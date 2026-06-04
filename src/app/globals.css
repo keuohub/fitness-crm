@@ -1,0 +1,146 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ═══ 徕舞视觉配色 ═══ */
+:root {
+  --color-laiwu-primary: #3E2723;
+  --color-laiwu-bg: #FAF7F2;
+  --color-laiwu-surface: #FFFFFF;
+  --color-laiwu-accent: #8B5E3C;
+  --color-laiwu-border: #E8E0D5;
+  --color-laiwu-muted: #9E8E7E;
+  --color-laiwu-danger: #D4736A;
+}
+
+/* ═══ 全局强制背景和文字 ═══ */
+html, body {
+  background-color: #FAF7F2 !important;
+  color: #3E2723 !important;
+}
+
+/* ═══ 字体系统 ═══ */
+/*
+ * 字体策略：纯 CSS 字体栈，零网络依赖。
+ * 中国大陆网络限制导致 Google Fonts API 不可达，
+ * next/font/google 在 build 阶段即失败。
+ * 因此所有字体使用系统字体栈渐进增强。
+ *
+ * 正文：Noto Sans SC > 苹方 > 微软雅黑 > 系统默认
+ * 数字/英文特殊排版：Inter > Helvetica Neue > 系统默认
+ * 标题 serif：STSong > 宋体 > 思源宋体 > 系统 serif
+ */
+:root {
+  --font-body: 'PingFang SC', 'HarmonyOS Sans SC', 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif;
+  --font-number: 'SF Pro Display',
+  'Inter',
+  'Segoe UI',
+  sans-serif;
+  --font-serif: 'STSong', 'Songti SC', 'Noto Serif CJK SC', 'Source Han Serif SC', 'Songti', serif;
+}
+
+/* ═══ shadcn 主题变量 — 映射到徕舞配色 ═══ */
+@theme inline {
+    --font-heading: var(--font-body);
+    --font-sans: var(--font-body);
+
+    --color-background: #FAF7F2;
+    --color-foreground: #3E2723;
+    --color-card: #FFFFFF;
+    --color-card-foreground: #3E2723;
+    --color-popover: #FFFFFF;
+    --color-popover-foreground: #3E2723;
+    --color-primary: #8B5E3C;
+    --color-primary-foreground: #FFFFFF;
+    --color-secondary: #FAF7F2;
+    --color-secondary-foreground: #3E2723;
+    --color-muted: #FAF7F2;
+    --color-muted-foreground: #9E8E7E;
+    --color-accent: #FAF7F2;
+    --color-accent-foreground: #3E2723;
+    --color-destructive: #D4736A;
+    --color-destructive-foreground: #FFFFFF;
+    --color-border: #E8E0D5;
+    --color-input: #E8E0D5;
+    --color-ring: #8B5E3C;
+
+    --color-chart-1: #8B5E3C;
+    --color-chart-2: #9E8E7E;
+    --color-chart-3: #3E2723;
+    --color-chart-4: #E8E0D5;
+    --color-chart-5: #FAF7F2;
+
+    --color-sidebar: #FAF7F2;
+    --color-sidebar-foreground: #3E2723;
+    --color-sidebar-primary: #8B5E3C;
+    --color-sidebar-primary-foreground: #FFFFFF;
+    --color-sidebar-accent: #FAF7F2;
+    --color-sidebar-accent-foreground: #3E2723;
+    --color-sidebar-border: #E8E0D5;
+    --color-sidebar-ring: #8B5E3C;
+
+    --radius-sm: calc(var(--radius) * 0.6);
+    --radius-md: calc(var(--radius) * 0.8);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) * 1.4);
+    --radius-2xl: calc(var(--radius) * 1.8);
+    --radius-3xl: calc(var(--radius) * 2.2);
+    --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+    --radius: 0.75rem;
+}
+
+.dark {
+    --color-background: #1C1410;
+    --color-foreground: #FAF7F2;
+    --color-card: #2A1F1A;
+    --color-card-foreground: #FAF7F2;
+    --color-popover: #2A1F1A;
+    --color-popover-foreground: #FAF7F2;
+    --color-primary: #8B5E3C;
+    --color-primary-foreground: #FFFFFF;
+    --color-secondary: #2A1F1A;
+    --color-secondary-foreground: #FAF7F2;
+    --color-muted: #2A1F1A;
+    --color-muted-foreground: #9E8E7E;
+    --color-accent: #2A1F1A;
+    --color-accent-foreground: #FAF7F2;
+    --color-destructive: #D4736A;
+    --color-destructive-foreground: #FFFFFF;
+    --color-border: rgba(232, 224, 213, 0.15);
+    --color-input: rgba(232, 224, 213, 0.2);
+    --color-ring: #8B5E3C;
+
+    --color-sidebar: #1C1410;
+    --color-sidebar-foreground: #FAF7F2;
+    --color-sidebar-primary: #8B5E3C;
+    --color-sidebar-primary-foreground: #FFFFFF;
+    --color-sidebar-accent: #2A1F1A;
+    --color-sidebar-accent-foreground: #FAF7F2;
+    --color-sidebar-border: rgba(232, 224, 213, 0.15);
+    --color-sidebar-ring: #8B5E3C;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+    }
+  html {
+    @apply font-sans;
+    }
+}
+
+@keyframes breath {
+  0%, 100% { transform: scale(1); opacity: 0.3; }
+  50% { transform: scale(1.08); opacity: 0.5; }
+}
+
+html { scroll-behavior: smooth; }
