@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     const response = NextResponse.json({ success: true });
-    setAdminCookie(response, session);
+    await setAdminCookie(response, session);
     return response;
   } catch (err) {
     console.error("Admin login error:", err);
