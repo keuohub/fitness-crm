@@ -6,7 +6,7 @@ import { fadeUp, MICRO } from "@/lib/design/motion-presets";
 
 export default function FounderLetterSection() {
   return (
-    <section className="max-w-[38em] mx-auto px-6 py-32 md:py-40 bg-white">
+    <section className="max-w-[38em] mx-auto px-5 sm:px-8 md:px-12 py-40 md:py-48 bg-white">
       <motion.div
         {...MICRO.scrollReveal}
         variants={fadeUp}
@@ -20,11 +20,11 @@ export default function FounderLetterSection() {
           一封信
         </p>
 
-        <h2 className="text-3xl sm:text-4xl font-semibold text-[#1D1D1F] tracking-[-0.03em] leading-[1.15] mb-16 max-w-[12ch]">
+        <h2 className="text-3xl sm:text-4xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15] mb-16 max-w-[12ch]">
           致正在认真练习的你
         </h2>
 
-        <div className="space-y-8 text-base leading-[2] text-[#1D1D1F]">
+        <div className="space-y-8 text-base leading-[2] text-[#3E2723]">
           <p>
             不是每个人都需要成为运动达人。
           </p>

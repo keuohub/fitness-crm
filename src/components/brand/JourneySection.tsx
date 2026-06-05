@@ -42,7 +42,7 @@ export default function JourneySection() {
   const progressHeight = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
 
   return (
-    <section id="journey" ref={containerRef} className="relative bg-white">
+    <section id="journey" ref={containerRef} className="relative bg-white py-40 md:py-48">
       {/* Sticky progress bar */}
       <div className="sticky top-0 z-30 w-full h-[2px] bg-[#EDE8E2]">
         <motion.div
@@ -65,7 +65,7 @@ export default function JourneySection() {
               transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1.0] }}
               className="text-center md:text-left"
             >
-              <p className="text-6xl sm:text-8xl md:text-9xl font-semibold text-[#1D1D1F] tracking-[-0.04em] leading-none">
+              <p className="text-6xl sm:text-8xl md:text-9xl font-semibold text-[#3E2723] tracking-[-0.04em] leading-none">
                 {i + 1}
               </p>
               <p
@@ -83,7 +83,7 @@ export default function JourneySection() {
               viewport={{ once: true, margin: "-30%" }}
               transition={{ duration: 0.5, delay: 0.15 }}
             >
-              <h3 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-[#1D1D1F] tracking-[-0.03em] leading-[1.15] mb-3 sm:mb-4">
+              <h3 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15] mb-3 sm:mb-4">
                 {stage.title}
               </h3>
               <p className="text-sm sm:text-base text-[#6E6E73] leading-relaxed">

@@ -13,10 +13,10 @@ const LINKS = [
 
 export default function TrySection() {
   return (
-    <section id="try" className="max-w-4xl mx-auto px-6 py-32 bg-white">
+    <section id="try" className="max-w-4xl mx-auto px-5 sm:px-8 md:px-12 py-40 md:py-48 bg-white">
       <motion.div {...MICRO.scrollReveal} variants={fadeUp} initial="hidden" whileInView="visible" className="text-center mb-16">
         <p className="text-[11px] uppercase tracking-[0.3em] font-medium mb-8" style={{ color: COLORS.primary }}>体验</p>
-        <h2 className="text-4xl sm:text-5xl font-semibold text-[#1D1D1F] tracking-[-0.03em] leading-[1.15] mb-4">亲自体验</h2>
+        <h2 className="text-4xl sm:text-5xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15] mb-4">亲自体验</h2>
         <p className="text-sm text-[#6E6E73] max-w-[34em] mx-auto">打开样例系统，感受为会员带来的成长体验。</p>
       </motion.div>
 
@@ -29,7 +29,7 @@ export default function TrySection() {
               style={{ boxShadow: "0 2px 16px rgba(62,39,35,0.04)" }}
               onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 8px 30px rgba(62,39,35,0.08)"; }}
               onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 2px 16px rgba(62,39,35,0.04)"; }}>
-              <p className="text-lg font-semibold text-[#1D1D1F] tracking-[-0.03em] leading-[1.15] mb-2">{l.label}</p>
+              <p className="text-lg font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15] mb-2">{l.label}</p>
               <p className="text-xs text-[#6E6E73]">{l.desc}</p>
             </Link>
           </motion.div>

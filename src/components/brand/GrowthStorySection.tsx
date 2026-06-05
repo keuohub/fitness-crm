@@ -14,11 +14,11 @@ const STORY = [
 
 export default function GrowthStorySection() {
   return (
-    <section id="story" className="max-w-3xl mx-auto px-6 py-32 sm:py-32">
+    <section id="story" className="max-w-3xl mx-auto px-5 sm:px-8 md:px-12 py-40 md:py-48">
       <motion.div {...MICRO.scrollReveal} variants={fadeUp} initial="hidden" whileInView="visible" className="text-center mb-20">
         <p className="text-[11px] uppercase tracking-[0.3em] font-medium mb-4" style={{ color: COLORS.primary }}>Growth Story</p>
-        <h2 className="text-4xl sm:text-5xl font-semibold text-[#1D1D1F] tracking-[-0.03em] leading-[1.15] mb-4">成长的故事</h2>
-        <p className="text-sm text-[#6E6E73] max-w-lg mx-auto">每一位加入徕舞的女性，都在书写自己的成长故事。</p>
+        <h2 className="text-4xl sm:text-5xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15] mb-4">成长的故事</h2>
+        <p className="text-sm text-[#6E6E73] max-w-[34em] mx-auto">每一位加入徕舞的女性，都在书写自己的成长故事。</p>
       </motion.div>
 
       <div className="relative">
@@ -36,14 +36,14 @@ export default function GrowthStorySection() {
               </div>
 
               <div className="flex items-baseline gap-4 mb-3">
-                <span className="text-3xl sm:text-4xl font-semibold text-[#1D1D1F] tracking-[-0.03em] leading-[1.15]">Day {item.day}</span>
+                <span className="text-3xl sm:text-4xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15]">Day {item.day}</span>
                 {i > 0 && (
                   <div className="hidden sm:block flex-1 h-[1px] mt-4 opacity-20" style={{ backgroundColor: COLORS.border }} />
                 )}
               </div>
 
-              <h3 className="text-xl font-semibold text-[#1D1D1F] tracking-[-0.03em] leading-[1.15] mb-2">{item.title}</h3>
-              <p className="text-sm text-[#6E6E73] leading-relaxed max-w-lg">{item.desc}</p>
+              <h3 className="text-xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15] mb-2">{item.title}</h3>
+              <p className="text-sm text-[#6E6E73] leading-relaxed max-w-[34em]">{item.desc}</p>
             </motion.div>
           ))}
         </motion.div>

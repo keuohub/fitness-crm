@@ -20,16 +20,16 @@ export default function DemoSection() {
   };
 
   return (
-    <section id="demo" className="max-w-2xl mx-auto px-6 py-32 bg-white">
+    <section id="demo" className="max-w-2xl mx-auto px-5 sm:px-8 md:px-12 py-40 md:py-48 bg-white">
       <motion.div {...MICRO.scrollReveal} variants={fadeUp} initial="hidden" whileInView="visible" className="text-center mb-16">
         <p className="text-[11px] uppercase tracking-[0.3em] font-medium mb-8" style={{ color: COLORS.primary }}>预约</p>
-        <h2 className="text-4xl sm:text-5xl font-semibold text-[#1D1D1F] tracking-[-0.03em] leading-[1.15] mb-4">预约演示</h2>
+        <h2 className="text-4xl sm:text-5xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15] mb-4">预约演示</h2>
         <p className="text-sm text-[#6E6E73] max-w-[34em] mx-auto">看看徕舞系统如何帮助你的工作室，让会员真正看见成长。</p>
       </motion.div>
 
       {submitted ? (
         <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-12">
-          <p className="text-2xl font-semibold text-[#1D1D1F] tracking-[-0.03em] leading-[1.15] mb-2">感谢你的关注</p>
+          <p className="text-2xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15] mb-2">感谢你的关注</p>
           <p className="text-sm text-[#6E6E73]">我们会在 24 小时内与你联系。</p>
         </motion.div>
       ) : (

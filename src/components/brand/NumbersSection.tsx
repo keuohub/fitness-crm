@@ -21,10 +21,10 @@ export default function NumbersSection() {
   const [inView, setInView] = useState(false);
 
   return (
-    <section className="max-w-5xl mx-auto px-6 py-32 sm:py-32">
+    <section className="max-w-5xl mx-auto px-5 sm:px-8 md:px-12 py-40 md:py-48">
       <motion.div {...MICRO.scrollReveal} variants={fadeUp} initial="hidden" whileInView="visible" className="text-center mb-16">
         <p className="text-[11px] uppercase tracking-[0.3em] font-medium mb-4" style={{ color: COLORS.primary }}>Numbers</p>
-        <h2 className="text-4xl sm:text-5xl font-semibold text-[#1D1D1F] tracking-[-0.03em] leading-[1.15] mb-4">数字见证成长</h2>
+        <h2 className="text-4xl sm:text-5xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15] mb-4">数字见证成长</h2>
       </motion.div>
 
       <motion.div

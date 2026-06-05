@@ -52,7 +52,7 @@ function GrowthWheel() {
 
       {/* Center */}
       <div className="absolute inset-0 flex items-center justify-center">
-        <p className="text-base font-semibold text-[#1D1D1F] tracking-[-0.03em] leading-[1.15]">持续<br />成长</p>
+        <p className="text-base font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15]">持续<br />成长</p>
       </div>
     </div>
   );
@@ -60,11 +60,11 @@ function GrowthWheel() {
 
 export default function WheelSection() {
   return (
-    <section id="wheel" className="max-w-3xl mx-auto px-6 py-32 bg-white">
+    <section id="wheel" className="max-w-3xl mx-auto px-5 sm:px-8 md:px-12 py-40 md:py-48 bg-white">
       <motion.div {...MICRO.scrollReveal} variants={fadeUp} initial="hidden" whileInView="visible" className="text-center mb-16">
         <p className="text-[11px] uppercase tracking-[0.3em] font-medium mb-8" style={{ color: COLORS.primary }}>成长路径</p>
-        <h2 className="text-4xl sm:text-5xl font-semibold text-[#1D1D1F] tracking-[-0.03em] leading-[1.15] mb-4">成长飞轮</h2>
-        <p className="text-sm text-[#6E6E73] max-w-md mx-auto">训练、记录、反馈、坚持 —— 每一次循环都推动成长向前。</p>
+        <h2 className="text-4xl sm:text-5xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15] mb-4">成长飞轮</h2>
+        <p className="text-sm text-[#6E6E73] max-w-[34em] mx-auto">训练、记录、反馈、坚持 —— 每一次循环都推动成长向前。</p>
       </motion.div>
       <GrowthWheel />
     </section>

@@ -12,10 +12,10 @@ const PARTNERS = [
 
 export default function PartnerSection() {
   return (
-    <section id="partner" className="max-w-4xl mx-auto px-6 py-32 bg-white">
+    <section id="partner" className="max-w-4xl mx-auto px-5 sm:px-8 md:px-12 py-40 md:py-48 bg-white">
       <motion.div {...MICRO.scrollReveal} variants={fadeUp} initial="hidden" whileInView="visible" className="text-center mb-16">
         <p className="text-[11px] uppercase tracking-[0.3em] font-medium mb-8" style={{ color: COLORS.primary }}>合作伙伴</p>
-        <h2 className="text-4xl sm:text-5xl font-semibold text-[#1D1D1F] tracking-[-0.03em] leading-[1.15] mb-4">谁适合使用本平台</h2>
+        <h2 className="text-4xl sm:text-5xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15] mb-4">谁适合使用本平台</h2>
         <p className="text-sm text-[#6E6E73] max-w-[34em] mx-auto">帮助每一位教练更好地陪伴会员成长。</p>
       </motion.div>
 
@@ -26,7 +26,7 @@ export default function PartnerSection() {
             className="p-8 text-center transition-shadow"
             style={{ boxShadow: "0 2px 16px rgba(62,39,35,0.04)" }}
             whileHover={{ y: -4, boxShadow: "0 8px 30px rgba(62,39,35,0.08)" }} transition={{ duration: 0.2 }}>
-            <p className="text-lg font-semibold text-[#1D1D1F] tracking-[-0.03em] leading-[1.15] mb-2">{p.name}</p>
+            <p className="text-lg font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15] mb-2">{p.name}</p>
             <p className="text-xs text-[#6E6E73] leading-relaxed">{p.desc}</p>
           </motion.div>
         ))}

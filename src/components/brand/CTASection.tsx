@@ -6,10 +6,10 @@ import { fadeUp, MICRO } from "@/lib/design/motion-presets";
 
 export default function CTASection() {
   return (
-    <section id="cta" className="max-w-3xl mx-auto px-6 py-32 bg-white text-center">
+    <section id="cta" className="max-w-3xl mx-auto px-5 sm:px-8 md:px-12 py-40 md:py-48 bg-white text-center">
       <motion.div {...MICRO.scrollReveal} variants={fadeUp} initial="hidden" whileInView="visible" className="space-y-8">
-        <h2 className="text-4xl sm:text-5xl font-semibold text-[#1D1D1F] tracking-[-0.03em] leading-[1.15]">让会员真正看见成长</h2>
-        <p className="text-sm text-[#6E6E73] max-w-md mx-auto">
+        <h2 className="text-4xl sm:text-5xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15]">让会员真正看见成长</h2>
+        <p className="text-sm text-[#6E6E73] max-w-[34em] mx-auto">
           不是每个月的数据报表，而是一次次被看见的坚持。
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4">

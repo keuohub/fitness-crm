@@ -27,10 +27,10 @@ const SECTIONS = [
 
 export default function EcosystemSection() {
   return (
-    <section id="ecosystem" className="max-w-5xl mx-auto px-6 py-32 md:py-40 bg-white">
+    <section id="ecosystem" className="max-w-5xl mx-auto px-5 sm:px-8 md:px-12 py-40 md:py-48 bg-white">
       <motion.div {...MICRO.scrollReveal} variants={fadeUp} initial="hidden" whileInView="visible" className="text-center mb-24">
         <p className="text-[11px] uppercase tracking-[0.3em] font-medium mb-8" style={{ color: COLORS.primary }}>产品</p>
-        <h2 className="text-4xl sm:text-5xl font-semibold text-[#1D1D1F] tracking-[-0.03em] leading-[1.15] mb-4">一个完整的成长生态</h2>
+        <h2 className="text-4xl sm:text-5xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15] mb-4">一个完整的成长生态</h2>
         <p className="text-sm text-[#6E6E73] max-w-[34em] mx-auto">三套系统协同工作，从教练到会员，从记录到反馈。</p>
       </motion.div>
 
@@ -45,7 +45,7 @@ export default function EcosystemSection() {
             className="flex flex-col"
           >
             <p className="text-[10px] uppercase tracking-[0.2em] font-medium mb-4" style={{ color: COLORS.primary }}>{s.title}</p>
-            <p className="text-sm text-[#3E2723] leading-[1.9] mb-6 max-w-[34em]">{s.desc}</p>
+            <p className="text-sm text-[#3E2723] leading-[1.7] mb-6 max-w-[34em]">{s.desc}</p>
             <div className="space-y-2">
               {s.features.map((f) => (
                 <div key={f} className="text-xs text-[#6E6E73] flex items-center gap-1.5">

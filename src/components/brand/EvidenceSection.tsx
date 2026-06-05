@@ -34,7 +34,7 @@ export default function EvidenceSection() {
   ];
 
   return (
-    <section id="evidence" className="max-w-5xl mx-auto px-6 py-32 md:py-40 bg-white">
+    <section id="evidence" className="max-w-5xl mx-auto px-5 sm:px-8 md:px-12 py-40 md:py-48 bg-white">
       <motion.div
         {...MICRO.scrollReveal}
         variants={fadeUp}
@@ -43,7 +43,7 @@ export default function EvidenceSection() {
         onViewportEnter={() => setInView(true)}
         className="text-center mb-20"
       >
-        <h2 className="text-4xl sm:text-5xl font-semibold text-[#1D1D1F] tracking-[-0.03em] leading-[1.15]">
+        <h2 className="text-4xl sm:text-5xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15]">
           成长应该被量化
         </h2>
       </motion.div>

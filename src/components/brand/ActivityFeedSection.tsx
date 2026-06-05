@@ -44,7 +44,7 @@ export default function ActivityFeedSection() {
 
   if (loading) {
     return (
-      <section className="max-w-4xl mx-auto px-6 py-32 bg-white">
+      <section className="max-w-4xl mx-auto px-5 sm:px-8 md:px-12 py-40 md:py-48 bg-white">
         <div className="text-center text-sm text-[#6E6E73]">加载实时动态...</div>
       </section>
     );
@@ -53,7 +53,7 @@ export default function ActivityFeedSection() {
   if (activities.length === 0) return null;
 
   return (
-    <section id="activity" className="max-w-4xl mx-auto px-6 py-32 bg-white">
+    <section id="activity" className="max-w-4xl mx-auto px-5 sm:px-8 md:px-12 py-40 md:py-48 bg-white">
       <motion.div
         {...MICRO.scrollReveal}
         variants={fadeUp}
@@ -67,7 +67,7 @@ export default function ActivityFeedSection() {
         >
           Live Activity
         </p>
-        <h2 className="text-3xl sm:text-4xl font-semibold text-[#1D1D1F] tracking-[-0.03em] leading-[1.15]">
+        <h2 className="text-3xl sm:text-4xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15]">
           今天的训练记录
         </h2>
       </motion.div>
@@ -81,7 +81,7 @@ export default function ActivityFeedSection() {
           {[...activities, ...activities].map((a, i) => (
             <div
               key={`${a.id}-${i}`}
-              className="flex items-center justify-between py-3 px-5 rounded-2xl bg-[#FAF7F2]"
+              className="flex items-center justify-between py-3 px-5 rounded-xl bg-[#FAF7F2]"
             >
               <div className="flex items-center gap-3">
                 <div

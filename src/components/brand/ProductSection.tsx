@@ -36,7 +36,7 @@ const SHOWCASE = [
 
 function PreviewCard({ title, color }: { title: string; color: string }) {
   return (
-    <div className="rounded-2xl overflow-hidden" style={{ background: "linear-gradient(160deg, #FDF9F5 0%, #FFF 100%)", boxShadow: "0 2px 20px rgba(62,39,35,0.06)", minHeight: 280 }}>
+    <div className="rounded-xl overflow-hidden" style={{ background: "linear-gradient(160deg, #FDF9F5 0%, #FFF 100%)", boxShadow: "0 2px 20px rgba(62,39,35,0.06)", minHeight: 280 }}>
       {/* Mock header bar */}
       <div className="h-10 flex items-center gap-2 px-4" style={{ backgroundColor: `${color}10` }}>
         <div className="flex gap-1.5">
@@ -59,11 +59,11 @@ function PreviewCard({ title, color }: { title: string; color: string }) {
 
 export default function ProductSection() {
   return (
-    <section id="product" className="max-w-5xl mx-auto px-6 py-32 sm:py-32">
+    <section id="product" className="max-w-5xl mx-auto px-5 sm:px-8 md:px-12 py-40 md:py-48">
       <motion.div {...MICRO.scrollReveal} variants={fadeUp} initial="hidden" whileInView="visible" className="text-center mb-20">
         <p className="text-[11px] uppercase tracking-[0.3em] font-medium mb-4" style={{ color: COLORS.primary }}>产品</p>
-        <h2 className="text-4xl sm:text-5xl font-semibold text-[#1D1D1F] tracking-[-0.03em] leading-[1.15] mb-4">完整的成长生态</h2>
-        <p className="text-sm text-[#6E6E73] max-w-lg mx-auto">三套系统协同工作，从教练到会员，从记录到反馈。</p>
+        <h2 className="text-4xl sm:text-5xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15] mb-4">完整的成长生态</h2>
+        <p className="text-sm text-[#6E6E73] max-w-[34em] mx-auto">三套系统协同工作，从教练到会员，从记录到反馈。</p>
       </motion.div>
 
       <div className="space-y-24 sm:space-y-32">
@@ -87,7 +87,7 @@ export default function ProductSection() {
               className="flex flex-col justify-center"
             >
               <p className="text-[10px] uppercase tracking-[0.2em] font-medium mb-2" style={{ color: item.color }}>{item.subtitle}</p>
-              <h3 className="text-2xl sm:text-3xl font-semibold text-[#1D1D1F] tracking-[-0.03em] leading-[1.15] mb-4">{item.title}</h3>
+              <h3 className="text-2xl sm:text-3xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15] mb-4">{item.title}</h3>
               <p className="text-sm text-[#6E6E73] leading-relaxed mb-6">{item.desc}</p>
               <ul className="space-y-2">
                 {item.features.map((f) => (

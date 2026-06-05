@@ -36,7 +36,7 @@ function FlowDiagram() {
       {FLOW.map((step, i) => (
         <div key={step} className="flex items-center gap-3">
           <motion.div
-            className="w-16 h-16 rounded-2xl flex items-center justify-center text-xs font-semibold text-white"
+            className="w-16 h-16 rounded-xl flex items-center justify-center text-xs font-semibold text-white"
             style={{
               backgroundColor:
                 i === FLOW.length - 1 ? COLORS.primary : "#3E2723",
@@ -87,7 +87,7 @@ export default function AIReportSection() {
   }, []);
 
   return (
-    <section id="insight" className="max-w-4xl mx-auto px-6 py-32 bg-white">
+    <section id="insight" className="max-w-4xl mx-auto px-5 sm:px-8 md:px-12 py-40 md:py-48 bg-white">
       <motion.div
         {...MICRO.scrollReveal}
         variants={fadeUp}
@@ -101,7 +101,7 @@ export default function AIReportSection() {
         >
           分析引擎
         </p>
-        <h2 className="text-4xl sm:text-5xl font-semibold text-[#1D1D1F] tracking-[-0.03em] leading-[1.15] mb-4">
+        <h2 className="text-4xl sm:text-5xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15] mb-4">
           成长记录
         </h2>
         <p className="text-sm text-[#6E6E73] max-w-[34em] mx-auto">
@@ -135,7 +135,7 @@ export default function AIReportSection() {
                   {reportTypeLabel(report.reportType)} ·{" "}
                   {report.generatedAt?.slice(0, 7) ?? ""}
                 </p>
-                <p className="text-xl font-semibold text-[#1D1D1F] tracking-[-0.03em] leading-[1.15]">
+                <p className="text-xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15]">
                   {report.memberName}的{reportTypeLabel(report.reportType)}
                 </p>
               </div>
@@ -188,7 +188,7 @@ export default function AIReportSection() {
                 >
                   周报 · 2026年5月
                 </p>
-                <p className="text-xl font-semibold text-[#1D1D1F] tracking-[-0.03em] leading-[1.15]">
+                <p className="text-xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15]">
                   阶段回顾样本
                 </p>
               </div>

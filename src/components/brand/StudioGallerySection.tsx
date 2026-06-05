@@ -24,7 +24,7 @@ const GALLERY = [
 
 export default function StudioGallerySection() {
   return (
-    <section id="studio" className="max-w-5xl mx-auto px-6 py-32 bg-white">
+    <section id="studio" className="max-w-5xl mx-auto px-5 sm:px-8 md:px-12 py-40 md:py-48 bg-white">
       <motion.div
         {...MICRO.scrollReveal}
         variants={fadeUp}
@@ -38,10 +38,10 @@ export default function StudioGallerySection() {
         >
           Studio
         </p>
-        <h2 className="text-4xl sm:text-5xl font-semibold text-[#1D1D1F] tracking-[-0.03em] leading-[1.15] mb-4">
+        <h2 className="text-4xl sm:text-5xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15] mb-4">
           我们的空间
         </h2>
-        <p className="text-sm text-[#6E6E73] max-w-md mx-auto">
+        <p className="text-sm text-[#6E6E73] max-w-[34em] mx-auto">
           钟祥徕舞 — 女性成长与身体管理平台
         </p>
       </motion.div>
@@ -69,8 +69,8 @@ export default function StudioGallerySection() {
             </svg>
 
             <div className="absolute inset-0 flex flex-col justify-end p-6">
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4">
-                <h3 className="text-lg font-semibold text-[#1D1D1F] tracking-[-0.03em] leading-[1.15]">
+              <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4">
+                <h3 className="text-lg font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15]">
                   {item.title}
                 </h3>
                 <p className="text-xs text-[#6E6E73] mt-1">{item.desc}</p>
@@ -86,9 +86,9 @@ export default function StudioGallerySection() {
         variants={fadeUp}
         initial="hidden"
         whileInView="visible"
-        className="mt-20 text-center max-w-lg mx-auto"
+        className="mt-20 text-center max-w-[34em] mx-auto"
       >
-        <h3 className="text-2xl font-semibold text-[#1D1D1F] tracking-[-0.03em] leading-[1.15] mb-3">
+        <h3 className="text-2xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15] mb-3">
           小桥 · 主理人
         </h3>
         <p className="text-sm text-[#6E6E73] leading-relaxed">

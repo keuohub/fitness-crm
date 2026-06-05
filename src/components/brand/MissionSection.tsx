@@ -12,11 +12,11 @@ const PILLARS = [
 
 export default function MissionSection() {
   return (
-    <section id="mission" className="max-w-5xl mx-auto px-6 py-24 sm:py-32">
+    <section id="mission" className="max-w-5xl mx-auto px-5 sm:px-8 md:px-12 py-40 md:py-48">
       <motion.div {...MICRO.scrollReveal} variants={fadeUp} initial="hidden" whileInView="visible" className="text-center mb-16">
         <p className="text-[11px] uppercase tracking-[0.3em] font-medium mb-4" style={{ color: COLORS.primary }}>我们的信念</p>
-        <h2 className="text-3xl sm:text-4xl font-semibold text-[#1D1D1F] tracking-[-0.03em] leading-[1.15] mb-4">不只是管理会员</h2>
-        <p className="text-sm text-[#6E6E73] max-w-lg mx-auto">传统健身房关注续费。徕舞关注成长。我们相信每一位女性都值得被看见、被陪伴。</p>
+        <h2 className="text-3xl sm:text-4xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15] mb-4">不只是管理会员</h2>
+        <p className="text-sm text-[#6E6E73] max-w-[34em] mx-auto">传统健身房关注续费。徕舞关注成长。我们相信每一位女性都值得被看见、被陪伴。</p>
       </motion.div>
 
       <motion.div variants={staggerContainer} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-80px" }}
@@ -31,7 +31,7 @@ export default function MissionSection() {
               style={{ backgroundColor: `${COLORS.primary}14`, color: COLORS.primary }}>
               {i + 1}
             </div>
-            <h3 className="text-lg font-semibold text-[#1D1D1F] tracking-[-0.03em] leading-[1.15] mb-2">{p.title}</h3>
+            <h3 className="text-lg font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15] mb-2">{p.title}</h3>
             <p className="text-sm text-[#6E6E73] leading-relaxed">{p.desc}</p>
           </motion.div>
         ))}

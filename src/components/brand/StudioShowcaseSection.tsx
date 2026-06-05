@@ -27,7 +27,7 @@ const PLACEHOLDER_BLUR = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB
 
 export default function StudioShowcaseSection() {
   return (
-    <section id="studio" className="max-w-5xl mx-auto px-6 py-32 bg-white">
+    <section id="studio" className="max-w-5xl mx-auto px-5 sm:px-8 md:px-12 py-40 md:py-48 bg-white">
       <motion.div
         {...MICRO.scrollReveal}
         variants={fadeUp}
@@ -41,10 +41,10 @@ export default function StudioShowcaseSection() {
         >
           Our Space
         </p>
-        <h2 className="text-4xl sm:text-5xl font-semibold text-[#1D1D1F] tracking-[-0.03em] leading-[1.15] mb-4">
+        <h2 className="text-4xl sm:text-5xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15] mb-4">
           训练空间
         </h2>
-        <p className="text-sm text-[#6E6E73] max-w-md mx-auto">
+        <p className="text-sm text-[#6E6E73] max-w-[34em] mx-auto">
           在舒适的环境中专注每一次训练。自然光、专业器械、安静氛围。
         </p>
       </motion.div>

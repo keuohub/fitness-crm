@@ -6,10 +6,10 @@ import { fadeUp, MICRO } from "@/lib/design/motion-presets";
 
 export default function BrandFilmSection() {
   return (
-    <section id="film" className="py-32 bg-white">
-      <div className="max-w-6xl mx-auto px-6">
+    <section id="film" className="py-40 md:py-48 bg-white">
+      <div className="max-w-6xl mx-auto px-5 sm:px-8 md:px-12">
         <motion.div {...MICRO.scrollReveal} variants={fadeUp} initial="hidden" whileInView="visible" className="text-center mb-16">
-          <h2 className="text-4xl sm:text-5xl font-semibold text-[#1D1D1F] tracking-[-0.03em] leading-[1.15]">
+          <h2 className="text-4xl sm:text-5xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15]">
             成长不是奇迹
             <br />
             是一次次坚持

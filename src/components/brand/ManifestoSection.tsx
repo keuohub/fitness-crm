@@ -6,14 +6,14 @@ import { fadeUp, MICRO } from "@/lib/design/motion-presets";
 
 export default function ManifestoSection() {
   return (
-    <section id="about" className="max-w-[42em] mx-auto px-6 py-32 bg-white">
+    <section id="about" className="max-w-[42em] mx-auto px-5 sm:px-8 md:px-12 py-40 md:py-48 bg-white">
       <div className="grid md:grid-cols-2 gap-16 md:gap-24">
         {/* Left: big title */}
         <motion.div {...MICRO.scrollReveal} variants={fadeUp} initial="hidden" whileInView="visible">
           <p className="text-[11px] uppercase tracking-[0.3em] font-medium mb-10" style={{ color: COLORS.primary }}>
             关于小桥
           </p>
-          <h2 className="text-4xl sm:text-5xl md:text-6xl font-semibold text-[#1D1D1F] tracking-[-0.04em] leading-[1.08]">
+          <h2 className="text-4xl sm:text-5xl md:text-6xl font-semibold text-[#3E2723] tracking-[-0.04em] leading-[1.08]">
             关于
             <br />
             小桥

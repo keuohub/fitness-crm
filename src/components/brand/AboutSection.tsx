@@ -6,10 +6,10 @@ import { fadeUp, MICRO } from "@/lib/design/motion-presets";
 
 export default function AboutSection() {
   return (
-    <section id="about" className="max-w-5xl mx-auto px-6 py-32 bg-white">
+    <section id="about" className="max-w-5xl mx-auto px-5 sm:px-8 md:px-12 py-40 md:py-48 bg-white">
       <motion.div {...MICRO.scrollReveal} variants={fadeUp} initial="hidden" whileInView="visible" className="text-center mb-20">
         <p className="text-[11px] uppercase tracking-[0.3em] font-medium mb-8" style={{ color: COLORS.primary }}>About</p>
-        <h2 className="text-4xl sm:text-5xl font-semibold text-[#1D1D1F] tracking-[-0.04em] leading-tight">
+        <h2 className="text-4xl sm:text-5xl font-semibold text-[#3E2723] tracking-[-0.04em] leading-tight">
           让成长被记录
           <br />
           让坚持被看见
@@ -18,7 +18,7 @@ export default function AboutSection() {
 
       <div className="grid md:grid-cols-2 gap-16">
         <motion.div {...MICRO.scrollReveal} variants={fadeUp} initial="hidden" whileInView="visible" className="space-y-6">
-          <h3 className="text-2xl font-semibold text-[#1D1D1F] tracking-[-0.03em] leading-[1.15]">为什么创立徕舞</h3>
+          <h3 className="text-2xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15]">为什么创立徕舞</h3>
           <p className="text-sm text-[#6E6E73] leading-relaxed">
             在陪伴女性成长的这些年里，我们见过太多次这样的场景：
             会员练了三个月，感觉不到变化，慢慢就不来了。
@@ -32,7 +32,7 @@ export default function AboutSection() {
         </motion.div>
 
         <motion.div {...MICRO.scrollReveal} variants={fadeUp} initial="hidden" whileInView="visible" className="space-y-6">
-          <h3 className="text-2xl font-semibold text-[#1D1D1F] tracking-[-0.03em] leading-[1.15]">为什么成长应该被记录</h3>
+          <h3 className="text-2xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15]">为什么成长应该被记录</h3>
           <p className="text-sm text-[#6E6E73] leading-relaxed">
             体重秤上的数字不会告诉你，你的体态是否在变好。
             日历上的记录不会告诉你，你正在建立什么样的习惯。

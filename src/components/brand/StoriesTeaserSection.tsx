@@ -43,7 +43,7 @@ const TEASER_STORIES = RAW_STORIES.map((s) => ({
 
 export default function StoriesTeaserSection() {
   return (
-    <section id="stories" className="max-w-5xl mx-auto px-6 py-32 bg-white">
+    <section id="stories" className="max-w-5xl mx-auto px-5 sm:px-8 md:px-12 py-40 md:py-48 bg-white">
       <motion.div
         {...MICRO.scrollReveal}
         variants={fadeUp}
@@ -57,7 +57,7 @@ export default function StoriesTeaserSection() {
         >
           成长故事
         </p>
-        <h2 className="text-4xl sm:text-5xl font-semibold text-[#1D1D1F] tracking-[-0.03em] leading-[1.15] mb-4">
+        <h2 className="text-4xl sm:text-5xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15] mb-4">
           每一次坚持
         </h2>
         <p className="text-sm text-[#6E6E73] max-w-[34em] mx-auto">
@@ -88,7 +88,7 @@ export default function StoriesTeaserSection() {
               <p className="text-[10px] tracking-widest uppercase font-medium mb-1" style={{ color: COLORS.primary }}>
                 {story.role}
               </p>
-              <h3 className="font-semibold text-[#1D1D1F] tracking-[-0.03em] leading-[1.15]">
+              <h3 className="font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15]">
                 {story.displayName}
               </h3>
               <p className="text-[10px] text-[#6E6E73]">{story.stage}</p>

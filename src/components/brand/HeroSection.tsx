@@ -17,7 +17,7 @@ export default function HeroSection() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.1 }}
-          className="text-lg sm:text-xl md:text-2xl tracking-[0.15em] font-medium mb-10"
+          className="text-[11px] sm:text-xs tracking-[0.15em] font-medium mb-12"
           style={{ color: COLORS.primary }}
         >
           钟祥 · 徕舞女子塑形
@@ -27,7 +27,8 @@ export default function HeroSection() {
           initial={{ opacity: 0, scale: 1.05 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1.2, delay: 0.2 }}
-          className="max-w-[14ch] mx-auto text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-semibold text-[#1D1D1F] tracking-[-0.03em] leading-[1.15] sm:leading-[1.02]"
+          className="max-w-[14ch] mx-auto text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-semibold tracking-[-0.02em] leading-[1.15] sm:leading-[1.02]"
+          style={{ color: COLORS.secondary }}
         >
           成长值得被记录 <br /> 坚持值得被{" "}
           <span style={{ color: COLORS.primary }}>看见</span>
@@ -37,7 +38,7 @@ export default function HeroSection() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.5 }}
-          className="text-sm sm:text-base leading-[1.9] tracking-normal mt-12 max-w-[34em] mx-auto text-center"
+          className="text-sm sm:text-base leading-[1.7] tracking-normal mt-12 max-w-[34em] mx-auto text-center"
           style={{ color: "#6E6E73" }}
         >
           不是一次训练改变了身体，<br />

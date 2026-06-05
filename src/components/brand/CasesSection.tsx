@@ -30,7 +30,7 @@ const MEMBERS = [
 
 export default function CasesSection() {
   return (
-    <section id="cases" className="max-w-[32em] mx-auto px-6 py-32 md:py-40 bg-white">
+    <section id="cases" className="max-w-[32em] mx-auto px-5 sm:px-8 md:px-12 py-40 md:py-48 bg-white">
       <motion.div
         {...MICRO.scrollReveal}
         variants={fadeUp}
@@ -44,7 +44,7 @@ export default function CasesSection() {
           成长档案
         </p>
 
-        <h2 className="text-3xl sm:text-4xl font-semibold text-[#1D1D1F] tracking-[-0.03em] leading-[1.15] mb-20 max-w-[12ch]">
+        <h2 className="text-3xl sm:text-4xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15] mb-20 max-w-[12ch]">
           她们的成长记录
         </h2>
       </motion.div>
@@ -69,7 +69,7 @@ export default function CasesSection() {
             <div className="flex items-baseline gap-8 mb-8">
               <div>
                 <span
-                  className="text-2xl font-semibold text-[#1D1D1F] tracking-[-0.02em]"
+                  className="text-2xl font-semibold text-[#3E2723] tracking-[-0.02em]"
                   style={{ fontFamily: "var(--font-number, 'Inter', sans-serif)" }}
                 >
                   {m.totalTrainings}
@@ -78,7 +78,7 @@ export default function CasesSection() {
               </div>
               <div>
                 <span
-                  className="text-2xl font-semibold text-[#1D1D1F] tracking-[-0.02em]"
+                  className="text-2xl font-semibold text-[#3E2723] tracking-[-0.02em]"
                   style={{ fontFamily: "var(--font-number, 'Inter', sans-serif)" }}
                 >
                   {m.monthsSinceJoin}
@@ -87,7 +87,7 @@ export default function CasesSection() {
               </div>
             </div>
 
-            <p className="text-base text-[#1D1D1F] leading-[1.9] max-w-[32em]">
+            <p className="text-base text-[#3E2723] leading-[1.7] max-w-[32em]">
               {m.note}
             </p>
           </motion.article>

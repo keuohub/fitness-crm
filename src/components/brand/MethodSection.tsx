@@ -68,7 +68,7 @@ function FlywheelRing() {
       {/* Center */}
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-lg font-semibold text-[#1D1D1F] tracking-[-0.03em] leading-[1.15]">成长飞轮</p>
+          <p className="text-lg font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15]">成长飞轮</p>
           <p className="text-xs text-[#6E6E73] mt-1">持续循环</p>
         </div>
       </div>
@@ -78,11 +78,11 @@ function FlywheelRing() {
 
 export default function MethodSection() {
   return (
-    <section id="method" className="max-w-5xl mx-auto px-6 py-24 sm:py-32">
+    <section id="method" className="max-w-5xl mx-auto px-5 sm:px-8 md:px-12 py-40 md:py-48">
       <motion.div {...MICRO.scrollReveal} variants={fadeUp} initial="hidden" whileInView="visible" className="text-center mb-16">
         <p className="text-[11px] uppercase tracking-[0.3em] font-medium mb-4" style={{ color: COLORS.primary }}>成长模型</p>
-        <h2 className="text-3xl sm:text-4xl font-semibold text-[#1D1D1F] tracking-[-0.03em] leading-[1.15] mb-4">持续成长的飞轮</h2>
-        <p className="text-sm text-[#6E6E73] max-w-lg mx-auto">每一次评估、每一次训练、每一次反馈，都在推动成长的飞轮向前转动。</p>
+        <h2 className="text-3xl sm:text-4xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15] mb-4">持续成长的飞轮</h2>
+        <p className="text-sm text-[#6E6E73] max-w-[34em] mx-auto">每一次评估、每一次训练、每一次反馈，都在推动成长的飞轮向前转动。</p>
       </motion.div>
 
       <FlywheelRing />
