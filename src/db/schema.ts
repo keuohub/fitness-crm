@@ -1,23 +1,18 @@
-import { sqliteTable, integer, real, text } from "drizzle-orm/sqlite-core";
-import { sql } from "drizzle-orm";
+import { pgTable, serial, integer, real, text, timestamp } from "drizzle-orm/pg-core";
 
 // ── 租户 ──
-export const tenants = sqliteTable("tenants", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const tenants = pgTable("tenants", {
+  id: serial("id").primaryKey(),
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
   description: text("description"),
-  createdAt: text("created_at")
-    .notNull()
-    .default(sql`(datetime('now','localtime'))`),
-  updatedAt: text("updated_at")
-    .notNull()
-    .default(sql`(datetime('now','localtime'))`),
+  createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { mode: "string" }).notNull().defaultNow(),
 });
 
 // ── 用户（教练/员工） ──
-export const users = sqliteTable("users", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
   tenantId: integer("tenant_id")
     .notNull()
     .references(() => tenants.id),
@@ -27,88 +22,76 @@ export const users = sqliteTable("users", {
   role: text("role").notNull().default("coach"),
   status: text("status").default("active"),
   avatarUrl: text("avatar_url"),
-  createdAt: text("created_at")
-    .notNull()
-    .default(sql`(datetime('now','localtime'))`),
-  updatedAt: text("updated_at")
-    .notNull()
-    .default(sql`(datetime('now','localtime'))`),
+  createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { mode: "string" }).notNull().defaultNow(),
 });
 
 // ── 会员 ──
-export const members = sqliteTable("members", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const members = pgTable("members", {
+  id: serial("id").primaryKey(),
   tenantId: integer("tenant_id")
     .notNull()
     .references(() => tenants.id),
-  memberCode: text("member_code"), // 对应飞书的 memberCode
+  memberCode: text("member_code"),
   name: text("name").notNull(),
-  gender: text("gender"), // male | female
+  gender: text("gender"),
   phone: text("phone"),
   phoneVerified: integer("phone_verified").default(0),
-  stage: text("stage"), // 对应飞书的 stage
-  tags: text("tags"), // JSON 数组字符串，如 ["腰痛","产后","体态矫正"]
+  stage: text("stage"),
+  tags: text("tags"),
   notes: text("notes"),
-  status: text("status").notNull().default("active"), // active | inactive | archived
-  freezeStatus: text("freeze_status").default("active"), // active | frozen
+  status: text("status").notNull().default("active"),
+  freezeStatus: text("freeze_status").default("active"),
   freezeStart: text("freeze_start"),
   freezeEnd: text("freeze_end"),
   joinedAt: text("joined_at"),
-  birthday: text("birthday"), // YYYY-MM-DD
+  birthday: text("birthday"),
   portalCode: text("portal_code").unique(),
   portalEnabled: integer("portal_enabled").default(0),
   portalActivatedAt: text("portal_activated_at"),
   currentQuestionnaireId: integer("current_questionnaire_id"),
-  createdAt: text("created_at")
-    .notNull()
-    .default(sql`(datetime('now','localtime'))`),
-  updatedAt: text("updated_at")
-    .notNull()
-    .default(sql`(datetime('now','localtime'))`),
+  createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { mode: "string" }).notNull().defaultNow(),
 });
 
-// ── 会员记忆（叙事记忆 + 结构化记忆） ──
-export const memberMemories = sqliteTable("member_memories", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+// ── 会员记忆 ──
+export const memberMemories = pgTable("member_memories", {
+  id: serial("id").primaryKey(),
   tenantId: integer("tenant_id")
     .notNull()
     .references(() => tenants.id),
   memberId: integer("member_id")
     .notNull()
     .references(() => members.id),
-  content: text("content"), // 叙事记忆：自然语言长文本
-  structuredData: text("structured_data"), // 结构化记忆：JSON 字符串，存 key-value
-  memoryType: text("memory_type").notNull().default("note"), // note | milestone | preference | ai_summary
+  content: text("content"),
+  structuredData: text("structured_data"),
+  memoryType: text("memory_type").notNull().default("note"),
   createdBy: integer("created_by").references(() => users.id),
-  createdAt: text("created_at")
-    .notNull()
-    .default(sql`(datetime('now','localtime'))`),
+  createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
 });
 
 // ── 每日健康日志 ──
-export const dailyHealthLogs = sqliteTable("daily_health_logs", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const dailyHealthLogs = pgTable("daily_health_logs", {
+  id: serial("id").primaryKey(),
   tenantId: integer("tenant_id")
     .notNull()
     .references(() => tenants.id),
   memberId: integer("member_id")
     .notNull()
     .references(() => members.id),
-  logDate: text("log_date").notNull(), // YYYY-MM-DD
-  weight: real("weight"), // kg
+  logDate: text("log_date").notNull(),
+  weight: real("weight"),
   sleepHours: real("sleep_hours"),
-  stressLevel: integer("stress_level"), // 1-5
-  energyLevel: integer("energy_level"), // 1-5
+  stressLevel: integer("stress_level"),
+  energyLevel: integer("energy_level"),
   painAreas: text("pain_areas"),
   notes: text("notes"),
-  createdAt: text("created_at")
-    .notNull()
-    .default(sql`(datetime('now','localtime'))`),
+  createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
 });
 
 // ── 训练记录 ──
-export const trainings = sqliteTable("trainings", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const trainings = pgTable("trainings", {
+  id: serial("id").primaryKey(),
   tenantId: integer("tenant_id")
     .notNull()
     .references(() => tenants.id),
@@ -118,68 +101,58 @@ export const trainings = sqliteTable("trainings", {
   coachId: integer("coach_id").references(() => users.id),
   trainingDate: text("training_date").notNull(),
   durationMinutes: integer("duration_minutes"),
-  type: text("type").notNull().default("private"), // private | group | assessment
+  type: text("type").notNull().default("private"),
   focusArea: text("focus_area"),
   notes: text("notes"),
-  createdAt: text("created_at")
-    .notNull()
-    .default(sql`(datetime('now','localtime'))`),
+  createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
 });
 
 // ── AI 反馈报告 ──
-export const aiFeedbackReports = sqliteTable("ai_feedback_reports", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const aiFeedbackReports = pgTable("ai_feedback_reports", {
+  id: serial("id").primaryKey(),
   tenantId: integer("tenant_id")
     .notNull()
     .references(() => tenants.id),
   memberId: integer("member_id")
     .notNull()
     .references(() => members.id),
-  reportType: text("report_type").notNull(), // initial_assessment | weekly | monthly
+  reportType: text("report_type").notNull(),
   content: text("content").notNull(),
   generatedAt: text("generated_at").notNull(),
-  questionnaireData: text("questionnaire_data"), // JSON string
-  createdAt: text("created_at")
-    .notNull()
-    .default(sql`(datetime('now','localtime'))`),
+  questionnaireData: text("questionnaire_data"),
+  createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
 });
 
 // ── 照片 ──
-export const photos = sqliteTable("photos", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const photos = pgTable("photos", {
+  id: serial("id").primaryKey(),
   tenantId: integer("tenant_id")
     .notNull()
     .references(() => tenants.id),
   memberId: integer("member_id")
     .notNull()
     .references(() => members.id),
-  photoType: text("photo_type").notNull().default("progress"), // body | posture | progress
+  photoType: text("photo_type").notNull().default("progress"),
   filePath: text("file_path").notNull(),
   takenAt: text("taken_at"),
   notes: text("notes"),
-  createdAt: text("created_at")
-    .notNull()
-    .default(sql`(datetime('now','localtime'))`),
+  createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
 });
 
 // ── 问卷提交记录 ──
-export const questionnaireSubmissions = sqliteTable("questionnaire_submissions", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const questionnaireSubmissions = pgTable("questionnaire_submissions", {
+  id: serial("id").primaryKey(),
   memberId: integer("member_id")
     .notNull()
     .references(() => members.id),
   tenantId: integer("tenant_id")
     .notNull()
     .references(() => tenants.id),
-  submittedAt: text("submitted_at")
-    .notNull()
-    .default(sql`(datetime('now','localtime'))`),
-  // ── 基本信息（real 类型）──
+  submittedAt: timestamp("submitted_at", { mode: "string" }).notNull().defaultNow(),
   age: real("age"),
   height: real("height"),
   weight: real("weight"),
   avgSleep: real("avg_sleep"),
-  // ── 问卷文本字段 ──
   name: text("name").notNull(),
   occupation: text("occupation"),
   workStatus: text("work_status"),
@@ -212,53 +185,45 @@ export const questionnaireSubmissions = sqliteTable("questionnaire_submissions",
 });
 
 // ── Portal 使用追踪 ──
-export const portalUsageLogs = sqliteTable("portal_usage_logs", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const portalUsageLogs = pgTable("portal_usage_logs", {
+  id: serial("id").primaryKey(),
   memberId: integer("member_id")
     .notNull()
     .references(() => members.id),
-  event: text("event").notNull(), // page_view | login | share | feedback
-  page: text("page"), // /portal, /portal/growth, etc.
+  event: text("event").notNull(),
+  page: text("page"),
   durationSeconds: integer("duration_seconds"),
-  createdAt: text("created_at")
-    .notNull()
-    .default(sql`(datetime('now','localtime'))`),
+  createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
 });
 
 // ── 会员 Session ──
-export const memberSessions = sqliteTable("member_sessions", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const memberSessions = pgTable("member_sessions", {
+  id: serial("id").primaryKey(),
   memberId: integer("member_id")
     .notNull()
     .references(() => members.id),
   token: text("token").notNull().unique(),
   expiresAt: text("expires_at").notNull(),
-  createdAt: text("created_at")
-    .notNull()
-    .default(sql`(datetime('now','localtime'))`),
+  createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
 });
 
 // ── 管理员 Session ──
-export const adminSessions = sqliteTable("admin_sessions", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const adminSessions = pgTable("admin_sessions", {
+  id: serial("id").primaryKey(),
   adminId: integer("admin_id")
     .notNull()
     .references(() => users.id),
   token: text("token").notNull().unique(),
   expiresAt: text("expires_at").notNull(),
-  createdAt: text("created_at")
-    .notNull()
-    .default(sql`(datetime('now','localtime'))`),
+  createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
 });
 
 // ── 短信验证码 ──
-export const smsCodes = sqliteTable("sms_codes", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const smsCodes = pgTable("sms_codes", {
+  id: serial("id").primaryKey(),
   phone: text("phone").notNull(),
   code: text("code").notNull(),
   used: integer("used").default(0),
   expiresAt: text("expires_at").notNull(),
-  createdAt: text("created_at")
-    .notNull()
-    .default(sql`(datetime('now','localtime'))`),
+  createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
 });

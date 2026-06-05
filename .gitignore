@@ -9,3 +9,4 @@ backup_*.tar.gz
 .DS_Store
 .next/
 .env.production
+.vercel

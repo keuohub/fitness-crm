@@ -1,0 +1,9 @@
+# 备份文件
+backup_sprint_42_stable.tar.gz
+
+# 所有 Markdown 报告文档（不影响运行）
+*.md
+!README.md
+
+# 开发工具
+.vscode/

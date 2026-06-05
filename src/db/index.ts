@@ -1,10 +1,14 @@
-import Database from "better-sqlite3";
-import { drizzle } from "drizzle-orm/better-sqlite3";
+import { Pool } from "pg";
+import { drizzle } from "drizzle-orm/node-postgres";
 import * as schema from "./schema";
 
-const sqlite = new Database("fitness.db");
+const DATABASE_URL = process.env.DATABASE_URL!;
+if (!DATABASE_URL) throw new Error("DATABASE_URL environment variable is required");
 
-sqlite.pragma("journal_mode = WAL");
-sqlite.pragma("foreign_keys = ON");
+const pool = new Pool({
+  connectionString: DATABASE_URL,
+  max: 1, // Neon free tier limitation
+  idleTimeoutMillis: 30000,
+});
 
-export const db = drizzle(sqlite, { schema });
+export const db = drizzle(pool, { schema });
