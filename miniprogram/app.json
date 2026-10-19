@@ -41,5 +41,6 @@
     "connectSocket": 10000
   },
   "style": "v2",
+  "lazyCodeLoading": "requiredComponents",
   "sitemapLocation": "sitemap.json"
 }
