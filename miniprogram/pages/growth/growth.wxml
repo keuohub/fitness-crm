@@ -1,0 +1,394 @@
+<wxs module="tools">
+module.exports = {
+  includes: function(arr, val) {
+    if (!arr) return false;
+    return arr.indexOf(val) !== -1;
+  }
+};
+</wxs>
+
+<view class="growth-page">
+
+  <!-- 加载态 -->
+  <view wx:if="{{loading}}" class="loading-view">
+    <text class="loading-text">正在加载你的成长足迹...</text>
+  </view>
+
+  <block wx:else>
+
+    <!-- ====== 模块一：问候与自律荣誉区 (严格避让微信右上角胶囊，对标 lululemon 高奢呼吸感排印) ====== -->
+    <view class="greeting-area stagger-1">
+      <view class="greeting-top-row">
+        <text class="greeting-salute">你好，</text>
+        <text class="greeting-name">{{memberName}}</text>
+      </view>
+      <view class="greeting-companion-lockup">
+        <view class="companion-tier-pill {{joinDays >= 365 ? 'tier-pill-gold' : ''}}">
+          <text class="companion-spark">✦</text>
+          <text class="companion-tier-title">{{joinDays >= 365 ? '资深自律挚友' : '身体掌权者'}}</text>
+        </view>
+        <view class="companion-divider"></view>
+        <view class="companion-days-box" wx:if="{{joinDays > 0}}">
+          <text class="companion-days-label">相伴自律</text>
+          <text class="companion-days-number">{{formattedDays}}</text>
+          <text class="companion-days-unit">天</text>
+        </view>
+        <view class="companion-days-box" wx:else>
+          <text class="companion-days-label">相伴自律启程之日</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- ====== 模块二：进阶轨迹 · 坚持不易的每一步激励 ====== -->
+    <view class="milestone-card stagger-2">
+      <view class="milestone-card-top">
+        <text class="section-title-inline">进阶轨迹 · 每一步坚持都有印记</text>
+        <text class="milestone-level-badge">{{stageName}}</text>
+      </view>
+      <view class="milestone-tags">
+        <view class="milestone-tag {{trainCount >= 1 ? 'tag-achieved' : 'tag-locked'}}">
+          觉知
+        </view>
+        <view class="milestone-tag {{trainCount >= 6 ? 'tag-achieved' : 'tag-locked'}}">
+          掌控
+        </view>
+        <view class="milestone-tag {{trainCount >= 21 ? 'tag-achieved' : 'tag-locked'}}">
+          掌权
+        </view>
+        <view class="milestone-tag {{trainCount >= 51 ? 'tag-achieved' : 'tag-locked'}}">
+          优雅
+        </view>
+      </view>
+      <view class="next-goal">
+        <text class="next-goal-value">
+          <block wx:if="{{trainCount < 6}}">坚持不易。再完成 {{6 - trainCount}} 次私教训练，迈入「身体掌控」进阶阶段</block>
+          <block wx:elif="{{trainCount < 21}}">渐入佳境。仅余 {{21 - trainCount}} 次私教训练，迈入「身体掌权」深层蜕变期</block>
+          <block wx:elif="{{trainCount < 51}}">自律已成习惯。仅余 {{51 - trainCount}} 次训练，晋升「终生优雅」卓越境界</block>
+          <block wx:else>自律已成骨骼，挺拔从容是你呼吸自带的底气</block>
+        </text>
+      </view>
+    </view>
+
+    <!-- ====== 模块三：核心自律资产双拼大卡 (摒弃6宫格，数据清晰不折行) ====== -->
+    <view class="stats-grid-dual stagger-3">
+      <view class="stat-card-dual">
+        <view class="stat-number-wrap">
+          <text class="stat-number">{{formattedDays}}</text>
+          <text class="stat-unit">天</text>
+        </view>
+        <text class="stat-label">相伴自律坚持</text>
+        <text class="stat-sub">深层体态觉察与蜕变</text>
+      </view>
+      <view class="stat-card-dual">
+        <view class="stat-number-wrap">
+          <text class="stat-number">{{trainCount || 0}}</text>
+          <text class="stat-unit">节</text>
+        </view>
+        <text class="stat-label">核心私教训练</text>
+        <text class="stat-sub">普拉提与体态精雕</text>
+      </view>
+    </view>
+
+    <!-- ====== 模块四：主理人私语 (简短温暖，拒绝堆砌) ====== -->
+    <view class="whisper-card stagger-4">
+      <view class="whisper-bar"></view>
+      <view class="whisper-content">
+        <text class="whisper-label">小桥私语</text>
+        <text class="whisper-title">{{whisperTitle}}</text>
+        <text class="whisper-body">{{whisperBody}}</text>
+        <text class="whisper-sign">— 小桥 · 亲笔</text>
+      </view>
+    </view>
+
+    <!-- ====== 模块五：你的身形变化（最直观的视觉刺激） ====== -->
+    <view class="section-block stagger-5">
+      <view class="section-head-flex">
+        <text class="section-title">你的身形变化</text>
+        <view class="share-pill-btn" bindtap="openShareModal">
+          <text class="share-pill-icon">✦</text>
+          <text class="share-pill-text">自律画报</text>
+        </view>
+      </view>
+
+      <!-- 一组数据都没有时显示温柔占位与生成海报按钮 -->
+      <view wx:if="{{!photoComparisons || photoComparisons.length === 0}}" class="empty-state">
+        <text class="empty-title">小桥正在为你收录专属体态蜕变 · 每一次自律都在重塑身姿</text>
+        <view class="empty-poster-btn" bindtap="openShareModal">
+          <text class="empty-poster-icon">📥</text>
+          <text class="empty-poster-text">生成自律档案海报并保存到相册</text>
+        </view>
+      </view>
+
+      <!-- 有对比数据 -->
+      <block wx:else>
+
+        <!-- 置顶：之前 → 现在（第一次 vs 最近一次） -->
+        <view wx:if="{{pinnedComparison}}" class="photo-compare-card pinned-compare-card">
+          <view class="photo-compare-dates">
+            <text class="photo-date-label">蜕变前</text>
+            <text class="photo-arrow">→</text>
+            <text class="photo-date-label">当下身形</text>
+            <text class="compare-badge">初次定格 · 当下沉淀</text>
+            <view class="share-trigger-btn" bindtap="openShareModal" data-item="{{pinnedComparison}}">
+              <text class="share-trigger-icon">✦</text> 画报分享
+            </view>
+          </view>
+          <view class="photo-compare-pair">
+            <image
+              class="photo-compare-img"
+              src="{{pinnedComparison.photo1_url}}"
+              mode="aspectFill"
+              data-src="{{pinnedComparison.photo1_url}}"
+              data-p1="{{pinnedComparison.photo1_url}}"
+              data-p2="{{pinnedComparison.photo2_url}}"
+              bindtap="previewPhoto"
+            />
+            <image
+              class="photo-compare-img"
+              src="{{pinnedComparison.photo2_url}}"
+              mode="aspectFill"
+              data-src="{{pinnedComparison.photo2_url}}"
+              data-p1="{{pinnedComparison.photo1_url}}"
+              data-p2="{{pinnedComparison.photo2_url}}"
+              bindtap="previewPhoto"
+            />
+          </view>
+          <text wx:if="{{pinnedComparison.analysis}}" class="photo-analysis">{{pinnedComparison.analysis}}</text>
+        </view>
+
+        <!-- 角度切换：正面 · 侧面 · 背面 -->
+        <view class="angle-tabs">
+          <view
+            wx:for="{{angleTabs}}"
+            wx:key="key"
+            class="angle-tab-item {{selectedAngle === item.key ? 'angle-tab-active' : ''}}"
+            data-angle="{{item.key}}"
+            bindtap="switchAngle"
+          >
+            {{item.label}}
+          </view>
+        </view>
+
+        <!-- 历史对比：按时间倒序，能一直往下加 -->
+        <block wx:if="{{historyComparisons.length > 0}}">
+          <view wx:for="{{historyComparisons}}" wx:key="id" class="photo-compare-card">
+            <view class="photo-compare-dates">
+              <text class="photo-date-label">蜕变前</text>
+              <text class="photo-arrow">→</text>
+              <text class="photo-date-label">当下身形</text>
+              <view class="share-trigger-btn" bindtap="openShareModal" data-item="{{item}}">
+                <text class="share-trigger-icon">✦</text> 画报分享
+              </view>
+            </view>
+            <view class="photo-compare-pair">
+              <image
+                class="photo-compare-img"
+                src="{{item.photo1_url}}"
+                mode="aspectFill"
+                data-src="{{item.photo1_url}}"
+                data-p1="{{item.photo1_url}}"
+                data-p2="{{item.photo2_url}}"
+                bindtap="previewPhoto"
+              />
+              <image
+                class="photo-compare-img"
+                src="{{item.photo2_url}}"
+                mode="aspectFill"
+                data-src="{{item.photo2_url}}"
+                data-p1="{{item.photo1_url}}"
+                data-p2="{{item.photo2_url}}"
+                bindtap="previewPhoto"
+              />
+            </view>
+            <text wx:if="{{item.analysis}}" class="photo-analysis">{{item.analysis}}</text>
+          </view>
+        </block>
+
+        <!-- 当前角度无历史对比且无置顶时占位 -->
+        <view wx:elif="{{!pinnedComparison}}" class="empty-state">
+          <text class="empty-title">该视角体态定格记录沉淀中 · 每一次自律都在重塑身形</text>
+        </view>
+
+      </block>
+    </view>
+
+    <!-- ====== 模块五：最近训练记录 ====== -->
+    <view class="section-block stagger-5">
+      <text class="section-title">雕塑足迹 · 每一节都在沉淀从容</text>
+      <view wx:if="{{recentTrainings.length > 0}}" class="training-list">
+        <view wx:for="{{recentTrainings}}" wx:key="id" class="training-card-luxury">
+          <view class="training-card-header">
+            <text class="training-date">{{item.date}}</text>
+            <text class="course-category-badge {{item.badgeClass}}">{{item.category}}</text>
+            <text class="training-duration" wx:if="{{item.duration}}">{{item.duration}}</text>
+          </view>
+          <text class="training-course-name">{{item.type}}</text>
+          <view class="training-focus-row" wx:if="{{item.focusArea}}">
+            <text class="focus-icon">✦</text>
+            <text class="focus-label">重点部位：</text>
+            <text class="focus-val">{{item.focusArea}}</text>
+          </view>
+        </view>
+      </view>
+      <view wx:else class="empty-state training-empty-state">
+        <view class="empty-icon-wrap">
+          <text class="empty-icon">✦</text>
+        </view>
+        <text class="empty-title">静候你的首次开练记录</text>
+        <text class="empty-desc">每一次普拉提大器械、一对一私教或维密塑形，小桥都会在此为你沉淀课时与重点雕塑部位。</text>
+      </view>
+    </view>
+
+    <!-- ====== 模块六：今日私享便签 ====== -->
+    <view class="section-block stagger-6">
+      <view class="feeling-section-head">
+        <text class="section-title">今日私享便签</text>
+        <text class="feeling-hint">直达小桥后台 · 双向倾听</text>
+      </view>
+
+      <!-- 快捷体感标签胶囊 -->
+      <view class="feeling-tags-wrapper">
+        <view
+          wx:for="{{feelingTags}}"
+          wx:key="*this"
+          class="feeling-tag-pill {{tools.includes(selectedFeelingTags, item) ? 'feeling-tag-active' : ''}}"
+          bindtap="toggleFeelingTag"
+          data-tag="{{item}}"
+        >
+          #{{item}}
+        </view>
+      </view>
+
+      <textarea
+        class="textarea-field"
+        value="{{feeling}}"
+        placeholder="跟小桥说说：今天练完身体感觉怎么样？哪里舒展了，或者有什么想交流的..."
+        bindinput="onFeelingInput"
+        maxlength="500"
+      />
+      <view class="feeling-footer">
+        <view class="feeling-privacy-badge">
+          <text class="privacy-lock">🔒</text>
+          <text class="privacy-text">便签仅你与教练可见 · 小桥会认真阅读并回复</text>
+        </view>
+        <button
+          class="btn-primary btn-submit-feeling"
+          bindtap="submitFeeling"
+          disabled="{{feelingSubmitting || feeling === ''}}"
+        >
+          {{feelingSubmitting ? "发送中..." : "发给小桥"}}
+        </button>
+      </view>
+      <view wx:if="{{feelingReply}}" class="reply-card">
+        <view class="reply-card-header">
+          <text class="reply-label">小桥回音 · 亲笔</text>
+          <text class="reply-badge">已收入手札</text>
+        </view>
+        <text class="reply-text">{{feelingReply}}</text>
+      </view>
+    </view>
+
+  </block>
+</view>
+
+<!-- ====== 画报级体态美学分享卡 弹窗 ====== -->
+<view class="share-modal-mask" wx:if="{{showShareModal}}" bindtap="closeShareModal">
+  <!-- 右上角常驻悬浮关闭按钮：任何时候一触即关 -->
+  <view class="modal-float-close" catchtap="closeShareModal">✕</view>
+
+  <!-- 纵向滚动容器：无论文字多长都可以上下丝滑滑动 -->
+  <scroll-view scroll-y class="share-modal-scroll" enhanced show-scrollbar="{{false}}">
+    <view class="share-modal-container" bindtap="closeShareModal">
+      <view class="poster-card" catchtap="noop">
+        <view class="poster-brand">
+          <text class="poster-brand-en">身 体 掌 权 · 终 生 优 雅</text>
+          <text class="poster-brand-cn">徕舞 · 私人体态美学档案</text>
+        </view>
+
+        <view class="poster-member-info">
+          <text class="poster-member-title">{{memberName}} · 身体掌权者</text>
+          <text class="poster-member-days">相伴自律 {{joinDays}} 天</text>
+        </view>
+
+        <!-- 仅当有真实对比图时呈现对比图，未拍照会员严禁做假图 -->
+        <view class="poster-compare-pair" wx:if="{{shareComparison && shareComparison.photo1_url && shareComparison.photo2_url}}">
+          <view class="poster-img-box">
+            <image class="poster-img" src="{{shareComparison.photo1_url}}" mode="aspectFill" />
+            <text class="poster-tag">初见 · 蜕变前</text>
+          </view>
+          <view class="poster-img-box">
+            <image class="poster-img" src="{{shareComparison.photo2_url}}" mode="aspectFill" />
+            <text class="poster-tag">当下 · 新生后</text>
+          </view>
+        </view>
+        <!-- 无对比图时的高奢自律徽章（纯净真实，绝不放假图） -->
+        <view class="poster-no-photo-badge" wx:else>
+          <view class="poster-badge-icon">✦</view>
+          <text class="poster-badge-title">身 心 觉 察 · 终 生 自 律</text>
+          <text class="poster-badge-sub">累计完成 {{trainCount || 0}} 次核心训练 · 岁月不负自律</text>
+        </view>
+
+        <view class="poster-analysis-box" wx:if="{{shareComparison && shareComparison.analysis}}">
+          <text class="poster-quote">“</text>
+          <text class="poster-analysis">{{shareComparison.analysis}}</text>
+        </view>
+        <view class="poster-analysis-box" wx:else>
+          <text class="poster-quote">“</text>
+          <text class="poster-analysis">锁骨舒展，骨盆中立回弹，自带松弛挺拔的大女主气场。</text>
+        </view>
+
+        <view class="poster-footer">
+          <view class="poster-footer-left">
+            <text class="poster-sign">小桥 · 专属私教手札</text>
+            <text class="poster-slogan">自律成骨骼，岁月即礼赞</text>
+          </view>
+          <view class="poster-stamp">
+            <text class="poster-stamp-inner">徕舞\n私享</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 预留底部吸底操作栏高度，让卡片内容可以完整滑出 -->
+      <view class="poster-scroll-bottom-spacer"></view>
+    </view>
+  </scroll-view>
+
+  <!-- 底部固定吸底操作栏：无论何时何地，保存按钮永远悬浮在屏幕最底端，一眼可见！ -->
+  <view class="poster-fixed-bottom" catchtap="noop">
+    <button class="poster-btn-primary" bindtap="savePosterToAlbum" loading="{{savingPoster}}">
+      📥 保存海报到手机相册
+    </button>
+    <view class="poster-bottom-subrow">
+      <button class="poster-btn-secondary" open-type="share">
+        💬 分享给微信好友
+      </button>
+      <view class="poster-btn-close-pill" bindtap="closeShareModal">
+        ✕ 关闭
+      </view>
+    </view>
+  </view>
+</view>
+
+<!-- 离屏海报绘制画布 (用于生成保存到相册的高清图片) -->
+<canvas type="2d" id="posterCanvas" class="poster-canvas-hidden"></canvas>
+
+<!-- ====== 全屏开屏 ======
+     必须放在 .growth-page 之外。
+     .growth-page 带进场动画（transform），会让内部的 position: fixed
+     以它为参照物，全屏层被撑成整页高度，内容就掉到屏幕下方去了。 -->
+<view class="splash-screen {{splashFadeOut ? 'splash-fade-out' : ''}}" wx:if="{{showSplash}}" catchtouchmove="noop">
+  <view class="splash-center">
+    <!-- 高奢衬线品牌拼音：置于「到徕舞」正上方 -->
+    <text class="splash-brand-luxury">L A I W U</text>
+    <view class="splash-brand-line"></view>
+
+    <!-- 核心文案 -->
+    <text class="splash-sub">到徕舞</text>
+    <text class="splash-main">一起</text>
+    <text class="splash-main">好状态</text>
+
+    <!-- 唯一交互入口 -->
+    <view class="splash-cta" bindtap="skipSplash">即刻开启</view>
+  </view>
+</view>
+

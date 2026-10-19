@@ -71,34 +71,34 @@ export default async function MemberDetail({ params }: Props) {
   const hasQuestionnaire = latestQuestionnaire !== undefined;
 
   return (
-    <main className="min-h-screen bg-[#FAF7F2] text-[#3E2723]">
+    <main className="min-h-screen bg-[#FAFAFA] text-[#1A1A1A]">
       <div className="max-w-4xl mx-auto px-6 py-6">
         {/* ═══ 面包屑 ═══ */}
         <div className="mb-6">
-          <Link href="/" className="text-sm text-[#9E8E7E] hover:text-[#3E2723] hover:underline transition-colors">
+          <Link href="/" className="text-sm text-[#9E9E9E] hover:text-[#1A1A1A] hover:underline transition-colors">
             ← 返回会员列表
           </Link>
         </div>
 
         {/* ═══ 头部信息卡 ═══ */}
-        <div className="bg-white rounded-2xl border border-[#E8E0D5] p-5 mb-6">
+        <div className="bg-white rounded-xl border border-[#E5E5E5] p-5 mb-6">
           <div className="flex items-start justify-between">
             <div className="min-w-0">
               <h1 className="text-2xl font-serif font-bold">{member.name}</h1>
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-sm text-[#9E8E7E]">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-sm text-[#9E9E9E]">
                 {member.phone && <span>{member.phone}</span>}
-                {member.phone && <span className="text-[#E8E0D5]">|</span>}
+                {member.phone && <span className="text-[#E5E5E5]">|</span>}
                 <span>编号 {member.memberCode || `#${member.id}`}</span>
-                <span className="text-[#E8E0D5]">|</span>
+                <span className="text-[#E5E5E5]">|</span>
                 <span>{statusLabel(member.status)}</span>
                 {member.tags && (
                   <>
-                    <span className="text-[#E8E0D5]">|</span>
+                    <span className="text-[#E5E5E5]">|</span>
                     <span>{member.tags}</span>
                   </>
                 )}
                 {member.freezeStatus === "frozen" && (
-                  <span className="text-xs bg-[#8B5E3C]/10 text-[#8B5E3C] px-1.5 py-0.5 rounded">
+                  <span className="text-xs bg-[#1A1A1A]/10 text-[#1A1A1A] px-1.5 py-0.5 rounded">
                     冻结中
                   </span>
                 )}

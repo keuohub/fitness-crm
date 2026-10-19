@@ -41,12 +41,12 @@ export default function MemberStoryCard({ memberName, memberId, joinedAt }: Prop
       animate={{ opacity: 1, y: 0 }}
       className="rounded-[2rem] p-6"
       style={{
-        background: "linear-gradient(160deg, #FFFFFF 0%, #FDF9F5 60%, #F7F1EA 100%)",
+        background: "linear-gradient(160deg, #FFFFFF 0%, #FAFAFA 60%, #F7F1EA 100%)",
         boxShadow: "0 4px 20px rgba(62,39,35,0.05)",
       }}
     >
-      <p className="text-xs font-bold text-[#3E2723] mb-4">成长故事</p>
-      <p className="text-xs text-[#9E8E7E] mb-4">
+      <p className="text-xs font-bold text-[#1A1A1A] mb-4">成长故事</p>
+      <p className="text-xs text-[#9E9E9E] mb-4">
         将 {memberName} 的成长经历记录下来，为其他会员提供参考。
       </p>
 
@@ -56,7 +56,7 @@ export default function MemberStoryCard({ memberName, memberId, joinedAt }: Prop
           onChange={(e) => setQuote(e.target.value)}
           placeholder="会员引用语..."
           rows={2}
-          className="w-full px-4 py-3 rounded-xl bg-[#FAF7F2] text-sm text-[#3E2723] placeholder-[#9E8E7E] outline-none resize-none"
+          className="w-full px-4 py-3 rounded-xl bg-[#FAFAFA] text-sm text-[#1A1A1A] placeholder-[#9E9E9E] outline-none resize-none"
           style={{ border: `1px solid ${COLORS.border}` }}
         />
         <textarea
@@ -64,7 +64,7 @@ export default function MemberStoryCard({ memberName, memberId, joinedAt }: Prop
           onChange={(e) => setObservation(e.target.value)}
           placeholder="教练观察..."
           rows={2}
-          className="w-full px-4 py-3 rounded-xl bg-[#FAF7F2] text-sm text-[#3E2723] placeholder-[#9E8E7E] outline-none resize-none"
+          className="w-full px-4 py-3 rounded-xl bg-[#FAFAFA] text-sm text-[#1A1A1A] placeholder-[#9E9E9E] outline-none resize-none"
           style={{ border: `1px solid ${COLORS.border}` }}
         />
       </div>

@@ -1,4 +1,4 @@
-import { db } from "@/db";
+import { db, rawSql } from "@/db";
 import { members, trainings } from "@/db/schema";
 import { sql } from "drizzle-orm";
 import Link from "next/link";
@@ -84,19 +84,34 @@ export default async function AdminPage() {
     }
   }
 
+  // 最新会员心声便签 (小桥来信互动)
+  let recentFeelings: any[] = [];
+  try {
+    recentFeelings = await rawSql`
+      SELECT tf.id, tf.member_id, tf.feeling, tf.xiaoqiao_reply, tf.created_at,
+             m.name as member_name, m.portal_code
+        FROM training_feelings tf
+        LEFT JOIN members m ON m.id = tf.member_id
+       ORDER BY tf.created_at DESC
+       LIMIT 6
+    `;
+  } catch (err) {
+    console.error("fetch recentFeelings error:", err);
+  }
+
   return (
-    <main style={{ background: "#FAF7F2", minHeight: "100vh", padding: "40px 24px" }}>
+    <main style={{ background: "#FAFAFA", minHeight: "100vh", padding: "40px 24px" }}>
       <div style={{ maxWidth: 960, margin: "0 auto" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: "#3E2723" }}>CRM 首页</h1>
-          <Link href="/members" style={{ fontSize: 14, color: "#8B5E3C", fontWeight: 500, textDecoration: "none" }}>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: "#1A1A1A" }}>CRM 首页</h1>
+          <Link href="/members" style={{ fontSize: 14, color: "#1A1A1A", fontWeight: 500, textDecoration: "none" }}>
             会员列表 →
           </Link>
         </div>
 
         {anniversaries.length > 0 && (
           <div style={{ marginBottom: 32 }}>
-            <p style={{ fontSize: 13, fontWeight: 600, color: "#8B5E3C", marginBottom: 12, textTransform: "uppercase", letterSpacing: 1 }}>
+            <p style={{ fontSize: 13, fontWeight: 600, color: "#1A1A1A", marginBottom: 12, textTransform: "uppercase", letterSpacing: 1 }}>
               本周纪念会员
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -108,10 +123,10 @@ export default async function AdminPage() {
                     textDecoration: "none", boxShadow: "0 1px 3px rgba(0,0,0,0.03)"
                   }}>
                   <div>
-                    <span style={{ fontWeight: 600, fontSize: 15, color: "#3E2723" }}>{a.memberName}</span>
-                    <span style={{ fontSize: 12, color: "#9E8E7E", marginLeft: 10 }}>{a.days}天 · {a.level}</span>
+                    <span style={{ fontWeight: 600, fontSize: 15, color: "#1A1A1A" }}>{a.memberName}</span>
+                    <span style={{ fontSize: 12, color: "#9E9E9E", marginLeft: 10 }}>{a.days}天 · {a.level}</span>
                   </div>
-                  <span style={{ fontSize: 12, color: "#8B5E3C", fontWeight: 500 }}>加入于 {a.joinedAt?.slice(0, 10)}</span>
+                  <span style={{ fontSize: 12, color: "#1A1A1A", fontWeight: 500 }}>加入于 {a.joinedAt?.slice(0, 10)}</span>
                 </Link>
               ))}
             </div>
@@ -132,8 +147,8 @@ export default async function AdminPage() {
                     textDecoration: "none", border: "1px solid #FCE4EC"
                   }}>
                   <div>
-                    <span style={{ fontWeight: 600, fontSize: 15, color: "#3E2723" }}>{c.memberName}</span>
-                    <span style={{ fontSize: 12, color: "#9E8E7E", marginLeft: 10 }}>
+                    <span style={{ fontWeight: 600, fontSize: 15, color: "#1A1A1A" }}>{c.memberName}</span>
+                    <span style={{ fontSize: 12, color: "#9E9E9E", marginLeft: 10 }}>
                       {c.lastTrainingDate ? `最近训练 ${c.lastTrainingDate}` : "暂无训练记录"}
                     </span>
                   </div>
@@ -144,20 +159,63 @@ export default async function AdminPage() {
           </div>
         )}
 
+        {/* ─── 最新会员心声便签 (小桥来信互动) ─── */}
+        <div style={{ marginBottom: 32 }}>
+          <p style={{ fontSize: 13, fontWeight: 600, color: "#8B5E3C", marginBottom: 12, textTransform: "uppercase", letterSpacing: 1 }}>
+            最新会员心声 · 小桥来信互动
+          </p>
+          {recentFeelings.length === 0 ? (
+            <div style={{ background: "#FAFAFA", borderRadius: 10, padding: "16px", border: "1px dashed #E5E5E5", color: "#9E9E9E", fontSize: 13 }}>
+              暂无最新会员便签提交
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {recentFeelings.map((f: any) => (
+                <Link key={f.id} href={`/members/${f.member_id}`}
+                  style={{
+                    background: "#FFFFFF", borderRadius: 10, padding: "14px 18px",
+                    display: "flex", flexDirection: "column", gap: 6,
+                    textDecoration: "none", border: "1px solid #E5E5E5", boxShadow: "0 1px 3px rgba(0,0,0,0.02)"
+                  }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ fontWeight: 600, fontSize: 15, color: "#1A1A1A" }}>
+                      {f.member_name || "会员"}
+                      <span style={{ fontSize: 11, color: "#8B5E3C", background: "#FAF5F0", padding: "2px 6px", borderRadius: 4, marginLeft: 8 }}>
+                        {f.portal_code || ""}
+                      </span>
+                    </span>
+                    <span style={{ fontSize: 12, color: "#9E9E9E" }}>
+                      {f.created_at ? String(f.created_at).slice(0, 16) : ""}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: 13, color: "#4A4A4A", margin: 0 }}>
+                    <strong style={{ color: "#1A1A1A" }}>会员留言：</strong>{f.feeling}
+                  </p>
+                  {f.xiaoqiao_reply && (
+                    <p style={{ fontSize: 12, color: "#8B5E3C", margin: 0, background: "#FAF5F0", padding: "6px 10px", borderRadius: 6 }}>
+                      <strong>小桥回信：</strong>{f.xiaoqiao_reply}
+                    </p>
+                  )}
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 24 }}>
           <Link href="/members" style={{
             background: "#FFFFFF", padding: "12px 24px", borderRadius: 10,
-            fontSize: 14, color: "#3E2723", fontWeight: 500, textDecoration: "none",
+            fontSize: 14, color: "#1A1A1A", fontWeight: 500, textDecoration: "none",
             boxShadow: "0 1px 3px rgba(0,0,0,0.04)"
           }}>全部会员</Link>
           <Link href="/admin/sync" style={{
             background: "#FFFFFF", padding: "12px 24px", borderRadius: 10,
-            fontSize: 14, color: "#3E2723", fontWeight: 500, textDecoration: "none",
+            fontSize: 14, color: "#1A1A1A", fontWeight: 500, textDecoration: "none",
             boxShadow: "0 1px 3px rgba(0,0,0,0.04)"
           }}>飞书同步</Link>
           <Link href="/admin/usage" style={{
             background: "#FFFFFF", padding: "12px 24px", borderRadius: 10,
-            fontSize: 14, color: "#3E2723", fontWeight: 500, textDecoration: "none",
+            fontSize: 14, color: "#1A1A1A", fontWeight: 500, textDecoration: "none",
             boxShadow: "0 1px 3px rgba(0,0,0,0.04)"
           }}>运营数据</Link>
         </div>

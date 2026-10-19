@@ -23,11 +23,11 @@ export default function BadgeCard({ badges }: { badges: Badge[] }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, delay: 0.1, ease: "easeOut" }}
       className="rounded-3xl p-6 bg-white"
-      style={{ border: "1px solid #E8E0D5" }}
+      style={{ border: "1px solid #E5E5E5" }}
     >
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-serif text-base text-[#3E2723]">成长勋章</h3>
-        <span className="text-xs text-[#9E8E7E]">
+        <h3 className="font-serif text-base text-[#1A1A1A]">成长勋章</h3>
+        <span className="text-xs text-[#9E9E9E]">
           {unlocked.length}/{badges.length} 已解锁
         </span>
       </div>
@@ -43,23 +43,23 @@ export default function BadgeCard({ badges }: { badges: Badge[] }) {
               transition={{ duration: 0.25, delay: 0.05 * i }}
               className={`flex flex-col items-center text-center gap-1 p-2 rounded-xl transition-all ${
                 badge.unlocked
-                  ? "bg-[#8B5E3C]/5"
-                  : "opacity-40 grayscale bg-[#FAF7F2]"
+                  ? "bg-[#1A1A1A]/5"
+                  : "opacity-40 grayscale bg-[#FAFAFA]"
               }`}
             >
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-serif font-bold ${
                   badge.unlocked
-                    ? "bg-[#8B5E3C] text-white"
-                    : "bg-[#E8E0D5] text-[#9E8E7E]"
+                    ? "bg-[#1A1A1A] text-white"
+                    : "bg-[#E5E5E5] text-[#9E9E9E]"
                 }`}
               >
                 {initial}
               </div>
-              <span className={`text-[10px] font-medium leading-tight ${badge.unlocked ? "text-[#3E2723]" : "text-[#9E8E7E]"}`}>
+              <span className={`text-[10px] font-medium leading-tight ${badge.unlocked ? "text-[#1A1A1A]" : "text-[#9E9E9E]"}`}>
                 {badge.name}
               </span>
-              <span className="text-[9px] text-[#9E8E7E] leading-tight hidden sm:block">
+              <span className="text-[9px] text-[#9E9E9E] leading-tight hidden sm:block">
                 {badge.description}
               </span>
             </motion.div>

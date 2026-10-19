@@ -21,7 +21,7 @@ const PILLARS = [
 
 export default function StudioSection() {
   return (
-    <section id="studio" className="max-w-5xl mx-auto px-5 sm:px-8 md:px-12 py-40 md:py-48 bg-white">
+    <section id="studio" className="max-w-5xl mx-auto px-4 sm:px-6 md:px-8 py-16 sm:py-20 md:py-24">
       <motion.div
         {...MICRO.scrollReveal}
         variants={fadeUp}
@@ -35,10 +35,10 @@ export default function StudioSection() {
         >
           普拉提 · 瑜伽 · 减脂管理 · 女性力量训练
         </p>
-        <h2 className="text-4xl sm:text-5xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15] mb-4">
+        <h2 className="text-2xl sm:text-3xl font-normal text-[#1A1A1A] tracking-normal mb-4">
           在安静中专注
         </h2>
-        <p className="text-sm text-[#6E6E73] max-w-[34em] mx-auto leading-[1.7]">
+        <p className="text-sm text-[#4A4A4A] max-w-prose mx-auto leading-[1.7]">
           不追求热闹，只追求专注。这里是训练的空间，也是与自己相处的空间。
         </p>
       </motion.div>
@@ -52,10 +52,10 @@ export default function StudioSection() {
             initial="hidden"
             whileInView="visible"
           >
-            <h3 className="text-lg font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15] mb-4">
+            <h3 className="text-lg font-semibold text-[#1A1A1A] tracking-normal mb-4">
               {p.title}
             </h3>
-            <p className="text-sm text-[#3E2723] leading-[1.7] max-w-[34em]">
+            <p className="text-sm text-[#1A1A1A] leading-[1.7] max-w-prose">
               {p.desc}
             </p>
           </motion.div>
@@ -67,7 +67,7 @@ export default function StudioSection() {
         variants={fadeUp}
         initial="hidden"
         whileInView="visible"
-        className="text-center text-sm text-[#6E6E73] max-w-[34em] mx-auto mt-20 leading-[1.7]"
+        className="text-center text-sm text-[#4A4A4A] max-w-prose mx-auto mt-20 leading-[1.7]"
       >
         服务女性会员、教练与工作室经营者。
         同时为女性运动工作室提供课程体系、教练培训、门店运营与知识服务支持。

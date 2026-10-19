@@ -20,7 +20,7 @@ export default function GlassCard({ children, className = "", hover = true, padd
       transition={{ duration: 0.15 }}
       className={`rounded-3xl ${paddings[padding]} ${className} ${onClick ? "cursor-pointer select-none" : ""}`}
       style={{
-        background: "linear-gradient(135deg, #FDF9F5 0%, rgba(255,255,255,0.95) 100%)",
+        background: "linear-gradient(135deg, #FAFAFA 0%, rgba(255,255,255,0.95) 100%)",
         boxShadow: "0 2px 16px rgba(62,39,35,0.05)",
         backdropFilter: "blur(4px)",
       }}

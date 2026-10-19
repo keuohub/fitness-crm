@@ -24,10 +24,10 @@ export default function UsageDashboard() {
   }, [days]);
 
   return (
-    <main className="min-h-screen bg-[#FAF7F2] text-[#3E2723] p-6">
+    <main className="min-h-screen bg-[#FAFAFA] text-[#1A1A1A] p-6">
       <div className="max-w-lg mx-auto">
         <div className="mb-6">
-          <Link href="/admin/sync" className="text-sm text-[#9E8E7E] hover:underline">
+          <Link href="/admin/sync" className="text-sm text-[#9E9E9E] hover:underline">
             -- 返回管理面板
           </Link>
         </div>
@@ -41,7 +41,7 @@ export default function UsageDashboard() {
               className="px-3 py-1 text-xs rounded-full transition-colors"
               style={{
                 backgroundColor: days === d ? COLORS.primary : "#EDE8E2",
-                color: days === d ? "#fff" : "#3E2723",
+                color: days === d ? "#fff" : "#1A1A1A",
               }}
             >
               近{d}天
@@ -50,7 +50,7 @@ export default function UsageDashboard() {
         </div>
 
         {!summary ? (
-          <div className="text-center py-12 text-sm text-[#9E8E7E]">加载中...</div>
+          <div className="text-center py-12 text-sm text-[#9E9E9E]">加载中...</div>
         ) : (
           <div className="space-y-6">
             <div className="grid grid-cols-2 gap-3">
@@ -62,27 +62,27 @@ export default function UsageDashboard() {
               ].map((item) => (
                 <div
                   key={item.label}
-                  className="bg-white rounded-2xl p-5 text-center"
-                  style={{ boxShadow: "0 2px 12px rgba(62,39,35,0.04)" }}
+                  className="bg-white rounded-xl p-5 text-center"
+                  style={{ boxShadow: "none" }}
                 >
                   <p className="text-2xl font-serif font-bold" style={{ color: COLORS.primary }}>
                     {item.value}
                   </p>
-                  <p className="text-xs text-[#9E8E7E] mt-1">{item.label}</p>
+                  <p className="text-xs text-[#9E9E9E] mt-1">{item.label}</p>
                 </div>
               ))}
             </div>
 
-            <div className="bg-white rounded-2xl p-6" style={{ boxShadow: "0 2px 12px rgba(62,39,35,0.04)" }}>
-              <p className="text-sm font-bold text-[#3E2723] mb-4">热门页面</p>
+            <div className="bg-white rounded-xl p-6" style={{ boxShadow: "none" }}>
+              <p className="text-sm font-bold text-[#1A1A1A] mb-4">热门页面</p>
               {summary.topPages.length === 0 ? (
-                <p className="text-sm text-[#9E8E7E]">暂无数据</p>
+                <p className="text-sm text-[#9E9E9E]">暂无数据</p>
               ) : (
                 <div className="space-y-2">
                   {summary.topPages.map((p) => (
                     <div key={p.page} className="flex items-center justify-between text-sm">
-                      <span className="text-[#3E2723]">{p.page}</span>
-                      <span className="text-xs text-[#9E8E7E]">{p.count} 次</span>
+                      <span className="text-[#1A1A1A]">{p.page}</span>
+                      <span className="text-xs text-[#9E9E9E]">{p.count} 次</span>
                     </div>
                   ))}
                 </div>

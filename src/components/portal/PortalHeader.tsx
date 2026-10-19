@@ -44,17 +44,17 @@ export default function PortalHeader({ title, showBack }: Props) {
         {showBack && !isHome && (
           <button
             onClick={() => router.back()}
-            className="w-9 h-9 flex items-center justify-center rounded-full bg-white/60 backdrop-blur-sm flex-shrink-0"
+            className="w-9 h-9 flex items-center justify-center rounded-full bg-white/60  flex-shrink-0"
             style={{ boxShadow: "0 2px 8px rgba(62,39,35,0.06)" }}
           >
-            <ChevronLeft size={18} className="text-[#3E2723]" />
+            <ChevronLeft size={18} className="text-[#1A1A1A]" />
           </button>
         )}
 
         {/* Avatar */}
         <div
           className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-serif flex-shrink-0"
-          style={{ backgroundColor: "rgba(139,94,60,0.12)", color: "#8B5E3C" }}
+          style={{ backgroundColor: "rgba(139,94,60,0.12)", color: "#1A1A1A" }}
         >
           {initial}
         </div>
@@ -62,19 +62,19 @@ export default function PortalHeader({ title, showBack }: Props) {
         {/* Info */}
         <div className="min-w-0 flex-1">
           {title ? (
-            <p className="text-sm font-bold text-[#3E2723] truncate">{title}</p>
+            <p className="text-sm font-bold text-[#1A1A1A] truncate">{title}</p>
           ) : (
-            <p className="text-sm font-bold text-[#3E2723] truncate">
+            <p className="text-sm font-bold text-[#1A1A1A] truncate">
               {greeting}，{member.memberName}
             </p>
           )}
           {isHome && !title && (
-            <p className="text-xs text-[#9E8E7E]">
+            <p className="text-xs text-[#9E9E9E]">
               {days > 0 ? `第 ${days} 天` : "欢迎加入徕舞"}
             </p>
           )}
           {!isHome && (
-            <p className="text-xs text-[#9E8E7E]">
+            <p className="text-xs text-[#9E9E9E]">
               {days > 0 ? `${days} 天陪伴` : ""}
             </p>
           )}
@@ -82,13 +82,13 @@ export default function PortalHeader({ title, showBack }: Props) {
 
         {/* Level capsule */}
         <div
-          className="flex items-center gap-1.5 bg-white/60 backdrop-blur-sm rounded-full px-3 py-1.5 flex-shrink-0"
+          className="flex items-center gap-1.5 bg-white/60  rounded-full px-3 py-1.5 flex-shrink-0"
           style={{ boxShadow: "0 2px 8px rgba(62,39,35,0.04)" }}
         >
-          <span className="text-xs font-bold" style={{ color: "#8B5E3C" }}>
+          <span className="text-xs font-bold" style={{ color: "#1A1A1A" }}>
             Lv.{level.level}
           </span>
-          <span className="text-[10px] text-[#9E8E7E]">{level.title}</span>
+          <span className="text-[10px] text-[#9E9E9E]">{level.title}</span>
         </div>
       </div>
     </header>

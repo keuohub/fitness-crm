@@ -13,6 +13,10 @@ interface Photo {
 }
 
 const typeLabelMap: Record<string, string> = {
+  front: "正面",
+  side: "侧面",
+  back: "背面",
+  // 旧数据兼容
   body: "体型",
   posture: "体态",
   progress: "进度",
@@ -34,6 +38,11 @@ export default function PhotoList() {
     type: string;
     photos: [Photo, Photo];
   } | null>(null);
+
+  // 写给会员看的变化说明 + 保存状态
+  const [analysis, setAnalysis] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [savedMsg, setSavedMsg] = useState("");
 
   useEffect(() => {
     Promise.all([
@@ -114,15 +123,46 @@ export default function PhotoList() {
     setCompareMode(false);
     setSelectedIds(new Set());
     setCompareView(null);
+    setAnalysis("");
+    setSavedMsg("");
   };
 
   const canCompare = (type: string) => (groups[type] || []).length >= 2;
 
+  // 保存这组对比：左侧=之前，右侧=现在，会员端会按时间倒序看到
+  const saveComparison = async () => {
+    if (!compareView) return;
+    setSaving(true);
+    setSavedMsg("");
+    try {
+      const res = await fetch("/api/admin/photo-compare", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          memberId,
+          photoId1: compareView.photos[0].id,
+          photoId2: compareView.photos[1].id,
+          analysis,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSavedMsg("已保存，会员端现在能看到这组对比了");
+        setAnalysis("");
+      } else {
+        setSavedMsg(data.error || "保存失败");
+      }
+    } catch {
+      setSavedMsg("保存失败，请重试");
+    }
+    setSaving(false);
+  };
+
   return (
-    <main className="min-h-screen bg-[#FAF7F2] text-[#3E2723] p-6">
+    <main className="min-h-screen bg-[#FAFAFA] text-[#1A1A1A] p-6">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-6">
-          <Link href={`/members/${memberId}`} className="text-sm text-[#9E8E7E] hover:underline">
+          <Link href={`/members/${memberId}`} className="text-sm text-[#9E9E9E] hover:underline">
             ← 返回会员详情
           </Link>
           <div className="flex gap-2">
@@ -143,16 +183,16 @@ export default function PhotoList() {
         </div>
 
         <h1 className="text-2xl font-serif tracking-wide mb-2">体态照片 · {memberName}</h1>
-        <p className="text-sm text-[#9E8E7E] mb-8">
+        <p className="text-sm text-[#9E9E9E] mb-8">
           {photos.length > 0 ? `共 ${photos.length} 张照片` : ""}
           {compareMode && ` · 每类型最多选 ${MAX_PER_TYPE} 张对比`}
         </p>
 
         {loading ? (
-          <p className="text-sm text-[#9E8E7E]">加载中...</p>
+          <p className="text-sm text-[#9E9E9E]">加载中...</p>
         ) : photos.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-[#E8E0D5] p-8 shadow-sm text-center">
-            <p className="text-[#9E8E7E] mb-4">暂无照片记录</p>
+          <div className="bg-white rounded-xl border border-[#E5E5E5] p-8 shadow-sm text-center">
+            <p className="text-[#9E9E9E] mb-4">暂无照片记录</p>
             <Button asChild>
               <Link href={`/members/${memberId}/photos/upload`}>上传第一张照片</Link>
             </Button>
@@ -164,13 +204,13 @@ export default function PhotoList() {
               const canComp = canCompare(type);
 
               return (
-                <div key={type} className="bg-white rounded-2xl border border-[#E8E0D5] p-5 shadow-sm">
-                  <div className="flex items-center justify-between border-b border-[#E8E0D5] pb-2 mb-3">
-                    <h2 className="font-serif text-base text-[#3E2723]">
+                <div key={type} className="bg-white rounded-xl border border-[#E5E5E5] p-5 shadow-sm">
+                  <div className="flex items-center justify-between border-b border-[#E5E5E5] pb-2 mb-3">
+                    <h2 className="font-serif text-base text-[#1A1A1A]">
                       {typeLabelMap[type] || type} · {items.length}张
                     </h2>
                     {compareMode && (
-                      <span className="text-xs text-[#9E8E7E]">
+                      <span className="text-xs text-[#9E9E9E]">
                         {canComp
                           ? `已选 ${selectCount}/${MAX_PER_TYPE}`
                           : "不足两张，无法对比"}
@@ -204,8 +244,8 @@ export default function PhotoList() {
                             alt={p.takenAt || "照片"}
                             className={`w-full h-48 object-cover rounded border transition-all ${
                               isSelected
-                                ? "border-[#3E2723] ring-2 ring-[#3E2723]/30"
-                                : "border-[#E8E0D5]"
+                                ? "border-[#1A1A1A] ring-2 ring-[#1A1A1A]/30"
+                                : "border-[#E5E5E5]"
                             } group-hover:opacity-80`}
                           />
 
@@ -214,8 +254,8 @@ export default function PhotoList() {
                             <div
                               className={`absolute top-2 right-2 w-5 h-5 rounded border-2 flex items-center justify-center text-xs ${
                                 isSelected
-                                  ? "bg-[#8B5E3C] border-[#8B5E3C] text-white"
-                                  : "bg-white/80 border-[#E8E0D5]"
+                                  ? "bg-[#1A1A1A] border-[#1A1A1A] text-white"
+                                  : "bg-white/80 border-[#E5E5E5]"
                               }`}
                             >
                               {isSelected ? "✓" : ""}
@@ -239,45 +279,67 @@ export default function PhotoList() {
 
         {/* 对比视图 */}
         {compareView && (
-          <div className="mt-6 bg-white rounded-2xl border border-[#E8E0D5] p-5 shadow-sm">
-            <h2 className="font-serif text-base text-[#3E2723] border-b border-[#E8E0D5] pb-2 mb-4">
+          <div className="mt-6 bg-white rounded-xl border border-[#E5E5E5] p-5 shadow-sm">
+            <h2 className="font-serif text-base text-[#1A1A1A] border-b border-[#E5E5E5] pb-2 mb-4">
               对比视图 · {typeLabelMap[compareView.type] || compareView.type}
             </h2>
 
             <div className="grid grid-cols-2 gap-4">
               {/* 左：较早 */}
               <div>
-                <p className="text-xs text-[#9E8E7E] mb-2 text-center">
+                <p className="text-xs text-[#9E9E9E] mb-2 text-center">
                   {compareView.photos[0].takenAt || "未知日期"}
                 </p>
                 <button onClick={() => setSelectedPhoto(compareView.photos[0])}>
                   <img
                     src={compareView.photos[0].filePath}
                     alt="早期照片"
-                    className="w-full h-64 object-cover rounded border border-[#E8E0D5] hover:opacity-80 transition-opacity"
+                    className="w-full h-64 object-cover rounded border border-[#E5E5E5] hover:opacity-80 transition-opacity"
                   />
                 </button>
               </div>
 
               {/* 右：较晚 */}
               <div>
-                <p className="text-xs text-[#9E8E7E] mb-2 text-center">
+                <p className="text-xs text-[#9E9E9E] mb-2 text-center">
                   {compareView.photos[1].takenAt || "未知日期"}
                 </p>
                 <button onClick={() => setSelectedPhoto(compareView.photos[1])}>
                   <img
                     src={compareView.photos[1].filePath}
                     alt="近期照片"
-                    className="w-full h-64 object-cover rounded border border-[#E8E0D5] hover:opacity-80 transition-opacity"
+                    className="w-full h-64 object-cover rounded border border-[#E5E5E5] hover:opacity-80 transition-opacity"
                   />
                 </button>
               </div>
             </div>
 
             {/* 对比提示 */}
-            <p className="text-xs text-[#9E8E7E] mt-3 text-center">
+            <p className="text-xs text-[#9E9E9E] mt-3 text-center">
               点击照片可放大查看
             </p>
+
+            {/* 写给会员看的变化说明 */}
+            <div className="mt-4 border-t border-[#E5E5E5] pt-4 space-y-2">
+              <label className="text-sm">
+                变化说明（写给会员看；留空则由 AI 起草）
+              </label>
+              <textarea
+                value={analysis}
+                onChange={e => setAnalysis(e.target.value)}
+                rows={3}
+                placeholder="例如：腰腹线条更利落了，肩颈也打开了……"
+                className="w-full rounded-md border border-[#E5E5E5] px-3 py-2 text-sm focus:border-[#1A1A1A] focus:outline-none"
+              />
+              <div className="flex items-center gap-3">
+                <Button size="sm" onClick={saveComparison} disabled={saving}>
+                  {saving ? "保存中..." : "保存给会员看"}
+                </Button>
+                {savedMsg && (
+                  <span className="text-xs text-[#9E9E9E]">{savedMsg}</span>
+                )}
+              </div>
+            </div>
 
             {/* 并排 Dialog 大图对比 */}
             <Button

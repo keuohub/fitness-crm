@@ -64,55 +64,55 @@ export default function AdminStoriesPage() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-[#FAF7F2] text-[#3E2723] p-6">
+    <main className="min-h-screen bg-[#FAFAFA] text-[#1A1A1A] p-6">
       <div className="max-w-3xl mx-auto">
         <div className="mb-6">
-          <Link href="/admin/sync" className="text-sm text-[#9E8E7E] hover:underline">-- 返回管理面板</Link>
+          <Link href="/admin/sync" className="text-sm text-[#9E9E9E] hover:underline">-- 返回管理面板</Link>
         </div>
 
         <h1 className="text-2xl font-serif tracking-wide mb-2">案例库</h1>
-        <p className="text-sm text-[#9E8E7E] mb-8">管理成长故事 · 审核 · 发布</p>
+        <p className="text-sm text-[#9E9E9E] mb-8">管理成长故事 · 审核 · 发布</p>
 
         {/* Stats */}
         <div className="grid grid-cols-4 gap-3 mb-8">
           {[
-            { label: "全部", value: stats.total, color: "#3E2723" },
+            { label: "全部", value: stats.total, color: "#1A1A1A" },
             { label: "已发布", value: stats.published, color: "#16a34a" },
-            { label: "草稿", value: stats.draft, color: "#9E8E7E" },
-            { label: "隐藏", value: stats.hidden, color: "#D4736A" },
+            { label: "草稿", value: stats.draft, color: "#9E9E9E" },
+            { label: "隐藏", value: stats.hidden, color: "#666666" },
           ].map((s) => (
-            <div key={s.label} className="bg-white rounded-2xl p-4 text-center" style={{ boxShadow: "0 2px 12px rgba(62,39,35,0.04)" }}>
+            <div key={s.label} className="bg-white rounded-xl p-4 text-center" style={{ boxShadow: "none" }}>
               <p className="text-xl font-bold" style={{ color: s.color }}>{s.value}</p>
-              <p className="text-[10px] text-[#9E8E7E] mt-1">{s.label}</p>
+              <p className="text-[10px] text-[#9E9E9E] mt-1">{s.label}</p>
             </div>
           ))}
         </div>
 
         {loading ? (
-          <div className="space-y-3">{[...Array(3)].map((_, i) => <div key={i} className="h-24 rounded-2xl animate-pulse bg-white" style={{ boxShadow: "0 2px 12px rgba(62,39,35,0.04)" }} />)}</div>
+          <div className="space-y-3">{[...Array(3)].map((_, i) => <div key={i} className="h-24 rounded-xl animate-pulse bg-white" style={{ boxShadow: "none" }} />)}</div>
         ) : stories.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-2xl" style={{ boxShadow: "0 2px 12px rgba(62,39,35,0.04)" }}>
-            <p className="text-sm text-[#9E8E7E]">暂无案例</p>
-            <p className="text-xs text-[#9E8E7E] mt-2">在会员详情页可保存成长故事</p>
+          <div className="text-center py-12 bg-white rounded-xl" style={{ boxShadow: "none" }}>
+            <p className="text-sm text-[#9E9E9E]">暂无案例</p>
+            <p className="text-xs text-[#9E9E9E] mt-2">在会员详情页可保存成长故事</p>
           </div>
         ) : (
           <div className="space-y-3">
             {stories.map((story) => (
               <div
                 key={story.id}
-                className="bg-white rounded-2xl p-5"
-                style={{ boxShadow: "0 2px 12px rgba(62,39,35,0.04)" }}
+                className="bg-white rounded-xl p-5"
+                style={{ boxShadow: "none" }}
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold" style={{ color: story.status === "published" ? "#16a34a" : story.status === "hidden" ? "#D4736A" : "#9E8E7E" }}>
+                    <span className="text-xs font-bold" style={{ color: story.status === "published" ? "#16a34a" : story.status === "hidden" ? "#666666" : "#9E9E9E" }}>
                       {story.status === "published" ? "已发布" : story.status === "hidden" ? "已隐藏" : "草稿"}
                     </span>
-                    <span className="text-xs text-[#9E8E7E]">会员 #{story.memberId}</span>
+                    <span className="text-xs text-[#9E9E9E]">会员 #{story.memberId}</span>
                   </div>
-                  <span className="text-[10px] text-[#9E8E7E]">{story.createdAt?.slice(0, 10)}</span>
+                  <span className="text-[10px] text-[#9E9E9E]">{story.createdAt?.slice(0, 10)}</span>
                 </div>
-                <p className="text-sm text-[#3E2723] leading-relaxed line-clamp-2">&ldquo;{story.quote}&rdquo;</p>
+                <p className="text-sm text-[#1A1A1A] leading-relaxed line-clamp-2">&ldquo;{story.quote}&rdquo;</p>
               </div>
             ))}
           </div>

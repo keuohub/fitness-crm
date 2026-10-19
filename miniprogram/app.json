@@ -1,0 +1,45 @@
+{
+  "pages": [
+    "pages/growth/growth",
+    "pages/feedback/feedback",
+    "pages/me/me",
+    "pages/booking/booking",
+    "pages/login/login"
+  ],
+  "tabBar": {
+    "custom": true,
+    "color": "#5C5559",
+    "selectedColor": "#0D0C0F",
+    "backgroundColor": "#F6E6DA",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/growth/growth",
+        "text": "成长"
+      },
+      {
+        "pagePath": "pages/feedback/feedback",
+        "text": "小桥的来信"
+      },
+      {
+        "pagePath": "pages/me/me",
+        "text": "我的"
+      }
+    ]
+  },
+  "window": {
+    "navigationStyle": "custom",
+    "navigationBarBackgroundColor": "#F6E6DA",
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "徕舞·成长日记",
+    "backgroundColor": "#F6E6DA"
+  },
+  "networkTimeout": {
+    "request": 5000,
+    "downloadFile": 10000,
+    "uploadFile": 10000,
+    "connectSocket": 10000
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

@@ -7,7 +7,7 @@ import { COLORS } from "@/lib/design/DESIGN_TOKEN";
 export function Spinner({ size = 8 }: { size?: number }) {
   return (
     <div
-      className="border-2 border-[#8B5E3C] border-t-transparent rounded-full animate-spin"
+      className="border-2 border-[#1A1A1A] border-t-transparent rounded-full animate-spin"
       style={{ width: `${size * 4}px`, height: `${size * 4}px` }}
     />
   );
@@ -28,8 +28,8 @@ export function PageLoading() {
 export function SkeletonCard({ lines = 3 }: { lines?: number }) {
   return (
     <div
-      className="rounded-2xl p-6 space-y-3"
-      style={{ boxShadow: "0 2px 12px rgba(62,39,35,0.04)", background: "#fff" }}
+      className="rounded-xl p-6 space-y-3"
+      style={{ boxShadow: "none", background: "#fff" }}
     >
       {Array.from({ length: lines }).map((_, i) => (
         <div
@@ -56,7 +56,7 @@ export function ErrorState({
 }) {
   return (
     <div className="text-center py-16">
-      <p className="text-sm text-[#9E8E7E] mb-4">{message}</p>
+      <p className="text-sm text-[#9E9E9E] mb-4">{message}</p>
       {onRetry && (
         <button
           onClick={onRetry}
@@ -82,16 +82,16 @@ export function EmptyState({
   return (
     <div className="text-center py-16">
       <div
-        className="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center mb-4"
+        className="w-14 h-14 mx-auto rounded-xl flex items-center justify-center mb-4"
         style={{ backgroundColor: `${COLORS.primary}0a` }}
       >
         <span className="text-lg font-serif" style={{ color: COLORS.primary }}>
           L
         </span>
       </div>
-      <p className="text-sm text-[#9E8E7E]">{title}</p>
+      <p className="text-sm text-[#9E9E9E]">{title}</p>
       {description && (
-        <p className="text-xs text-[#9E8E7E] mt-1">{description}</p>
+        <p className="text-xs text-[#9E9E9E] mt-1">{description}</p>
       )}
     </div>
   );

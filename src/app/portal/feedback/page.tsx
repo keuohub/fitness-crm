@@ -1,121 +1,138 @@
 "use client";
 
-import PortalHeader from "@/components/portal/PortalHeader";
-import { usePortalMember } from "@/context/PortalMemberContext";
-import { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
-import GlassCard from "@/components/portal/ui/GlassCard";
-import { COLORS } from "@/lib/design/DESIGN_TOKEN";
-import { fadeUp, staggerContainer, staggerItem, DURATION, MICRO } from "@/lib/design/motion-presets";
+import { useEffect, useState } from "react";
 
-interface Report {
-  id: number; memberId: number; reportType: string; content: string; generatedAt: string; createdAt: string;
-}
-
-const LABELS: Record<string, { label: string; color: string }> = {
-  daily: { label: "每日", color: "#8B5E3C" }, weekly: { label: "周报", color: "#3E2723" },
-  monthly: { label: "月度", color: "#8B5E3C" }, "15days": { label: "15日", color: "#9E8E7E" },
-  quarterly: { label: "季度", color: "#3E2723" }, semiyearly: { label: "半年", color: "#8B5E3C" }, yearly: { label: "年度", color: "#3E2723" },
+const TYPE_LABEL: Record<string, string> = {
+  daily: "每日关怀",
+  weekly: "周报",
+  monthly: "月报",
+  "15days": "15日总结",
+  quarterly: "季度总结",
+  semiyearly: "半年总结",
+  yearly: "年度总结",
+  initial_assessment: "小桥的初始评估",
 };
 
-export default function FeedbackPage() {
-  const { member, loading: memberLoading } = usePortalMember();
+interface Report {
+  id: number;
+  reportType: string;
+  content: string;
+  generatedAt: string;
+}
+
+export default function PortalFeedbackPage() {
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
-  const [expandedId, setExpandedId] = useState<number | null>(null);
-  const [readingProgress, setReadingProgress] = useState(0);
-  const contentRef = useRef<HTMLDivElement>(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!member) return;
-    fetch(`/api/ai/period-report?memberId=${member.memberId}`)
-      .then((r) => (r.ok ? r.json() : []))
-      .then((data: Report[]) => setReports(data.sort((a, b) => new Date(b.generatedAt || b.createdAt).getTime() - new Date(a.generatedAt || a.createdAt).getTime())))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [member]);
+    let memberId = 1;
+    try {
+      const raw = localStorage.getItem("portal_member");
+      if (raw) {
+        const m = JSON.parse(raw);
+        if (m.id) memberId = m.id;
+      }
+    } catch {}
 
-  useEffect(() => {
-    if (expandedId === null) { setReadingProgress(0); return; }
-    const el = contentRef.current;
-    if (!el) return;
-    const onScroll = () => {
-      const { scrollTop, scrollHeight, clientHeight } = el;
-      setReadingProgress(Math.min(1, (scrollTop + clientHeight) / scrollHeight));
-    };
-    el.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    return () => el.removeEventListener("scroll", onScroll);
-  }, [expandedId]);
-
-  if (memberLoading || !member) {
-    return <div className="min-h-[60vh] flex items-center justify-center"><div className="w-8 h-8 border-2 border-[#8B5E3C] border-t-transparent rounded-full animate-spin" /></div>;
-  }
+    fetch(`/api/ai/period-report?memberId=${memberId}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("暂时没能加载");
+        return res.json();
+      })
+      .then((data) => {
+        setReports(Array.isArray(data) ? data : []);
+        setLoading(false);
+      })
+      .catch((e) => {
+        setError(e.message);
+        setLoading(false);
+      });
+  }, []);
 
   if (loading) {
     return (
-      <>
-        <PortalHeader title="本月回顾" showBack />
-        <div className="max-w-lg mx-auto space-y-4">
-          {[...Array(3)].map((_, i) => <div key={i} className="h-32 rounded-2xl animate-pulse bg-white" style={{ boxShadow: "0 2px 12px rgba(62,39,35,0.04)" }} />)}
-        </div>
-      </>
+      <div className="py-12 px-4 space-y-4">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="h-32 bg-[#F5F5F5] rounded-lg animate-pulse" />
+        ))}
+      </div>
     );
   }
 
-  return (
-    <>
-      <PortalHeader title="本月回顾" showBack />
-      <div className="space-y-12 max-w-lg mx-auto">
-        <motion.div {...MICRO.scrollReveal} variants={fadeUp} initial="hidden" whileInView="visible" className="text-center">
-          <p className="text-[11px] uppercase tracking-[0.3em] font-medium mb-4" style={{ color: COLORS.primary }}>阶段回顾</p>
-          <p className="font-serif text-3xl font-bold text-[#3E2723]">成长记录</p>
-          <p className="text-sm text-[#9E8E7E] mt-3">每一次回顾都是对坚持的尊重</p>
-        </motion.div>
-        {reports.length === 0 ? (
-          <GlassCard padding="lg" className="text-center" hover={false}>
-            <p className="text-sm text-[#9E8E7E]">等待第一次阶段回顾</p>
-            <p className="text-xs text-[#9E8E7E] mt-2">完成训练和记录后教练会为你写下阶段回顾</p>
-          </GlassCard>
-        ) : (
-          <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-4">
-            {reports.map((report) => {
-              const meta = LABELS[report.reportType] || { label: report.reportType, color: "#9E8E7E" };
-              const isExpanded = expandedId === report.id;
-              return (
-                <motion.div key={report.id} variants={staggerItem}>
-                  <GlassCard padding="md" onClick={() => setExpandedId(isExpanded ? null : report.id)} hover>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: meta.color }}>{meta.label}</span>
-                        <span className="text-xs text-[#9E8E7E]">{report.generatedAt?.slice(0, 10) || report.createdAt?.slice(0, 10)}</span>
-                      </div>
-                      {isExpanded && readingProgress > 0 && (
-                        <div className="w-16 h-[2px] rounded-full bg-[#EDE8E2] overflow-hidden">
-                          <div className="h-full transition-all" style={{ width: `${readingProgress * 100}%`, backgroundColor: COLORS.primary }} />
-                        </div>
-                      )}
-                    </div>
-                    {!isExpanded ? (
-                      <p className="text-sm text-[#3E2723] line-clamp-2 leading-relaxed">{report.content}</p>
-                    ) : (
-                      <div ref={contentRef} className="max-h-[60vh] overflow-y-auto">
-                        <p className="text-sm text-[#3E2723] leading-relaxed whitespace-pre-wrap">
-                          <span className="float-left font-serif text-5xl font-bold mr-2 leading-none" style={{ color: COLORS.primary }}>{report.content[0]}</span>
-                          {report.content.slice(1)}
-                        </p>
-                      </div>
-                    )}
-                    {!isExpanded && report.content.length > 120 && (
-                      <p className="text-xs mt-2" style={{ color: COLORS.primary }}>点击展开阅读</p>
-                    )}
-                  </GlassCard>
-                </motion.div>
-              );
-            })}
-          </motion.div>
-        )}
+  if (error) {
+    return (
+      <div className="py-20 text-center px-4">
+        <p className="text-sm text-[#666666] leading-relaxed">
+          {error}<br />
+          <span className="text-xs text-[#AAAAAA]">下拉刷新试试看</span>
+        </p>
       </div>
-    </>
+    );
+  }
+
+  const latest = reports[0];
+  const history = reports.slice(1);
+
+  return (
+    <div className="py-6 px-4 space-y-8">
+      {/* 引导语 */}
+      <div className="pt-2">
+        <p className="text-sm text-[#AAAAAA]">小桥写给你的话</p>
+        <p className="text-lg font-medium text-[#1A1A1A] mt-1">
+          每一次训练后，她都在认真记录你的变化
+        </p>
+      </div>
+
+      {/* 最新一封 */}
+      {latest ? (
+        <div>
+          <h2 className="text-sm font-medium text-[#1A1A1A] mb-4">最新一封</h2>
+          <div className="bg-white border border-[#EBEBEB] rounded-lg p-5">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-medium text-[#1A1A1A] bg-[#F5F5F5] rounded-full px-3 py-1">
+                {TYPE_LABEL[latest.reportType] || latest.reportType}
+              </span>
+              <span className="text-xs text-[#AAAAAA]">{latest.generatedAt?.slice(0, 10)}</span>
+            </div>
+            <p className="text-sm text-[#666666] leading-[1.8] whitespace-pre-wrap">
+              {latest.content}
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="py-16 text-center">
+          <p className="text-sm text-[#666666] leading-relaxed">
+            小桥正在为你准备第一份成长报告
+          </p>
+          <p className="text-xs text-[#AAAAAA] mt-2 leading-relaxed">
+            每次训练后她都会认真记录你的变化<br />
+            这些文字，是属于你的成长日记
+          </p>
+        </div>
+      )}
+
+      {/* 过往的来信 */}
+      {history.length > 0 && (
+        <div>
+          <h2 className="text-sm font-medium text-[#1A1A1A] mb-4">过往的来信</h2>
+          <div className="space-y-3">
+            {history.map((r) => (
+              <div key={r.id} className="bg-white border border-[#EBEBEB] rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-medium text-[#1A1A1A] bg-[#F5F5F5] rounded-full px-3 py-1">
+                    {TYPE_LABEL[r.reportType] || r.reportType}
+                  </span>
+                  <span className="text-xs text-[#AAAAAA]">{r.generatedAt?.slice(0, 10)}</span>
+                </div>
+                <p className="text-sm text-[#666666] leading-[1.8] line-clamp-4 whitespace-pre-wrap">
+                  {r.content}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

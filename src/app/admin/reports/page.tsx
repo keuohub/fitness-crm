@@ -5,8 +5,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-const inputClass = "border-[#E8E0D5] focus-visible:border-[#8B5E3C] focus-visible:ring-[#8B5E3C]/20";
-const selectClass = `flex h-9 rounded-md border border-[#E8E0D5] bg-white px-3 py-1 text-sm shadow-sm focus-visible:border-[#8B5E3C] focus-visible:ring-[#8B5E3C]/20`;
+const inputClass = "border-[#E5E5E5] focus-visible:border-[#1A1A1A] focus-visible:ring-[#1A1A1A]/20";
+const selectClass = `flex h-9 rounded-md border border-[#E5E5E5] bg-white px-3 py-1 text-sm shadow-sm focus-visible:border-[#1A1A1A] focus-visible:ring-[#1A1A1A]/20`;
 
 const REPORT_TYPES = [
   { value: "weekly", label: "周报（7天）" },
@@ -182,10 +182,10 @@ export default function AdminReports() {
   const memberName = (id: number) => allMembers.find((m) => m.id === id)?.name || "";
 
   return (
-    <main className="min-h-screen bg-[#FAF7F2] text-[#3E2723] p-6">
+    <main className="min-h-screen bg-[#FAFAFA] text-[#1A1A1A] p-6">
       <div className="max-w-6xl mx-auto">
         <div className="mb-6">
-          <Link href="/admin/sync" className="text-sm text-[#9E8E7E] hover:underline">
+          <Link href="/admin/sync" className="text-sm text-[#9E9E9E] hover:underline">
             ← 返回管理面板
           </Link>
         </div>
@@ -195,12 +195,12 @@ export default function AdminReports() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* ═══ 左栏：生成面板 ═══ */}
           <div className="space-y-6">
-            <div className="bg-white rounded-2xl border border-[#E8E0D5] p-5 shadow-sm">
+            <div className="bg-white rounded-xl border border-[#E5E5E5] p-5 shadow-sm">
               <h2 className="font-serif text-lg mb-4">生成报告</h2>
 
               {/* 报告类型 */}
               <div className="space-y-1.5 mb-4">
-                <label className="text-sm text-[#3E2723]">报告类型</label>
+                <label className="text-sm text-[#1A1A1A]">报告类型</label>
                 <select
                   value={reportType}
                   onChange={(e) => setReportType(e.target.value)}
@@ -214,7 +214,7 @@ export default function AdminReports() {
 
               {/* 会员搜索 */}
               <div className="space-y-1.5 mb-4 relative">
-                <label className="text-sm text-[#3E2723]">目标会员</label>
+                <label className="text-sm text-[#1A1A1A]">目标会员</label>
                 <Input
                   placeholder="搜索姓名..."
                   value={memberSearch}
@@ -227,11 +227,11 @@ export default function AdminReports() {
                   className={inputClass}
                 />
                 {showDropdown && filteredMembers.length > 0 && (
-                  <div className="absolute z-10 w-full bg-white border border-[#E8E0D5] rounded mt-1 max-h-40 overflow-auto shadow-lg">
+                  <div className="absolute z-10 w-full bg-white border border-[#E5E5E5] rounded mt-1 max-h-40 overflow-auto shadow-lg">
                     {filteredMembers.map((m) => (
                       <button
                         key={m.id}
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-[#E8E0D5]"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-[#E5E5E5]"
                         onClick={() => {
                           setSelectedMember(m);
                           setMemberSearch(m.name);
@@ -246,7 +246,7 @@ export default function AdminReports() {
               </div>
 
               {selectedMember && (
-                <p className="text-sm text-[#9E8E7E] mb-4">
+                <p className="text-sm text-[#9E9E9E] mb-4">
                   已选：{selectedMember.name}
                 </p>
               )}
@@ -259,7 +259,7 @@ export default function AdminReports() {
                 {generating ? "生成中..." : "生成单个报告"}
               </Button>
 
-              <div className="border-t border-[#E8E0D5] my-4" />
+              <div className="border-t border-[#E5E5E5] my-4" />
 
               <Button
                 onClick={handleBatch}
@@ -271,21 +271,21 @@ export default function AdminReports() {
               </Button>
 
               {genError && (
-                <p className="mt-3 text-sm text-[#D4736A]">{genError}</p>
+                <p className="mt-3 text-sm text-[#666666]">{genError}</p>
               )}
 
               {genResult && (
-                <div className="mt-4 p-4 bg-[#FAF7F2] border border-[#E8E0D5] rounded text-sm text-[#3E2723] whitespace-pre-wrap max-h-80 overflow-auto">
+                <div className="mt-4 p-4 bg-[#FAFAFA] border border-[#E5E5E5] rounded text-sm text-[#1A1A1A] whitespace-pre-wrap max-h-80 overflow-auto">
                   {genResult.slice(0, 500)}...
                 </div>
               )}
 
               {batchResult && (
-                <div className="mt-4 pt-4 border-t border-[#E8E0D5]">
+                <div className="mt-4 pt-4 border-t border-[#E5E5E5]">
                   <div className="grid grid-cols-3 gap-2 text-sm mb-2">
-                    <div><span className="text-[#9E8E7E]">处理</span><p className="font-serif">{batchResult.processed}</p></div>
-                    <div><span className="text-[#9E8E7E]">成功</span><p className="font-serif text-green-700">{batchResult.succeeded}</p></div>
-                    <div><span className="text-[#9E8E7E]">失败</span><p className="font-serif text-[#D4736A]">{batchResult.failed}</p></div>
+                    <div><span className="text-[#9E9E9E]">处理</span><p className="font-serif">{batchResult.processed}</p></div>
+                    <div><span className="text-[#9E9E9E]">成功</span><p className="font-serif text-green-700">{batchResult.succeeded}</p></div>
+                    <div><span className="text-[#9E9E9E]">失败</span><p className="font-serif text-[#666666]">{batchResult.failed}</p></div>
                   </div>
                 </div>
               )}
@@ -294,24 +294,24 @@ export default function AdminReports() {
 
           {/* ═══ 右栏：报告列表 ═══ */}
           <div>
-            <div className="bg-white rounded-2xl border border-[#E8E0D5] p-5 shadow-sm">
+            <div className="bg-white rounded-xl border border-[#E5E5E5] p-5 shadow-sm">
               <h2 className="font-serif text-lg mb-4">已生成报告</h2>
 
               {Object.keys(reportsByMember).length === 0 ? (
-                <p className="text-sm text-[#9E8E7E]">暂无报告，先在左侧生成</p>
+                <p className="text-sm text-[#9E9E9E]">暂无报告，先在左侧生成</p>
               ) : (
                 <div className="space-y-4 max-h-[70vh] overflow-auto">
                   {Object.entries(reportsByMember).map(([mid, reports]) => (
-                    <div key={mid} className="border-b border-[#E8E0D5] pb-3 last:border-0">
+                    <div key={mid} className="border-b border-[#E5E5E5] pb-3 last:border-0">
                       <h3 className="font-serif text-sm mb-2">{memberName(parseInt(mid))}</h3>
                       {reports.map((r) => (
                         <div key={r.id} className="mb-2 last:mb-0">
                           <div className="flex items-center justify-between text-xs">
                             <div className="flex items-center gap-2">
-                              <span className="bg-[#E8E0D5] px-1.5 py-0.5 rounded">
+                              <span className="bg-[#E5E5E5] px-1.5 py-0.5 rounded">
                                 {TYPE_LABEL[r.reportType] || r.reportType}
                               </span>
-                              <span className="text-[#9E8E7E]">
+                              <span className="text-[#9E9E9E]">
                                 {r.generatedAt?.slice(0, 10) || r.createdAt?.slice(0, 10)}
                               </span>
                             </div>
@@ -320,13 +320,13 @@ export default function AdminReports() {
                                 onClick={() =>
                                   setExpandedReport(expandedReport === r.id ? null : r.id)
                                 }
-                                className="text-[#9E8E7E] hover:text-[#3E2723] underline"
+                                className="text-[#9E9E9E] hover:text-[#1A1A1A] underline"
                               >
                                 {expandedReport === r.id ? "收起" : "展开"}
                               </button>
                               <button
                                 onClick={() => handleRegenerate(parseInt(mid), r.reportType)}
-                                className="text-[#9E8E7E] hover:text-[#3E2723] underline"
+                                className="text-[#9E9E9E] hover:text-[#1A1A1A] underline"
                               >
                                 重新生成
                               </button>
@@ -335,14 +335,14 @@ export default function AdminReports() {
 
                           {/* 预览 */}
                           {expandedReport !== r.id && (
-                            <p className="text-xs text-[#9E8E7E] mt-1 truncate">
+                            <p className="text-xs text-[#9E9E9E] mt-1 truncate">
                               {r.content?.slice(0, 100)}...
                             </p>
                           )}
 
                           {/* 展开 */}
                           {expandedReport === r.id && (
-                            <div className="mt-2 p-3 bg-[#FAF7F2] border border-[#E8E0D5] rounded text-sm text-[#3E2723] whitespace-pre-wrap max-h-96 overflow-auto">
+                            <div className="mt-2 p-3 bg-[#FAFAFA] border border-[#E5E5E5] rounded text-sm text-[#1A1A1A] whitespace-pre-wrap max-h-96 overflow-auto">
                               {r.content}
                             </div>
                           )}

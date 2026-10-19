@@ -49,14 +49,14 @@ export default function DailyMotivation({ stageTitle }: Props) {
         <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-6xl font-serif text-[#EDE8E2] leading-none select-none">
           &ldquo;
         </span>
-        <p className="font-serif text-2xl sm:text-3xl text-[#3E2723] leading-relaxed italic max-w-xs mx-auto relative z-10">
+        <p className="font-serif text-2xl sm:text-3xl text-[#1A1A1A] leading-relaxed italic max-w-xs mx-auto relative z-10">
           {m.title}
         </p>
       </div>
-      <p className="text-sm text-[#9E8E7E] mt-6 leading-relaxed max-w-sm mx-auto">
+      <p className="text-sm text-[#9E9E9E] mt-6 leading-relaxed max-w-sm mx-auto">
         {m.body}
       </p>
-      <p className="text-xs text-[#9E8E7E] mt-6">-- 小桥</p>
+      <p className="text-xs text-[#9E9E9E] mt-6">-- 小桥</p>
     </motion.section>
   );
 }

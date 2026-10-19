@@ -14,7 +14,9 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     memberId: member.id,
     memberName: member.name,
+    memberCode: member.memberCode,
     joinedAt: member.joinedAt,
+    avatarUrl: member.avatarUrl,
     portalEnabled: member.portalEnabled,
   });
 }

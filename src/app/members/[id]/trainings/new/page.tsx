@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
-const inputClass = "border-[#E8E0D5] focus-visible:border-[#8B5E3C] focus-visible:ring-[#8B5E3C]/20";
+const inputClass = "border-[#E5E5E5] focus-visible:border-[#1A1A1A] focus-visible:ring-[#1A1A1A]/20";
 const selectClass = `flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-sm transition-colors ${inputClass}`;
 
 export default function NewTraining() {
@@ -64,7 +64,7 @@ export default function NewTraining() {
   };
 
   return (
-    <main className="min-h-screen bg-[#FAF7F2] text-[#3E2723] p-6">
+    <main className="min-h-screen bg-[#FAFAFA] text-[#1A1A1A] p-6">
       <div className="max-w-xl mx-auto">
         <h1 className="text-2xl font-serif tracking-wide mb-8">新增训练</h1>
 
@@ -99,7 +99,7 @@ export default function NewTraining() {
             <Textarea name="notes" value={form.notes} onChange={handleChange} placeholder="训练笔记、会员反馈等" className={`${inputClass} min-h-[80px]`} />
           </div>
 
-          {error && <p className="text-sm text-[#D4736A]">{error}</p>}
+          {error && <p className="text-sm text-[#666666]">{error}</p>}
 
           <div className="flex gap-3 pt-2">
             <Button type="submit" disabled={submitting}>

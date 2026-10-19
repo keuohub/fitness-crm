@@ -37,12 +37,18 @@ async function seed() {
 
   if (existing.length > 0) {
     const mid = existing[0].id;
-    await db.delete(questionnaireSubmissions).where(eq(questionnaireSubmissions.memberId, mid));
-    await db.delete(trainings).where(eq(trainings.memberId, mid));
-    await db.delete(photos).where(eq(photos.memberId, mid));
-    await db.delete(aiFeedbackReports).where(eq(aiFeedbackReports.memberId, mid));
-    await db.delete(memberMemories).where(eq(memberMemories.memberId, mid));
-    await db.delete(dailyHealthLogs).where(eq(dailyHealthLogs.memberId, mid));
+    // 按 FK 依赖顺序删除：先删所有子表，最后删主表
+    // 使用 Promise.all 确保并行执行，所有子表删完再删 members
+    await Promise.all([
+      db.delete(questionnaireSubmissions).where(eq(questionnaireSubmissions.memberId, mid)),
+      db.delete(trainings).where(eq(trainings.memberId, mid)),
+      db.delete(photos).where(eq(photos.memberId, mid)),
+      db.delete(aiFeedbackReports).where(eq(aiFeedbackReports.memberId, mid)),
+      db.delete(memberMemories).where(eq(memberMemories.memberId, mid)),
+      db.delete(dailyHealthLogs).where(eq(dailyHealthLogs.memberId, mid)),
+    ]);
+    // 额外等待确保 Neon 完成所有子表删除
+    await new Promise((r) => setTimeout(r, 500));
     await db.delete(members).where(eq(members.id, mid));
     console.log("  已清理旧数据");
   }

@@ -1,0 +1,56 @@
+<view class="login-container">
+  
+  <!-- 品牌标识区 -->
+  <view class="brand stagger-1">
+    <text class="brand-en">L A I W U</text>
+    <view class="brand-divider"></view>
+    <text class="brand-name">徕 舞 · 私 人 塑 形</text>
+    <text class="brand-subtitle">身 体 掌 权 · 终 生 优 雅</text>
+  </view>
+
+  <!-- 引导文字 -->
+  <view class="guide stagger-2">
+    <text class="guide-text">见字如面 · 开启你的身体私享手札</text>
+  </view>
+
+  <!-- 邀请码与防串号手机尾号双重核验 -->
+  <view class="input-card stagger-3">
+    <input
+      class="invite-input"
+      value="{{inviteCode}}"
+      placeholder="专属邀请码 (如 LW8866)"
+      placeholder-class="input-placeholder"
+      bindinput="onCodeInput"
+      maxlength="20"
+      confirm-type="next"
+    />
+    <input
+      class="invite-input phone-suffix-input"
+      value="{{phoneSuffix}}"
+      placeholder="手机尾号后4位 (私享档案安全核验)"
+      placeholder-class="input-placeholder"
+      bindinput="onPhoneSuffixInput"
+      maxlength="4"
+      type="number"
+      confirm-type="go"
+      bindconfirm="handleLogin"
+    />
+  </view>
+
+  <!-- 登录按钮 -->
+  <button class="login-btn stagger-4" bindtap="handleLogin" loading="{{submitting}}" disabled="{{submitting}}">
+    {{submitting ? "正在开启档案..." : "开启专属成长手札"}}
+  </button>
+
+  <!-- 错误提示 -->
+  <text wx:if="{{error}}" class="error-text">{{error}}</text>
+
+  <!-- 底部说明与演示模式（保障微信审核顺畅通过） -->
+  <view class="footer-wrap stagger-5">
+    <text class="footer-note">还未取得专属口令？联系小桥开启您的自律之旅</text>
+    <view class="demo-entry-btn" bindtap="enterDemo">
+      <text class="demo-entry-text">探索陈知意示范档案 ›</text>
+    </view>
+  </view>
+
+</view>

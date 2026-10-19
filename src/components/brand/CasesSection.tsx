@@ -1,36 +1,48 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { COLORS } from "@/lib/design/DESIGN_TOKEN";
 import { fadeUp, MICRO } from "@/lib/design/motion-presets";
 
-const MEMBERS = [
-  {
-    name: "李女士",
-    role: "儿科医生",
-    totalTrainings: 87,
-    monthsSinceJoin: 14,
-    note: "现在最大的变化，是终于能够感受到自己的身体。",
-  },
-  {
-    name: "张女士",
-    role: "中学教师",
-    totalTrainings: 63,
-    monthsSinceJoin: 11,
-    note: "十一年伏案工作的肩颈问题，在这里慢慢消解了。不是因为某一次训练，而是因为持续。",
-  },
-  {
-    name: "陈女士",
-    role: "设计师",
-    totalTrainings: 54,
-    monthsSinceJoin: 9,
-    note: "训练不是惩罚自己的身体，而是学会与它相处。这个认知改变了很多事。",
-  },
-];
+interface CaseItem {
+  memberId: number;
+  name: string;
+  role: string;
+  totalTrainings: number;
+  daysSinceJoin: number;
+  latestAiComment: string | null;
+}
 
 export default function CasesSection() {
+  const [cases, setCases] = useState<CaseItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/cases")
+      .then((r) => r.json())
+      .then((data) => { setCases(data.cases ?? []); setLoading(false); })
+      .catch(() => { setLoading(false); });
+  }, []);
+
+  if (loading) {
+    return (
+      <section className="max-w-prose mx-auto px-4 sm:px-6 md:px-8 py-16 sm:py-20 md:py-24">
+        <div className="text-center text-sm text-[#AAAAAA]">加载成长档案...</div>
+      </section>
+    );
+  }
+
+  if (cases.length === 0) {
+    return (
+      <section className="max-w-prose mx-auto px-4 sm:px-6 md:px-8 py-16 sm:py-20 md:py-24">
+        <div className="text-center text-sm text-[#AAAAAA]">成长档案即将上线</div>
+      </section>
+    );
+  }
+
   return (
-    <section id="cases" className="max-w-[32em] mx-auto px-5 sm:px-8 md:px-12 py-40 md:py-48 bg-white">
+    <section id="cases" className="max-w-prose mx-auto px-4 sm:px-6 md:px-8 py-16 sm:py-20 md:py-24">
       <motion.div
         {...MICRO.scrollReveal}
         variants={fadeUp}
@@ -44,15 +56,15 @@ export default function CasesSection() {
           成长档案
         </p>
 
-        <h2 className="text-3xl sm:text-4xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15] mb-20 max-w-[12ch]">
+        <h2 className="text-xl sm:text-2xl font-normal text-[#1A1A1A] tracking-normal mb-20 max-w-[12ch]">
           她们的成长记录
         </h2>
       </motion.div>
 
-      <div className="divide-y divide-[#E8E0D5]">
-        {MEMBERS.map((m) => (
+      <div className="divide-y divide-[#F0F0F0]">
+        {cases.map((m) => (
           <motion.article
-            key={m.name}
+            key={m.memberId}
             {...MICRO.scrollReveal}
             variants={fadeUp}
             initial="hidden"
@@ -69,26 +81,26 @@ export default function CasesSection() {
             <div className="flex items-baseline gap-8 mb-8">
               <div>
                 <span
-                  className="text-2xl font-semibold text-[#3E2723] tracking-[-0.02em]"
+                  className="text-2xl font-semibold text-[#1A1A1A] tracking-[-0.02em]"
                   style={{ fontFamily: "var(--font-number, 'Inter', sans-serif)" }}
                 >
                   {m.totalTrainings}
                 </span>
-                <span className="text-xs text-[#6E6E73] ml-2">次训练</span>
+                <span className="text-xs text-[#4A4A4A] ml-2">次训练</span>
               </div>
               <div>
                 <span
-                  className="text-2xl font-semibold text-[#3E2723] tracking-[-0.02em]"
+                  className="text-2xl font-semibold text-[#1A1A1A] tracking-[-0.02em]"
                   style={{ fontFamily: "var(--font-number, 'Inter', sans-serif)" }}
                 >
-                  {m.monthsSinceJoin}
+                  {Math.floor(m.daysSinceJoin / 30)}
                 </span>
-                <span className="text-xs text-[#6E6E73] ml-2">个月</span>
+                <span className="text-xs text-[#4A4A4A] ml-2">个月</span>
               </div>
             </div>
 
-            <p className="text-base text-[#3E2723] leading-[1.7] max-w-[32em]">
-              {m.note}
+            <p className="text-base text-[#1A1A1A] leading-[1.7] max-w-prose">
+              {m.latestAiComment ?? "每一次训练，都在构建更好的自己。"}
             </p>
           </motion.article>
         ))}

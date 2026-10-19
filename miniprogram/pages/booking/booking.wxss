@@ -1,0 +1,189 @@
+/* pages/booking · 预约课程 · 朱红流光 + 磨砂微光 */
+
+.booking-page {
+  min-height: 100vh;
+  padding: calc(env(safe-area-inset-top) + 124rpx) 32rpx calc(env(safe-area-inset-bottom) + 300rpx);
+  box-sizing: border-box;
+  animation: pageTransitIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.section {
+  margin-bottom: 40rpx;
+}
+.section-title {
+  display: block;
+  font-family: "Songti SC", Georgia, serif;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #381617;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin: 40rpx 0 20rpx 12rpx;
+  text-shadow: 0 1rpx 12rpx rgba(255, 245, 240, 0.45);
+}
+
+/* 课程选择 */
+.course-types {
+  display: flex;
+  flex-direction: column;
+}
+.course-item {
+  padding: 32rpx;
+  margin-bottom: 16rpx;
+  background: var(--card-glass);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  border-radius: 32rpx;
+  border: var(--card-border);
+  box-shadow: var(--card-shadow);
+  box-sizing: border-box;
+  transition: transform 160ms cubic-bezier(0.2, 0.8, 0.25, 1), border-color 200ms ease, background-color 200ms ease;
+}
+.course-item:active {
+  transform: scale(0.975);
+}
+.course-name {
+  display: block;
+  font-family: Georgia, "Songti SC", serif;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--text-main);
+}
+.course-desc {
+  display: block;
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  color: var(--text-muted);
+}
+.course-item-active {
+  background: #08070A !important;
+  border: 1.5rpx solid rgba(255, 255, 255, 0.38) !important;
+  box-shadow: 0 14rpx 36rpx rgba(8, 7, 10, 0.32), inset 0 1rpx 0 rgba(255, 255, 255, 0.25) !important;
+}
+.course-item-active .course-name {
+  color: #FFFFFF !important;
+}
+.course-item-active .course-desc {
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+
+/* 日期 */
+.date-list {
+  display: flex;
+  gap: 14rpx;
+}
+.date-item {
+  flex: 1;
+  padding: 22rpx 0;
+  text-align: center;
+  border-radius: 28rpx;
+  background: var(--card-glass);
+  border: var(--card-border);
+  box-shadow: var(--card-shadow);
+  box-sizing: border-box;
+  transition: transform 160ms cubic-bezier(0.2, 0.8, 0.25, 1), background-color 180ms ease, box-shadow 180ms ease;
+}
+.date-item:active {
+  transform: scale(0.94);
+}
+.date-weekday {
+  display: block;
+  font-size: 22rpx;
+  color: var(--text-muted);
+}
+.date-day {
+  display: block;
+  margin-top: 8rpx;
+  font-family: Georgia, "Songti SC", serif;
+  font-size: 32rpx;
+  color: var(--text-main);
+}
+.date-item-active {
+  background: #08070A !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
+  transform: translateY(-4rpx);
+  box-shadow: 0 10rpx 28rpx rgba(8, 7, 10, 0.30), inset 0 1rpx 0 rgba(255, 255, 255, 0.25) !important;
+}
+.date-item-active .date-weekday {
+  color: rgba(255, 255, 255, 0.75);
+}
+.date-item-active .date-day {
+  color: #FFFFFF;
+}
+
+/* 时段 */
+.time-slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+.time-item {
+  width: calc((100% - 16rpx) / 2);
+  box-sizing: border-box;
+  padding: 26rpx 0;
+  text-align: center;
+  border-radius: 999rpx;
+  background: var(--card-glass);
+  border: var(--card-border);
+  box-shadow: var(--card-shadow);
+  font-size: 26rpx;
+  color: var(--text-main);
+  transition: transform 140ms cubic-bezier(0.2, 0.8, 0.25, 1), background-color 160ms ease;
+}
+.time-item:active {
+  transform: scale(0.95);
+}
+.time-item-active {
+  background: #08070A !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 8rpx 22rpx rgba(8, 7, 10, 0.28), inset 0 1rpx 0 rgba(255, 255, 255, 0.25) !important;
+}
+
+/* 备注 */
+.textarea-field {
+  width: 100%;
+  min-height: 180rpx;
+  box-sizing: border-box;
+  padding: 28rpx;
+  background: var(--card-glass);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  border-radius: 32rpx;
+  border: var(--card-border);
+  box-shadow: var(--card-shadow);
+  font-size: 28rpx;
+  line-height: 1.7;
+  color: var(--text-main);
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+}
+
+/* 提交 */
+.btn-primary {
+  margin-top: 12rpx;
+  background: var(--noir-btn);
+  color: #FFFFFF;
+  border-radius: 999rpx;
+  padding: 28rpx 0;
+  font-size: 30rpx;
+  font-weight: 500;
+  letter-spacing: 2rpx;
+  box-shadow: 0 14rpx 34rpx rgba(13, 12, 15, 0.28), inset 0 1rpx 0 rgba(255, 255, 255, 0.25);
+  transition: transform 140ms cubic-bezier(0.2, 0.8, 0.25, 1), opacity 140ms ease;
+}
+.btn-primary:active {
+  transform: scale(0.97);
+  opacity: 0.92;
+}
+.btn-primary[disabled] {
+  opacity: 0.4;
+  box-shadow: none;
+}
+
+.fade-in {
+  animation: cardFadeSlide 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}

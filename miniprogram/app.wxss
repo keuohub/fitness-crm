@@ -1,0 +1,168 @@
+/* app.wxss - 高奢女性品牌「徕舞」全局视觉设计与动效系统 */
+
+page {
+  --bg-gradient:
+    radial-gradient(circle at 85% 10%, rgba(255, 248, 242, 0.78) 0%, transparent 45%),
+    linear-gradient(170deg, #F5E5D9 0%, #E58572 32%, #D4423C 65%, #B82226 100%);
+  --card-glass: rgba(255, 255, 255, 0.90);
+  --card-glass-subtle: rgba(255, 255, 255, 0.78);
+  --card-border: 1rpx solid rgba(255, 255, 255, 0.92);
+  --card-shadow: 0 16rpx 44rpx rgba(186, 36, 40, 0.09), 0 4rpx 12rpx rgba(0, 0, 0, 0.03);
+  --card-shadow-active: 0 8rpx 20rpx rgba(186, 36, 40, 0.12);
+  
+  /* 高对比度清晰文字阶梯：确保在暖红渐变背景下文字极致清晰且融洽 */
+  --text-main: #0D0C0F;       /* 黑曜石高奢主标题，对比度极致清晰 */
+  --text-body: #2B2629;       /* 浓郁深灰正文，阅读舒适 */
+  --text-secondary: #5C5559;  /* 中度沉稳副标，层次分明 */
+  --text-muted: #827A7E;      /* 辅助弱标/说明文字 */
+  --text-white: #FFFFFF;      /* 反白文字 */
+  
+  /* 品牌核心点缀色 */
+  --brand-crimson: #BA2428;
+  --brand-warm-peach: #F6E6DA;
+  --noir-btn: #0D0C0F;
+  
+  /* 背景改由下方 page::before 的固定画布承担，这里只留兜底色 */
+  background-color: #BA2428;
+  background-image: none;
+  position: relative;
+  z-index: 0;
+  min-height: 100vh;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  color: var(--text-body);
+  -webkit-font-smoothing: antialiased;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 全屏固定画布：滚屏时背景纹丝不动，不再拦腰截断、不再重复平铺 */
+page::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  background-color: #CE3834;
+  background-image: var(--bg-gradient);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  pointer-events: none;
+}
+
+/* 全局页面容器与切换动效 */
+.growth-page,
+.booking-page {
+  min-height: 100vh;
+  padding-top: calc(env(safe-area-inset-top) + 124rpx);
+  padding-bottom: calc(env(safe-area-inset-bottom) + 210rpx);
+  box-sizing: border-box;
+  animation: pageTransitIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* 页面切换沉静淡入 */
+@keyframes pageTransitIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* 卡片微距轻盈淡入：稳健、平缓、杜绝眩晕 */
+@keyframes cardFadeSlide {
+  0% {
+    opacity: 0;
+    transform: translateY(8rpx);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ================= 稳健微距级联淡入系统 ================= */
+.stagger-1 { animation: cardFadeSlide 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.02s both; }
+.stagger-2 { animation: cardFadeSlide 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.05s both; }
+.stagger-3 { animation: cardFadeSlide 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both; }
+.stagger-4 { animation: cardFadeSlide 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.11s both; }
+.stagger-5 { animation: cardFadeSlide 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.14s both; }
+.stagger-6 { animation: cardFadeSlide 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.17s both; }
+.stagger-7 { animation: cardFadeSlide 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.20s both; }
+
+/* ================= Lululemon & Apple HIG 沉静通透磨砂材质 =================
+   温润通透，边框具有物理微光折射，稳重沉静不晃动 */
+.coach-message-card,
+.milestone-card,
+.whisper-card,
+.feedback-card,
+.photo-compare-card,
+.reply-card,
+.training-item,
+.training-card-luxury,
+.stat-card-dual,
+.profile-card-luxury,
+.latest-card,
+.history-item,
+.booking-entry,
+.data-list,
+.feeling-item,
+.booking-item,
+.stats-grid,
+.empty-state,
+.textarea-field {
+  background: rgba(253, 248, 245, 0.88) !important;
+  backdrop-filter: blur(28px) saturate(150%);
+  -webkit-backdrop-filter: blur(28px) saturate(150%);
+  border-radius: 40rpx !important;
+  border-top: 1.5rpx solid rgba(255, 255, 255, 0.96) !important;
+  border-left: 1rpx solid rgba(255, 255, 255, 0.75) !important;
+  border-right: 1rpx solid rgba(255, 255, 255, 0.75) !important;
+  border-bottom: 1rpx solid rgba(255, 255, 255, 0.45) !important;
+  box-shadow: 
+    0 20rpx 48rpx -10rpx rgba(110, 18, 18, 0.15),
+    0 4rpx 14rpx rgba(110, 18, 18, 0.05),
+    inset 0 1.5rpx 0 rgba(255, 255, 255, 0.92) !important;
+  transition: transform 240ms cubic-bezier(0.2, 0.8, 0.25, 1), box-shadow 240ms cubic-bezier(0.2, 0.8, 0.25, 1);
+  box-sizing: border-box;
+}
+
+/* Lululemon & Apple 细腻触控微交互：轻压微凹微缩，松手弹性回弹 */
+.coach-message-card:active,
+.milestone-card:active,
+.whisper-card:active,
+.feedback-card:active,
+.photo-compare-card:active,
+.reply-card:active,
+.latest-card:active,
+.history-item:active,
+.booking-entry:active,
+.data-list:active,
+.feeling-item:active,
+.booking-item:active,
+.training-item:active,
+.training-card-luxury:active,
+.stat-card-dual:active,
+.profile-card-luxury:active {
+  transform: scale(0.985) translateY(2rpx) !important;
+  box-shadow: 
+    0 10rpx 24rpx -6rpx rgba(110, 18, 18, 0.14),
+    0 2rpx 8rpx rgba(110, 18, 18, 0.04),
+    inset 0 1rpx 0 rgba(255, 255, 255, 0.7) !important;
+  transition: transform 120ms cubic-bezier(0.2, 0.8, 0.25, 1), box-shadow 120ms ease !important;
+}
+
+/* 胶囊主按钮高奢触感交互 */
+.btn-primary,
+.login-btn,
+.splash-cta {
+  transition: transform 140ms cubic-bezier(0.2, 0.8, 0.25, 1), box-shadow 140ms ease, opacity 140ms ease !important;
+}
+.btn-primary:active,
+.login-btn:active,
+.splash-cta:active {
+  transform: scale(0.965) translateY(2rpx) !important;
+  box-shadow: 0 6rpx 16rpx rgba(8, 7, 10, 0.2) !important;
+}

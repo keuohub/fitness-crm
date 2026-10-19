@@ -43,7 +43,7 @@ const TEASER_STORIES = RAW_STORIES.map((s) => ({
 
 export default function StoriesTeaserSection() {
   return (
-    <section id="stories" className="max-w-5xl mx-auto px-5 sm:px-8 md:px-12 py-40 md:py-48 bg-white">
+    <section id="stories" className="max-w-5xl mx-auto px-4 sm:px-6 md:px-8 py-16 sm:py-20 md:py-24">
       <motion.div
         {...MICRO.scrollReveal}
         variants={fadeUp}
@@ -57,10 +57,10 @@ export default function StoriesTeaserSection() {
         >
           成长故事
         </p>
-        <h2 className="text-4xl sm:text-5xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15] mb-4">
+        <h2 className="text-2xl sm:text-3xl font-normal text-[#1A1A1A] tracking-normal mb-4">
           每一次坚持
         </h2>
-        <p className="text-sm text-[#6E6E73] max-w-[34em] mx-auto">
+        <p className="text-sm text-[#4A4A4A] max-w-prose mx-auto">
           这些记录，来自真实训练与长期坚持。
         </p>
       </motion.div>
@@ -79,7 +79,7 @@ export default function StoriesTeaserSection() {
             className="rounded-[2rem] p-7 relative overflow-hidden transition-all"
             style={{
               background:
-                "linear-gradient(160deg, #FFFFFF 0%, #FDF9F5 60%, #F7F1EA 100%)",
+                "linear-gradient(160deg, #FFFFFF 0%, #FAFAFA 60%, #F7F1EA 100%)",
               boxShadow: "0 4px 20px rgba(62,39,35,0.05)",
             }}
             whileHover={{ y: -6, boxShadow: "0 12px 40px rgba(62,39,35,0.1)" }}
@@ -88,28 +88,28 @@ export default function StoriesTeaserSection() {
               <p className="text-[10px] tracking-widest uppercase font-medium mb-1" style={{ color: COLORS.primary }}>
                 {story.role}
               </p>
-              <h3 className="font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15]">
+              <h3 className="font-semibold text-[#1A1A1A] tracking-normal">
                 {story.displayName}
               </h3>
-              <p className="text-[10px] text-[#6E6E73]">{story.stage}</p>
+              <p className="text-[10px] text-[#4A4A4A]">{story.stage}</p>
             </div>
 
             <div className="flex gap-4 mb-4">
               <div>
-                <span className="text-lg font-semibold text-[#3E2723] tracking-[-0.02em]">
+                <span className="text-lg font-semibold text-[#1A1A1A] tracking-[-0.02em]">
                   {Math.round(story.days / 30)}
                 </span>
-                <span className="text-xs text-[#6E6E73] ml-1">个月</span>
+                <span className="text-xs text-[#4A4A4A] ml-1">个月</span>
               </div>
               <div>
-                <span className="text-lg font-semibold text-[#3E2723] tracking-[-0.02em]">
+                <span className="text-lg font-semibold text-[#1A1A1A] tracking-[-0.02em]">
                   {story.trainingCount}
                 </span>
-                <span className="text-xs text-[#6E6E73] ml-1">次</span>
+                <span className="text-xs text-[#4A4A4A] ml-1">次</span>
               </div>
             </div>
 
-            <blockquote className="text-sm text-[#3E2723] leading-relaxed italic border-l-2 pl-3 border-[#E8E0D5]">
+            <blockquote className="text-sm text-[#1A1A1A] leading-[1.8] italic border-l-2 pl-3 border-0">
               &ldquo;{story.quote}&rdquo;
             </blockquote>
           </motion.article>

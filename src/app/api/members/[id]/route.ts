@@ -3,18 +3,20 @@ import { db } from "@/db";
 import { members, questionnaireSubmissions, memberMemories, dailyHealthLogs, trainings, aiFeedbackReports, photos } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { requireAdmin } from "@/lib/auth/admin-session";
+import { verifyMemberAccess } from "@/lib/auth/member-ownership";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!requireAdmin(request)) {
-    return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
-  }
-
   const { id: idStr } = await params;
   const id = parseInt(idStr, 10);
   if (isNaN(id)) return NextResponse.json({ error: "无效 id" }, { status: 400 });
+
+  const access = await verifyMemberAccess(request, id);
+  if (!access.allowed) {
+    return NextResponse.json({ error: "需要管理员登录或会员专属访问" }, { status: 401 });
+  }
 
   const [member] = await db.select().from(members).where(eq(members.id, id));
   if (!member) return NextResponse.json({ error: "会员不存在" }, { status: 404 });

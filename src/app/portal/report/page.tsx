@@ -47,7 +47,7 @@ export default function ReportPage() {
   }, [member]);
 
   if (memberLoading || !member) {
-    return <div className="min-h-[60vh] flex items-center justify-center"><div className="w-8 h-8 border-2 border-[#8B5E3C] border-t-transparent rounded-full animate-spin" /></div>;
+    return <div className="min-h-[60vh] flex items-center justify-center"><div className="w-8 h-8 border-2 border-[#1A1A1A] border-t-transparent rounded-full animate-spin" /></div>;
   }
 
   return (
@@ -55,11 +55,11 @@ export default function ReportPage() {
       <PortalHeader title="本月回顾" showBack />
       <div className="space-y-14 max-w-lg mx-auto">
         {loading ? (
-          <div className="space-y-4">{[...Array(4)].map((_, i) => <div key={i} className="h-28 rounded-2xl animate-pulse bg-white" style={{ boxShadow: "0 2px 12px rgba(62,39,35,0.04)" }} />)}</div>
+          <div className="space-y-4">{[...Array(4)].map((_, i) => <div key={i} className="h-28 rounded-xl animate-pulse bg-white" style={{ boxShadow: "none" }} />)}</div>
         ) : !report ? (
           <GlassCard padding="lg" className="text-center" hover={false}>
-            <p className="text-sm text-[#9E8E7E]">暂无本月回顾</p>
-            <p className="text-xs text-[#9E8E7E] mt-2">记录训练和问卷后可查看回顾</p>
+            <p className="text-sm text-[#9E9E9E]">暂无本月回顾</p>
+            <p className="text-xs text-[#9E9E9E] mt-2">记录训练和问卷后可查看回顾</p>
           </GlassCard>
         ) : (
           <>
@@ -77,8 +77,8 @@ export default function ReportPage() {
                   />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="font-serif text-4xl font-bold text-[#3E2723]">{report.score.value}</span>
-                  <span className="text-xs text-[#9E8E7E] mt-1">坚持指数</span>
+                  <span className="font-serif text-4xl font-bold text-[#1A1A1A]">{report.score.value}</span>
+                  <span className="text-xs text-[#9E9E9E] mt-1">坚持指数</span>
                 </div>
               </div>
               <p className="text-sm mt-4" style={{ color: COLORS.primary }}>{report.score.label}</p>
@@ -87,29 +87,29 @@ export default function ReportPage() {
             {/* ── Trend + Momentum + Consistency ── */}
             <div className="grid grid-cols-3 gap-3">
               {[
-                { label: "趋势", value: report.trend.label, color: report.trend.trend === "rising" ? "#16a34a" : report.trend.trend === "falling" ? "#D4736A" : "#9E8E7E", sub: (report.trend.changePercent > 0 ? "+" : "") + report.trend.changePercent + "%" },
+                { label: "趋势", value: report.trend.label, color: report.trend.trend === "rising" ? "#16a34a" : report.trend.trend === "falling" ? "#666666" : "#9E9E9E", sub: (report.trend.changePercent > 0 ? "+" : "") + report.trend.changePercent + "%" },
                 { label: "势能", value: report.momentum.label, color: COLORS.primary, sub: report.momentum.score + "分" },
-                { label: "坚持", value: report.consistency.label, color: "#3E2723", sub: report.consistency.score + "分" },
+                { label: "坚持", value: report.consistency.label, color: "#1A1A1A", sub: report.consistency.score + "分" },
               ].map((item) => (
                 <motion.div key={item.label} {...MICRO.scrollReveal} variants={fadeUp} initial="hidden" whileInView="visible"
-                  className="bg-white rounded-2xl p-4 text-center" style={{ boxShadow: "0 2px 12px rgba(62,39,35,0.04)" }}>
-                  <p className="text-[10px] text-[#9E8E7E] mb-1">{item.label}</p>
+                  className="bg-white rounded-xl p-4 text-center" style={{ boxShadow: "none" }}>
+                  <p className="text-[10px] text-[#9E9E9E] mb-1">{item.label}</p>
                   <p className="text-sm font-bold" style={{ color: item.color }}>{item.value}</p>
-                  <p className="text-[10px] text-[#9E8E7E] mt-0.5">{item.sub}</p>
+                  <p className="text-[10px] text-[#9E9E9E] mt-0.5">{item.sub}</p>
                 </motion.div>
               ))}
             </div>
 
             {/* ── Score History ── */}
             <motion.section {...MICRO.scrollReveal} variants={fadeUp} initial="hidden" whileInView="visible">
-              <p className="font-serif text-sm font-bold text-[#3E2723] mb-4">坚持指数变化</p>
-              <div className="bg-white rounded-2xl p-5" style={{ boxShadow: "0 2px 12px rgba(62,39,35,0.04)" }}>
+              <p className="font-serif text-sm font-bold text-[#1A1A1A] mb-4">坚持指数变化</p>
+              <div className="bg-white rounded-xl p-5" style={{ boxShadow: "none" }}>
                 <div className="flex items-end justify-between gap-2 h-24">
                   {[...report.scoreHistory].reverse().map((p, i) => {
                     const height = Math.max(8, (p.score.score / 100) * 100);
                     return (
                       <div key={p.label} className="flex-1 flex flex-col items-center gap-1">
-                        <span className="text-xs font-bold text-[#3E2723]">{p.score.score}</span>
+                        <span className="text-xs font-bold text-[#1A1A1A]">{p.score.score}</span>
                         <motion.div
                           className="w-full rounded-t-lg"
                           style={{ backgroundColor: i === report.scoreHistory.length - 1 ? COLORS.primary : "#EDE8E2", height: "4px" }}
@@ -117,7 +117,7 @@ export default function ReportPage() {
                           animate={{ height: `${height}%` }}
                           transition={{ duration: 0.6, delay: 0.3 }}
                         />
-                        <span className="text-[9px] text-[#9E8E7E]">{p.label}</span>
+                        <span className="text-[9px] text-[#9E9E9E]">{p.label}</span>
                       </div>
                     );
                   })}
@@ -129,11 +129,11 @@ export default function ReportPage() {
             <motion.section {...MICRO.scrollReveal} variants={fadeUp} initial="hidden" whileInView="visible">
               <GlassCard padding="lg" hover={false}>
                 <p className="text-[11px] uppercase tracking-[0.3em] font-medium mb-3" style={{ color: COLORS.primary }}>成长阶段</p>
-                <p className="font-serif text-2xl font-bold text-[#3E2723] mb-2">{report.stage.title}</p>
-                <p className="text-sm text-[#9E8E7E] leading-relaxed">{report.stage.description}</p>
+                <p className="font-serif text-2xl font-bold text-[#1A1A1A] mb-2">{report.stage.title}</p>
+                <p className="text-sm text-[#9E9E9E] leading-relaxed">{report.stage.description}</p>
                 {report.nextStage && (
                   <div className="mt-4 pt-4 border-t border-[#EDE8E2] flex items-center justify-between">
-                    <span className="text-xs text-[#9E8E7E]">下一阶段：{report.nextStage.title}</span>
+                    <span className="text-xs text-[#9E9E9E]">下一阶段：{report.nextStage.title}</span>
                     <span className="text-xs font-medium" style={{ color: COLORS.primary }}>还需 {report.nextStage.daysToReach} 天</span>
                   </div>
                 )}
@@ -143,25 +143,25 @@ export default function ReportPage() {
             {/* ── Summary ── */}
             <motion.section {...MICRO.scrollReveal} variants={fadeUp} initial="hidden" whileInView="visible">
               <GlassCard padding="md" hover={false}>
-                <p className="font-serif text-sm font-bold text-[#3E2723] mb-3">成长摘要</p>
-                <p className="text-sm text-[#3E2723] leading-relaxed">{report.summary}</p>
+                <p className="font-serif text-sm font-bold text-[#1A1A1A] mb-3">成长摘要</p>
+                <p className="text-sm text-[#1A1A1A] leading-relaxed">{report.summary}</p>
               </GlassCard>
             </motion.section>
 
             {/* ── Score Breakdown ── */}
             <motion.section {...MICRO.scrollReveal} variants={fadeUp} initial="hidden" whileInView="visible">
-              <p className="font-serif text-sm font-bold text-[#3E2723] mb-4">成长详情</p>
+              <p className="font-serif text-sm font-bold text-[#1A1A1A] mb-4">成长详情</p>
               <div className="space-y-3">
                 {BREAKDOWN_ITEMS.map((item) => {
                   const val = report.score.breakdown[item.key];
                   return (
                     <div key={item.key} className="flex items-center gap-3">
-                      <span className="text-xs text-[#9E8E7E] w-16 flex-shrink-0">{item.label}</span>
+                      <span className="text-xs text-[#9E9E9E] w-16 flex-shrink-0">{item.label}</span>
                       <div className="flex-1 h-2 rounded-full bg-[#EDE8E2] overflow-hidden">
                         <motion.div className="h-full rounded-full" style={{ backgroundColor: COLORS.primary }}
                           initial={{ width: 0 }} animate={{ width: `${(val / item.max) * 100}%` }} transition={{ duration: 0.5, delay: 0.15 }} />
                       </div>
-                      <span className="text-xs font-medium text-[#3E2723] w-8 text-right">{val}</span>
+                      <span className="text-xs font-medium text-[#1A1A1A] w-8 text-right">{val}</span>
                     </div>
                   );
                 })}
@@ -171,29 +171,29 @@ export default function ReportPage() {
             {/* ── Strengths + Risks + Recommendations ── */}
             {report.strengths.length > 0 && (
               <motion.section {...MICRO.scrollReveal} variants={fadeUp} initial="hidden" whileInView="visible">
-                <p className="font-serif text-sm font-bold text-[#3E2723] mb-4">你已经做到的事</p>
+                <p className="font-serif text-sm font-bold text-[#1A1A1A] mb-4">你已经做到的事</p>
                 <div className="space-y-2">
                   {report.strengths.map((s, i) => (
-                    <div key={i} className="flex items-start gap-2 text-sm text-[#3E2723]"><span className="text-[#16a34a] mt-0.5">+</span><span>{s}</span></div>
+                    <div key={i} className="flex items-start gap-2 text-sm text-[#1A1A1A]"><span className="text-[#16a34a] mt-0.5">+</span><span>{s}</span></div>
                   ))}
                 </div>
               </motion.section>
             )}
             {report.risks.length > 0 && (
               <motion.section {...MICRO.scrollReveal} variants={fadeUp} initial="hidden" whileInView="visible">
-                <p className="font-serif text-sm font-bold text-[#3E2723] mb-4">值得关注的地方</p>
+                <p className="font-serif text-sm font-bold text-[#1A1A1A] mb-4">值得关注的地方</p>
                 <div className="space-y-2">
                   {report.risks.map((r, i) => (
-                    <div key={i} className="flex items-start gap-2 text-sm text-[#3E2723]"><span className="text-[#D4736A] mt-0.5">!</span><span>{r}</span></div>
+                    <div key={i} className="flex items-start gap-2 text-sm text-[#1A1A1A]"><span className="text-[#666666] mt-0.5">!</span><span>{r}</span></div>
                   ))}
                 </div>
               </motion.section>
             )}
             <motion.section {...MICRO.scrollReveal} variants={fadeUp} initial="hidden" whileInView="visible">
-              <p className="font-serif text-sm font-bold text-[#3E2723] mb-4">下一步</p>
+              <p className="font-serif text-sm font-bold text-[#1A1A1A] mb-4">下一步</p>
               <div className="space-y-2">
                 {report.recommendations.map((r, i) => (
-                  <div key={i} className="flex items-start gap-2 text-sm"><span className="text-[#8B5E3C] mt-0.5 font-bold">{i + 1}.</span><span className="text-[#3E2723]">{r}</span></div>
+                  <div key={i} className="flex items-start gap-2 text-sm"><span className="text-[#1A1A1A] mt-0.5 font-bold">{i + 1}.</span><span className="text-[#1A1A1A]">{r}</span></div>
                 ))}
               </div>
             </motion.section>

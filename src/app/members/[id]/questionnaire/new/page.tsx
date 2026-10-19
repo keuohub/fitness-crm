@@ -7,12 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
 const inputClass =
-  "border-[#E8E0D5] focus-visible:border-[#8B5E3C] focus-visible:ring-[#8B5E3C]/20";
+  "border-[#E5E5E5] focus-visible:border-[#1A1A1A] focus-visible:ring-[#1A1A1A]/20";
 
 const selectClass = `flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-sm transition-colors ${inputClass}`;
 
-const sectionClass = "bg-white rounded-2xl border border-[#E8E0D5] p-5 shadow-sm space-y-4";
-const sectionTitleClass = "font-serif text-base text-[#3E2723] border-b border-[#E8E0D5] pb-2 mb-3";
+const sectionClass = "bg-white rounded-xl border border-[#E5E5E5] p-5 shadow-sm space-y-4";
+const sectionTitleClass = "font-serif text-base text-[#1A1A1A] border-b border-[#E5E5E5] pb-2 mb-3";
 
 interface SelectFieldProps {
   label: string;
@@ -25,7 +25,7 @@ interface SelectFieldProps {
 function SelectField({ label, name, value, onChange, options }: SelectFieldProps) {
   return (
     <div className="space-y-1.5">
-      <label className="text-sm text-[#3E2723]">{label}</label>
+      <label className="text-sm text-[#1A1A1A]">{label}</label>
       <select name={name} value={value} onChange={onChange} className={selectClass}>
         <option value="">请选择</option>
         {options.map((opt) => (
@@ -50,7 +50,7 @@ function TextField({ label, name, value, onChange, type = "text", placeholder, t
   if (textarea) {
     return (
       <div className="space-y-1.5">
-        <label className="text-sm text-[#3E2723]">{label}</label>
+        <label className="text-sm text-[#1A1A1A]">{label}</label>
         <Textarea
           name={name}
           value={value}
@@ -63,7 +63,7 @@ function TextField({ label, name, value, onChange, type = "text", placeholder, t
   }
   return (
     <div className="space-y-1.5">
-      <label className="text-sm text-[#3E2723]">{label}</label>
+      <label className="text-sm text-[#1A1A1A]">{label}</label>
       <Input
         name={name}
         type={type}
@@ -306,12 +306,12 @@ export default function NewQuestionnaire() {
   };
 
   return (
-    <main className="min-h-screen bg-[#FAF7F2] text-[#3E2723] p-6">
+    <main className="min-h-screen bg-[#FAFAFA] text-[#1A1A1A] p-6">
       <div className="max-w-2xl mx-auto">
         <h1 className="text-2xl font-serif tracking-wide mb-2">
           新增问卷 · {memberName || `会员 #${memberId}`}
         </h1>
-        <p className="text-sm text-[#9E8E7E] mb-8">
+        <p className="text-sm text-[#9E9E9E] mb-8">
           请根据会员填写的内容逐项录入，所有非必填项可留空
         </p>
 
@@ -406,7 +406,7 @@ export default function NewQuestionnaire() {
           </div>
 
           {/* 错误提示 */}
-          {error && <p className="text-sm text-[#D4736A]">{error}</p>}
+          {error && <p className="text-sm text-[#666666]">{error}</p>}
 
           {/* 按钮 */}
           <div className="flex gap-3 pt-2 pb-8">

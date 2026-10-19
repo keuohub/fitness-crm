@@ -312,8 +312,11 @@ export function useGrowthEvents(
       console.log("[GrowthEvents] fetch start");
       const timedFetch = (url: string) => {
         const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), 8000);
-        return fetch(url, { signal: controller.signal }).finally(() => clearTimeout(timer));
+        const timer = setTimeout(() => controller.abort(), 20000);
+        const headers: Record<string,string> = {};
+        const storedId = localStorage.getItem("portal_member_id");
+        if (storedId) headers["x-portal-member-id"] = storedId;
+        return fetch(url, { signal: controller.signal, credentials: "include", headers }).finally(() => clearTimeout(timer));
       };
       setLoading(true);
       setError(null);

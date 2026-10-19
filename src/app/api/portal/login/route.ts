@@ -19,25 +19,49 @@ const MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 
 export async function POST(request: NextRequest) {
   try {
-    const { portalCode } = await request.json();
+    const body = await request.json();
+    const rawCode = (body.portalCode || body.accessCode || "").trim().toUpperCase();
+    const phoneSuffix = (body.phoneSuffix || "").trim().replace(/\D/g, "");
 
-    if (!portalCode || typeof portalCode !== "string" || portalCode.trim().length === 0) {
-      return NextResponse.json({ error: "请输入邀请码" }, { status: 400 });
+    if (!rawCode) {
+      return NextResponse.json({ error: "请输入专属邀请码" }, { status: 400 });
     }
 
-    const [member] = await db
+    const allMembers = await db
       .select({
         id: members.id,
         name: members.name,
+        phone: members.phone,
         joinedAt: members.joinedAt,
         portalEnabled: members.portalEnabled,
         portalCode: members.portalCode,
       })
       .from(members)
-      .where(and(eq(members.portalCode, portalCode.trim()), eq(members.portalEnabled, 1)));
+      .where(eq(members.portalEnabled, 1));
+
+    const member = allMembers.find(
+      (m) => m.portalCode && m.portalCode.trim().toUpperCase() === rawCode
+    );
 
     if (!member) {
-      return NextResponse.json({ error: "邀请码无效或未激活" }, { status: 404 });
+      return NextResponse.json({ error: "未找到该邀请码，请核对或联系小桥" }, { status: 404 });
+    }
+
+    // 防串号安全校验：若会员在册手机号存在且长度>=4
+    if (member.phone && member.phone.replace(/\D/g, "").length >= 4) {
+      const cleanPhone = member.phone.replace(/\D/g, "");
+      // 如果会员有登记手机号，必须验证尾号后4位！如果不填或不匹配，坚决拦截
+      if (!phoneSuffix) {
+        return NextResponse.json({ error: "为保障您的私密档案安全，请输入手机尾号后4位" }, { status: 403 });
+      }
+      if (!cleanPhone.endsWith(phoneSuffix)) {
+        return NextResponse.json({ error: "邀请码与手机尾号不匹配，请核对或联系小桥" }, { status: 403 });
+      }
+    }
+
+    // 如果会员此前未录入手机号，而本次提供了尾号/手机号，则自动回填
+    if (!member.phone && phoneSuffix && phoneSuffix.length === 11) {
+      await db.update(members).set({ phone: phoneSuffix }).where(eq(members.id, member.id));
     }
 
     const response = NextResponse.json({

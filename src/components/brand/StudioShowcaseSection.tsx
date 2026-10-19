@@ -27,7 +27,7 @@ const PLACEHOLDER_BLUR = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB
 
 export default function StudioShowcaseSection() {
   return (
-    <section id="studio" className="max-w-5xl mx-auto px-5 sm:px-8 md:px-12 py-40 md:py-48 bg-white">
+    <section id="studio" className="max-w-5xl mx-auto px-4 sm:px-6 md:px-8 py-16 sm:py-20 md:py-24">
       <motion.div
         {...MICRO.scrollReveal}
         variants={fadeUp}
@@ -41,10 +41,10 @@ export default function StudioShowcaseSection() {
         >
           Our Space
         </p>
-        <h2 className="text-4xl sm:text-5xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15] mb-4">
+        <h2 className="text-2xl sm:text-3xl font-normal text-[#1A1A1A] tracking-normal mb-4">
           训练空间
         </h2>
-        <p className="text-sm text-[#6E6E73] max-w-[34em] mx-auto">
+        <p className="text-sm text-[#4A4A4A] max-w-prose mx-auto">
           在舒适的环境中专注每一次训练。自然光、专业器械、安静氛围。
         </p>
       </motion.div>
@@ -60,7 +60,7 @@ export default function StudioShowcaseSection() {
           <motion.div
             key={img.label}
             variants={staggerItem}
-            className="relative rounded-3xl overflow-hidden aspect-[3/4] group"
+            className="relative rounded-none overflow-hidden aspect-[3/4] group"
             style={{ boxShadow: "0 4px 24px rgba(62,39,35,0.06)" }}
           >
             <Image

@@ -42,14 +42,14 @@ export default async function MembersPage() {
   const trainCounts = await getTrainCounts();
 
   return (
-    <main style={{ background: "#FAF7F2", minHeight: "100vh", padding: "40px 24px" }}>
+    <main style={{ background: "#FAFAFA", minHeight: "100vh", padding: "40px 24px" }}>
       <div style={{ maxWidth: 960, margin: "0 auto" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: "#3E2723" }}>会员列表</h1>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: "#1A1A1A" }}>会员列表</h1>
           <Link
             href="/members/new"
             style={{
-              background: "#8B5E3C", color: "#fff", padding: "10px 20px",
+              background: "#1A1A1A", color: "#fff", padding: "10px 20px",
               borderRadius: 8, fontWeight: 600, textDecoration: "none", fontSize: 14
             }}
           >
@@ -59,7 +59,7 @@ export default async function MembersPage() {
 
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {allMembers.length === 0 && (
-            <p style={{ color: "#9E8E7E", textAlign: "center", padding: 60 }}>暂无会员数据</p>
+            <p style={{ color: "#9E9E9E", textAlign: "center", padding: 60 }}>暂无会员数据</p>
           )}
           {allMembers.map((m: MemberRow) => {
             const cnt = trainCounts.get(m.id) ?? 0;
@@ -77,12 +77,12 @@ export default async function MembersPage() {
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
                   <div>
-                    <div style={{ fontWeight: 600, fontSize: 16, color: "#3E2723" }}>{m.name}</div>
-                    {m.phone && <div style={{ fontSize: 13, color: "#9E8E7E", marginTop: 1 }}>{m.phone}</div>}
+                    <div style={{ fontWeight: 600, fontSize: 16, color: "#1A1A1A" }}>{m.name}</div>
+                    {m.phone && <div style={{ fontSize: 13, color: "#9E9E9E", marginTop: 1 }}>{m.phone}</div>}
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 12 }}>
-                  <span style={{ color: "#9E8E7E" }}>{cnt}次/30天</span>
+                  <span style={{ color: "#9E9E9E" }}>{cnt}次/30天</span>
                   <span style={{
                     background: tag.bg, color: tag.text,
                     padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 500,
@@ -90,7 +90,7 @@ export default async function MembersPage() {
                   }}>
                     {tag.label}
                   </span>
-                  {m.stage && <span style={{ color: "#8B5E3C", fontWeight: 500 }}>{m.stage}</span>}
+                  {m.stage && <span style={{ color: "#1A1A1A", fontWeight: 500 }}>{m.stage}</span>}
                 </div>
               </Link>
             );

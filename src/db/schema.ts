@@ -50,6 +50,8 @@ export const members = pgTable("members", {
   portalEnabled: integer("portal_enabled").default(0),
   portalActivatedAt: text("portal_activated_at"),
   currentQuestionnaireId: integer("current_questionnaire_id"),
+  wechatOpenId: text("wechat_open_id").unique(),
+  avatarUrl: text("avatar_url"),
   createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { mode: "string" }).notNull().defaultNow(),
 });
@@ -139,6 +141,23 @@ export const photos = pgTable("photos", {
   createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
 });
 
+// ── 照片对比 ──
+export const photoComparisons = pgTable("photo_comparisons", {
+  id: serial("id").primaryKey(),
+  tenantId: integer("tenant_id")
+    .notNull()
+    .references(() => tenants.id),
+  memberId: integer("member_id")
+    .notNull()
+    .references(() => members.id),
+  photoId1: integer("photo_id_1")
+    .references(() => photos.id),
+  photoId2: integer("photo_id_2")
+    .references(() => photos.id),
+  analysis: text("analysis"),
+  createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
+});
+
 // ── 问卷提交记录 ──
 export const questionnaireSubmissions = pgTable("questionnaire_submissions", {
   id: serial("id").primaryKey(),
@@ -225,5 +244,65 @@ export const smsCodes = pgTable("sms_codes", {
   code: text("code").notNull(),
   used: integer("used").default(0),
   expiresAt: text("expires_at").notNull(),
+  createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
+});
+
+// ── Demo 预约线索 ──
+export const demoLeads = pgTable("demo_leads", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  phone: text("phone").notNull(),
+  city: text("city"),
+  studioName: text("studio_name"),
+  memberScale: text("member_scale"),
+  createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
+});
+
+// ── 训练感受 ──
+export const trainingFeelings = pgTable("training_feelings", {
+  id: serial("id").primaryKey(),
+  tenantId: integer("tenant_id")
+    .notNull()
+    .references(() => tenants.id),
+  memberId: integer("member_id")
+    .notNull()
+    .references(() => members.id),
+  trainingId: integer("training_id").references(() => trainings.id),
+  feeling: text("feeling").notNull(),
+  xiaoqiaoReply: text("xiaoqiao_reply"),
+  createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
+});
+
+// ── 课程预约 ──
+export const courseBookings = pgTable("course_bookings", {
+  id: serial("id").primaryKey(),
+  tenantId: integer("tenant_id")
+    .notNull()
+    .references(() => tenants.id),
+  memberId: integer("member_id")
+    .notNull()
+    .references(() => members.id),
+  courseType: text("course_type").notNull(),
+  bookingDate: text("booking_date").notNull(),
+  bookingTime: text("booking_time").notNull(),
+  coachId: integer("coach_id").references(() => users.id).default(1),
+  status: text("status").notNull().default("pending"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
+});
+
+// ====== 教练课后笔记 ======
+export const coachNotes = pgTable("coach_notes", {
+  id: serial("id").primaryKey(),
+  tenantId: integer("tenant_id")
+    .notNull()
+    .references(() => tenants.id),
+  memberId: integer("member_id")
+    .notNull()
+    .references(() => members.id),
+  trainingId: integer("training_id").references(() => trainings.id),
+  tags: text("tags"),          // JSON: ["动作进步","状态好","核心稳了"]
+  coachNote: text("coach_note"), // 教练手写备注
+  aiMessage: text("ai_message"), // AI生成的人文关怀鼓励语
   createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
 });

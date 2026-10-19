@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 const inputClass =
-  "border-[#E8E0D5] focus-visible:border-[#8B5E3C] focus-visible:ring-[#8B5E3C]/20";
+  "border-[#E5E5E5] focus-visible:border-[#1A1A1A] focus-visible:ring-[#1A1A1A]/20";
 
 const selectClass = `flex h-9 w-full rounded-md border bg-white px-3 py-1 text-sm shadow-sm transition-colors ${inputClass}`;
 
@@ -114,35 +114,35 @@ export default function EditMember() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#FAF7F2] text-[#3E2723] p-6">
+      <main className="min-h-screen bg-[#FAFAFA] text-[#1A1A1A] p-6">
         <div className="max-w-xl mx-auto">
-          <div className="h-96 bg-[#FAF7F2] rounded-2xl animate-pulse" />
+          <div className="h-96 bg-[#FAFAFA] rounded-xl animate-pulse" />
         </div>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#FAF7F2] text-[#3E2723] p-6">
+    <main className="min-h-screen bg-[#FAFAFA] text-[#1A1A1A] p-6">
       <div className="max-w-xl mx-auto">
         <div className="mb-6">
-          <Link href={`/members/${memberId}`} className="text-sm text-[#9E8E7E] hover:text-[#3E2723]">
+          <Link href={`/members/${memberId}`} className="text-sm text-[#9E9E9E] hover:text-[#1A1A1A]">
             ← 返回会员详情
           </Link>
         </div>
 
         <h1 className="text-2xl font-serif font-bold tracking-wide mb-2">编辑会员</h1>
-        <p className="text-sm text-[#9E8E7E] mb-8">编号 {memberCode}</p>
+        <p className="text-sm text-[#9E9E9E] mb-8">编号 {memberCode}</p>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* 姓名 + 性别 */}
           <div className="grid grid-cols-3 gap-4">
             <div className="col-span-2 space-y-1.5">
-              <label className="text-sm text-[#9E8E7E]">姓名 *</label>
+              <label className="text-sm text-[#9E9E9E]">姓名 *</label>
               <Input name="name" value={form.name} onChange={handleChange} required className={inputClass} />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm text-[#9E8E7E]">性别</label>
+              <label className="text-sm text-[#9E9E9E]">性别</label>
               <select name="gender" value={form.gender} onChange={handleChange} className={selectClass}>
                 <option value="female">女</option>
                 <option value="male">男</option>
@@ -152,18 +152,18 @@ export default function EditMember() {
 
           {/* 手机号 */}
           <div className="space-y-1.5">
-            <label className="text-sm text-[#9E8E7E]">手机号</label>
+            <label className="text-sm text-[#9E9E9E]">手机号</label>
             <Input name="phone" value={form.phone} onChange={handleChange} className={inputClass} />
           </div>
 
           {/* 生日 + 加入时间 */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-sm text-[#9E8E7E]">生日</label>
+              <label className="text-sm text-[#9E9E9E]">生日</label>
               <Input name="birthday" type="date" value={form.birthday} onChange={handleChange} className={inputClass} />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm text-[#9E8E7E]">加入时间</label>
+              <label className="text-sm text-[#9E9E9E]">加入时间</label>
               <Input name="joinedAt" type="date" value={form.joinedAt} onChange={handleChange} className={inputClass} />
             </div>
           </div>
@@ -171,7 +171,7 @@ export default function EditMember() {
           {/* 阶段 + 状态 */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-sm text-[#9E8E7E]">会员阶段</label>
+              <label className="text-sm text-[#9E9E9E]">会员阶段</label>
               <select name="stage" value={form.stage} onChange={handleChange} className={selectClass}>
                 <option value="">请选择</option>
                 <option value="new">新会员</option>
@@ -182,7 +182,7 @@ export default function EditMember() {
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm text-[#9E8E7E]">状态</label>
+              <label className="text-sm text-[#9E9E9E]">状态</label>
               <select name="status" value={form.status} onChange={handleChange} className={selectClass}>
                 <option value="active">在籍</option>
                 <option value="inactive">停课</option>
@@ -193,22 +193,22 @@ export default function EditMember() {
 
           {/* 标签 */}
           <div className="space-y-1.5">
-            <label className="text-sm text-[#9E8E7E]">标签（逗号分隔）</label>
+            <label className="text-sm text-[#9E9E9E]">标签（逗号分隔）</label>
             <Input name="tags" value={form.tags} onChange={handleChange} placeholder="腰痛, 产后, 体态矫正" className={inputClass} />
           </div>
 
           {/* 编号只读 */}
-          <div className="flex items-center gap-2 text-xs text-[#9E8E7E] bg-[#FAF7F2] rounded-lg px-3 py-2">
+          <div className="flex items-center gap-2 text-xs text-[#9E9E9E] bg-[#FAFAFA] rounded-lg px-3 py-2">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
             </svg>
             会员编号 {memberCode} · 不可修改
           </div>
 
-          {error && <p className="text-sm text-[#D4736A]">{error}</p>}
+          {error && <p className="text-sm text-[#666666]">{error}</p>}
 
           <div className="flex gap-3 pt-2">
-            <Button type="submit" disabled={submitting} className="bg-[#8B5E3C] hover:bg-[#A86545] text-white rounded-xl">
+            <Button type="submit" disabled={submitting} className="bg-[#1A1A1A] hover:bg-[#333333] text-white rounded-xl">
               {submitting ? "保存中..." : "保存修改"}
             </Button>
             <Button type="button" variant="outline" onClick={() => router.back()} className="rounded-xl">

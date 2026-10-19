@@ -19,12 +19,12 @@ const TYPE_CONFIG: Record<
   GrowthEventType,
   { icon: string; label: string; dotColor: string; bgColor: string; textColor: string }
 > = {
-  join:          { icon: "📌", label: "加入",     dotColor: "bg-[#8B5E3C]",  bgColor: "bg-[#8B5E3C]/10", textColor: "text-[#8B5E3C]" },
-  training:      { icon: "🏋️", label: "训练",     dotColor: "bg-[#3E2723]",  bgColor: "bg-[#3E2723]/10",  textColor: "text-[#3E2723]" },
-  photo:         { icon: "📸", label: "照片",     dotColor: "bg-[#9E8E7E]", bgColor: "bg-[#FAF7F2]",    textColor: "text-[#9E8E7E]" },
-  questionnaire: { icon: "📋", label: "问卷",     dotColor: "bg-[#8B5E3C]",  bgColor: "bg-[#8B5E3C]/10", textColor: "text-[#8B5E3C]" },
+  join:          { icon: "📌", label: "加入",     dotColor: "bg-[#1A1A1A]",  bgColor: "bg-[#1A1A1A]/10", textColor: "text-[#1A1A1A]" },
+  training:      { icon: "🏋️", label: "训练",     dotColor: "bg-[#1A1A1A]",  bgColor: "bg-[#1A1A1A]/10",  textColor: "text-[#1A1A1A]" },
+  photo:         { icon: "📸", label: "照片",     dotColor: "bg-[#9E9E9E]", bgColor: "bg-[#FAFAFA]",    textColor: "text-[#9E9E9E]" },
+  questionnaire: { icon: "📋", label: "问卷",     dotColor: "bg-[#1A1A1A]",  bgColor: "bg-[#1A1A1A]/10", textColor: "text-[#1A1A1A]" },
   ai_report:     { icon: "🤖", label: "阶段回顾",  dotColor: "bg-emerald-400",bgColor: "bg-emerald-50",  textColor: "text-emerald-700" },
-  milestone:     { icon: "⭐", label: "里程碑",   dotColor: "bg-[#8B5E3C]",  bgColor: "bg-[#8B5E3C]/10", textColor: "text-[#8B5E3C]" },
+  milestone:     { icon: "⭐", label: "里程碑",   dotColor: "bg-[#1A1A1A]",  bgColor: "bg-[#1A1A1A]/10", textColor: "text-[#1A1A1A]" },
 };
 
 // ─── 从 events 中提取统计 ───
@@ -70,12 +70,12 @@ export default function GrowthTimeline({ memberId, memberName, joinedAt }: Props
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="h-48 bg-[#FAF7F2] rounded-3xl animate-pulse" />
-        <div className="bg-white rounded-2xl shadow-sm border border-[#E8E0D5] p-6">
-          <h2 className="font-serif text-lg text-[#3E2723] mb-4">成长记录</h2>
+        <div className="h-48 bg-[#FAFAFA] rounded-3xl animate-pulse" />
+        <div className="bg-white rounded-xl shadow-sm border border-[#E5E5E5] p-6">
+          <h2 className="font-serif text-lg text-[#1A1A1A] mb-4">成长记录</h2>
           <div className="space-y-3">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-16 bg-[#FAF7F2] rounded-xl animate-pulse" />
+              <div key={i} className="h-16 bg-[#FAFAFA] rounded-xl animate-pulse" />
             ))}
           </div>
         </div>
@@ -95,12 +95,12 @@ export default function GrowthTimeline({ memberId, memberName, joinedAt }: Props
           feedbackCount={0}
           consecutiveTrainingDays={0}
         />
-        <div className="bg-white rounded-2xl shadow-sm border border-[#E8E0D5] p-6">
-          <h2 className="font-serif text-lg text-[#3E2723] mb-4">成长记录</h2>
-          <p className="text-sm text-[#D4736A] mb-3">{error}</p>
+        <div className="bg-white rounded-xl shadow-sm border border-[#E5E5E5] p-6">
+          <h2 className="font-serif text-lg text-[#1A1A1A] mb-4">成长记录</h2>
+          <p className="text-sm text-[#666666] mb-3">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="text-xs px-3 py-1.5 rounded-lg bg-[#8B5E3C]/10 text-[#8B5E3C] hover:bg-[#8B5E3C]/20 transition-colors"
+            className="text-xs px-3 py-1.5 rounded-lg bg-[#1A1A1A]/10 text-[#1A1A1A] hover:bg-[#1A1A1A]/20 transition-colors"
           >
             重试
           </button>
@@ -124,11 +124,11 @@ export default function GrowthTimeline({ memberId, memberName, joinedAt }: Props
           feedbackCount={0}
           consecutiveTrainingDays={0}
         />
-        <div className="bg-white rounded-2xl shadow-sm border border-[#E8E0D5] p-6">
-          <h2 className="font-serif text-lg text-[#3E2723] mb-4">成长记录</h2>
+        <div className="bg-white rounded-xl shadow-sm border border-[#E5E5E5] p-6">
+          <h2 className="font-serif text-lg text-[#1A1A1A] mb-4">成长记录</h2>
           <div className="text-center py-8">
-            <p className="text-sm text-[#9E8E7E]">暂无成长记录</p>
-            <p className="text-xs text-[#9E8E7E] mt-1">
+            <p className="text-sm text-[#9E9E9E]">暂无成长记录</p>
+            <p className="text-xs text-[#9E9E9E] mt-1">
               添加训练、上传照片或填写问卷后，成长轨迹将在此展示
             </p>
           </div>
@@ -151,15 +151,15 @@ export default function GrowthTimeline({ memberId, memberName, joinedAt }: Props
       />
 
       {/* 时间轴 */}
-      <div className="bg-white rounded-2xl shadow-sm border border-[#E8E0D5] p-6">
-        <h2 className="font-serif text-lg text-[#3E2723] mb-4">成长记录</h2>
+      <div className="bg-white rounded-xl shadow-sm border border-[#E5E5E5] p-6">
+        <h2 className="font-serif text-lg text-[#1A1A1A] mb-4">成长记录</h2>
 
         <div className="relative">
           <div
             className="absolute left-[11px] top-2 bottom-2 w-px"
             style={{
               background:
-                "linear-gradient(180deg, rgba(139,94,60,0.4) 0%, #E8E0D5 50%, transparent 100%)",
+                "linear-gradient(180deg, rgba(139,94,60,0.4) 0%, #E5E5E5 50%, transparent 100%)",
             }}
           />
 
@@ -176,7 +176,7 @@ export default function GrowthTimeline({ memberId, memberName, joinedAt }: Props
                   className="relative pl-8"
                 >
                   <div className="absolute left-1 top-1.5">
-                    <div className="w-[10px] h-[10px] rounded-full border-2 border-white ring-2 ring-[#8B5E3C]/10">
+                    <div className="w-[10px] h-[10px] rounded-full border-2 border-white ring-2 ring-[#1A1A1A]/10">
                       <div className={`w-full h-full rounded-full ${config.dotColor}`} />
                     </div>
                   </div>
@@ -188,13 +188,13 @@ export default function GrowthTimeline({ memberId, memberName, joinedAt }: Props
                       >
                         {config.icon} {config.label}
                       </span>
-                      <span className="text-xs text-[#9E8E7E]">{event.date}</span>
+                      <span className="text-xs text-[#9E9E9E]">{event.date}</span>
                     </div>
 
-                    <p className="text-sm text-[#3E2723] font-medium">{event.title}</p>
+                    <p className="text-sm text-[#1A1A1A] font-medium">{event.title}</p>
 
                     {event.description && (
-                      <p className="text-xs text-[#9E8E7E] leading-relaxed line-clamp-2">
+                      <p className="text-xs text-[#9E9E9E] leading-relaxed line-clamp-2">
                         {event.description}
                       </p>
                     )}

@@ -29,14 +29,18 @@ interface FieldMapping {
 // ─── 会员基础信息映射 ───
 
 export const MEMBER_BASE_MAPPING: FieldMapping[] = [
-  { internalKey: "member_code", feishuKeys: ["会员编号", "memberCode", "编号"], type: "string", required: true },
+  { internalKey: "member_code", feishuKeys: ["会员编号", "memberCode", "编号", "小程序专属激活码"], type: "string" },
+  { internalKey: "portal_code", feishuKeys: ["小程序专属激活码", "激活码", "portalCode"], type: "string" },
+  { internalKey: "coach_note", feishuKeys: ["教练初见备忘", "备忘", "coachNote"], type: "string" },
   { internalKey: "name", feishuKeys: ["姓名", "name", "会员姓名"], type: "string", required: true },
   { internalKey: "gender", feishuKeys: ["性别", "gender"], type: "string" },
   { internalKey: "phone", feishuKeys: ["手机号", "phone", "电话"], type: "string" },
-  { internalKey: "stage", feishuKeys: ["阶段", "stage"], type: "string" },
+  { internalKey: "stage", feishuKeys: ["阶段", "stage", "会员阶段"], type: "string" },
   { internalKey: "tags", feishuKeys: ["标签", "tags"], type: "json", defaultValue: "[]" },
-  { internalKey: "joined_at", feishuKeys: ["入会日期", "joinedAt", "加入日期"], type: "string" },
+  { internalKey: "joined_at", feishuKeys: ["入会日期", "joinedAt", "加入日期", "入会时间"], type: "string" },
   { internalKey: "birthday", feishuKeys: ["生日", "birthday"], type: "string" },
+  { internalKey: "desired_state", feishuKeys: ["你最希望自己变成什么状态？", "desiredState", "desired_state"], type: "string" },
+  { internalKey: "commitment", feishuKeys: ["你愿意为自己的改变投入多久？", "commitment"], type: "string" },
 ];
 
 // ─── 健康日志映射（15天/30天/90天/365天共用） ───

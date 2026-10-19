@@ -6,7 +6,7 @@ import { fadeUp, MICRO } from "@/lib/design/motion-presets";
 
 export default function FounderLetterSection() {
   return (
-    <section className="max-w-[38em] mx-auto px-5 sm:px-8 md:px-12 py-40 md:py-48 bg-white">
+    <section className="max-w-prose mx-auto px-4 sm:px-6 md:px-8 py-16 sm:py-20 md:py-24">
       <motion.div
         {...MICRO.scrollReveal}
         variants={fadeUp}
@@ -20,11 +20,11 @@ export default function FounderLetterSection() {
           一封信
         </p>
 
-        <h2 className="text-3xl sm:text-4xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15] mb-16 max-w-[12ch]">
+        <h2 className="text-xl sm:text-2xl font-normal text-[#1A1A1A] tracking-normal mb-16 max-w-[12ch]">
           致正在认真练习的你
         </h2>
 
-        <div className="space-y-8 text-base leading-[2] text-[#3E2723]">
+        <div className="space-y-8 text-base leading-[2] text-[#1A1A1A]">
           <p>
             不是每个人都需要成为运动达人。
           </p>
@@ -45,7 +45,7 @@ export default function FounderLetterSection() {
           </p>
         </div>
 
-        <p className="text-sm text-[#6E6E73] mt-16">
+        <p className="text-sm text-[#4A4A4A] mt-16">
           徕舞女子塑形
         </p>
       </motion.div>

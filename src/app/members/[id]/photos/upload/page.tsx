@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-const inputClass = "border-[#E8E0D5] focus-visible:border-[#8B5E3C] focus-visible:ring-[#8B5E3C]/20";
+const inputClass = "border-[#E5E5E5] focus-visible:border-[#1A1A1A] focus-visible:ring-[#1A1A1A]/20";
 const selectClass = `flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-sm transition-colors ${inputClass}`;
 
 export default function UploadPhoto() {
@@ -18,7 +18,7 @@ export default function UploadPhoto() {
   const [preview, setPreview] = useState<string | null>(null);
 
   const [form, setForm] = useState({
-    photoType: "progress",
+    photoType: "front",
     takenAt: new Date().toISOString().slice(0, 10),
   });
   const [file, setFile] = useState<File | null>(null);
@@ -66,23 +66,23 @@ export default function UploadPhoto() {
   };
 
   return (
-    <main className="min-h-screen bg-[#FAF7F2] text-[#3E2723] p-6">
+    <main className="min-h-screen bg-[#FAFAFA] text-[#1A1A1A] p-6">
       <div className="max-w-xl mx-auto">
         <h1 className="text-2xl font-serif tracking-wide mb-8">上传照片</h1>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-sm">照片类型</label>
+              <label className="text-sm">拍摄角度</label>
               <select
                 name="photoType"
                 value={form.photoType}
                 onChange={e => setForm({ ...form, photoType: e.target.value })}
                 className={selectClass}
               >
-                <option value="body">体型</option>
-                <option value="posture">体态</option>
-                <option value="progress">进度</option>
+                <option value="front">正面</option>
+                <option value="side">侧面</option>
+                <option value="back">背面</option>
               </select>
             </div>
             <div className="space-y-1.5">
@@ -108,12 +108,12 @@ export default function UploadPhoto() {
           </div>
 
           {preview && (
-            <div className="border border-[#E8E0D5] rounded p-2">
+            <div className="border border-[#E5E5E5] rounded p-2">
               <img src={preview} alt="预览" className="max-h-64 rounded mx-auto" />
             </div>
           )}
 
-          {error && <p className="text-sm text-[#D4736A]">{error}</p>}
+          {error && <p className="text-sm text-[#666666]">{error}</p>}
 
           <div className="flex gap-3 pt-2">
             <Button type="submit" disabled={submitting}>

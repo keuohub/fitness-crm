@@ -1,0 +1,112 @@
+<view class="me-container">
+  
+  <!-- 加载中 -->
+  <view wx:if="{{loading}}" class="loading">
+    <text class="loading-text">正在加载...</text>
+  </view>
+
+  <!-- 正常内容 -->
+  <block wx:else>
+
+    <!-- 模块一：Lululemon 级高奢会员专属身份卡 (对标品牌会员状态卡) -->
+    <view class="profile-card-luxury stagger-1">
+      <view class="avatar" bindtap="handleAvatarTap">
+        <image wx:if="{{avatarUrl}}" class="avatar-img" src="{{avatarUrl}}" mode="aspectFill" />
+        <text wx:else class="avatar-placeholder">{{initial}}</text>
+      </view>
+      <text class="profile-name">{{memberName}}</text>
+      <view class="profile-companion-lockup">
+        <view class="profile-tier-pill {{joinDays >= 365 ? 'tier-pill-gold' : ''}}">
+          <text class="tier-spark">✦</text>
+          <text class="tier-title">{{joinDays >= 365 ? '资深自律挚友' : '身体掌权者'}}</text>
+        </view>
+        <view class="profile-divider"></view>
+        <view class="profile-days-box" wx:if="{{joinDays > 0}}">
+          <text class="profile-days-label">相伴自律</text>
+          <text class="profile-days-number">{{formattedDays}}</text>
+          <text class="profile-days-unit">天</text>
+        </view>
+        <view class="profile-days-box" wx:else>
+          <text class="profile-days-label">相伴自律启程之日</text>
+        </view>
+      </view>
+      <text class="avatar-hint">轻触头像可更换私享写真</text>
+    </view>
+
+    <!-- 模块二：约课入口（优雅保留，不干扰现有运营） -->
+    <view class="booking-entry stagger-2" bindtap="navigateToBooking">
+      <view class="booking-entry-left">
+        <text class="booking-entry-title">预约专属私享席位</text>
+        <text class="booking-entry-desc">如需调整私教排课，可在此轻点或直接微信小桥</text>
+      </view>
+      <text class="booking-entry-arrow">›</text>
+    </view>
+
+    <!-- 模块三：我的身体资产档案 -->
+    <view class="section stagger-3">
+      <text class="section-title">身体资产档案</text>
+      <view class="data-list">
+        <view class="data-row">
+          <text class="data-label">塑形进阶阶段</text>
+          <text class="data-value data-stage">{{stageName}}</text>
+        </view>
+        <view class="data-row">
+          <text class="data-label">私教训练课时</text>
+          <text class="data-value">{{trainCount || 0}} 节</text>
+        </view>
+        <view class="data-row">
+          <text class="data-label">体态深度测评</text>
+          <text class="data-value">{{questionnaireCount || 0}} 次</text>
+        </view>
+        <view class="data-row">
+          <text class="data-label">身形蜕变定格</text>
+          <text class="data-value">{{photoCount || 0}} 组</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 模块四：我的私享便签 -->
+    <view class="section stagger-4" wx:if="{{feelings.length > 0}}">
+      <text class="section-title">我的私享便签</text>
+      <view class="feeling-list">
+        <view wx:for="{{feelings}}" wx:key="id" class="feeling-item">
+          <text class="feeling-text">{{item.feeling}}</text>
+          <view wx:if="{{item.xiaoqiaoReply}}" class="feeling-reply">
+            <text class="reply-label">小桥回复</text>
+            <text class="reply-text">{{item.xiaoqiaoReply}}</text>
+          </view>
+          <text class="feeling-date">{{item.createdAt}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 模块五：我的预约 -->
+    <view class="section stagger-5" wx:if="{{bookings.length > 0}}">
+      <text class="section-title">我的预约</text>
+      <view class="booking-list">
+        <view wx:for="{{bookings}}" wx:key="id" class="booking-item">
+          <view class="booking-info">
+            <text class="booking-date">{{item.bookingDate}}</text>
+            <text class="booking-time">{{item.bookingTime}}</text>
+          </view>
+          <view class="booking-right">
+            <text class="booking-type">{{item.courseType}}</text>
+            <text class="booking-status status-{{item.status}}">
+              {{item.status === "pending" ? "待确认" : item.status === "confirmed" ? "已确认" : "已取消"}}
+            </text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 模块六：账号操作 -->
+    <view class="account-actions stagger-5">
+      <view class="switch-account-btn" bindtap="handleSwitchAccount">
+        <text class="switch-icon">⇄</text>
+        <text class="switch-text">切换会员档案 / 口令</text>
+      </view>
+      <button class="logout-btn" bindtap="handleLogout">暂时离开</button>
+    </view>
+
+  </block>
+</view>

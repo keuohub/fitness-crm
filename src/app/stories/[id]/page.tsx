@@ -35,9 +35,9 @@ export default function StoryDetailPage() {
 
   if (!story) {
     return (
-      <main className="min-h-screen flex items-center justify-center bg-[#FAF7F2]">
+      <main className="min-h-screen flex items-center justify-center bg-[#FAFAFA]">
         <div className="text-center">
-          <p className="text-sm text-[#9E8E7E] mb-4">故事不存在</p>
+          <p className="text-sm text-[#9E9E9E] mb-4">故事不存在</p>
           <Link href="/stories" className="text-sm" style={{ color: COLORS.primary }}>返回故事库</Link>
         </div>
       </main>
@@ -45,13 +45,13 @@ export default function StoryDetailPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#FAF7F2] text-[#3E2723]">
+    <main className="min-h-screen bg-[#FAFAFA] text-[#1A1A1A]">
       {/* Hero */}
       <section className="max-w-3xl mx-auto px-6 pt-20 pb-16 text-center">
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-          <Link href="/stories" className="text-xs text-[#9E8E7E] hover:underline mb-6 inline-block">-- 故事库</Link>
+          <Link href="/stories" className="text-xs text-[#9E9E9E] hover:underline mb-6 inline-block">-- 故事库</Link>
           <p className="text-[11px] uppercase tracking-[0.3em] font-medium mb-6" style={{ color: COLORS.primary }}>{story.stage}</p>
-          <h1 className="font-serif text-3xl sm:text-5xl font-bold text-[#3E2723] mb-4">{story.name}的成长故事</h1>
+          <h1 className="font-serif text-3xl sm:text-5xl font-bold text-[#1A1A1A] mb-4">{story.name}的成长故事</h1>
         </motion.div>
       </section>
 
@@ -59,15 +59,15 @@ export default function StoryDetailPage() {
       <motion.section {...MICRO.scrollReveal} variants={fadeUp} initial="hidden" whileInView="visible"
         className="max-w-2xl mx-auto px-6 mb-12">
         <div className="rounded-[2rem] p-10 text-center relative overflow-hidden"
-          style={{ background: "linear-gradient(160deg, #FFFFFF 0%, #FDF9F5 60%, #F7F1EA 100%)", boxShadow: "0 4px 30px rgba(62,39,35,0.06)" }}>
+          style={{ background: "linear-gradient(160deg, #FFFFFF 0%, #FAFAFA 60%, #F7F1EA 100%)", boxShadow: "0 4px 30px rgba(62,39,35,0.06)" }}>
           <div className="w-20 h-20 mx-auto rounded-full flex items-center justify-center text-3xl font-serif mb-5"
             style={{ backgroundColor: `${COLORS.primary}14`, color: COLORS.primary }}>{story.name[0]}</div>
           <div className="flex items-center justify-center gap-6 mb-6">
-            <div className="text-center"><p className="text-3xl font-bold text-[#3E2723]">{story.days}</p><p className="text-xs text-[#9E8E7E]">坚持天数</p></div>
+            <div className="text-center"><p className="text-3xl font-bold text-[#1A1A1A]">{story.days}</p><p className="text-xs text-[#9E9E9E]">坚持天数</p></div>
             <div className="w-px h-10 bg-[#EDE8E2]" />
-            <div className="text-center"><p className="text-3xl font-bold text-[#3E2723]">{story.trainingCount}</p><p className="text-xs text-[#9E8E7E]">训练次数</p></div>
+            <div className="text-center"><p className="text-3xl font-bold text-[#1A1A1A]">{story.trainingCount}</p><p className="text-xs text-[#9E9E9E]">训练次数</p></div>
           </div>
-          <p className="text-sm text-[#9E8E7E]">加入于 {story.joinedAt}</p>
+          <p className="text-sm text-[#9E9E9E]">加入于 {story.joinedAt}</p>
         </div>
       </motion.section>
 
@@ -75,21 +75,21 @@ export default function StoryDetailPage() {
       <motion.section {...MICRO.scrollReveal} variants={fadeUp} initial="hidden" whileInView="visible" className="max-w-2xl mx-auto px-6 mb-12">
         <div className="text-center relative py-8">
           <span className="absolute top-0 left-1/2 -translate-x-1/2 text-6xl font-serif text-[#EDE8E2] leading-none">&ldquo;</span>
-          <p className="font-serif text-xl sm:text-2xl text-[#3E2723] leading-relaxed italic max-w-lg mx-auto relative z-10">{story.quote}</p>
+          <p className="font-serif text-xl sm:text-2xl text-[#1A1A1A] leading-relaxed italic max-w-lg mx-auto relative z-10">{story.quote}</p>
         </div>
       </motion.section>
 
       {/* Journey Timeline */}
       <motion.section {...MICRO.scrollReveal} variants={fadeUp} initial="hidden" whileInView="visible" className="max-w-lg mx-auto px-6 mb-12">
-        <p className="font-serif text-lg font-bold text-[#3E2723] mb-6">成长旅程</p>
+        <p className="font-serif text-lg font-bold text-[#1A1A1A] mb-6">成长旅程</p>
         <div className="relative">
           <div className="absolute left-2 top-2 bottom-2 w-px" style={{ background: `linear-gradient(180deg, ${COLORS.primary}30, #EDE8E2 50%, transparent)` }} />
           <div className="space-y-5">
             {story.milestones.map((m, i) => (
               <div key={m.date} className="relative pl-8">
                 <div className="absolute left-[2px] top-1.5 w-[7px] h-[7px] rounded-full" style={{ backgroundColor: COLORS.primary }} />
-                <p className="text-sm font-medium text-[#3E2723]">{m.title}</p>
-                <p className="text-xs text-[#9E8E7E]">{m.date}</p>
+                <p className="text-sm font-medium text-[#1A1A1A]">{m.title}</p>
+                <p className="text-xs text-[#9E9E9E]">{m.date}</p>
               </div>
             ))}
           </div>
@@ -98,10 +98,10 @@ export default function StoryDetailPage() {
 
       {/* Coach observation */}
       <motion.section {...MICRO.scrollReveal} variants={fadeUp} initial="hidden" whileInView="visible" className="max-w-lg mx-auto px-6 mb-12">
-        <div className="rounded-2xl p-6" style={{ backgroundColor: "#FAF7F2" }}>
+        <div className="rounded-xl p-6" style={{ backgroundColor: "#FAFAFA" }}>
           <p className="text-[10px] uppercase tracking-wider font-medium mb-2" style={{ color: COLORS.primary }}>教练观察</p>
-          <p className="text-sm text-[#3E2723] leading-relaxed">{story.observation}</p>
-          <p className="text-xs text-[#9E8E7E] mt-4">-- {story.coachName || "教练"}</p>
+          <p className="text-sm text-[#1A1A1A] leading-relaxed">{story.observation}</p>
+          <p className="text-xs text-[#9E9E9E] mt-4">-- {story.coachName || "教练"}</p>
         </div>
       </motion.section>
 
@@ -114,7 +114,7 @@ export default function StoryDetailPage() {
         </div>
       </section>
 
-      <footer className="py-12 text-center bg-white"><p className="text-xs text-[#9E8E7E]">徕舞成长系统 · 钟祥徕舞女子塑形</p></footer>
+      <footer className="py-12 text-center bg-white"><p className="text-xs text-[#9E9E9E]">徕舞成长系统 · 钟祥徕舞女子塑形</p></footer>
     </main>
   );
 }

@@ -1,0 +1,16 @@
+Dockerfile
+.dockerignore
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.next
+.git
+.gitignore
+.env*.local
+miniprogram
+miniprogram_backup_*
+*.tar.gz
+*.db*
+docs
+screenshot-*

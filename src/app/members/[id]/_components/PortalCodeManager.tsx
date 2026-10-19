@@ -65,27 +65,27 @@ export default function PortalCodeManager({ memberId }: Props) {
 
   return (
     <div
-      className="rounded-2xl p-5"
+      className="rounded-xl p-5"
       style={{
-        background: "linear-gradient(135deg, #FDF9F5 0%, #FFF 100%)",
-        border: "1px solid #E8E0D5",
+        background: "linear-gradient(135deg, #FAFAFA 0%, #FFF 100%)",
+        border: "1px solid #E5E5E5",
       }}
     >
-      <p className="font-serif text-sm font-bold text-[#3E2723] mb-4">会员 Portal 邀请码</p>
+      <p className="font-serif text-sm font-bold text-[#1A1A1A] mb-4">会员 Portal 邀请码</p>
 
       {portalCode ? (
         <div className="space-y-3">
           <div className="flex items-center gap-3">
-            <code className="flex-1 h-10 px-4 rounded-xl bg-[#FAF7F2] text-lg font-mono font-bold text-[#3E2723] flex items-center tracking-widest"
-              style={{ border: "1px solid #E8E0D5" }}>
+            <code className="flex-1 h-10 px-4 rounded-xl bg-[#FAFAFA] text-lg font-mono font-bold text-[#1A1A1A] flex items-center tracking-widest"
+              style={{ border: "1px solid #E5E5E5" }}>
               {portalCode}
             </code>
             <button
               onClick={handleCopy}
               className="h-10 px-4 rounded-xl text-sm font-medium transition-colors"
               style={{
-                backgroundColor: copied ? "#E8E0D5" : COLORS.primary,
-                color: copied ? "#3E2723" : "#FFFFFF",
+                backgroundColor: copied ? "#E5E5E5" : COLORS.primary,
+                color: copied ? "#1A1A1A" : "#FFFFFF",
               }}
             >
               {copied ? "已复制" : "复制"}
@@ -99,9 +99,9 @@ export default function PortalCodeManager({ memberId }: Props) {
                 checked={portalEnabled === 1}
                 onChange={handleToggle}
                 disabled={loading}
-                className="w-4 h-4 rounded accent-[#8B5E3C]"
+                className="w-4 h-4 rounded accent-[#1A1A1A]"
               />
-              <span className="text-sm text-[#3E2723]">已启用</span>
+              <span className="text-sm text-[#1A1A1A]">已启用</span>
             </label>
 
             <button
@@ -120,7 +120,7 @@ export default function PortalCodeManager({ memberId }: Props) {
           disabled={loading}
           className="w-full h-10 rounded-xl text-white text-sm font-medium transition-colors"
           style={{ backgroundColor: COLORS.primary }}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#A86545")}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#333333")}
           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = COLORS.primary)}
         >
           {loading ? "生成中..." : "生成邀请码"}

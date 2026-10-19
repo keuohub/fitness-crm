@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#8B5E3C",
+  themeColor: "#1A1A1A",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -34,7 +34,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN" className="font-sans">
-      <body className="antialiased bg-[#FAF7F2] text-[#3E2723]">
+      <body className="antialiased bg-[#FAFAFA] text-[#1A1A1A]">
         <Navbar />
         <PageTransition>{children}</PageTransition>
       </body>

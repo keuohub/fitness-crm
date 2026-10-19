@@ -44,16 +44,16 @@ export default function ActivityFeedSection() {
 
   if (loading) {
     return (
-      <section className="max-w-4xl mx-auto px-5 sm:px-8 md:px-12 py-40 md:py-48 bg-white">
-        <div className="text-center text-sm text-[#6E6E73]">加载实时动态...</div>
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-16 sm:py-20 md:py-24">
+        <div className="text-center text-sm text-[#4A4A4A]">加载实时动态...</div>
       </section>
     );
   }
 
-  if (activities.length === 0) return null;
+  if (activities.length === 0) { return (<section className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-16 sm:py-20 md:py-24"><div className="text-center text-sm text-[#AAAAAA]">会员动态即将上线</div></section>); }
 
   return (
-    <section id="activity" className="max-w-4xl mx-auto px-5 sm:px-8 md:px-12 py-40 md:py-48 bg-white">
+    <section id="activity" className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-16 sm:py-20 md:py-24">
       <motion.div
         {...MICRO.scrollReveal}
         variants={fadeUp}
@@ -67,7 +67,7 @@ export default function ActivityFeedSection() {
         >
           Live Activity
         </p>
-        <h2 className="text-3xl sm:text-4xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15]">
+        <h2 className="text-xl sm:text-2xl font-normal text-[#1A1A1A] tracking-normal">
           今天的训练记录
         </h2>
       </motion.div>
@@ -81,19 +81,19 @@ export default function ActivityFeedSection() {
           {[...activities, ...activities].map((a, i) => (
             <div
               key={`${a.id}-${i}`}
-              className="flex items-center justify-between py-3 px-5 rounded-xl bg-[#FAF7F2]"
+              className="flex items-center justify-between py-3 px-5 rounded-none bg-[#FAFAFA]  "
             >
               <div className="flex items-center gap-3">
                 <div
                   className="w-2 h-2 rounded-full flex-shrink-0"
                   style={{ backgroundColor: COLORS.primary }}
                 />
-                <span className="text-sm font-medium text-[#3E2723]">
+                <span className="text-sm font-medium text-[#1A1A1A]">
                   {a.memberName}
                 </span>
-                <span className="text-sm text-[#6E6E73]">{a.action}</span>
+                <span className="text-sm text-[#4A4A4A]">{a.action}</span>
               </div>
-              <span className="text-xs text-[#6E6E73] flex-shrink-0">
+              <span className="text-xs text-[#4A4A4A] flex-shrink-0">
                 {timeAgo(a.time)}
               </span>
             </div>

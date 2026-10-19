@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 const inputClass =
-  "border-[#E8E0D5] focus-visible:border-[#8B5E3C] focus-visible:ring-[#8B5E3C]/20";
+  "border-[#E5E5E5] focus-visible:border-[#1A1A1A] focus-visible:ring-[#1A1A1A]/20";
 
 const selectClass = `flex h-9 w-full rounded-md border bg-white px-3 py-1 text-sm shadow-sm transition-colors ${inputClass}`;
 
@@ -67,16 +67,16 @@ export default function NewMember() {
   };
 
   return (
-    <main className="min-h-screen bg-[#FAF7F2] text-[#3E2723] p-6">
+    <main className="min-h-screen bg-[#FAFAFA] text-[#1A1A1A] p-6">
       <div className="max-w-xl mx-auto">
         <h1 className="text-2xl font-serif font-bold tracking-wide mb-2">新增会员</h1>
-        <p className="text-sm text-[#9E8E7E] mb-8">会员编号将在保存后自动生成</p>
+        <p className="text-sm text-[#9E9E9E] mb-8">会员编号将在保存后自动生成</p>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* 姓名(2/3) + 性别(1/3) */}
           <div className="grid grid-cols-3 gap-4">
             <div className="col-span-2 space-y-1.5">
-              <label className="text-sm text-[#9E8E7E]">姓名 *</label>
+              <label className="text-sm text-[#9E9E9E]">姓名 *</label>
               <Input
                 name="name"
                 value={form.name}
@@ -87,7 +87,7 @@ export default function NewMember() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm text-[#9E8E7E]">性别</label>
+              <label className="text-sm text-[#9E9E9E]">性别</label>
               <select
                 name="gender"
                 value={form.gender}
@@ -102,7 +102,7 @@ export default function NewMember() {
 
           {/* 手机号 */}
           <div className="space-y-1.5">
-            <label className="text-sm text-[#9E8E7E]">手机号</label>
+            <label className="text-sm text-[#9E9E9E]">手机号</label>
             <Input
               name="phone"
               value={form.phone}
@@ -115,7 +115,7 @@ export default function NewMember() {
           {/* 生日 + 加入时间 */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-sm text-[#9E8E7E]">生日</label>
+              <label className="text-sm text-[#9E9E9E]">生日</label>
               <Input
                 name="birthday"
                 type="date"
@@ -125,7 +125,7 @@ export default function NewMember() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm text-[#9E8E7E]">加入时间</label>
+              <label className="text-sm text-[#9E9E9E]">加入时间</label>
               <Input
                 name="joinedAt"
                 type="date"
@@ -139,7 +139,7 @@ export default function NewMember() {
           {/* 阶段 + 状态 */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-sm text-[#9E8E7E]">会员阶段</label>
+              <label className="text-sm text-[#9E9E9E]">会员阶段</label>
               <select
                 name="stage"
                 value={form.stage}
@@ -155,7 +155,7 @@ export default function NewMember() {
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm text-[#9E8E7E]">状态</label>
+              <label className="text-sm text-[#9E9E9E]">状态</label>
               <select
                 name="status"
                 value={form.status}
@@ -171,7 +171,7 @@ export default function NewMember() {
 
           {/* 标签 */}
           <div className="space-y-1.5">
-            <label className="text-sm text-[#9E8E7E]">标签（逗号分隔）</label>
+            <label className="text-sm text-[#9E9E9E]">标签（逗号分隔）</label>
             <Input
               name="tags"
               value={form.tags}
@@ -182,7 +182,7 @@ export default function NewMember() {
           </div>
 
           {/* 编号提示 */}
-          <div className="flex items-center gap-2 text-xs text-[#9E8E7E] bg-[#FAF7F2] rounded-lg px-3 py-2">
+          <div className="flex items-center gap-2 text-xs text-[#9E9E9E] bg-[#FAFAFA] rounded-lg px-3 py-2">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
@@ -191,11 +191,11 @@ export default function NewMember() {
           </div>
 
           {/* 错误提示 */}
-          {error && <p className="text-sm text-[#D4736A]">{error}</p>}
+          {error && <p className="text-sm text-[#666666]">{error}</p>}
 
           {/* 按钮 */}
           <div className="flex gap-3 pt-2">
-            <Button type="submit" disabled={submitting} className="bg-[#8B5E3C] hover:bg-[#A86545] text-white rounded-xl">
+            <Button type="submit" disabled={submitting} className="bg-[#1A1A1A] hover:bg-[#333333] text-white rounded-xl">
               {submitting ? "保存中..." : "保存"}
             </Button>
             <Button type="button" variant="outline" onClick={() => router.back()} className="rounded-xl">

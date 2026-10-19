@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { photos } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { verifyMemberAccess } from "@/lib/auth/member-ownership";
+import { getCached, setCache, deleteCache } from "@/lib/api-cache";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 
@@ -26,13 +27,21 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "无权访问" }, { status: 401 });
   }
 
+  const cacheKey = `photos:${memberId}`;
+  const cached = getCached(cacheKey);
+  if (cached) return NextResponse.json(cached);
+
   const data = await db
     .select()
     .from(photos)
     .where(eq(photos.memberId, memberId))
     .orderBy(desc(photos.takenAt));
 
-  return NextResponse.json(data);
+  setCache(cacheKey, data);
+
+  const response = NextResponse.json(data);
+    response.headers.set("Cache-Control", "public, max-age=300, s-maxage=300");
+    return response;
 }
 
 export async function POST(request: NextRequest) {
@@ -80,6 +89,9 @@ export async function POST(request: NextRequest) {
       })
       .returning();
     const record = (__r_record as any)[0];
+
+    // 清除该会员照片缓存，保障前台秒级刷新
+    deleteCache(`photos:${mid}`);
 
     return NextResponse.json(
       { id: record.id, url, photoType: record.photoType, takenAt: record.takenAt },

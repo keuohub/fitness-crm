@@ -36,10 +36,10 @@ function FlowDiagram() {
       {FLOW.map((step, i) => (
         <div key={step} className="flex items-center gap-3">
           <motion.div
-            className="w-16 h-16 rounded-xl flex items-center justify-center text-xs font-semibold text-white"
+            className="w-16 h-16 rounded-lg flex items-center justify-center text-xs font-semibold text-white"
             style={{
               backgroundColor:
-                i === FLOW.length - 1 ? COLORS.primary : "#3E2723",
+                i === FLOW.length - 1 ? COLORS.primary : "#1A1A1A",
             }}
             whileHover={{ scale: 1.05 }}
             transition={{ duration: 0.15 }}
@@ -87,7 +87,7 @@ export default function AIReportSection() {
   }, []);
 
   return (
-    <section id="insight" className="max-w-4xl mx-auto px-5 sm:px-8 md:px-12 py-40 md:py-48 bg-white">
+    <section id="insight" className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-16 sm:py-20 md:py-24">
       <motion.div
         {...MICRO.scrollReveal}
         variants={fadeUp}
@@ -101,10 +101,10 @@ export default function AIReportSection() {
         >
           分析引擎
         </p>
-        <h2 className="text-4xl sm:text-5xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15] mb-4">
+        <h2 className="text-2xl sm:text-3xl font-normal text-[#1A1A1A] tracking-normal mb-4">
           成长记录
         </h2>
-        <p className="text-sm text-[#6E6E73] max-w-[34em] mx-auto">
+        <p className="text-sm text-[#4A4A4A] max-w-prose mx-auto">
           训练、问卷与照片形成长期档案。
         </p>
       </motion.div>
@@ -116,15 +116,15 @@ export default function AIReportSection() {
         variants={fadeUp}
         initial="hidden"
         whileInView="visible"
-        className="mt-16 rounded-3xl p-10 max-w-2xl mx-auto"
+        className="mt-16 rounded-none p-10 max-w-2xl mx-auto"
         style={{
-          background: "#FAF7F2",
+          background: "#FAFAFA",
           boxShadow: "0 2px 20px rgba(62,39,35,0.05)",
         }}
       >
         <div className="space-y-6">
           {loading ? (
-            <p className="text-sm text-[#6E6E73]">加载样本...</p>
+            <p className="text-sm text-[#4A4A4A]">加载样本...</p>
           ) : report?.exists ? (
             <>
               <div>
@@ -135,12 +135,12 @@ export default function AIReportSection() {
                   {reportTypeLabel(report.reportType)} ·{" "}
                   {report.generatedAt?.slice(0, 7) ?? ""}
                 </p>
-                <p className="text-xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15]">
+                <p className="text-xl font-semibold text-[#1A1A1A] tracking-normal">
                   {report.memberName}的{reportTypeLabel(report.reportType)}
                 </p>
               </div>
               <div className="space-y-3">
-                <p className="text-sm text-[#3E2723] leading-relaxed">
+                <p className="text-sm text-[#1A1A1A] leading-[1.8]">
                   {report.content.length > 200
                     ? report.content.slice(0, 200) + "..."
                     : report.content}
@@ -171,8 +171,8 @@ export default function AIReportSection() {
                 <div
                   className="rounded-full px-3 py-1 text-[10px] font-medium"
                   style={{
-                    backgroundColor: "#3E2723" + "10",
-                    color: "#3E2723",
+                    backgroundColor: "#1A1A1A" + "10",
+                    color: "#1A1A1A",
                   }}
                 >
                   自动生成
@@ -188,12 +188,12 @@ export default function AIReportSection() {
                 >
                   周报 · 2026年5月
                 </p>
-                <p className="text-xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15]">
+                <p className="text-xl font-semibold text-[#1A1A1A] tracking-normal">
                   阶段回顾样本
                 </p>
               </div>
               <div className="space-y-3">
-                <p className="text-sm text-[#3E2723] leading-relaxed">
+                <p className="text-sm text-[#1A1A1A] leading-[1.8]">
                   系统会根据训练数据、体态照片和健康问卷自动生成个性化反馈报告。
                   报告包含训练分析、体态变化趋势和成长建议。
                 </p>

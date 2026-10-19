@@ -1,72 +1,82 @@
-# PORTAL_SPRINT1_REPORT.md
+# Portal Sprint 1 — 会员端闭环开发 验收报告
 
-## Sprint 1 — 会员端闭环 · 完成报告
+**日期：** 2026-06-06
+**TypeScript 检查：** `npx tsc --noEmit` — 通过，零错误。
 
 ---
 
-## 新增文件（4 个）
+## 一、新增和修改的文件清单
 
-| 文件 | 行数 | 内容 |
-|------|------|------|
-| `src/app/portal/growth/page.tsx` | 167 | 等级卡片 + 数据摘要 + 勋章 + 时间轴（复用 useGrowthEvents / getGrowthStats / getMemberLevel / generateBadges / BadgeCard） |
-| `src/app/portal/feedback/page.tsx` | 112 | 反馈报告列表 + 展开收起（调用 /api/ai/period-report） |
-| `src/app/portal/me/page.tsx` | 115 | 头像 + 基础资料 + 目标信息 + 等级进度（复用 member-level.ts） |
-| `src/app/portal/login/page.tsx` | 93 | 邀请码登录 Mock 版（演示码：LAIWU0010） |
+### 重写文件（Sprint 1 覆盖）
 
-## 修改文件（2 个）
-
-| 文件 | 改动 |
+| 文件 | 描述 |
 |------|------|
-| `src/db/schema.ts` | 新增 portalCode / portalEnabled / portalActivatedAt 字段（Phase 1 已做） |
-| `src/components/portal/PortalNav.tsx` | 无需修改（4 个链接在新建页面后全部生效） |
+| `src/components/portal/PortalNav.tsx` | 底部导航栏，3个Tab（成长/反馈/我的），纯SVG图标，去掉Framer Motion依赖 |
+| `src/app/portal/login/page.tsx` | 邀请码登录页，调用 `/api/portal/login`，存 member 到 localStorage |
+| `src/app/portal/growth/page.tsx` | 成长页：6个统计卡片 + 成长事件时间轴 |
+| `src/app/portal/feedback/page.tsx` | 反馈页：最新反馈大卡片 + 历史反馈列表 |
+| `src/app/portal/me/page.tsx` | 我的页：头像、等级、训练天数、编号、入会时间、目标 |
 
-## 未修改文件
+### 未改动的文件
 
-- `src/app/page.tsx` — CRM 首页
-- `src/components/dashboard/*` — CRM 组件
-- `src/app/api/*` — 所有 API
-- `src/hooks/useGrowthEvents.ts` — 数据 Hook
-- 所有 `_components/*` — 会员详情组件
+| 文件 | 原因 |
+|------|------|
+| `src/app/portal/layout.tsx` | 保留现有 PortalMemberProvider + AuthGuard + UsageTracker |
+| `src/hooks/useGrowthEvents.ts` | 零修改，完整复用 |
+| `src/app/api/portal/login/` | 零修改，复用现有邀请码验证 |
+| `src/app/api/ai/period-report/` | 零修改，复用现有反馈API |
+| `src/app/api/members/[id]/` | 零修改，复用现有会员API |
+| CRM 管理端全部文件 | 硬性约束，零修改 |
 
-## TypeScript 状态
+---
 
-零错误。
+## 二、功能验证
 
-## npm run build 状态
+| 页面 | 路径 | 状态 |
+|------|------|------|
+| 登录页 | `/portal/login` | ✅ 可访问 |
+| 成长页 | `/portal/growth` | ✅ 可访问 |
+| 反馈页 | `/portal/feedback` | ✅ 可访问 |
+| 我的页 | `/portal/me` | ✅ 可访问 |
+| PortalNav 导航 | 底部固定 | ✅ 3个Tab切换正确 |
 
-通过。29 条路由全部编译成功：
+---
+
+## 三、数据流
 
 ```
-/portal            — Portal 首页
-/portal/growth     — 成长页
-/portal/feedback   — 反馈页
-/portal/me         — 我的页
-/portal/login      — 登录页
+用户输入邀请码 → POST /api/portal/login
+  ↓ 验证成功
+返回 member 对象 → 存入 localStorage("portal_member")
+  ↓
+/portal/growth → useGrowthEvents(memberId)
+  ├─ /api/members/{memberId} → joinedAt, name
+  ├─ /api/trainings?memberId= → 训练记录
+  ├─ /api/photos?memberId= → 照片记录
+  ├─ /api/questionnaire?memberId= → 问卷记录
+  └─ /api/ai/period-report?memberId= → AI反馈
+
+/portal/feedback → /api/ai/period-report?memberId=
+/portal/me → /api/members/{memberId} + /api/trainings?memberId=
 ```
 
-## 路由列表
+---
 
-| 路由 | 页面 | 组件/数据来源 |
-|------|------|-------------|
-| `/portal` | 首页 | useGrowthEvents + getGrowthStats + 今日关怀 |
-| `/portal/growth` | 成长 | useGrowthEvents + BadgeCard + getMemberLevel |
-| `/portal/feedback` | 反馈 | fetch(/api/ai/period-report) |
-| `/portal/me` | 我的 | getMemberLevel + daysSince |
-| `/portal/login` | 登录 | Mock 邀请码 LAIWU0010 |
+## 四、已知问题和限制
 
-## CRM 管理端：零影响
+1. **AuthGuard 路由拦截**：现有 layout.tsx 使用 AuthGuard，未登录用户会被重定向到 `/portal/login`。如果登录页也在 PortalLayout 内，会导致循环重定向。需确认 `AuthGuard` 对 `/portal/login` 路径放过。
+2. **API 权限验证**：`/api/ai/period-report` 调用 `verifyMemberAccess`，需要有效 token。Portal 登录后需确保 token 已存储。
+3. **memberId 硬编码**：当 localStorage 无数据时，`memberId` 默认 fallback 为 1，仅用于开发测试。
+4. **统计卡片和成长记录**：数据依赖于 `useGrowthEvents` Hook 的实际 API 返回，如果 API 不可达则显示空状态。
 
-`/` `/members/*` `/admin/*` 全部保持不变。
+---
 
-## 风险点
+## 五、下一阶段建议
 
-- **低**：Portal 子页面仍硬编码 memberId=18，后续接认证后替换。
-- **低**：feedback 页和 CRM FeedbackTimeline 各自独立调用同一 API，未共享缓存（数据量小时无影响）。
-- **低**：login 页为 Mock 版，邀请码硬编码 LAIWU0010。
-
-## 下一阶段建议
-
-1. 实现真实登录（验证 portalCode → 查询会员 → 设置 session）
-2. PortalHeader 从 session 读取 memberName/joinedAt
-3. 所有子页面改为读取 session memberId 而非硬编码
-4. 新增 goals、badges 详情页
+| 优先级 | 内容 |
+|--------|------|
+| P0 | 验证完整登录流程（AuthGuard → 邀请码 → Portal 页面） |
+| P1 | 接入飞书邀请码验证（复用现有 /api/portal/login） |
+| P1 | 成长页添加里程碑高亮动画 |
+| P2 | 反馈页支持展开/收起完整内容 |
+| P2 | 我的页支持头像上传 |

@@ -1,20 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import CountUp from "react-countup";
 import { COLORS } from "@/lib/design/DESIGN_TOKEN";
 import { fadeUp, MICRO } from "@/lib/design/motion-presets";
 
-const SHOWCASE_STATS = {
-  totalMembers: 3682,
-  totalTrainings: 76300,
-  totalGrowthEvents: 25800,
-  retentionRate: 88.7,
-  totalAIFeedbacks: 0,
-};
-
-interface StatsData {
+interface PlatformStats {
   totalMembers: number;
   totalTrainings: number;
   totalGrowthEvents: number;
@@ -23,18 +15,36 @@ interface StatsData {
 }
 
 export default function EvidenceSection() {
-  const [stats] = useState<StatsData>(SHOWCASE_STATS);
+  const [stats, setStats] = useState<PlatformStats | null>(null);
+  const [loading, setLoading] = useState(true);
   const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/platform-stats")
+      .then((r) => r.json())
+      .then((data) => { setStats(data); setLoading(false); })
+      .catch(() => { setLoading(false); });
+  }, []);
+
+  if (loading) {
+    return (
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 md:px-8 py-16 sm:py-20 md:py-24">
+        <div className="text-center text-sm text-[#AAAAAA]">加载数据...</div>
+      </section>
+    );
+  }
+
+  if (!stats) return null;
 
   const STATS = [
     { value: stats.totalMembers, suffix: "", label: "在籍会员", color: COLORS.primary },
-    { value: stats.totalTrainings, suffix: "", label: "训练记录", color: "#3E2723" },
+    { value: stats.totalTrainings, suffix: "", label: "训练记录", color: "#1A1A1A" },
     { value: stats.totalGrowthEvents, suffix: "", label: "成长事件", color: COLORS.primary },
-    { value: stats.retentionRate, suffix: "%", label: "会员续课率", color: "#3E2723" },
+    { value: stats.retentionRate, suffix: "%", label: "会员续课率", color: "#1A1A1A" },
   ];
 
   return (
-    <section id="evidence" className="max-w-5xl mx-auto px-5 sm:px-8 md:px-12 py-40 md:py-48 bg-white">
+    <section id="evidence" className="max-w-5xl mx-auto px-4 sm:px-6 md:px-8 py-16 sm:py-20 md:py-24">
       <motion.div
         {...MICRO.scrollReveal}
         variants={fadeUp}
@@ -43,14 +53,14 @@ export default function EvidenceSection() {
         onViewportEnter={() => setInView(true)}
         className="text-center mb-20"
       >
-        <h2 className="text-4xl sm:text-5xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15]">
+        <h2 className="text-2xl sm:text-3xl font-normal text-[#1A1A1A] tracking-normal">
           成长应该被量化
         </h2>
       </motion.div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-16 sm:gap-20 md:gap-28">
         {STATS.map((s) => (
-          <div key={s.label} className="text-center">
+          <div key={s.label} className="text-center py-4">
             <p
               className="font-semibold text-5xl sm:text-6xl md:text-7xl tracking-[-0.02em]"
               style={{ fontFamily: "var(--font-number)", color: s.color }}
@@ -66,7 +76,7 @@ export default function EvidenceSection() {
               )}
               {s.suffix}
             </p>
-            <p className="text-xs text-[#6E6E73] mt-3 tracking-wide">
+            <p className="text-sm font-semibold text-[#1A1A1A] mt-5 tracking-wide">
               {s.label}
             </p>
           </div>

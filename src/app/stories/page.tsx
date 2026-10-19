@@ -44,12 +44,12 @@ export default function StoriesPage() {
   else if (sortBy === "trainings") filtered = [...filtered].sort((a, b) => b.trainingCount - a.trainingCount);
 
   return (
-    <main className="min-h-screen bg-[#FAF7F2] text-[#3E2723]">
+    <main className="min-h-screen bg-[#FAFAFA] text-[#1A1A1A]">
       <section className="max-w-4xl mx-auto px-6 pt-20 pb-12 text-center">
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
           <p className="text-[11px] uppercase tracking-[0.3em] font-medium mb-6" style={{ color: COLORS.primary }}>Growth Stories</p>
-          <h1 className="font-serif text-3xl sm:text-5xl font-bold text-[#3E2723] mb-4">她们的变化值得被看见</h1>
-          <p className="text-sm text-[#9E8E7E] max-w-md mx-auto">每一次坚持，都有痕迹。</p>
+          <h1 className="font-serif text-3xl sm:text-5xl font-bold text-[#1A1A1A] mb-4">她们的变化值得被看见</h1>
+          <p className="text-sm text-[#9E9E9E] max-w-md mx-auto">每一次坚持，都有痕迹。</p>
         </motion.div>
       </section>
 
@@ -61,13 +61,13 @@ export default function StoriesPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="搜索姓名、关键词..."
-            className="flex-1 h-10 px-4 rounded-xl bg-white text-sm text-[#3E2723] placeholder-[#9E8E7E] outline-none"
+            className="flex-1 h-10 px-4 rounded-xl bg-white text-sm text-[#1A1A1A] placeholder-[#9E9E9E] outline-none"
             style={{ border: `1px solid ${COLORS.border}` }}
           />
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-            className="h-10 px-3 rounded-xl bg-white text-sm text-[#3E2723] outline-none"
+            className="h-10 px-3 rounded-xl bg-white text-sm text-[#1A1A1A] outline-none"
             style={{ border: `1px solid ${COLORS.border}` }}
           >
             <option value="newest">最新</option>
@@ -83,7 +83,7 @@ export default function StoriesPage() {
               className="px-4 py-1.5 rounded-full text-xs font-medium transition-colors"
               style={{
                 backgroundColor: stageFilter === stage ? COLORS.primary : "#EDE8E2",
-                color: stageFilter === stage ? "white" : "#3E2723",
+                color: stageFilter === stage ? "white" : "#1A1A1A",
               }}
             >
               {stage}
@@ -96,7 +96,7 @@ export default function StoriesPage() {
       <section className="max-w-[1200px] mx-auto px-6 pb-24">
         {filtered.length === 0 ? (
           <div className="text-center py-20">
-            <p className="text-sm text-[#9E8E7E]">没有找到匹配的故事</p>
+            <p className="text-sm text-[#9E9E9E]">没有找到匹配的故事</p>
           </div>
         ) : (
           <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -107,7 +107,7 @@ export default function StoriesPage() {
                   variants={staggerItem}
                   layout
                   className="rounded-[2rem] p-8 relative overflow-hidden transition-all"
-                  style={{ background: "linear-gradient(160deg, #FFFFFF 0%, #FDF9F5 60%, #F7F1EA 100%)", boxShadow: "0 4px 20px rgba(62,39,35,0.05)" }}
+                  style={{ background: "linear-gradient(160deg, #FFFFFF 0%, #FAFAFA 60%, #F7F1EA 100%)", boxShadow: "0 4px 20px rgba(62,39,35,0.05)" }}
                   whileHover={{ y: -6, boxShadow: "0 12px 40px rgba(62,39,35,0.1)" }}
                 >
                   <div className="flex items-center gap-3 mb-6">
@@ -115,15 +115,15 @@ export default function StoriesPage() {
                       {story.name[0]}
                     </div>
                     <div>
-                      <Link href={`/stories/${story.id}`} className="font-serif text-lg font-bold text-[#3E2723] hover:underline">{story.name}</Link>
-                      <p className="text-xs text-[#9E8E7E]">{story.stage}</p>
+                      <Link href={`/stories/${story.id}`} className="font-serif text-lg font-bold text-[#1A1A1A] hover:underline">{story.name}</Link>
+                      <p className="text-xs text-[#9E9E9E]">{story.stage}</p>
                     </div>
                   </div>
                   <div className="flex gap-6 mb-6">
-                    <div><span className="text-2xl font-bold text-[#3E2723]">{story.days}</span><span className="text-xs text-[#9E8E7E] ml-1">天</span></div>
-                    <div><span className="text-2xl font-bold text-[#3E2723]">{story.trainingCount}</span><span className="text-xs text-[#9E8E7E] ml-1">次训练</span></div>
+                    <div><span className="text-2xl font-bold text-[#1A1A1A]">{story.days}</span><span className="text-xs text-[#9E9E9E] ml-1">天</span></div>
+                    <div><span className="text-2xl font-bold text-[#1A1A1A]">{story.trainingCount}</span><span className="text-xs text-[#9E9E9E] ml-1">次训练</span></div>
                   </div>
-                  <blockquote className="text-sm text-[#3E2723] leading-relaxed mb-4 italic border-l-2 pl-4 border-[#E8E0D5]">
+                  <blockquote className="text-sm text-[#1A1A1A] leading-relaxed mb-4 italic border-l-2 pl-4 border-[#E5E5E5]">
                     &ldquo;{story.quote}&rdquo;
                   </blockquote>
                   <div className="flex flex-wrap gap-1.5">
@@ -138,7 +138,7 @@ export default function StoriesPage() {
         )}
       </section>
 
-      <footer className="py-12 text-center bg-white"><p className="text-xs text-[#9E8E7E]">徕舞成长系统 · 钟祥徕舞女子塑形</p></footer>
+      <footer className="py-12 text-center bg-white"><p className="text-xs text-[#9E9E9E]">徕舞成长系统 · 钟祥徕舞女子塑形</p></footer>
     </main>
   );
 }

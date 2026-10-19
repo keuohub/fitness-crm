@@ -16,6 +16,120 @@ import { members as membersTable, dailyHealthLogs, memberMemories } from "@/db/s
 import { eq } from "drizzle-orm";
 import * as fs from "fs";
 import * as path from "path";
+import Database from "better-sqlite3";
+
+
+
+// ─── 本地 SQLite 双写 ───
+
+const LOCAL_DB_PATH = path.join(process.cwd(), "fitness.db");
+
+let localDb: Database.Database | null = null;
+function getLocalDb(): Database.Database {
+  if (!localDb) {
+    localDb = new Database(LOCAL_DB_PATH);
+    localDb.pragma("journal_mode = WAL");
+  }
+  return localDb;
+}
+
+function writeMemberToLocal(memberData: Record<string, unknown>) {
+  try {
+    const db2 = getLocalDb();
+    const existing = db2
+      .prepare("SELECT id FROM members WHERE member_code = ?")
+      .get(memberData.memberCode as string) as { id: number } | undefined;
+
+    if (existing) {
+      db2
+        .prepare(
+          `UPDATE members SET name=?, gender=?, phone=?, stage=?, tags=?, status=?,
+           joined_at=?, updated_at=? WHERE id=?`
+        )
+        .run(
+          memberData.name,
+          memberData.gender,
+          memberData.phone,
+          memberData.stage,
+          memberData.tags,
+          memberData.status,
+          memberData.joinedAt,
+          new Date().toISOString(),
+          existing.id
+        );
+    } else {
+      db2
+        .prepare(
+          `INSERT INTO members (tenant_id, member_code, name, gender, phone, stage, tags,
+           status, joined_at, created_at, updated_at)
+           VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`
+        )
+        .run(
+          memberData.memberCode,
+          memberData.name,
+          memberData.gender,
+          memberData.phone,
+          memberData.stage,
+          memberData.tags,
+          memberData.status,
+          memberData.joinedAt
+        );
+    }
+  } catch (e) {
+    console.warn("[local-sqlite] 写入 members 失败（不阻塞）:", e instanceof Error ? e.message : e);
+  }
+}
+
+function writeHealthLogToLocal(data: {
+  memberId: number;
+  logDate: string;
+  weight: number | null;
+  sleepHours: number | null;
+  energyLevel: number | null;
+  stressLevel: number | null;
+  painAreas: string | null;
+}) {
+  try {
+    const db2 = getLocalDb();
+    db2
+      .prepare(
+        `INSERT INTO daily_health_logs (tenant_id, member_id, log_date, weight, sleep_hours,
+         energy_level, stress_level, pain_areas, created_at)
+         VALUES (1, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`
+      )
+      .run(
+        data.memberId,
+        data.logDate,
+        data.weight,
+        data.sleepHours,
+        data.energyLevel,
+        data.stressLevel,
+        data.painAreas
+      );
+  } catch (e) {
+    console.warn("[local-sqlite] 写入 daily_health_logs 失败（不阻塞）:", e instanceof Error ? e.message : e);
+  }
+}
+
+function writeMemoryToLocal(data: {
+  memberId: number;
+  content: string;
+  structuredData: string | null;
+  memoryType: string;
+}) {
+  try {
+    const db2 = getLocalDb();
+    db2
+      .prepare(
+        `INSERT INTO member_memories (tenant_id, member_id, content, structured_data,
+         memory_type, created_at)
+         VALUES (1, ?, ?, ?, ?, datetime('now'))`
+      )
+      .run(data.memberId, data.content, data.structuredData, data.memoryType);
+  } catch (e) {
+    console.warn("[local-sqlite] 写入 member_memories 失败（不阻塞）:", e instanceof Error ? e.message : e);
+  }
+}
 
 // ─── 日志系统 ───
 
@@ -100,15 +214,21 @@ export async function syncMembers(): Promise<SyncLogEntry> {
     for (const rec of records) {
       try {
         const mapped = extractFields(rec.fields, MEMBER_BASE_MAPPING);
-        const memberCode = mapped["member_code"] as string | undefined;
+        let memberCode = mapped["member_code"] as string | undefined;
         const name = mapped["name"] as string | undefined;
 
-        if (!memberCode || !name) {
+        // 飞书表格没有"会员编号"列时，用姓名 + recordId 生成唯一编号
+        if (!memberCode && name) {
+          memberCode = "FS" + rec.recordId.slice(-8);
+        }
+
+        if (!name) {
           skipCount++;
-          errors.push(`skip record ${rec.recordId}: missing member_code or name`);
+          errors.push(`skip record ${rec.recordId}: missing name`);
           continue;
         }
 
+        const portalCode = (mapped["portal_code"] as string) || (mapped["member_code"] as string) || null;
         const memberData = {
           name: name,
           memberCode: memberCode,
@@ -118,15 +238,22 @@ export async function syncMembers(): Promise<SyncLogEntry> {
           tags: (mapped["tags"] as string) || null,
           status: "active" as const,
           joinedAt: isValidDate(mapped["joined_at"] as string) ? (mapped["joined_at"] as string) : null,
+          desiredState: (mapped["desired_state"] as string) || null,
+          commitment: (mapped["commitment"] as string) || null,
           birthday: isValidDate(mapped["birthday"] as string) ? (mapped["birthday"] as string) : null,
+          portalCode: portalCode,
+          portalEnabled: portalCode ? 1 : 0,
+          notes: (mapped["coach_note"] as string) || null,
         };
 
-        const exists = existing.find((m) => m.memberCode === memberCode);
+        const exists = existing.find((m) => (memberCode && m.memberCode === memberCode) || m.name === name);
         if (exists) {
           await db.update(membersTable).set(memberData).where(eq(membersTable.id, exists.id));
         } else {
           await db.insert(membersTable).values({ ...memberData, tenantId: 1 });
         }
+        // 双写到本地 SQLite
+        writeMemberToLocal(memberData);
         successCount++;
       } catch (e) {
         skipCount++;
@@ -226,6 +353,16 @@ async function syncCareTable(tableKey: string, tableId: string): Promise<SyncLog
               stressLevel: stressLevel ?? null,
               painAreas: painAreas ?? null,
             });
+            // 双写到本地 SQLite
+            writeHealthLogToLocal({
+              memberId,
+              logDate: new Date().toISOString().slice(0, 10),
+              weight: weight ?? null,
+              sleepHours: sleepHours ?? null,
+              energyLevel: energyLevel ?? null,
+              stressLevel: stressLevel ?? null,
+              painAreas: painAreas ?? null,
+            });
           }
         }
 
@@ -255,6 +392,13 @@ async function syncCareTable(tableKey: string, tableId: string): Promise<SyncLog
         if (reportTexts.length > 0) {
           await db.insert(memberMemories).values({
             tenantId: 1,
+            memberId,
+            content: reportTexts.join("\n"),
+            structuredData: Object.keys(structured).length > 0 ? JSON.stringify(structured) : null,
+            memoryType: isMilestone ? "milestone" : "self_report",
+          });
+          // 双写到本地 SQLite
+          writeMemoryToLocal({
             memberId,
             content: reportTexts.join("\n"),
             structuredData: Object.keys(structured).length > 0 ? JSON.stringify(structured) : null,

@@ -1,117 +1,174 @@
 "use client";
 
-import PortalHeader from "@/components/portal/PortalHeader";
-import { usePortalMember } from "@/context/PortalMemberContext";
-import { daysSince } from "@/lib/member-level";
-import { motion } from "framer-motion";
-import GlassCard from "@/components/portal/ui/GlassCard";
-import { COLORS } from "@/lib/design/DESIGN_TOKEN";
-import { fadeUp, scaleIn, DURATION, MICRO } from "@/lib/design/motion-presets";
-import { getFutureSelfMessage } from "@/lib/growth-message-library";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
-function getStageTitle(days: number): string {
-  if (days >= 365) return "长期主义者";
-  if (days >= 180) return "深度蜕变";
-  if (days >= 90) return "稳定成长";
-  if (days >= 30) return "习惯建立";
-  return "启程";
+function getMemberId(): string {
+  if (typeof window === "undefined") return "1";
+  return localStorage.getItem("portal_member_id") || "1";
 }
 
-function getStageProgress(days: number): number {
-  if (days >= 365) return 1;
-  if (days >= 180) return Math.min(1, (days - 180) / 185);
-  if (days >= 90) return Math.min(1, (days - 90) / 90);
-  if (days >= 30) return Math.min(1, (days - 30) / 60);
-  return Math.min(1, days / 30);
+function getMemberName(): string {
+  if (typeof window === "undefined") return "你";
+  return localStorage.getItem("portal_member_name") || "你";
 }
 
-interface ArchiveData {
-  totalTrainings: number;
-  totalTrainingDays: number;
-  totalPhotos: number;
-  totalQuestionnaires: number;
-  totalRecords: number;
-  consecutiveMonths: number;
+function isLoggedIn(): boolean {
+  if (typeof window === "undefined") return false;
+  const expires = localStorage.getItem("portal_login_expires");
+  if (!expires) return false;
+  if (Date.now() > parseInt(expires, 10)) {
+    localStorage.removeItem("portal_member_id");
+    localStorage.removeItem("portal_member_name");
+    localStorage.removeItem("portal_login_expires");
+    return false;
+  }
+  return true;
 }
 
-export default function MePage() {
-  const { member, loading } = usePortalMember();
-  const [archive, setArchive] = useState<ArchiveData | null>(null);
+function daysSince(dateStr: string) {
+  if (!dateStr) return 0;
+  const d = new Date(dateStr);
+  const now = new Date();
+  return Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+function getLevel(trainingCount: number) {
+  if (trainingCount >= 51) return { name: "光芒", emoji: "🦋" };
+  if (trainingCount >= 21) return { name: "新生", emoji: "🌿" };
+  if (trainingCount >= 6)  return { name: "绽放", emoji: "🌱" };
+  return { name: "遇见", emoji: "✨" };
+}
+
+interface MemberData {
+  name: string;
+  memberNo?: string;
+  joinedAt: string;
+  desiredState?: string;
+  trainingCount: number;
+}
+
+export default function PortalMePage() {
+  const router = useRouter();
+  const [member, setMember] = useState<MemberData | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/portal/archive")
-      .then((r) => r.ok ? r.json() : Promise.reject(r.status))
-      .then(setArchive)
-      .catch(() => setArchive(null));
-  }, []);
+    if (!isLoggedIn()) {
+      router.replace("/portal/login");
+      return;
+    }
 
-  if (loading || !member) return <div className="min-h-[60vh] flex items-center justify-center"><div className="w-8 h-8 border-2 border-[#8B5E3C] border-t-transparent rounded-full animate-spin" /></div>;
+    const memberId = getMemberId();
 
-  const days = daysSince(member.joinedAt);
-  const stageTitle = getStageTitle(days);
-  const stageProgress = getStageProgress(days);
-  const initial = (member.memberName || "徕")[0];
-  const joinedDate = member.joinedAt || "";
+    Promise.all([
+      fetch(`/api/members/${memberId}`).then((r) => (r.ok ? r.json() : null)),
+      fetch(`/api/trainings?memberId=${memberId}`).then((r) => (r.ok ? r.json() : [])),
+    ])
+      .then(([memberData, trainings]) => {
+        const trainingCount = Array.isArray(trainings) ? trainings.length : 0;
+        setMember({
+          name: memberData?.name || getMemberName(),
+          memberNo: memberData?.memberNo || memberData?.member_code,
+          joinedAt: memberData?.joinedAt || memberData?.joined_at || "",
+          desiredState: memberData?.desiredState || memberData?.desired_state || "",
+          trainingCount,
+        });
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [router]);
 
-  const archiveItems = archive ? [
-    { label: "累计训练", value: `${archive.totalTrainings} 次` },
-    { label: "训练天数", value: `${archive.totalTrainingDays} 天` },
-    { label: "连续月份", value: `${archive.consecutiveMonths} 个月` },
-    { label: "成长记录", value: `${archive.totalRecords} 条` },
-    { label: "陪伴天数", value: `${days} 天` },
-  ] : null;
+  const handleLogout = () => {
+    localStorage.removeItem("portal_member_id");
+    localStorage.removeItem("portal_member_name");
+    localStorage.removeItem("portal_login_expires");
+    localStorage.removeItem("portal_member");
+    router.replace("/portal/login");
+  };
 
-  const futureSelf = getFutureSelfMessage(stageTitle);
+  if (loading) {
+    return (
+      <div className="py-12 px-4 space-y-4">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-20 h-20 rounded-full bg-[#F5F5F5] animate-pulse" />
+          <div className="h-5 w-24 bg-[#F5F5F5] rounded animate-pulse" />
+        </div>
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="h-16 bg-[#F5F5F5] rounded-lg animate-pulse" />
+        ))}
+      </div>
+    );
+  }
+
+  if (!member) {
+    return (
+      <div className="py-20 text-center px-4">
+        <p className="text-sm text-[#666666] leading-relaxed">
+          暂时无法获取你的信息<br />
+          <span className="text-xs text-[#AAAAAA]">下拉刷新试试看</span>
+        </p>
+      </div>
+    );
+  }
+
+  const level = getLevel(member.trainingCount);
+  const joinDays = member.joinedAt ? daysSince(member.joinedAt) : 0;
+  const initial = member.name ? member.name.charAt(0) : "?";
 
   return (
-    <>
-      <PortalHeader title="我的" showBack />
-      <div className="space-y-12 max-w-lg mx-auto px-5 pb-20">
-        <motion.div variants={scaleIn} initial="hidden" animate="visible" transition={{ duration: DURATION.slow, ease: [0.25, 0.1, 0.25, 1.0] }}>
-          <div className="rounded-[2rem] p-8 text-center relative overflow-hidden"
-            style={{ background: "linear-gradient(160deg, #FFFFFF 0%, #FDF9F5 60%, #F7F1EA 100%)", boxShadow: "0 8px 40px rgba(62,39,35,0.08), 0 2px 8px rgba(62,39,35,0.04)" }}>
-            <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
-              style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")" }} />
-            <div className="relative z-10">
-              <div className="w-20 h-20 mx-auto rounded-full flex items-center justify-center text-3xl font-serif mb-5" style={{ backgroundColor: `${COLORS.primary}14`, color: COLORS.primary }}>{initial}</div>
-              <h2 className="font-serif text-2xl font-bold text-[#3E2723]">{member.memberName}</h2>
-              <p className="text-sm text-[#9E8E7E] mt-1">{joinedDate ? `加入于 ${joinedDate}` : ""}</p>
-              <div className="flex items-center justify-center gap-4 mt-6 pt-6 border-t border-[#EDE8E2]">
-                <div className="text-center"><p className="text-2xl font-bold text-[#3E2723]">{days}</p><p className="text-[10px] text-[#9E8E7E] mt-1">天</p></div>
-              </div>
-              <div className="mt-5 w-full h-2 rounded-full bg-[#EDE8E2] overflow-hidden">
-                <div className="h-full rounded-full transition-all duration-700" style={{ width: `${stageProgress * 100}%`, backgroundColor: COLORS.primary }} />
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {archiveItems && (
-          <motion.div {...MICRO.scrollReveal} variants={fadeUp} initial="hidden" whileInView="visible">
-            <GlassCard padding="md" hover={false}>
-              <p className="text-xs font-bold text-[#3E2723] mb-5 tracking-widest uppercase">坚持档案</p>
-              <div className="grid grid-cols-2 gap-x-6 gap-y-5">
-                {archiveItems.map((item) => (
-                  <div key={item.label}>
-                    <span className="text-2xl font-bold text-[#3E2723]">{item.value.split(" ")[0]}</span>
-                    <span className="text-[11px] text-[#9E8E7E] leading-none ml-0.5">{item.value.split(" ")[1] || ""}</span>
-                    <div className="text-[10px] text-[#8B5E3C]/60 mt-0.5">{item.label}</div>
-                  </div>
-                ))}
-              </div>
-            </GlassCard>
-          </motion.div>
-        )}
-
-        <motion.div {...MICRO.scrollReveal} variants={fadeUp} initial="hidden" whileInView="visible">
-          <p className="text-[11px] uppercase tracking-[0.25em] font-medium mb-6" style={{ color: COLORS.primary }}>写给未来的自己</p>
-          <GlassCard padding="lg" hover={false} className="text-center relative overflow-hidden">
-            <div className="absolute -bottom-6 -left-6 w-20 h-20 rounded-full blur-2xl opacity-[0.06]" style={{ backgroundColor: "#3E2723" }} />
-            <p className="font-serif text-sm text-[#9E8E7E] leading-relaxed relative z-10">{futureSelf}</p>
-          </GlassCard>
-        </motion.div>
+    <div className="py-8 px-4 space-y-6">
+      {/* 头像和名字 */}
+      <div className="flex flex-col items-center gap-3 pt-4">
+        <div className="w-20 h-20 rounded-full bg-[#1A1A1A] flex items-center justify-center text-white text-2xl font-light">
+          {initial}
+        </div>
+        <p className="text-lg font-medium text-[#1A1A1A]">{member.name}</p>
       </div>
-    </>
+
+      {/* 信息卡片 */}
+      <div className="bg-white border border-[#EBEBEB] rounded-lg divide-y divide-[#F0F0F0]">
+        <div className="flex items-center justify-between px-5 py-4">
+          <span className="text-sm text-[#666666]">你的阶段</span>
+          <span className="text-sm font-medium text-[#1A1A1A]">{level.emoji} {level.name}</span>
+        </div>
+        <div className="flex items-center justify-between px-5 py-4">
+          <span className="text-sm text-[#666666]">一起走过的日子</span>
+          <span className="text-sm font-medium text-[#1A1A1A]">{joinDays} 天</span>
+        </div>
+        <div className="flex items-center justify-between px-5 py-4">
+          <span className="text-sm text-[#666666]">你为自己努力的次数</span>
+          <span className="text-sm font-medium text-[#1A1A1A]">{member.trainingCount} 次</span>
+        </div>
+        {member.memberNo && (
+          <div className="flex items-center justify-between px-5 py-4">
+            <span className="text-sm text-[#666666]">你的专属编号</span>
+            <span className="text-sm font-medium text-[#1A1A1A]">{member.memberNo}</span>
+          </div>
+        )}
+        {member.joinedAt && (
+          <div className="flex items-center justify-between px-5 py-4">
+            <span className="text-sm text-[#666666]">你来的那天</span>
+            <span className="text-sm font-medium text-[#1A1A1A]">{member.joinedAt.slice(0, 10)}</span>
+          </div>
+        )}
+        {member.desiredState && (
+          <div className="flex items-center justify-between px-5 py-4">
+            <span className="text-sm text-[#666666]">你想要的改变</span>
+            <span className="text-sm font-medium text-[#1A1A1A]">{member.desiredState}</span>
+          </div>
+        )}
+      </div>
+
+      {/* 暂时离开 */}
+      <div className="pt-4">
+        <button
+          onClick={handleLogout}
+          className="w-full border border-[#EBEBEB] text-[#AAAAAA] rounded-lg px-4 py-3 text-sm font-medium hover:text-[#666666] hover:border-[#D0D0D0] transition-colors duration-200"
+        >
+          暂时离开
+        </button>
+      </div>
+    </div>
   );
 }

@@ -5,12 +5,12 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-const labelClass = "text-xs text-[#9E8E7E]";
-const valueClass = "text-sm text-[#3E2723]";
+const labelClass = "text-xs text-[#9E9E9E]";
+const valueClass = "text-sm text-[#1A1A1A]";
 const fieldClass = "space-y-0.5";
-const sectionClass = "bg-white rounded-2xl border border-[#E8E0D5] p-5 shadow-sm";
-const sectionTitleClass = "font-serif text-base text-[#3E2723] border-b border-[#E8E0D5] pb-2 mb-3";
-const selectClass = "flex h-9 rounded-md border border-[#E8E0D5] bg-white px-3 py-1 text-sm shadow-sm focus-visible:border-[#8B5E3C] focus-visible:ring-[#8B5E3C]/20";
+const sectionClass = "bg-white rounded-xl border border-[#E5E5E5] p-5 shadow-sm";
+const sectionTitleClass = "font-serif text-base text-[#1A1A1A] border-b border-[#E5E5E5] pb-2 mb-3";
+const selectClass = "flex h-9 rounded-md border border-[#E5E5E5] bg-white px-3 py-1 text-sm shadow-sm focus-visible:border-[#1A1A1A] focus-visible:ring-[#1A1A1A]/20";
 
 function FieldRow({ label, value, fallback = "-" }: { label: string; value: string | number | null; fallback?: string }) {
   const display = value !== null && value !== undefined && value !== "" ? String(value) : fallback;
@@ -90,20 +90,20 @@ export default function QuestionnaireView() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#FAF7F2] text-[#3E2723] p-6">
+      <main className="min-h-screen bg-[#FAFAFA] text-[#1A1A1A] p-6">
         <div className="max-w-3xl mx-auto">
-          <p className="text-sm text-[#9E8E7E]">加载中...</p>
+          <p className="text-sm text-[#9E9E9E]">加载中...</p>
         </div>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#FAF7F2] text-[#3E2723] p-6">
+    <main className="min-h-screen bg-[#FAFAFA] text-[#1A1A1A] p-6">
       <div className="max-w-3xl mx-auto">
         {/* 面包屑 + 按钮 */}
         <div className="flex items-center justify-between mb-6">
-          <Link href={`/members/${memberId}`} className="text-sm text-[#9E8E7E] hover:underline">
+          <Link href={`/members/${memberId}`} className="text-sm text-[#9E9E9E] hover:underline">
             ← 返回会员详情
           </Link>
           <Button asChild size="sm">
@@ -130,8 +130,8 @@ export default function QuestionnaireView() {
         </div>
 
         {!selected ? (
-          <div className="bg-white rounded-2xl border border-[#E8E0D5] p-8 shadow-sm text-center">
-            <p className="text-[#9E8E7E] mb-4">暂无问卷记录</p>
+          <div className="bg-white rounded-xl border border-[#E5E5E5] p-8 shadow-sm text-center">
+            <p className="text-[#9E9E9E] mb-4">暂无问卷记录</p>
             <Button asChild>
               <Link href={`/members/${memberId}/questionnaire/new`}>填写第一份问卷</Link>
             </Button>

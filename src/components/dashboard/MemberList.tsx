@@ -33,10 +33,10 @@ const FILTERS = [
 ] as const;
 
 const STATUS_STYLE: Record<string, string> = {
-  active: "bg-[#8B5E3C]/10 text-[#8B5E3C]",
-  frozen: "bg-[#D4736A]/10 text-[#D4736A]",
-  inactive: "bg-[#FAF7F2] text-[#9E8E7E]",
-  archived: "bg-[#FAF7F2] text-[#9E8E7E]",
+  active: "bg-[#1A1A1A]/10 text-[#1A1A1A]",
+  frozen: "bg-[#666666]/10 text-[#666666]",
+  inactive: "bg-[#FAFAFA] text-[#9E9E9E]",
+  archived: "bg-[#FAFAFA] text-[#9E9E9E]",
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -114,7 +114,7 @@ export default function MemberList({
           placeholder="搜索会员..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 border-[#E8E0D5] focus-visible:border-[#8B5E3C] focus-visible:ring-[#8B5E3C]/20 rounded-xl"
+          className="flex-1 border-[#E5E5E5] focus-visible:border-[#1A1A1A] focus-visible:ring-[#1A1A1A]/20 rounded-xl"
         />
       </div>
 
@@ -127,8 +127,8 @@ export default function MemberList({
               onClick={() => setStatusFilter(opt.value)}
               className={`px-3 py-1.5 text-sm rounded-full border transition-all duration-200 ${
                 active
-                  ? "bg-[#8B5E3C] text-white border-[#8B5E3C]"
-                  : "bg-white border-[#E8E0D5] text-[#9E8E7E] hover:bg-[#FAF7F2] hover:border-[#8B5E3C]/30"
+                  ? "bg-[#1A1A1A] text-white border-[#1A1A1A]"
+                  : "bg-white border-[#E5E5E5] text-[#9E9E9E] hover:bg-[#FAFAFA] hover:border-[#1A1A1A]/30"
               }`}
             >
               {opt.label}
@@ -146,15 +146,15 @@ export default function MemberList({
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2, delay: i * 0.05 }}
-              className="h-[76px] rounded-2xl animate-pulse"
-              style={{ background: "linear-gradient(90deg, #FAF7F2 0%, #F0EBE5 50%, #FAF7F2 100%)" }}
+              className="h-[76px] rounded-xl animate-pulse"
+              style={{ background: "linear-gradient(90deg, #FAFAFA 0%, #F0EBE5 50%, #FAFAFA 100%)" }}
             />
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16 text-[#9E8E7E]">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#FAF7F2] flex items-center justify-center">
-            <svg className="w-8 h-8 text-[#E8E0D5]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+        <div className="text-center py-16 text-[#9E9E9E]">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#FAFAFA] flex items-center justify-center">
+            <svg className="w-8 h-8 text-[#E5E5E5]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
             </svg>
           </div>
@@ -180,16 +180,16 @@ export default function MemberList({
                 >
                   <Link
                     href={`/members/${m.id}`}
-                    className="flex items-center gap-4 px-5 py-4 bg-white rounded-2xl border border-[#E8E0D5] border-l-[4px] border-l-transparent hover:border-l-[#8B5E3C] hover:bg-[#FDF9F5] hover:shadow-md transition-all duration-200 group"
+                    className="flex items-center gap-4 px-5 py-4 bg-white rounded-xl border border-[#E5E5E5] border-l-[4px] border-l-transparent hover:border-l-[#1A1A1A] hover:bg-[#FAFAFA] hover:shadow-md transition-all duration-200 group"
                   >
                     {/* 左侧圆形头像 */}
-                    <div className="w-11 h-11 rounded-full bg-[#8B5E3C]/10 flex items-center justify-center text-[#8B5E3C] font-serif text-base shrink-0 group-hover:scale-105 transition-transform duration-300">
+                    <div className="w-11 h-11 rounded-full bg-[#1A1A1A]/10 flex items-center justify-center text-[#1A1A1A] font-serif text-base shrink-0 group-hover:scale-105 transition-transform duration-300">
                       {m.name.charAt(0)}
                     </div>
 
                     {/* 中间：姓名 + 标签 */}
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-[#3E2723] truncate">
+                      <p className="text-sm font-semibold text-[#1A1A1A] truncate">
                         {m.name}
                       </p>
                       <div className="flex items-center gap-1.5 mt-0.5">
@@ -201,15 +201,15 @@ export default function MemberList({
                             key={idx}
                             className={`text-[10px] px-1.5 py-0.5 rounded-full ${
                               tag === "VIP" || tag === "vip"
-                                ? "bg-[#8B5E3C]/10 text-[#8B5E3C]"
-                                : "bg-[#FAF7F2] text-[#9E8E7E]"
+                                ? "bg-[#1A1A1A]/10 text-[#1A1A1A]"
+                                : "bg-[#FAFAFA] text-[#9E9E9E]"
                             }`}
                           >
                             {tag}
                           </span>
                         ))}
                         {m.phone && (
-                          <span className="text-[10px] text-[#9E8E7E] ml-1 hidden sm:inline truncate">
+                          <span className="text-[10px] text-[#9E9E9E] ml-1 hidden sm:inline truncate">
                             {m.phone}
                           </span>
                         )}
@@ -220,11 +220,11 @@ export default function MemberList({
                     <div className="shrink-0 text-right">
                       {lastTrainingText ? (
                         <>
-                          <p className="text-xs font-medium text-[#3E2723]">最近训练</p>
-                          <p className="text-[11px] text-[#8B5E3C]">{lastTrainingText}</p>
+                          <p className="text-xs font-medium text-[#1A1A1A]">最近训练</p>
+                          <p className="text-[11px] text-[#1A1A1A]">{lastTrainingText}</p>
                         </>
                       ) : (
-                        <p className="text-[11px] text-[#9E8E7E]">暂无训练</p>
+                        <p className="text-[11px] text-[#9E9E9E]">暂无训练</p>
                       )}
                     </div>
 
@@ -235,7 +235,7 @@ export default function MemberList({
                         e.stopPropagation();
                         onDelete(m);
                       }}
-                      className="w-7 h-7 flex items-center justify-center rounded-lg text-[#9E8E7E] hover:text-[#D4736A] hover:bg-[#D4736A]/10 opacity-0 group-hover:opacity-100 transition-all ml-1"
+                      className="w-7 h-7 flex items-center justify-center rounded-lg text-[#9E9E9E] hover:text-[#666666] hover:bg-[#666666]/10 opacity-0 group-hover:opacity-100 transition-all ml-1"
                       title="删除会员"
                     >
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

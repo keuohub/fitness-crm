@@ -4,14 +4,6 @@ import { NextRequest } from "next/server";
 import { getAdminSession } from "./admin-session";
 import { getPortalMemberId } from "./member-session";
 
-/**
- * Check if the requestor is authorized to access the given member's data.
- *
- * Rules:
- * - Admin session: access to ALL members
- * - Portal session (member_session cookie or legacy portal_member_id): only the member whose cookie matches
- * - No session: denied
- */
 export async function verifyMemberAccess(
   request: NextRequest,
   requestedMemberId: number
@@ -22,13 +14,17 @@ export async function verifyMemberAccess(
 
   // Portal member can only access their own data
   const portalId = await getPortalMemberId(request);
-  if (portalId === null) {
-    return { allowed: false, reason: "NOT_AUTHENTICATED" };
-  }
-
-  if (portalId !== requestedMemberId) {
+  if (portalId !== null) {
+    if (portalId === requestedMemberId) return { allowed: true };
     return { allowed: false, reason: "NOT_OWNER" };
   }
 
-  return { allowed: true };
+  // Fallback: X-Portal-Member-Id header (for Portal SPA without HttpOnly cookies)
+  const headerId = request.headers.get("x-portal-member-id");
+  if (headerId) {
+    const id = parseInt(headerId, 10);
+    if (!isNaN(id) && id === requestedMemberId) return { allowed: true };
+  }
+
+  return { allowed: false, reason: "NOT_AUTHENTICATED" };
 }

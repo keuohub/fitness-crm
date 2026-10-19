@@ -10,7 +10,7 @@ const SHOWCASE = [
     subtitle: "会员管理中心",
     desc: "从会员档案到训练记录，从飞书同步到周期报告。教练可以随时随地查看每一位会员的成长状态。",
     features: ["会员档案管理", "训练记录追踪", "飞书数据同步", "周期报告生成"],
-    color: "#3E2723",
+    color: "#1A1A1A",
     imageLeft: false,
     placeholder: "CRM Dashboard Preview",
   },
@@ -28,7 +28,7 @@ const SHOWCASE = [
     subtitle: "会员成长空间",
     desc: "每一位会员都拥有自己的成长空间：时间轴记录、成长勋章、阶段回顾、成长分享。",
     features: ["成长时间轴", "成长勋章", "阶段回顾", "成长分享"],
-    color: "#6E6E73",
+    color: "#4A4A4A",
     imageLeft: false,
     placeholder: "Member Portal Preview",
   },
@@ -36,7 +36,7 @@ const SHOWCASE = [
 
 function PreviewCard({ title, color }: { title: string; color: string }) {
   return (
-    <div className="rounded-xl overflow-hidden" style={{ background: "linear-gradient(160deg, #FDF9F5 0%, #FFF 100%)", boxShadow: "0 2px 20px rgba(62,39,35,0.06)", minHeight: 280 }}>
+    <div className="rounded-none overflow-hidden" style={{ background: "#FFFFFF", minHeight: 280 }}>
       {/* Mock header bar */}
       <div className="h-10 flex items-center gap-2 px-4" style={{ backgroundColor: `${color}10` }}>
         <div className="flex gap-1.5">
@@ -50,8 +50,8 @@ function PreviewCard({ title, color }: { title: string; color: string }) {
       <div className="p-5 space-y-3">
         <div className="h-2.5 rounded-full w-3/4 opacity-15" style={{ backgroundColor: color }} />
         <div className="h-2.5 rounded-full w-1/2 opacity-10" style={{ backgroundColor: color }} />
-        <div className="h-16 rounded-xl mt-4 opacity-8" style={{ backgroundColor: `${color}10` }} />
-        <div className="h-10 rounded-lg opacity-6" style={{ backgroundColor: `${color}08` }} />
+        <div className="h-16 rounded-none mt-4 opacity-8" style={{ backgroundColor: `${color}10` }} />
+        <div className="h-10 rounded-none opacity-6" style={{ backgroundColor: `${color}08` }} />
       </div>
     </div>
   );
@@ -59,11 +59,11 @@ function PreviewCard({ title, color }: { title: string; color: string }) {
 
 export default function ProductSection() {
   return (
-    <section id="product" className="max-w-5xl mx-auto px-5 sm:px-8 md:px-12 py-40 md:py-48">
+    <section id="product" className="max-w-5xl mx-auto px-4 sm:px-6 md:px-8 py-16 sm:py-20 md:py-24">
       <motion.div {...MICRO.scrollReveal} variants={fadeUp} initial="hidden" whileInView="visible" className="text-center mb-20">
         <p className="text-[11px] uppercase tracking-[0.3em] font-medium mb-4" style={{ color: COLORS.primary }}>产品</p>
-        <h2 className="text-4xl sm:text-5xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15] mb-4">完整的成长生态</h2>
-        <p className="text-sm text-[#6E6E73] max-w-[34em] mx-auto">三套系统协同工作，从教练到会员，从记录到反馈。</p>
+        <h2 className="text-2xl sm:text-3xl font-normal text-[#1A1A1A] tracking-normal mb-4">完整的成长生态</h2>
+        <p className="text-sm text-[#4A4A4A] max-w-prose mx-auto">三套系统协同工作，从教练到会员，从记录到反馈。</p>
       </motion.div>
 
       <div className="space-y-24 sm:space-y-32">
@@ -87,11 +87,11 @@ export default function ProductSection() {
               className="flex flex-col justify-center"
             >
               <p className="text-[10px] uppercase tracking-[0.2em] font-medium mb-2" style={{ color: item.color }}>{item.subtitle}</p>
-              <h3 className="text-2xl sm:text-3xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15] mb-4">{item.title}</h3>
-              <p className="text-sm text-[#6E6E73] leading-relaxed mb-6">{item.desc}</p>
+              <h3 className="text-2xl sm:text-3xl font-semibold text-[#1A1A1A] tracking-normal mb-4">{item.title}</h3>
+              <p className="text-sm text-[#4A4A4A] leading-[1.8] mb-6">{item.desc}</p>
               <ul className="space-y-2">
                 {item.features.map((f) => (
-                  <li key={f} className="text-sm text-[#6E6E73] flex items-center gap-2">
+                  <li key={f} className="text-sm text-[#4A4A4A] flex items-center gap-2">
                     <span className="w-1 h-1 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
                     {f}
                   </li>

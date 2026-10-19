@@ -1,0 +1,496 @@
+/* pages/feedback · 小桥来信 · Lululemon/Aesop 奢雅手札信笺 + 蜕变时光轴 */
+
+.feedback-container {
+  min-height: 100vh;
+  padding: calc(env(safe-area-inset-top) + 120rpx) 32rpx calc(env(safe-area-inset-bottom) + 260rpx);
+  box-sizing: border-box;
+  animation: pageTransitIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.loading {
+  padding: 160rpx 0;
+  text-align: center;
+}
+.loading-text {
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.88);
+  letter-spacing: 2rpx;
+}
+
+.guide {
+  padding: 8rpx 4rpx 36rpx;
+}
+.guide-tag-wrap {
+  margin-bottom: 14rpx;
+}
+.guide-pill {
+  display: inline-block;
+  font-size: 20rpx;
+  font-weight: 600;
+  color: #BA2428;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1rpx solid rgba(186, 36, 40, 0.22);
+  padding: 6rpx 20rpx;
+  border-radius: 999rpx;
+  letter-spacing: 2rpx;
+  box-shadow: 0 4rpx 12rpx rgba(186, 36, 40, 0.08);
+}
+.guide-label {
+  display: block;
+  font-family: Georgia, "Songti SC", "Source Han Serif SC", -apple-system, BlinkMacSystemFont, "PingFang SC", serif;
+  font-size: 48rpx;
+  font-weight: 600;
+  color: #1C1415;
+  letter-spacing: 0.04em;
+  margin-bottom: 10rpx;
+}
+.guide-subtitle {
+  display: block;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  font-size: 26rpx;
+  color: rgba(28, 20, 21, 0.65);
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+}
+
+.section {
+  margin-bottom: 40rpx;
+}
+.section-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 36rpx 8rpx 18rpx;
+}
+.section-title {
+  display: block;
+  font-family: "Songti SC", "Source Han Serif SC", -apple-system, BlinkMacSystemFont, "PingFang SC", Georgia, serif;
+  background: transparent;
+  border: none;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #2C1819;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.section-badge {
+  font-size: 21rpx;
+  color: rgba(28, 20, 21, 0.48);
+  font-family: "Didot", -apple-system, sans-serif;
+  letter-spacing: 1rpx;
+}
+
+/* ── 手札信纸大卡片 (Editorial Stationery Card) ── */
+.latest-card.letter-paper {
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  border-radius: 36rpx;
+  border: 1rpx solid rgba(220, 195, 185, 0.45);
+  box-shadow: 0 16rpx 48rpx rgba(186, 36, 40, 0.06), 0 2rpx 8rpx rgba(0, 0, 0, 0.03);
+  box-sizing: border-box;
+  padding: 48rpx 40rpx 36rpx;
+  position: relative;
+  overflow: hidden;
+  transition: transform 140ms ease;
+}
+
+/* 顶部流金朱红边缘 */
+.paper-top-border {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6rpx;
+  background: linear-gradient(90deg, #BA2428 0%, #D48072 50%, #C99355 100%);
+  opacity: 0.8;
+}
+
+/* 右上角淡雅引用水印 */
+.letter-watermark {
+  position: absolute;
+  top: 14rpx;
+  right: 28rpx;
+  font-family: Georgia, "Didot", serif;
+  font-size: 140rpx;
+  line-height: 1;
+  color: rgba(186, 36, 40, 0.04);
+  pointer-events: none;
+  user-select: none;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+  position: relative;
+  z-index: 2;
+}
+
+.type-pill-luxury {
+  display: inline-flex;
+  align-items: center;
+  gap: 10rpx;
+  padding: 6rpx 20rpx;
+  border-radius: 999rpx;
+  background: #181213;
+  box-shadow: inset 0 1rpx 0 rgba(255, 255, 255, 0.22);
+}
+.pill-dot {
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: 50%;
+  background: #E8A598;
+}
+.pill-label {
+  font-size: 21rpx;
+  font-weight: 500;
+  color: #FFFFFF;
+  letter-spacing: 1rpx;
+}
+.card-date {
+  font-size: 24rpx;
+  font-family: "Didot", "Bodoni MT", "Times New Roman", serif;
+  color: rgba(28, 20, 21, 0.45);
+  font-variant-numeric: lining-nums tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.letter-body {
+  position: relative;
+  z-index: 2;
+  margin-top: 12rpx;
+}
+.card-summary,
+.card-full {
+  display: block;
+  font-size: 28rpx;
+  line-height: 1.88;
+  color: #261D1E;
+  letter-spacing: 0.02em;
+}
+.card-full {
+  white-space: pre-wrap;
+  animation: textUnfold 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes textUnfold {
+  0% {
+    opacity: 0;
+    transform: translateY(12rpx);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── 专属私教印鉴与落款 ── */
+.letter-sign-block {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: 40rpx;
+  padding-top: 32rpx;
+  border-top: 1rpx dashed rgba(28, 20, 21, 0.12);
+  position: relative;
+  z-index: 2;
+}
+.sign-left {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+.sign-role {
+  font-size: 20rpx;
+  color: rgba(28, 20, 21, 0.45);
+  letter-spacing: 2rpx;
+}
+.sign-author {
+  font-family: "Songti SC", Georgia, serif;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #1C1415;
+}
+.letter-seal-stamp {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 12rpx;
+  border: 2.5rpx solid #BA2428;
+  background: rgba(186, 36, 40, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(-3deg);
+  box-shadow: 0 4rpx 12rpx rgba(186, 36, 40, 0.12);
+}
+.seal-text {
+  font-family: "Songti SC", "Source Han Serif SC", serif;
+  font-size: 20rpx;
+  font-weight: 700;
+  color: #BA2428;
+  line-height: 1.25;
+  text-align: center;
+  letter-spacing: 2rpx;
+  width: 44rpx;
+}
+
+/* ── 折叠展开胶囊 ── */
+.card-toggle {
+  margin-top: 28rpx;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+}
+.toggle-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 12rpx 36rpx;
+  border-radius: 999rpx;
+  background: rgba(186, 36, 40, 0.06);
+  border: 1rpx solid rgba(186, 36, 40, 0.14);
+  transition: transform 140ms ease, background-color 140ms ease;
+}
+.toggle-pill:active {
+  transform: scale(0.96);
+  background: rgba(186, 36, 40, 0.12);
+}
+.toggle-pill.small {
+  padding: 8rpx 28rpx;
+}
+.toggle-label {
+  font-size: 23rpx;
+  font-weight: 600;
+  color: #BA2428;
+  letter-spacing: 0.04em;
+}
+.toggle-arrow {
+  font-size: 20rpx;
+  color: #BA2428;
+}
+
+/* ── 交互操作条 (互动闭环) ── */
+.letter-action-bar {
+  margin-top: 32rpx;
+  padding-top: 24rpx;
+  border-top: 1rpx solid rgba(28, 20, 21, 0.06);
+  position: relative;
+  z-index: 2;
+}
+.action-btn-single {
+  width: 100%;
+  height: 84rpx;
+  border-radius: 999rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  box-sizing: border-box;
+  background: linear-gradient(135deg, #1C1415 0%, #2E1F21 100%);
+  box-shadow: 0 6rpx 20rpx rgba(28, 20, 21, 0.18), inset 0 1rpx 0 rgba(255, 255, 255, 0.22);
+  transition: transform 140ms ease, opacity 140ms ease;
+}
+.action-btn-single:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+.action-btn-single .action-txt {
+  font-size: 25rpx;
+  font-weight: 600;
+  color: #FFFFFF;
+  letter-spacing: 1.5rpx;
+}
+.action-btn-single .action-icon {
+  font-size: 28rpx;
+}
+
+/* ── 「自律长跑 · 蜕变时光轴」 ── */
+.timeline-section {
+  margin-top: 48rpx;
+}
+.timeline-card {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  border-radius: 36rpx;
+  border: 1rpx solid rgba(220, 195, 185, 0.4);
+  box-shadow: 0 16rpx 48rpx rgba(186, 36, 40, 0.05), 0 2rpx 8rpx rgba(0, 0, 0, 0.02);
+  padding: 44rpx 36rpx 28rpx;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.milestone-item {
+  display: flex;
+  gap: 24rpx;
+  position: relative;
+  padding-bottom: 40rpx;
+}
+.milestone-item:last-child {
+  padding-bottom: 0;
+}
+/* 纵向连线 */
+.milestone-item:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: 22rpx;
+  top: 48rpx;
+  bottom: 0;
+  width: 2rpx;
+  background: rgba(28, 20, 21, 0.1);
+}
+.milestone-done:not(:last-child)::before {
+  background: linear-gradient(180deg, #BA2428 0%, rgba(186, 36, 40, 0.25) 100%);
+}
+
+.milestone-dot {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  z-index: 2;
+  box-sizing: border-box;
+}
+.milestone-done .milestone-dot {
+  background: linear-gradient(135deg, #BA2428 0%, #D48072 100%);
+  box-shadow: 0 4rpx 12rpx rgba(186, 36, 40, 0.25);
+}
+.milestone-done .dot-inner {
+  color: #FFFFFF;
+  font-size: 22rpx;
+  font-weight: 700;
+}
+.milestone-active .milestone-dot {
+  background: #FFFFFF;
+  border: 3rpx solid #BA2428;
+  box-shadow: 0 2rpx 10rpx rgba(186, 36, 40, 0.18);
+}
+.milestone-active .dot-inner {
+  color: #BA2428;
+  font-size: 22rpx;
+  font-weight: 700;
+}
+.milestone-locked .milestone-dot {
+  background: rgba(28, 20, 21, 0.04);
+  border: 2rpx dashed rgba(28, 20, 21, 0.2);
+}
+.milestone-locked .dot-inner {
+  color: rgba(28, 20, 21, 0.35);
+  font-size: 20rpx;
+}
+
+.milestone-content {
+  flex: 1;
+}
+.milestone-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8rpx;
+}
+.milestone-title {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #1C1415;
+}
+.milestone-status {
+  font-size: 20rpx;
+  font-weight: 500;
+  padding: 4rpx 16rpx;
+  border-radius: 999rpx;
+  letter-spacing: 0.5rpx;
+}
+.status-done {
+  background: rgba(186, 36, 40, 0.08);
+  color: #BA2428;
+}
+.status-ongoing {
+  background: rgba(201, 147, 85, 0.12);
+  color: #8C561B;
+}
+.status-locked {
+  background: rgba(28, 20, 21, 0.04);
+  color: rgba(28, 20, 21, 0.4);
+}
+.milestone-desc {
+  display: block;
+  font-size: 23rpx;
+  line-height: 1.68;
+  color: rgba(28, 20, 21, 0.62);
+}
+
+/* ── 历史手札列表 ── */
+.history-list {
+  display: flex;
+  flex-direction: column;
+}
+.history-item {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border-radius: 32rpx;
+  border: 1rpx solid rgba(220, 195, 185, 0.35);
+  box-shadow: 0 10rpx 32rpx rgba(186, 36, 40, 0.04);
+  padding: 32rpx 28rpx;
+  box-sizing: border-box;
+}
+.divider {
+  height: 20rpx;
+}
+
+/* ── 空状态信纸 ── */
+.empty-state {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 36rpx;
+  border: 1rpx solid rgba(220, 195, 185, 0.35);
+  box-sizing: border-box;
+}
+.letter-empty-stationery {
+  padding: 80rpx 48rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.letter-empty-stationery::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6rpx;
+  background: linear-gradient(90deg, #BA2428 0%, #D48072 50%, #BA2428 100%);
+  opacity: 0.6;
+}
+.stationery-seal {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  background: rgba(186, 36, 40, 0.08);
+  border: 1.5rpx solid rgba(186, 36, 40, 0.22);
+  color: #BA2428;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  margin-bottom: 24rpx;
+}
+.stationery-line {
+  width: 48rpx;
+  height: 2rpx;
+  background: rgba(28, 20, 21, 0.12);
+  margin: 32rpx 0 20rpx;
+}
+.stationery-footer {
+  font-family: Georgia, "Songti SC", serif;
+  font-size: 20rpx;
+  letter-spacing: 2rpx;
+  color: rgba(28, 20, 21, 0.45);
+}

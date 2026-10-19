@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { trainings } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { verifyMemberAccess } from "@/lib/auth/member-ownership";
+import { getCached, setCache, deleteCache } from "@/lib/api-cache";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -23,13 +24,21 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "无权访问" }, { status: 401 });
   }
 
+  const cacheKey = `trainings:${memberId}`;
+  const cached = getCached(cacheKey);
+  if (cached) return NextResponse.json(cached);
+
   const data = await db
     .select()
     .from(trainings)
     .where(eq(trainings.memberId, memberId))
     .orderBy(desc(trainings.trainingDate));
 
-  return NextResponse.json(data);
+  setCache(cacheKey, data);
+
+  const response = NextResponse.json(data);
+    response.headers.set("Cache-Control", "public, max-age=300, s-maxage=300");
+    return response;
 }
 
 export async function POST(request: NextRequest) {
@@ -63,6 +72,9 @@ export async function POST(request: NextRequest) {
     })
     .returning();
   const record = (__r_record as any)[0];
+
+  // 清除该会员训练数据缓存，保障前台秒级刷新
+  deleteCache(`trainings:${memberId}`);
 
   return NextResponse.json(record, { status: 201 });
 }

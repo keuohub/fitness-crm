@@ -12,27 +12,27 @@ const PILLARS = [
 
 export default function MissionSection() {
   return (
-    <section id="mission" className="max-w-5xl mx-auto px-5 sm:px-8 md:px-12 py-40 md:py-48">
+    <section id="mission" className="max-w-5xl mx-auto px-4 sm:px-6 md:px-8 py-16 sm:py-20 md:py-24">
       <motion.div {...MICRO.scrollReveal} variants={fadeUp} initial="hidden" whileInView="visible" className="text-center mb-16">
         <p className="text-[11px] uppercase tracking-[0.3em] font-medium mb-4" style={{ color: COLORS.primary }}>我们的信念</p>
-        <h2 className="text-3xl sm:text-4xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15] mb-4">不只是管理会员</h2>
-        <p className="text-sm text-[#6E6E73] max-w-[34em] mx-auto">传统健身房关注续费。徕舞关注成长。我们相信每一位女性都值得被看见、被陪伴。</p>
+        <h2 className="text-xl sm:text-2xl font-normal text-[#1A1A1A] tracking-normal mb-4">不只是管理会员</h2>
+        <p className="text-sm text-[#4A4A4A] max-w-prose mx-auto">传统健身房关注续费。徕舞关注成长。我们相信每一位女性都值得被看见、被陪伴。</p>
       </motion.div>
 
       <motion.div variants={staggerContainer} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-80px" }}
         className="grid md:grid-cols-3 gap-6">
         {PILLARS.map((p, i) => (
           <motion.div key={p.title} variants={staggerItem}
-            className="rounded-3xl p-8 text-center"
-            style={{ background: "linear-gradient(135deg, #FDF9F5 0%, rgba(255,255,255,0.95) 100%)", boxShadow: "0 2px 16px rgba(62,39,35,0.05)" }}
+            className="rounded-none p-8 text-center"
+            style={{ background: "linear-gradient(135deg, #FAFAFA 0%, rgba(255,255,255,0.95) 100%)", boxShadow: "0 2px 16px rgba(62,39,35,0.05)" }}
             whileHover={{ y: -4, scale: 1.01 }} transition={{ duration: 0.15 }}
           >
             <div className="w-12 h-12 mx-auto rounded-full flex items-center justify-center text-lg font-semibold mb-4"
               style={{ backgroundColor: `${COLORS.primary}14`, color: COLORS.primary }}>
               {i + 1}
             </div>
-            <h3 className="text-lg font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15] mb-2">{p.title}</h3>
-            <p className="text-sm text-[#6E6E73] leading-relaxed">{p.desc}</p>
+            <h3 className="text-lg font-semibold text-[#1A1A1A] tracking-normal mb-2">{p.title}</h3>
+            <p className="text-sm text-[#4A4A4A] leading-[1.8]">{p.desc}</p>
           </motion.div>
         ))}
       </motion.div>

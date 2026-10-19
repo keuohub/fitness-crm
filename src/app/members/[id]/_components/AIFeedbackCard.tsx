@@ -15,6 +15,8 @@ interface FeedbackData {
 
 export default function AIFeedbackCard({ memberId, hasQuestionnaire }: AIFeedbackCardProps) {
   const [latestFeedback, setLatestFeedback] = useState<string | null>(null);
+  const [initialAssessment, setInitialAssessment] = useState<string | null>(null);
+  const [iaLoading, setIaLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
@@ -33,6 +35,22 @@ export default function AIFeedbackCard({ memberId, hasQuestionnaire }: AIFeedbac
       })
       .catch(() => {})
       .finally(() => setLoading(false));
+  }, [memberId]);
+
+  // 加载 initial_assessment 报告
+  useEffect(() => {
+    setIaLoading(true);
+    fetch(`/api/ai/initial-assessment?memberId=${memberId}`)
+      .then(async (res) => {
+        if (res.ok) {
+          const data = await res.json();
+          if (data.assessment) {
+            setInitialAssessment(data.assessment);
+          }
+        }
+      })
+      .catch(() => {})
+      .finally(() => setIaLoading(false));
   }, [memberId]);
 
   const handleGenerate = async () => {
@@ -61,9 +79,9 @@ export default function AIFeedbackCard({ memberId, hasQuestionnaire }: AIFeedbac
   // 无问卷 → 提示
   if (!hasQuestionnaire) {
     return (
-      <div className="bg-white rounded-2xl border border-[#E8E0D5] p-6 shadow-sm mb-6">
+      <div className="bg-white rounded-xl border border-[#E5E5E5] p-6 shadow-sm mb-6">
         <h2 className="font-serif text-lg mb-3">洞察记录</h2>
-        <p className="text-sm text-[#9E8E7E]">
+        <p className="text-sm text-[#9E9E9E]">
           请先填写会员问卷，才能生成个性化洞察
         </p>
       </div>
@@ -71,7 +89,7 @@ export default function AIFeedbackCard({ memberId, hasQuestionnaire }: AIFeedbac
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-[#E8E0D5] p-6 shadow-sm mb-6">
+    <div className="bg-white rounded-xl border border-[#E5E5E5] p-6 shadow-sm mb-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-serif text-lg">洞察记录</h2>
         <Button
@@ -84,17 +102,31 @@ export default function AIFeedbackCard({ memberId, hasQuestionnaire }: AIFeedbac
       </div>
 
       {error && (
-        <p className="text-sm text-[#D4736A] mb-3">{error}</p>
+        <p className="text-sm text-[#666666] mb-3">{error}</p>
+      )}
+
+      {/* 初始评估报告 */}
+      {initialAssessment && (
+        <div className="mb-4">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-xs font-medium text-[#1A1A1A] bg-[#F5F5F5] rounded-full px-3 py-1">
+              初始评估
+            </span>
+          </div>
+          <div className="text-sm text-[#1A1A1A] leading-relaxed whitespace-pre-wrap bg-[#FAFAFA] border border-[#E5E5E5] rounded p-4 max-h-80 overflow-y-auto">
+            {initialAssessment}
+          </div>
+        </div>
       )}
 
       {loading ? (
-        <p className="text-sm text-[#9E8E7E]">加载中...</p>
+        <p className="text-sm text-[#9E9E9E]">加载中...</p>
       ) : latestFeedback ? (
-        <div className="text-sm text-[#3E2723] leading-relaxed whitespace-pre-wrap bg-[#FAF7F2] border border-[#E8E0D5] rounded p-4">
+        <div className="text-sm text-[#1A1A1A] leading-relaxed whitespace-pre-wrap bg-[#FAFAFA] border border-[#E5E5E5] rounded p-4">
           {latestFeedback}
         </div>
       ) : (
-        <p className="text-sm text-[#9E8E7E]">
+        <p className="text-sm text-[#9E9E9E]">
           点击「生成今日关怀」，小鹿会为 {memberId} 号会员生成专属反馈
         </p>
       )}

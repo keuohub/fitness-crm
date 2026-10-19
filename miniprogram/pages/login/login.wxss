@@ -1,0 +1,160 @@
+/* pages/login · 登录 · 朱红流光底 + 黑胶囊 */
+
+.login-container {
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: calc(env(safe-area-inset-top) + 100rpx) 56rpx calc(env(safe-area-inset-bottom) + 80rpx);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  animation: pageTransitIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.brand {
+  text-align: center;
+  margin-bottom: 64rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.brand-en {
+  font-family: "Didot", "Bodoni MT", Georgia, serif;
+  font-size: 42rpx;
+  letter-spacing: 0.35em;
+  margin-right: -0.35em;
+  color: #FFFFFF;
+  text-shadow: 0 4rpx 20rpx rgba(120, 20, 20, 0.25);
+}
+.brand-divider {
+  width: 44rpx;
+  height: 2rpx;
+  background: rgba(255, 255, 255, 0.6);
+  margin: 18rpx 0 20rpx;
+}
+.brand-name {
+  display: block;
+  font-family: Georgia, "Songti SC", serif;
+  font-size: 44rpx;
+  font-weight: 600;
+  color: #FFFFFF;
+  letter-spacing: 0.12em;
+  text-shadow: 0 6rpx 24rpx rgba(120, 20, 20, 0.25);
+}
+.brand-subtitle {
+  display: block;
+  margin-top: 14rpx;
+  font-size: 22rpx;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 0.2em;
+}
+
+.guide {
+  text-align: center;
+  margin-bottom: 40rpx;
+}
+.guide-text {
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: 2rpx;
+}
+
+.input-card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.invite-input {
+  width: 100%;
+  box-sizing: border-box;
+  height: 104rpx;
+  padding: 0 40rpx;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1.5rpx solid rgba(255, 255, 255, 0.95);
+  border-radius: 999rpx;
+  text-align: center;
+  font-size: 30rpx;
+  letter-spacing: 4rpx;
+  color: var(--text-main);
+  box-shadow: 0 12rpx 32rpx rgba(120, 20, 20, 0.12), inset 0 1rpx 0 rgba(255, 255, 255, 0.95);
+  transition: transform 160ms cubic-bezier(0.2, 0.8, 0.25, 1), box-shadow 160ms ease, border-color 160ms ease;
+}
+.invite-input:focus {
+  box-shadow: 0 14rpx 36rpx rgba(120, 20, 20, 0.18), 0 0 0 4rpx rgba(255, 255, 255, 0.4);
+}
+.phone-suffix-input {
+  font-size: 28rpx;
+  letter-spacing: 6rpx;
+  background: rgba(255, 255, 255, 0.88);
+}
+.input-placeholder {
+  color: rgba(92, 85, 89, 0.6);
+  font-size: 26rpx;
+  letter-spacing: 2rpx;
+}
+
+.login-btn {
+  margin-top: 32rpx;
+  background: var(--noir-btn);
+  color: #FFFFFF;
+  border-radius: 999rpx;
+  padding: 28rpx 0;
+  font-size: 30rpx;
+  font-weight: 500;
+  letter-spacing: 4rpx;
+  box-shadow: 0 14rpx 34rpx rgba(13, 12, 15, 0.28), inset 0 1rpx 0 rgba(255, 255, 255, 0.25);
+  transition: transform 140ms cubic-bezier(0.2, 0.8, 0.25, 1), opacity 140ms ease;
+}
+.login-btn:active {
+  transform: scale(0.965);
+  opacity: 0.92;
+}
+.login-btn[disabled] {
+  opacity: 0.45;
+  box-shadow: none;
+}
+
+.error-text {
+  display: block;
+  margin-top: 24rpx;
+  padding: 12rpx 0;
+  text-align: center;
+  font-size: 24rpx;
+  color: #FFFFFF;
+  background: rgba(120, 10, 10, 0.28);
+  border-radius: 999rpx;
+}
+
+.footer-wrap {
+  margin-top: 56rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20rpx;
+}
+.footer-note {
+  display: block;
+  text-align: center;
+  font-size: 22rpx;
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 1rpx;
+}
+.demo-entry-btn {
+  padding: 10rpx 28rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1rpx solid rgba(255, 255, 255, 0.35);
+  transition: transform 140ms ease, background 140ms ease;
+}
+.demo-entry-btn:active {
+  transform: scale(0.95);
+  background: rgba(255, 255, 255, 0.3);
+}
+.demo-entry-text {
+  font-size: 22rpx;
+  color: #FFFFFF;
+  letter-spacing: 2rpx;
+}

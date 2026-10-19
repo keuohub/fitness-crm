@@ -32,10 +32,10 @@ export default function SyncStatusPage() {
   const errorCount = logs.filter((l) => l.status === "error").length;
 
   return (
-    <main className="min-h-screen bg-[#FAF7F2] text-[#3E2723] p-6">
+    <main className="min-h-screen bg-[#FAFAFA] text-[#1A1A1A] p-6">
       <div className="max-w-2xl mx-auto">
         <div className="mb-6">
-          <Link href="/admin/sync" className="text-sm text-[#9E8E7E] hover:underline">
+          <Link href="/admin/sync" className="text-sm text-[#9E9E9E] hover:underline">
             -- 返回同步面板
           </Link>
         </div>
@@ -44,27 +44,27 @@ export default function SyncStatusPage() {
 
         {/* Status cards */}
         <div className="grid grid-cols-3 gap-4 mb-8">
-          <div className="bg-white rounded-2xl p-4 text-center" style={{ boxShadow: "0 2px 12px rgba(62,39,35,0.04)" }}>
+          <div className="bg-white rounded-xl p-4 text-center" style={{ boxShadow: "none" }}>
             <p className="text-2xl font-serif font-bold" style={{ color: COLORS.primary }}>
               {lastSync ? new Date(lastSync).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" }) : "--"}
             </p>
-            <p className="text-xs text-[#9E8E7E] mt-1">最后同步</p>
+            <p className="text-xs text-[#9E9E9E] mt-1">最后同步</p>
           </div>
-          <div className="bg-white rounded-2xl p-4 text-center" style={{ boxShadow: "0 2px 12px rgba(62,39,35,0.04)" }}>
+          <div className="bg-white rounded-xl p-4 text-center" style={{ boxShadow: "none" }}>
             <p className="text-2xl font-serif font-bold text-green-700">{successCount}</p>
-            <p className="text-xs text-[#9E8E7E] mt-1">成功</p>
+            <p className="text-xs text-[#9E9E9E] mt-1">成功</p>
           </div>
-          <div className="bg-white rounded-2xl p-4 text-center" style={{ boxShadow: "0 2px 12px rgba(62,39,35,0.04)" }}>
-            <p className="text-2xl font-serif font-bold" style={{ color: "#D4736A" }}>{errorCount}</p>
-            <p className="text-xs text-[#9E8E7E] mt-1">失败</p>
+          <div className="bg-white rounded-xl p-4 text-center" style={{ boxShadow: "none" }}>
+            <p className="text-2xl font-serif font-bold" style={{ color: "#666666" }}>{errorCount}</p>
+            <p className="text-xs text-[#9E9E9E] mt-1">失败</p>
           </div>
         </div>
 
         {/* Log list */}
-        <div className="bg-white rounded-2xl p-6" style={{ boxShadow: "0 2px 12px rgba(62,39,35,0.04)" }}>
+        <div className="bg-white rounded-xl p-6" style={{ boxShadow: "none" }}>
           <h2 className="font-serif text-lg mb-4">最近日志</h2>
           {logs.length === 0 ? (
-            <p className="text-sm text-[#9E8E7E]">暂无同步记录</p>
+            <p className="text-sm text-[#9E9E9E]">暂无同步记录</p>
           ) : (
             <div className="space-y-2">
               {logs.map((log, i) => (
@@ -75,7 +75,7 @@ export default function SyncStatusPage() {
                   transition={{ delay: i * 0.03 }}
                   className="flex items-center justify-between py-2 px-3 rounded-xl text-sm"
                   style={{
-                    background: log.status === "error" ? "#D4736A08" : "#FAF7F2",
+                    background: log.status === "error" ? "#66666608" : "#FAFAFA",
                   }}
                 >
                   <div className="flex items-center gap-2 min-w-0">
@@ -86,15 +86,15 @@ export default function SyncStatusPage() {
                           log.status === "success"
                             ? "#16a34a"
                             : log.status === "error"
-                            ? "#D4736A"
-                            : "#9E8E7E",
+                            ? "#666666"
+                            : "#9E9E9E",
                       }}
                     />
-                    <span className="truncate text-[#3E2723]">
+                    <span className="truncate text-[#1A1A1A]">
                       {log.memberName || log.message}
                     </span>
                   </div>
-                  <span className="text-xs text-[#9E8E7E] flex-shrink-0 ml-2">
+                  <span className="text-xs text-[#9E9E9E] flex-shrink-0 ml-2">
                     {log.timestamp?.slice(11, 16) || ""}
                   </span>
                 </motion.div>

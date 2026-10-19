@@ -28,6 +28,14 @@ export async function POST(request: NextRequest) {
   try {
     const result: FullSyncResult = await fullSync();
 
+    // 触发桌面总表与飞书全量对齐
+    try {
+      const { exec } = await import("child_process");
+      exec("python3 scripts/sync_all.py", (err) => {
+        if (err) console.warn("[sync] 刷新桌面总表警告:", err.message);
+      });
+    } catch {}
+
     return NextResponse.json({
       success: result.allSuccess,
       startedAt: result.members.startedAt,

@@ -59,6 +59,13 @@ export async function getPortalMemberId(request: NextRequest): Promise<number | 
     }
   }
 
+  // 3. 兜底：小程序端用请求头透传会员身份（与 verifyMemberAccess 保持一致）
+  const headerId = request.headers.get("x-portal-member-id");
+  if (headerId) {
+    const id = parseInt(headerId, 10);
+    if (!isNaN(id)) return id;
+  }
+
   return null;
 }
 

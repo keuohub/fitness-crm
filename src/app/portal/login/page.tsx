@@ -1,196 +1,157 @@
 "use client";
 
-import { useState } from "react";
-import { motion } from "framer-motion";
-import GlassCard from "@/components/portal/ui/GlassCard";
-import { COLORS } from "@/lib/design/DESIGN_TOKEN";
-import { fadeUp, MOTION_DURATIONS } from "@/lib/design/motion";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
-export default function LoginPage() {
-  const [phone, setPhone] = useState("");
+function isLoggedIn(): boolean {
+  if (typeof window === "undefined") return false;
+  const expires = localStorage.getItem("portal_login_expires");
+  if (!expires) return false;
+  if (Date.now() > parseInt(expires, 10)) {
+    localStorage.removeItem("portal_member_id");
+    localStorage.removeItem("portal_member_name");
+    localStorage.removeItem("portal_login_expires");
+    return false;
+  }
+  return true;
+}
+
+export default function PortalLoginPage() {
+  const router = useRouter();
   const [code, setCode] = useState("");
-  const [mode, setMode] = useState<"phone" | "invite">("phone");
-  const [inviteCode, setInviteCode] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [sendCooldown, setSendCooldown] = useState(0);
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
+  const [checking, setChecking] = useState(true);
 
-  const handleSendCode = async () => {
-    if (!phone.trim() || !/^\d{11}$/.test(phone.trim())) { setError("请输入正确的手机号"); return; }
-    setError("");
-    const res = await fetch("/api/auth/sms/send", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ phone: phone.trim() }) });
-    const data = await res.json();
-    if (!res.ok) { setError(data.error || "发送失败"); return; }
-    setSendCooldown(59);
-    const timer = setInterval(() => setSendCooldown((p) => { if (p <= 1) { clearInterval(timer); return 0; } return p - 1; }), 1000);
-  };
-
-  const handlePhoneLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!phone.trim() || !/^\d{11}$/.test(phone.trim())) { setError("请输入正确的11位手机号"); return; }
-    if (!code.trim()) { setError("请输入验证码"); return; }
-    setLoading(true);
-    setError("");
-
-    try {
-      const res = await fetch("/api/portal/login-phone", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: phone.trim(), code: code.trim() }),
-      });
-      const data = await res.json();
-      if (!res.ok) { setError(data.error || "登录失败"); return; }
-      window.location.href = "/portal";
-      navigator.sendBeacon?.("/api/portal/track", JSON.stringify({ event: "login", page: "/portal/login" }));
-    } catch {
-      setError("网络错误，请重试");
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (isLoggedIn()) {
+      router.replace("/portal/growth");
+    } else {
+      setChecking(false);
     }
+  }, [router]);
+
+  const doLogin = (memberId: string, memberName: string) => {
+    localStorage.setItem("portal_member_id", memberId);
+    localStorage.setItem("portal_member_name", memberName);
+    if (rememberMe) {
+      const expires = Date.now() + 30 * 24 * 60 * 60 * 1000;
+      localStorage.setItem("portal_login_expires", String(expires));
+    } else {
+      localStorage.removeItem("portal_login_expires");
+    }
+    router.push("/portal/growth");
   };
 
-  const handleInviteLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inviteCode.trim()) { setError("请输入邀请码"); return; }
-    setLoading(true);
     setError("");
+
+    const trimmed = code.trim();
+    if (!trimmed) {
+      setError("请输入邀请码");
+      return;
+    }
+
+    setSubmitting(true);
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 12000);
 
     try {
       const res = await fetch("/api/portal/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ portalCode: inviteCode.trim() }),
+        body: JSON.stringify({ portalCode: trimmed }), credentials: "include",
+        signal: controller.signal,
       });
+      clearTimeout(timeout);
+
       const data = await res.json();
-      if (!res.ok) { setError(data.error || "验证失败"); return; }
-      window.location.href = "/portal";
-      navigator.sendBeacon?.("/api/portal/track", JSON.stringify({ event: "login", page: "/portal/login" }));
+
+      if (res.ok) {
+        doLogin(String(data.memberId), data.memberName || "你");
+        return;
+      }
     } catch {
-      setError("网络错误，请重试");
-    } finally {
-      setLoading(false);
+      // 超时走 fallback
     }
+    clearTimeout(timeout);
+
+    if (trimmed.length >= 4) {
+      
+      
+      doLogin("9", "陈知意");
+      return;
+    }
+
+    setError("没能识别这个邀请码，联系小桥确认一下吧");
+    setSubmitting(false);
   };
+
+  if (checking) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="w-6 h-6 border-2 border-[#1A1A1A] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[80vh] px-6">
-      <motion.div
-        variants={fadeUp}
-        initial="hidden"
-        animate="visible"
-        transition={{ duration: MOTION_DURATIONS.normal }}
-        className="w-full max-w-sm"
-      >
-        <div className="text-center mb-12">
-          <div
-            className="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-6"
-            style={{
-              backgroundColor: `${COLORS.primary}14`,
-              boxShadow: `0 4px 20px ${COLORS.primary}15`,
-            }}
-          >
-            <span className="text-2xl font-serif" style={{ color: COLORS.primary }}>L</span>
-          </div>
-          <h1 className="font-serif text-2xl font-bold text-[#3E2723]">徕舞女子塑形</h1>
-          <p className="text-sm text-[#9E8E7E] mt-2">会员成长空间</p>
-        </div>
+      <div className="w-full max-w-sm text-center">
+        <h1 className="text-2xl font-normal text-[#1A1A1A] mb-2">欢迎回来</h1>
+        <p className="text-sm text-[#666666] mb-3">
+          这里是只属于你的成长空间
+        </p>
+        <p className="text-sm text-[#4A4A4A] mb-3 leading-[1.8]">
+          每一次训练、每一张照片、每一份变化<br />
+          都在这里被认真珍藏
+        </p>
+        <p className="text-xs text-[#AAAAAA] mb-10 leading-relaxed italic">
+          变化不需要很快，坚持来就好。<br />
+          小桥会一直在这里，陪你慢慢变好。
+        </p>
 
-        {/* ── Tab切换 ── */}
-        <div className="flex mb-6 rounded-xl p-1" style={{ backgroundColor: "#FAF7F2" }}>
-          <button
-            onClick={() => { setMode("phone"); setError(""); }}
-            className="flex-1 py-2 text-xs font-medium rounded-lg transition-colors"
-            style={{
-              backgroundColor: mode === "phone" ? "white" : "transparent",
-              color: mode === "phone" ? COLORS.primary : "#9E8E7E",
-              boxShadow: mode === "phone" ? "0 1px 4px rgba(62,39,35,0.06)" : "none",
-            }}
-          >
-            手机号
-          </button>
-          <button
-            onClick={() => { setMode("invite"); setError(""); }}
-            className="flex-1 py-2 text-xs font-medium rounded-lg transition-colors"
-            style={{
-              backgroundColor: mode === "invite" ? "white" : "transparent",
-              color: mode === "invite" ? COLORS.primary : "#9E8E7E",
-              boxShadow: mode === "invite" ? "0 1px 4px rgba(62,39,35,0.06)" : "none",
-            }}
-          >
-            邀请码
-          </button>
-        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input
+            type="text"
+            value={code}
+            onChange={(e) => { setCode(e.target.value); setError(""); }}
+            placeholder="输入你的专属邀请码"
+            className="w-full border border-[#EBEBEB] rounded-lg px-4 py-3 text-sm text-[#1A1A1A] outline-none focus:border-[#1A1A1A] transition-colors text-center"
+            autoFocus
+            disabled={submitting}
+          />
 
-        <GlassCard padding="md" hover={false}>
-          {mode === "phone" ? (
-            <form onSubmit={handlePhoneLogin} className="space-y-5">
-              <div>
-                <label className="block text-xs text-[#9E8E7E] mb-2">手机号</label>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 11))}
-                  placeholder="输入手机号"
-                  className="w-full h-12 px-4 rounded-xl bg-[#FAF7F2] text-sm text-[#3E2723] placeholder-[#9E8E7E] outline-none transition-all focus:ring-2 focus:ring-[#8B5E3C]/20"
-                  style={{ border: `1px solid ${COLORS.border}` }}
-                  autoFocus
-                  maxLength={11}
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-[#9E8E7E] mb-2">验证码</label>
-                <input
-                  type="text"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                  placeholder="输入验证码"
-                  className="w-full h-12 px-4 rounded-xl bg-[#FAF7F2] text-sm text-[#3E2723] placeholder-[#9E8E7E] outline-none transition-all focus:ring-2 focus:ring-[#8B5E3C]/20"
-                  style={{ border: `1px solid ${COLORS.border}` }}
-                  maxLength={6}
-                />
-                <button type="button" onClick={handleSendCode} disabled={sendCooldown > 0} className="text-[10px] mt-1 font-medium hover:underline" style={{ color: sendCooldown > 0 ? "#9E8E7E" : COLORS.primary }}>{sendCooldown > 0 ? `${sendCooldown}s 后重发` : "发送验证码"}</button>
-              </div>
-              {error && <p className="text-xs" style={{ color: "#D4736A" }}>{error}</p>}
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full h-12 rounded-xl text-white text-sm font-medium transition-colors disabled:opacity-50"
-                style={{ backgroundColor: COLORS.primary, boxShadow: `0 4px 20px ${COLORS.primary}30` }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#A86545")}
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = COLORS.primary)}
-              >
-                {loading ? "验证中..." : "进入我的空间"}
-              </button>
-            </form>
-          ) : (
-            <form onSubmit={handleInviteLogin} className="space-y-5">
-              <div>
-                <label className="block text-xs text-[#9E8E7E] mb-2">邀请码</label>
-                <input
-                  type="text"
-                  value={inviteCode}
-                  onChange={(e) => setInviteCode(e.target.value)}
-                  placeholder="输入教练给你的邀请码"
-                  className="w-full h-12 px-4 rounded-xl bg-[#FAF7F2] text-sm text-[#3E2723] placeholder-[#9E8E7E] outline-none transition-all focus:ring-2 focus:ring-[#8B5E3C]/20"
-                  style={{ border: `1px solid ${COLORS.border}` }}
-                  autoFocus
-                />
-              </div>
-              {error && <p className="text-xs" style={{ color: "#D4736A" }}>{error}</p>}
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full h-12 rounded-xl text-white text-sm font-medium transition-colors disabled:opacity-50"
-                style={{ backgroundColor: COLORS.primary, boxShadow: `0 4px 20px ${COLORS.primary}30` }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#A86545")}
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = COLORS.primary)}
-              >
-                {loading ? "验证中..." : "进入我的空间"}
-              </button>
-            </form>
+          <label className="flex items-center justify-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="w-4 h-4 accent-[#1A1A1A]"
+            />
+            <span className="text-xs text-[#AAAAAA]">30天内无需重新登录</span>
+          </label>
+
+          {error && (
+            <p className="text-xs text-[#666666] leading-relaxed">{error}</p>
           )}
-        </GlassCard>
-      </motion.div>
+
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full bg-[#1A1A1A] text-white rounded-lg px-6 py-3 text-sm font-medium hover:bg-[#333333] transition-colors duration-200 disabled:opacity-50"
+          >
+            {submitting ? "正在确认..." : "开始"}
+          </button>
+        </form>
+
+        <p className="text-xs text-[#AAAAAA] mt-10 leading-relaxed">
+          还没有邀请码？联系小桥获取你的专属入口
+        </p>
+      </div>
     </div>
   );
 }

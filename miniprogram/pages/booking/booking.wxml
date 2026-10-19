@@ -1,0 +1,96 @@
+<view class="booking-page">
+  
+  <!-- 课程类型选择 -->
+  <view class="section stagger-1">
+    <text class="section-title">选择专属课程</text>
+    <view class="course-types">
+      <view 
+        class="course-item {{selectedCourse === '普拉提大器械私教' ? 'course-item-active' : ''}}"
+        bindtap="selectCourse"
+        data-course="普拉提大器械私教"
+      >
+        <text class="course-name">普拉提大器械私教</text>
+        <text class="course-desc">深层核心塑形 · 脊柱舒展延展</text>
+      </view>
+      <view 
+        class="course-item {{selectedCourse === '一对一体态精雕' ? 'course-item-active' : ''}}"
+        bindtap="selectCourse"
+        data-course="一对一体态精雕"
+      >
+        <text class="course-name">一对一体态精雕</text>
+        <text class="course-desc">天鹅颈 · 直角肩 · 骨盆回弹</text>
+      </view>
+      <view 
+        class="course-item {{selectedCourse === '维密急速减脂塑形' ? 'course-item-active' : ''}}"
+        bindtap="selectCourse"
+        data-course="维密急速减脂塑形"
+      >
+        <text class="course-name">维密急速减脂塑形</text>
+        <text class="course-desc">腰腹线条紧致 · 优雅高效燃脂</text>
+      </view>
+      <view 
+        class="course-item {{selectedCourse === '大器械韵律团课' ? 'course-item-active' : ''}}"
+        bindtap="selectCourse"
+        data-course="大器械韵律团课"
+      >
+        <text class="course-name">大器械韵律团课</text>
+        <text class="course-desc">器械掌控 · 身心能量共振</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 日期选择 -->
+  <view class="section stagger-2">
+    <text class="section-title">选择日期</text>
+    <view class="date-list">
+      <block wx:for="{{dates}}" wx:key="value">
+        <view 
+          class="date-item {{item.value === selectedDate ? 'date-item-active' : ''}}"
+          bindtap="selectDate"
+          data-date="{{item.value}}"
+        >
+          <text class="date-weekday">{{item.weekday}}</text>
+          <text class="date-day">{{item.day}}</text>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <!-- 时段选择 -->
+  <view class="section stagger-3">
+    <text class="section-title">选择时段</text>
+    <view class="time-slots">
+      <view 
+        wx:for="{{timeSlots}}" 
+        wx:key="*this"
+        class="time-item {{item === selectedTime ? 'time-item-active' : ''}}"
+        bindtap="selectTime"
+        data-time="{{item}}"
+      >
+        <text>{{item}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 备注 -->
+  <view class="section stagger-4">
+    <text class="section-title">备注（选填）</text>
+    <textarea
+      class="textarea-field"
+      value="{{notes}}"
+      placeholder="有什么需要教练特别注意的吗？"
+      bindinput="onNotesInput"
+      maxlength="200"
+    />
+  </view>
+
+  <!-- 确认预约 -->
+  <button
+    class="btn-primary stagger-5"
+    bindtap="submitBooking"
+    disabled="{{submitting || !selectedCourse || !selectedDate || !selectedTime}}"
+  >
+    {{submitting ? "正在提交私享席位..." : "确认预约私享席位"}}
+  </button>
+
+</view>

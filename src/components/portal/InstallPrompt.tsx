@@ -59,7 +59,7 @@ export default function InstallPrompt() {
           className="fixed bottom-24 left-4 right-4 z-50 max-w-sm mx-auto"
         >
           <div
-            className="rounded-2xl p-4 flex items-center gap-3 backdrop-blur-xl"
+            className="rounded-xl p-4 flex items-center gap-3 backdrop-blur-xl"
             style={{
               background: "rgba(255,255,255,0.90)",
               boxShadow: "0 8px 32px rgba(62,39,35,0.12)",
@@ -72,10 +72,10 @@ export default function InstallPrompt() {
               <span className="text-white font-serif text-lg font-bold">L</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-[#3E2723]">
+              <p className="text-sm font-bold text-[#1A1A1A]">
                 添加到主屏幕
               </p>
-              <p className="text-xs text-[#9E8E7E]">
+              <p className="text-xs text-[#9E9E9E]">
                 像 App 一样打开徕舞
               </p>
             </div>
@@ -88,7 +88,7 @@ export default function InstallPrompt() {
             </button>
             <button
               onClick={handleDismiss}
-              className="text-xs text-[#9E8E7E] flex-shrink-0 px-1"
+              className="text-xs text-[#9E9E9E] flex-shrink-0 px-1"
             >
               稍后
             </button>

@@ -4,9 +4,14 @@ node_modules/
 .env.local
 .env.production
 *.db
+*.db-shm
+*.db-wal
+cookies.txt
+miniprogram_backup_*
+*.bak
 backup_*.tar.gz
+data/
 *.log
 .DS_Store
-.next/
-.env.production
 .vercel
+*.tsbuildinfo

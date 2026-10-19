@@ -1,43 +1,17 @@
-"use client";
-
-import { motion } from "framer-motion";
-import { COLORS } from "@/lib/design/DESIGN_TOKEN";
-import { fadeUp, MICRO } from "@/lib/design/motion-presets";
-
 export default function BrandFilmSection() {
   return (
-    <section id="film" className="py-40 md:py-48 bg-white">
-      <div className="max-w-6xl mx-auto px-5 sm:px-8 md:px-12">
-        <motion.div {...MICRO.scrollReveal} variants={fadeUp} initial="hidden" whileInView="visible" className="text-center mb-16">
-          <h2 className="text-4xl sm:text-5xl font-semibold text-[#3E2723] tracking-[-0.02em] leading-[1.15]">
-            成长不是奇迹
-            <br />
-            是一次次坚持
-          </h2>
-        </motion.div>
-
-        {/* 16:9 video placeholder */}
-        <motion.div {...MICRO.scrollReveal} variants={fadeUp} initial="hidden" whileInView="visible"
-          className="aspect-video rounded-3xl overflow-hidden relative max-w-4xl mx-auto"
-          style={{ background: "linear-gradient(160deg, #F7F1EA 0%, #E8D5C3 100%)", boxShadow: "0 4px 30px rgba(62,39,35,0.08)" }}>
-          {/* Abstract composition */}
-          <svg viewBox="0 0 800 450" className="absolute inset-0 w-full h-full opacity-10" preserveAspectRatio="xMidYMid slice">
-            <ellipse cx="400" cy="200" rx="250" ry="140" fill={COLORS.primary} />
-            <ellipse cx="300" cy="350" rx="180" ry="80" fill="#3E2723" opacity="0.5" />
-          </svg>
-
-          {/* Play button */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <motion.div
-              whileHover={{ scale: 1.06 }}
-              className="w-24 h-24 rounded-full flex items-center justify-center cursor-pointer"
-              style={{ backgroundColor: `${COLORS.primary}e0`, boxShadow: `0 8px 40px ${COLORS.primary}40` }}>
-              <svg width="32" height="38" viewBox="0 0 28 32" fill="white">
-                <path d="M0 0L28 16L0 32V0Z" />
-              </svg>
-            </motion.div>
-          </div>
-        </motion.div>
+    <section id="letter" className="py-24 sm:py-32">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 md:px-8 text-center">
+        <h2 className="text-2xl sm:text-3xl font-normal text-[#1A1A1A] tracking-normal mb-12">
+          十四年
+        </h2>
+        <div className="text-base sm:text-lg text-[#666666] leading-[1.8] space-y-6">
+          <p>十四年了。我们见过太多种变化——体态的重塑、信心的重建、一个女人重新接纳自己身体的全部过程。</p>
+          <p>这些变化，从来没有捷径。没有特效药，没有七天速成。它们来自每一次你按时出现，每一次你多坚持一秒，每一次你在想要放弃的时候选择了继续。</p>
+          <p>这里不是健身房。这里是一个你被认真记录、被温柔陪伴的地方。你的每一寸移动、每一次呼吸、每一个微小的进步，都被看见，都被珍惜。</p>
+          <p>十四年来，我们只做一件事——陪你在属于自己的节奏里，一点一点，变成你想要的样子。</p>
+          <p>你只需要来。剩下的，交给我们。</p>
+        </div>
       </div>
     </section>
   );
