@@ -150,6 +150,7 @@ Page({
     // 新增：月度之星开屏弹窗与品牌资产
     showStarsModal: true,
     currentStarIndex: 0,
+    starsClosing: false,
     monthlyStarsList: LOCAL_STARS,
     venueList: LOCAL_VENUES,
     teamList: LOCAL_TEAM
@@ -254,14 +255,23 @@ Page({
     if (wx.vibrateShort) wx.vibrateShort({ type: "light" });
     this.setData({
       showStarsModal: true,
-      currentStarIndex: 0
+      currentStarIndex: 0,
+      starsClosing: false
     });
   },
 
   closeStarsModal: function() {
+    var that = this;
+    if (wx.vibrateShort) wx.vibrateShort({ type: "light" });
     this.setData({
-      showStarsModal: false
+      starsClosing: true
     });
+    setTimeout(function() {
+      that.setData({
+        showStarsModal: false,
+        starsClosing: false
+      });
+    }, 280);
   },
 
   onStarSwiperChange: function(e) {

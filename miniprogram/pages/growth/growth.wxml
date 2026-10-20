@@ -415,55 +415,52 @@ module.exports = {
 <!-- 离屏海报绘制画布 (用于生成保存到相册的高清图片) -->
 <canvas type="2d" id="posterCanvas" class="poster-canvas-hidden"></canvas>
 
-<!-- ====== 开屏「✦ 徕舞 · 月度之星 ✦」沉浸式大片画廊弹窗 (Lululemon 级仪式感) ====== -->
-<view class="stars-modal-backdrop {{showStarsModal ? 'modal-visible' : 'modal-hidden'}}" 
-      wx:if="{{showStarsModal}}" 
-      catchtouchmove="noop">
+<!-- ====== 开屏「✦ 徕舞 · 月度之星 ✦」沉浸式大片 (1:1 对标 Lululemon 经典画幅) ====== -->
+<view class="stars-lulu-container {{showStarsModal ? 'lulu-visible' : 'lulu-hidden'}} {{starsClosing ? 'lulu-closing' : ''}}" 
+      wx:if="{{showStarsModal}}">
   
-  <view class="stars-modal-dialog">
-    <!-- 极奢仪式感抬头 -->
-    <view class="stars-ceremony-header">
-      <view class="ceremony-eyebrow">✦  L A I W U  ✦</view>
-      <view class="ceremony-title">—— 徕舞 · 月度之星 ——</view>
-      <view class="ceremony-sub">MONTHLY STARS OF LAIWU</view>
+  <!-- 顶部常驻悬浮栏：左上角 LAIWU 品牌标 + 右上角避让胶囊的高奢毛玻璃关闭/跳过按钮 -->
+  <view class="stars-lulu-top-nav">
+    <text class="stars-lulu-brand">LAIWU</text>
+    <view class="stars-lulu-close-pill" catchtap="closeStarsModal">
+      <text class="stars-lulu-close-text">跳过</text>
+      <text class="stars-lulu-close-x">✕</text>
     </view>
+  </view>
 
-    <!-- Lululemon 级左右横滑大片 Swiper (支持 previous-margin / next-margin 漏边手感) -->
-    <swiper class="stars-swiper" 
-            previous-margin="50rpx" 
-            next-margin="50rpx" 
-            current="{{currentStarIndex}}"
-            bindchange="onStarSwiperChange">
-      <swiper-item wx:for="{{monthlyStarsList}}" wx:key="id" class="star-swiper-item">
-        <view class="star-card-luxury {{index === currentStarIndex ? 'star-card-active' : ''}}">
-          <image class="star-card-img" src="{{item.avatarUrl}}" mode="aspectFill" lazy-load="true"></image>
-          <view class="star-card-gradient"></view>
-          
-          <!-- 卡片文字信息 (尊崇克制，拒绝俗套营销) -->
-          <view class="star-card-info">
-            <view class="star-card-tag-badge" wx:if="{{item.tag}}">
-              <text class="star-tag-spark">✦</text>
-              <text class="star-tag-txt">{{item.tag}}</text>
-            </view>
-            <view class="star-card-name">{{item.name}}</view>
-            <view class="star-card-quote" wx:if="{{item.quote}}">“{{item.quote}}”</view>
-          </view>
+  <!-- Lululemon 级全屏沉浸画报横滑 Swiper (单张铺满，手势丝滑) -->
+  <swiper class="stars-lulu-swiper" 
+          current="{{currentStarIndex}}"
+          bindchange="onStarSwiperChange">
+    <swiper-item wx:for="{{monthlyStarsList}}" wx:key="id" class="stars-lulu-item">
+      <view class="stars-lulu-slide">
+        <image class="stars-lulu-img" src="{{item.avatarUrl}}" mode="aspectFill" lazy-load="true"></image>
+        
+        <!-- 柔和电影级暗角微光，保护白字辨识度 -->
+        <view class="stars-lulu-top-gradient"></view>
+        <view class="stars-lulu-bottom-gradient"></view>
+        
+        <!-- 下半部核心信息区：白字「徕舞月度之星 —— 名字」，不放“立即选购” -->
+        <view class="stars-lulu-content-box">
+          <view class="stars-lulu-headline">徕舞月度之星 —— {{item.name}}</view>
+          <view class="stars-lulu-quote" wx:if="{{item.quote}}">“{{item.quote}}”</view>
         </view>
-      </swiper-item>
-    </swiper>
-
-    <!-- 分页胶囊长条指示器 -->
-    <view class="stars-pagination">
-      <view wx:for="{{monthlyStarsList}}" wx:key="id" 
-            class="star-dot {{index === currentStarIndex ? 'star-dot-active' : ''}}"></view>
-    </view>
-
-    <!-- 退出进入操作栏 -->
-    <view class="stars-dismiss-row">
-      <view class="stars-dismiss-btn" bindtap="closeStarsModal">
-        <text class="stars-dismiss-txt">开启今日训练 · 进入主页</text>
-        <text class="stars-dismiss-icon">✕</text>
       </view>
+    </swiper-item>
+  </swiper>
+
+  <!-- Lululemon 同款经典细条分页指示器 (细胶囊当前页 + 微透圆点) -->
+  <view class="stars-lulu-pagination">
+    <view wx:for="{{monthlyStarsList}}" wx:key="id" 
+          class="lulu-dot {{index === currentStarIndex ? 'lulu-dot-active' : ''}}"></view>
+  </view>
+
+  <!-- 底部毛玻璃操作栏：与小程序原生磨砂质感深度呼应，一触即入 -->
+  <view class="stars-lulu-bottom-bar" catchtap="closeStarsModal">
+    <view class="stars-lulu-frosted-pill">
+      <text class="stars-lulu-spark">✦</text>
+      <text class="stars-lulu-enter-txt">开启今日训练 · 进入主页</text>
+      <text class="stars-lulu-enter-arrow">❯</text>
     </view>
   </view>
 </view>
