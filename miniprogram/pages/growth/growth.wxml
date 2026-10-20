@@ -9,9 +9,30 @@ module.exports = {
 
 <view class="growth-page">
 
-  <!-- 加载态 -->
-  <view wx:if="{{loading}}" class="loading-view">
-    <text class="loading-text">正在加载你的成长足迹...</text>
+  <!-- 高奢光影呼吸骨架屏 (Luster Shimmer Skeleton) -->
+  <view wx:if="{{loading}}" class="luxury-skeleton">
+    <view class="sk-brand-watermark">✦ L A I W U · 私 享 手 札 ✦</view>
+    
+    <view class="sk-header-row">
+      <view class="sk-badge sk-shimmer"></view>
+      <view class="sk-title sk-shimmer"></view>
+    </view>
+    <view class="sk-gallery-hero sk-shimmer"></view>
+
+    <view class="sk-header-row">
+      <view class="sk-badge sk-shimmer"></view>
+      <view class="sk-title sk-shimmer"></view>
+    </view>
+    <view class="sk-portraits-row">
+      <view class="sk-portrait-card sk-shimmer"></view>
+      <view class="sk-portrait-card sk-shimmer"></view>
+      <view class="sk-portrait-card sk-shimmer"></view>
+    </view>
+
+    <view class="sk-metrics-row">
+      <view class="sk-metric-box sk-shimmer"></view>
+      <view class="sk-metric-box sk-shimmer"></view>
+    </view>
   </view>
 
   <block wx:else>
@@ -82,38 +103,50 @@ module.exports = {
         </view>
       </view>
 
-      <!-- 进阶经纬：线性水平刻度，取代粗暴药丸盒子 -->
-      <view class="progression-horizon">
-        <view class="horizon-header">
-          <text class="horizon-title">进阶经纬 · 身体觉知</text>
-          <text class="horizon-badge">{{stageName}}</text>
+      <!-- 进阶经纬：微米级卡地亚建筑经纬仪刻度 (Minimal Horizon Caliber) -->
+      <view class="caliber-horizon">
+        <view class="caliber-header">
+          <view class="caliber-title-group">
+            <text class="caliber-roman-badge">PHASE CALIBER</text>
+            <text class="caliber-dot">·</text>
+            <text class="caliber-stage-tag">{{stageName}}</text>
+          </view>
+          <text class="caliber-metric-num">第 {{trainCount || 0}} 席</text>
         </view>
-        <view class="horizon-track">
-          <view class="horizon-node {{trainCount >= 1 ? 'node-reached' : ''}}">
-            <view class="node-bullet"></view>
-            <text class="node-name">觉知</text>
-          </view>
-          <view class="horizon-line {{trainCount >= 6 ? 'line-reached' : ''}}"></view>
-          <view class="horizon-node {{trainCount >= 6 ? 'node-reached' : ''}}">
-            <view class="node-bullet"></view>
-            <text class="node-name">掌控</text>
-          </view>
-          <view class="horizon-line {{trainCount >= 21 ? 'line-reached' : ''}}"></view>
-          <view class="horizon-node {{trainCount >= 21 ? 'node-reached' : ''}}">
-            <view class="node-bullet"></view>
-            <text class="node-name">掌权</text>
-          </view>
-          <view class="horizon-line {{trainCount >= 51 ? 'line-reached' : ''}}"></view>
-          <view class="horizon-node {{trainCount >= 51 ? 'node-reached' : ''}}">
-            <view class="node-bullet"></view>
-            <text class="node-name">优雅</text>
+
+        <view class="caliber-scale-wrap">
+          <view class="caliber-track-line"></view>
+          <view class="caliber-stages">
+            <view class="caliber-step {{trainCount >= 1 ? 'is-reached' : ''}}">
+              <text class="caliber-roman">I</text>
+              <text class="caliber-name">觉知</text>
+              <view class="caliber-hairline-pip"></view>
+            </view>
+            <view class="caliber-step {{trainCount >= 6 ? 'is-reached' : ''}}">
+              <text class="caliber-roman">II</text>
+              <text class="caliber-name">掌控</text>
+              <view class="caliber-hairline-pip"></view>
+            </view>
+            <view class="caliber-step {{trainCount >= 21 ? 'is-reached' : ''}}">
+              <text class="caliber-roman">III</text>
+              <text class="caliber-name">掌权</text>
+              <view class="caliber-hairline-pip"></view>
+            </view>
+            <view class="caliber-step {{trainCount >= 51 ? 'is-reached' : ''}}">
+              <text class="caliber-roman">IV</text>
+              <text class="caliber-name">优雅</text>
+              <view class="caliber-hairline-pip"></view>
+            </view>
           </view>
         </view>
-        <view class="horizon-target-text">
-          <block wx:if="{{trainCount < 6}}">坚持不易。再完成 {{6 - trainCount}} 次私教训练，迈入「身体掌控」进阶阶段</block>
-          <block wx:elif="{{trainCount < 21}}">渐入佳境。仅余 {{21 - trainCount}} 次私教训练，迈入「身体掌权」深层蜕变期</block>
-          <block wx:elif="{{trainCount < 51}}">自律已成习惯。仅余 {{51 - trainCount}} 次训练，晋升「终生优雅」卓越境界</block>
-          <block wx:else>自律已成骨骼，挺拔从容是你呼吸自带的底气</block>
+
+        <view class="caliber-quote-row">
+          <text class="caliber-quote-text">
+            <block wx:if="{{trainCount < 6}}">坚持不易。再经 {{6 - trainCount}} 次从容延展，身体将步入「身体掌控」进阶阶段。</block>
+            <block wx:elif="{{trainCount < 21}}">渐入佳境。余 {{21 - trainCount}} 席沉淀，迈入「身体掌权」深层蜕变期。</block>
+            <block wx:elif="{{trainCount < 51}}">自律已成习惯。余 {{51 - trainCount}} 次延展，晋升「终生优雅」卓越境界。</block>
+            <block wx:else>自律已成骨骼，挺拔从容是你呼吸自带的底气。</block>
+          </text>
         </view>
       </view>
 
@@ -194,28 +227,34 @@ module.exports = {
 
       <!-- 有对比数据 -->
       <block wx:else>
-        <!-- 置顶对比：蜕变前 vs 当下 -->
-        <view wx:if="{{pinnedComparison}}" class="editorial-compare-frame">
-          <view class="compare-frame-header">
-            <view class="compare-labels">
-              <text class="compare-label-text">初见</text>
-              <text class="compare-label-arrow">→</text>
-              <text class="compare-label-text">当下新身</text>
+        <!-- 置顶对比：双联画艺术展签 (Exhibition Diptych Dossier) -->
+        <view wx:if="{{pinnedComparison}}" class="dossier-frame">
+          <view class="dossier-curation-bar">
+            <view class="dossier-label-pair">
+              <view class="dossier-col">
+                <text class="dossier-roman">FIG. 01</text>
+                <text class="dossier-sublabel">始见 · 觉察</text>
+              </view>
+              <view class="dossier-divider-dash"></view>
+              <view class="dossier-col">
+                <text class="dossier-roman">FIG. 02</text>
+                <text class="dossier-sublabel">当下 · 挺拔</text>
+              </view>
             </view>
-            <view class="compare-inline-share" bindtap="openShareModal" data-item="{{pinnedComparison}}">
-              <text>画报分享 ✦</text>
+            <view class="dossier-action-pill" bindtap="openShareModal" data-item="{{pinnedComparison}}">
+              <text class="dossier-pill-spark">✦</text>
+              <text class="dossier-pill-txt">展签画报</text>
             </view>
           </view>
-          <view class="compare-diptych">
-            <view class="diptych-pane">
-              <image class="diptych-img" src="{{pinnedComparison.photo1_url}}" mode="aspectFill"
-                     data-src="{{pinnedComparison.photo1_url}}" data-p1="{{pinnedComparison.photo1_url}}" data-p2="{{pinnedComparison.photo2_url}}" bindtap="previewPhoto" />
-              <text class="diptych-caption">初见 · 蜕变前</text>
+
+          <view class="dossier-diptych">
+            <view class="dossier-pane" bindtap="previewPhoto" data-src="{{pinnedComparison.photo1_url}}" data-p1="{{pinnedComparison.photo1_url}}" data-p2="{{pinnedComparison.photo2_url}}">
+              <image class="dossier-image" src="{{pinnedComparison.photo1_url}}" mode="aspectFill" lazy-load="true" />
+              <text class="dossier-caption">PRE-TRAINING</text>
             </view>
-            <view class="diptych-pane">
-              <image class="diptych-img" src="{{pinnedComparison.photo2_url}}" mode="aspectFill"
-                     data-src="{{pinnedComparison.photo2_url}}" data-p1="{{pinnedComparison.photo1_url}}" data-p2="{{pinnedComparison.photo2_url}}" bindtap="previewPhoto" />
-              <text class="diptych-caption">当下 · 沉淀后</text>
+            <view class="dossier-pane" bindtap="previewPhoto" data-src="{{pinnedComparison.photo2_url}}" data-p1="{{pinnedComparison.photo1_url}}" data-p2="{{pinnedComparison.photo2_url}}">
+              <image class="dossier-image" src="{{pinnedComparison.photo2_url}}" mode="aspectFill" lazy-load="true" />
+              <text class="dossier-caption">POST-METAMORPHOSIS</text>
             </view>
           </view>
           <text wx:if="{{pinnedComparison.analysis}}" class="compare-editorial-analysis">“{{pinnedComparison.analysis}}”</text>
@@ -233,27 +272,32 @@ module.exports = {
 
         <!-- 历史对比序列 -->
         <block wx:if="{{historyComparisons.length > 0}}">
-          <view wx:for="{{historyComparisons}}" wx:key="id" class="editorial-compare-frame">
-            <view class="compare-frame-header">
-              <view class="compare-labels">
-                <text class="compare-label-text">初见</text>
-                <text class="compare-label-arrow">→</text>
-                <text class="compare-label-text">当下新身</text>
+          <view wx:for="{{historyComparisons}}" wx:key="id" class="dossier-frame">
+            <view class="dossier-curation-bar">
+              <view class="dossier-label-pair">
+                <view class="dossier-col">
+                  <text class="dossier-roman">HIST. {{item.stage || '01'}}</text>
+                  <text class="dossier-sublabel">前期基准</text>
+                </view>
+                <view class="dossier-divider-dash"></view>
+                <view class="dossier-col">
+                  <text class="dossier-roman">PROGRESS</text>
+                  <text class="dossier-sublabel">定格进阶</text>
+                </view>
               </view>
-              <view class="compare-inline-share" bindtap="openShareModal" data-item="{{item}}">
-                <text>画报分享 ✦</text>
+              <view class="dossier-action-pill" bindtap="openShareModal" data-item="{{item}}">
+                <text class="dossier-pill-spark">✦</text>
+                <text class="dossier-pill-txt">展签画报</text>
               </view>
             </view>
-            <view class="compare-diptych">
-              <view class="diptych-pane">
-                <image class="diptych-img" src="{{item.photo1_url}}" mode="aspectFill"
-                       data-src="{{item.photo1_url}}" data-p1="{{item.photo1_url}}" data-p2="{{item.photo2_url}}" bindtap="previewPhoto" />
-                <text class="diptych-caption">初见 · 蜕变前</text>
+            <view class="dossier-diptych">
+              <view class="dossier-pane" bindtap="previewPhoto" data-src="{{item.photo1_url}}" data-p1="{{item.photo1_url}}" data-p2="{{item.photo2_url}}">
+                <image class="dossier-image" src="{{item.photo1_url}}" mode="aspectFill" lazy-load="true" />
+                <text class="dossier-caption">ARCHIVE</text>
               </view>
-              <view class="diptych-pane">
-                <image class="diptych-img" src="{{item.photo2_url}}" mode="aspectFill"
-                       data-src="{{item.photo2_url}}" data-p1="{{item.photo1_url}}" data-p2="{{item.photo2_url}}" bindtap="previewPhoto" />
-                <text class="diptych-caption">当下 · 沉淀后</text>
+              <view class="dossier-pane" bindtap="previewPhoto" data-src="{{item.photo2_url}}" data-p1="{{item.photo1_url}}" data-p2="{{item.photo2_url}}">
+                <image class="dossier-image" src="{{item.photo2_url}}" mode="aspectFill" lazy-load="true" />
+                <text class="dossier-caption">RECORD</text>
               </view>
             </view>
             <text wx:if="{{item.analysis}}" class="compare-editorial-analysis">“{{item.analysis}}”</text>
@@ -344,86 +388,15 @@ module.exports = {
   </block>
 </view>
 
-<!-- ====== 画报级体态美学分享卡 弹窗 ====== -->
-<view class="share-modal-mask" wx:if="{{showShareModal}}" bindtap="closeShareModal">
-  <!-- 右上角常驻悬浮关闭按钮：任何时候一触即关 -->
-  <view class="modal-float-close" catchtap="closeShareModal">✕</view>
-
-  <!-- 纵向滚动容器：无论文字多长都可以上下丝滑滑动 -->
-  <scroll-view scroll-y class="share-modal-scroll" enhanced show-scrollbar="{{false}}">
-    <view class="share-modal-container" bindtap="closeShareModal">
-      <view class="poster-card" catchtap="noop">
-        <view class="poster-brand">
-          <text class="poster-brand-en">身 体 掌 权 · 终 生 优 雅</text>
-          <text class="poster-brand-cn">徕舞 · 私人体态美学档案</text>
-        </view>
-
-        <view class="poster-member-info">
-          <text class="poster-member-title">{{memberName}} · 身体掌权者</text>
-          <text class="poster-member-days">相伴自律 {{joinDays}} 天</text>
-        </view>
-
-        <!-- 仅当有真实对比图时呈现对比图，未拍照会员严禁做假图 -->
-        <view class="poster-compare-pair" wx:if="{{shareComparison && shareComparison.photo1_url && shareComparison.photo2_url}}">
-          <view class="poster-img-box">
-            <image class="poster-img" src="{{shareComparison.photo1_url}}" mode="aspectFill" />
-            <text class="poster-tag">初见 · 蜕变前</text>
-          </view>
-          <view class="poster-img-box">
-            <image class="poster-img" src="{{shareComparison.photo2_url}}" mode="aspectFill" />
-            <text class="poster-tag">当下 · 新生后</text>
-          </view>
-        </view>
-        <!-- 无对比图时的高奢自律徽章（纯净真实，绝不放假图） -->
-        <view class="poster-no-photo-badge" wx:else>
-          <view class="poster-badge-icon">✦</view>
-          <text class="poster-badge-title">身 心 觉 察 · 终 生 自 律</text>
-          <text class="poster-badge-sub">累计完成 {{trainCount || 0}} 次核心训练 · 岁月不负自律</text>
-        </view>
-
-        <view class="poster-analysis-box" wx:if="{{shareComparison && shareComparison.analysis}}">
-          <text class="poster-quote">“</text>
-          <text class="poster-analysis">{{shareComparison.analysis}}</text>
-        </view>
-        <view class="poster-analysis-box" wx:else>
-          <text class="poster-quote">“</text>
-          <text class="poster-analysis">锁骨舒展，骨盆中立回弹，自带松弛挺拔的大女主气场。</text>
-        </view>
-
-        <view class="poster-footer">
-          <view class="poster-footer-left">
-            <text class="poster-sign">小桥 · 专属私教手札</text>
-            <text class="poster-slogan">自律成骨骼，岁月即礼赞</text>
-          </view>
-          <view class="poster-stamp">
-            <text class="poster-stamp-inner">徕舞\n私享</text>
-          </view>
-        </view>
-      </view>
-
-      <!-- 预留底部吸底操作栏高度，让卡片内容可以完整滑出 -->
-      <view class="poster-scroll-bottom-spacer"></view>
-    </view>
-  </scroll-view>
-
-  <!-- 底部固定吸底操作栏：无论何时何地，保存按钮永远悬浮在屏幕最底端，一眼可见！ -->
-  <view class="poster-fixed-bottom" catchtap="noop">
-    <button class="poster-btn-primary" bindtap="savePosterToAlbum" loading="{{savingPoster}}">
-      <text class="poster-btn-spark">✦</text> 保存海报到手机相册
-    </button>
-    <view class="poster-bottom-subrow">
-      <button class="poster-btn-secondary" open-type="share">
-        <text class="poster-btn-spark">✦</text> 分享给微信好友
-      </button>
-      <view class="poster-btn-close-pill" bindtap="closeShareModal">
-        ✕ 关闭
-      </view>
-    </view>
-  </view>
-</view>
-
-<!-- 离屏海报绘制画布 (用于生成保存到相册的高清图片) -->
-<canvas type="2d" id="posterCanvas" class="poster-canvas-hidden"></canvas>
+<!-- ====== 画报级体态美学分享卡 独立沙盒组件 ====== -->
+<poster-modal
+  visible="{{showShareModal}}"
+  comparison="{{shareComparison}}"
+  memberName="{{memberName}}"
+  joinDays="{{joinDays}}"
+  trainCount="{{trainCount}}"
+  bind:close="closeShareModal"
+/>
 
 <!-- ====== 开屏「✦ 徕舞 · 月度之星 ✦」沉浸式大片 (1:1 对标 Lululemon 经典画幅) ====== -->
 <view class="stars-lulu-container {{showStarsModal ? 'lulu-visible' : 'lulu-hidden'}} {{starsClosing ? 'lulu-closing' : ''}}" 

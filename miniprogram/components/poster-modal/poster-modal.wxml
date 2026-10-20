@@ -1,0 +1,78 @@
+<!-- components/poster-modal/poster-modal.wxml · 画报级体态美学分享卡组件 -->
+<view class="share-modal-mask" wx:if="{{visible}}" bindtap="onClose">
+  <!-- 右上角常驻悬浮关闭 -->
+  <view class="modal-float-close" catchtap="onClose">✕</view>
+
+  <scroll-view scroll-y class="share-modal-scroll" enhanced show-scrollbar="{{false}}">
+    <view class="share-modal-container" bindtap="onClose">
+      <view class="poster-card" catchtap="noop">
+        <view class="poster-brand">
+          <text class="poster-brand-en">身 体 掌 权 · 终 生 优 雅</text>
+          <text class="poster-brand-cn">徕舞 · 私人体态美学档案</text>
+        </view>
+
+        <view class="poster-member-info">
+          <text class="poster-member-title">{{memberName || '身体掌权者'}} · 专属手札</text>
+          <text class="poster-member-days">相伴自律 {{joinDays || 0}} 天</text>
+        </view>
+
+        <!-- 仅当有真实对比图时呈现对比图 -->
+        <view class="poster-compare-pair" wx:if="{{comparison && comparison.photo1_url && comparison.photo2_url}}">
+          <view class="poster-img-box">
+            <image class="poster-img" src="{{comparison.photo1_url}}" mode="aspectFill" />
+            <text class="poster-tag">初见 · 蜕变前</text>
+          </view>
+          <view class="poster-img-box">
+            <image class="poster-img" src="{{comparison.photo2_url}}" mode="aspectFill" />
+            <text class="poster-tag">当下 · 新生后</text>
+          </view>
+        </view>
+        <!-- 无对比图时的高奢自律徽章 -->
+        <view class="poster-no-photo-badge" wx:else>
+          <view class="poster-badge-icon">✦</view>
+          <text class="poster-badge-title">身 心 觉 察 · 终 生 自 律</text>
+          <text class="poster-badge-sub">累计完成 {{trainCount || 0}} 次核心训练 · 岁月不负自律</text>
+        </view>
+
+        <view class="poster-analysis-box" wx:if="{{comparison && comparison.analysis}}">
+          <text class="poster-quote">“</text>
+          <text class="poster-analysis">{{comparison.analysis}}</text>
+        </view>
+        <view class="poster-analysis-box" wx:else>
+          <text class="poster-quote">“</text>
+          <text class="poster-analysis">锁骨舒展，骨盆中立回弹，自带松弛挺拔的大女主气场。</text>
+        </view>
+
+        <view class="poster-footer">
+          <view class="poster-footer-left">
+            <text class="poster-sign">小桥 · 专属私教手札</text>
+            <text class="poster-slogan">自律成骨骼，岁月即礼赞</text>
+          </view>
+          <view class="poster-stamp">
+            <text class="poster-stamp-inner">徕舞\n私享</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="poster-scroll-bottom-spacer"></view>
+    </view>
+  </scroll-view>
+
+  <!-- 底部固定吸底操作栏 -->
+  <view class="poster-fixed-bottom" catchtap="noop">
+    <button class="poster-btn-primary" bindtap="savePosterToAlbum" loading="{{savingPoster}}" disabled="{{savingPoster}}">
+      <text class="poster-btn-spark">✦</text> {{savingPoster ? "正在雕刻画报..." : "保存海报到手机相册"}}
+    </button>
+    <view class="poster-bottom-subrow">
+      <button class="poster-btn-secondary" open-type="share">
+        <text class="poster-btn-spark">✦</text> 分享给微信好友
+      </button>
+      <view class="poster-btn-close-pill" bindtap="onClose">
+        ✕ 关闭
+      </view>
+    </view>
+  </view>
+</view>
+
+<!-- 离屏 2D 绘图 Canvas -->
+<canvas type="2d" id="posterCanvas" class="poster-canvas-hidden"></canvas>

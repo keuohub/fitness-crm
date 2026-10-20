@@ -12,18 +12,68 @@
   animation: pageTransitIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* 加载态 */
-.loading-view {
-  min-height: 70vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* 高奢光影呼吸骨架屏 (Luster Shimmer Skeleton) */
+.luxury-skeleton {
+  min-height: 100vh;
+  padding: calc(env(safe-area-inset-top) + 60rpx) 36rpx calc(env(safe-area-inset-bottom) + 120rpx);
+  box-sizing: border-box;
 }
-.loading-text {
-  font-family: "Songti SC", Georgia, serif;
-  font-size: 28rpx;
-  color: rgba(255, 255, 255, 0.85);
-  letter-spacing: 3rpx;
+.sk-brand-watermark {
+  font-family: "Didot", "Bodoni MT", Georgia, serif;
+  font-size: 24rpx;
+  letter-spacing: 0.28em;
+  color: rgba(186, 36, 40, 0.45);
+  text-align: center;
+  margin-bottom: 44rpx;
+}
+.sk-shimmer {
+  background: linear-gradient(90deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.78) 50%, rgba(255,255,255,0.35) 100%);
+  background-size: 200% 100%;
+  animation: skPulse 1.6s infinite ease-in-out;
+  border-radius: 12rpx;
+}
+@keyframes skPulse {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.sk-header-row {
+  display: flex;
+  gap: 16rpx;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+.sk-badge {
+  width: 44rpx;
+  height: 24rpx;
+}
+.sk-title {
+  width: 160rpx;
+  height: 34rpx;
+}
+.sk-gallery-hero {
+  width: 100%;
+  height: 380rpx;
+  border-radius: 18rpx;
+  margin-bottom: 44rpx;
+}
+.sk-portraits-row {
+  display: flex;
+  gap: 20rpx;
+  margin-bottom: 44rpx;
+}
+.sk-portrait-card {
+  flex: 1;
+  height: 240rpx;
+  border-radius: 14rpx;
+}
+.sk-metrics-row {
+  display: flex;
+  gap: 20rpx;
+}
+.sk-metric-box {
+  flex: 1;
+  height: 120rpx;
+  border-radius: 14rpx;
 }
 
 /* ================= 章节公共排印规范 (The Editorial Standards) ================= */
@@ -237,86 +287,112 @@
   letter-spacing: 1.5rpx;
 }
 
-/* 进阶经纬：线性水平刻度，告别粗暴药丸盒子 */
-.progression-horizon {
-  margin-bottom: 40rpx;
-  padding: 28rpx 28rpx 24rpx;
-  border-radius: 20rpx;
-  background: rgba(255, 255, 255, 0.45);
-  border: 1rpx solid rgba(255, 255, 255, 0.7);
-  box-shadow: 0 8rpx 24rpx rgba(186, 36, 40, 0.04);
+/* 进阶经纬：微米级卡地亚建筑经纬仪刻度 (Minimal Horizon Caliber) */
+.caliber-horizon {
+  margin-bottom: 44rpx;
+  padding: 12rpx 8rpx 20rpx;
 }
-.horizon-header {
+.caliber-header {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
   margin-bottom: 24rpx;
 }
-.horizon-title {
+.caliber-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+}
+.caliber-roman-badge {
+  font-family: "Didot", "Bodoni MT", Georgia, serif;
+  font-size: 19rpx;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  color: #BA2428;
+}
+.caliber-dot {
+  font-size: 18rpx;
+  color: rgba(186, 36, 40, 0.4);
+}
+.caliber-stage-tag {
+  font-family: "Songti SC", Georgia, serif;
   font-size: 22rpx;
   font-weight: 600;
   color: #1C1415;
-  letter-spacing: 0.08em;
-}
-.horizon-badge {
-  font-family: "Songti SC", Georgia, serif;
-  font-size: 20rpx;
-  font-weight: 500;
-  color: #BA2428;
   letter-spacing: 0.06em;
 }
-.horizon-track {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 12rpx;
-  margin-bottom: 20rpx;
+.caliber-metric-num {
+  font-family: "Songti SC", Georgia, serif;
+  font-size: 21rpx;
+  color: rgba(28, 20, 21, 0.55);
 }
-.horizon-node {
+.caliber-scale-wrap {
+  position: relative;
+  padding: 8rpx 0 20rpx;
+}
+.caliber-track-line {
+  position: absolute;
+  top: 50rpx;
+  left: 24rpx;
+  right: 24rpx;
+  height: 1rpx;
+  background: rgba(28, 20, 21, 0.14);
+  z-index: 1;
+}
+.caliber-stages {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+}
+.caliber-step {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8rpx;
+  opacity: 0.38;
+  transition: opacity 220ms ease;
 }
-.node-bullet {
-  width: 14rpx;
-  height: 14rpx;
-  border-radius: 50%;
-  background: rgba(28, 20, 21, 0.22);
-  border: 2rpx solid transparent;
-  transition: all 200ms ease;
+.caliber-step.is-reached {
+  opacity: 1;
 }
-.node-name {
-  font-size: 20rpx;
-  color: rgba(28, 20, 21, 0.45);
-  letter-spacing: 0.06em;
+.caliber-roman {
+  font-family: "Didot", "Bodoni MT", Georgia, serif;
+  font-size: 19rpx;
+  color: rgba(28, 20, 21, 0.5);
+  margin-bottom: 6rpx;
 }
-.horizon-node.node-reached .node-bullet {
-  background: #BA2428;
-  box-shadow: 0 0 10rpx rgba(186, 36, 40, 0.4);
-  transform: scale(1.15);
-}
-.horizon-node.node-reached .node-name {
-  color: #1C1415;
+.caliber-step.is-reached .caliber-roman {
+  color: #BA2428;
   font-weight: 600;
 }
-.horizon-line {
-  flex: 1;
-  height: 2rpx;
-  background: rgba(28, 20, 21, 0.15);
-  margin: 0 10rpx;
-  margin-bottom: 28rpx;
-}
-.horizon-line.line-reached {
-  background: #BA2428;
-}
-.horizon-target-text {
+.caliber-name {
   font-family: "Songti SC", Georgia, serif;
-  font-size: 21rpx;
-  line-height: 1.6;
-  color: rgba(28, 20, 21, 0.65);
-  padding-top: 16rpx;
-  border-top: 1rpx dashed rgba(28, 20, 21, 0.12);
+  font-size: 24rpx;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: #1C1415;
+  margin-bottom: 12rpx;
+}
+.caliber-hairline-pip {
+  width: 2rpx;
+  height: 14rpx;
+  background: rgba(28, 20, 21, 0.25);
+  transition: all 220ms ease;
+}
+.caliber-step.is-reached .caliber-hairline-pip {
+  height: 22rpx;
+  background: #BA2428;
+  box-shadow: 0 0 10rpx rgba(186, 36, 40, 0.45);
+}
+.caliber-quote-row {
+  margin-top: 14rpx;
+}
+.caliber-quote-text {
+  font-family: "Songti SC", Georgia, serif;
+  font-size: 22rpx;
+  line-height: 1.7;
+  color: rgba(28, 20, 21, 0.62);
+  font-style: italic;
 }
 
 /* 身体自律资产：大牌杂志开放式排印尺度 */
@@ -516,85 +592,117 @@
   letter-spacing: 1rpx;
 }
 
-/* 对比画框 */
-.editorial-compare-frame {
+/* 置顶对比：双联画艺术展签 (Exhibition Diptych Dossier) */
+.dossier-frame {
   margin-bottom: 32rpx;
-  padding: 24rpx;
-  border-radius: 24rpx;
-  background: rgba(255, 255, 255, 0.55);
+  padding: 24rpx 24rpx 28rpx;
+  border-radius: 20rpx;
+  background: rgba(255, 255, 255, 0.58);
   border: 1rpx solid rgba(255, 255, 255, 0.85);
-  box-shadow: 0 10rpx 28rpx rgba(28, 20, 21, 0.05);
+  box-shadow: 0 8rpx 24rpx rgba(28, 20, 21, 0.04);
 }
-.compare-frame-header {
+.dossier-curation-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 18rpx;
+  margin-bottom: 20rpx;
+  padding: 0 4rpx;
 }
-.compare-labels {
+.dossier-label-pair {
   display: flex;
   align-items: center;
-  gap: 12rpx;
+  gap: 16rpx;
 }
-.compare-label-text {
-  font-family: "Songti SC", Georgia, serif;
-  font-size: 22rpx;
+.dossier-col {
+  display: flex;
+  flex-direction: column;
+}
+.dossier-roman {
+  font-family: "Didot", "Bodoni MT", Georgia, serif;
+  font-size: 20rpx;
   font-weight: 600;
+  letter-spacing: 0.16em;
   color: #1C1415;
-  letter-spacing: 0.04em;
 }
-.compare-label-arrow {
-  font-size: 20rpx;
+.dossier-sublabel {
+  font-family: "Songti SC", Georgia, serif;
+  font-size: 19rpx;
+  color: rgba(28, 20, 21, 0.52);
+  letter-spacing: 0.04em;
+  margin-top: 2rpx;
+}
+.dossier-divider-dash {
+  width: 24rpx;
+  height: 1rpx;
+  background: rgba(28, 20, 21, 0.2);
+}
+.dossier-action-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6rpx;
+  padding: 6rpx 18rpx;
+  border-radius: 999rpx;
+  background: rgba(186, 36, 40, 0.08);
+  border: 1rpx solid rgba(186, 36, 40, 0.2);
+  transition: transform 140ms ease;
+}
+.dossier-action-pill:active {
+  transform: scale(0.95);
+}
+.dossier-pill-spark {
+  font-size: 16rpx;
   color: #BA2428;
 }
-.compare-inline-share {
-  font-size: 20rpx;
+.dossier-pill-txt {
+  font-size: 19rpx;
+  font-weight: 600;
   color: #BA2428;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
 }
-.compare-diptych {
+.dossier-diptych {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16rpx;
   margin-bottom: 18rpx;
 }
-.diptych-pane {
+.dossier-pane {
   position: relative;
   aspect-ratio: 3 / 4;
-  border-radius: 18rpx;
+  border-radius: 14rpx;
   overflow: hidden;
   background: #EAE3DE;
-  box-shadow: 0 6rpx 18rpx rgba(28, 20, 21, 0.08);
+  box-shadow: 0 4rpx 16rpx rgba(28, 20, 21, 0.06);
   border: 1rpx solid rgba(255, 255, 255, 0.7);
 }
-.diptych-img {
+.dossier-image {
   width: 100%;
   height: 100%;
   display: block;
 }
-.diptych-caption {
+.dossier-caption {
   position: absolute;
   bottom: 12rpx;
   left: 12rpx;
   right: 12rpx;
-  padding: 6rpx 12rpx;
+  padding: 6rpx 10rpx;
   border-radius: 999rpx;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.48);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   color: #FFFFFF;
-  font-size: 18rpx;
-  letter-spacing: 1rpx;
+  font-family: "Didot", "Bodoni MT", Georgia, serif;
+  font-size: 16rpx;
+  letter-spacing: 0.14em;
   text-align: center;
 }
 .compare-editorial-analysis {
   display: block;
   font-family: "Songti SC", Georgia, serif;
-  font-size: 23rpx;
+  font-size: 22rpx;
   line-height: 1.65;
-  color: rgba(28, 20, 21, 0.75);
+  color: rgba(28, 20, 21, 0.72);
   font-style: italic;
-  padding: 12rpx 8rpx 0;
+  padding: 14rpx 8rpx 0;
   border-top: 1rpx dashed rgba(28, 20, 21, 0.1);
 }
 
@@ -819,357 +927,7 @@
   color: rgba(28, 20, 21, 0.85);
 }
 
-/* ================= 画报级体态美学分享卡 弹窗 ================= */
-.share-modal-mask {
-  position: fixed;
-  inset: 0;
-  z-index: 99999;
-  background: rgba(8, 7, 10, 0.78);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  animation: fadeIn 0.25s ease both;
-}
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
 
-/* 右上角常驻高奢悬浮关闭按钮 */
-.modal-float-close {
-  position: fixed;
-  top: calc(env(safe-area-inset-top) + 24rpx);
-  right: 32rpx;
-  width: 72rpx;
-  height: 72rpx;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.22);
-  border: 1.5rpx solid rgba(255, 255, 255, 0.45);
-  color: #FFFFFF;
-  font-size: 32rpx;
-  font-weight: 300;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100001;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.28);
-  transition: transform 140ms ease, background 140ms ease;
-}
-.modal-float-close:active {
-  transform: scale(0.92);
-  background: rgba(255, 255, 255, 0.4);
-}
-
-/* 纵向滚动容器：无论文字多长都可以上下丝滑滑动 */
-.share-modal-scroll {
-  width: 100%;
-  height: 100vh;
-  box-sizing: border-box;
-}
-
-.share-modal-container {
-  width: 100%;
-  min-height: 100%;
-  box-sizing: border-box;
-  padding: calc(env(safe-area-inset-top) + 110rpx) 44rpx calc(env(safe-area-inset-bottom) + 90rpx);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.poster-card {
-  width: 100%;
-  max-width: 620rpx;
-  box-sizing: border-box;
-  padding: 48rpx 36rpx 40rpx;
-  border-radius: 36rpx;
-  background: #FCF8F5;
-  border: 1.5rpx solid rgba(255, 255, 255, 0.9);
-  box-shadow: 0 24rpx 60rpx rgba(0, 0, 0, 0.38);
-  display: flex;
-  flex-direction: column;
-}
-
-.poster-brand {
-  text-align: center;
-  margin-bottom: 24rpx;
-}
-.poster-brand-en {
-  display: block;
-  font-family: "Didot", "Bodoni MT", Georgia, serif;
-  font-size: 22rpx;
-  letter-spacing: 0.25em;
-  color: #120E0F;
-}
-.poster-brand-cn {
-  display: block;
-  margin-top: 6rpx;
-  font-size: 18rpx;
-  color: #8C6A6B;
-  letter-spacing: 0.12em;
-}
-
-.poster-member-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  padding-bottom: 18rpx;
-  border-bottom: 1rpx solid rgba(28, 20, 21, 0.08);
-  margin-bottom: 24rpx;
-}
-.poster-member-title {
-  font-family: "Songti SC", Georgia, serif;
-  font-size: 26rpx;
-  font-weight: 600;
-  color: #1C1415;
-  letter-spacing: 1rpx;
-}
-.poster-member-days {
-  font-size: 20rpx;
-  color: #8C6A6B;
-}
-
-.poster-compare-pair {
-  display: flex;
-  gap: 16rpx;
-  margin-bottom: 24rpx;
-}
-.poster-img-box {
-  flex: 1;
-  position: relative;
-  border-radius: 20rpx;
-  overflow: hidden;
-  aspect-ratio: 3 / 4;
-  background: #EAE3DE;
-}
-.poster-img {
-  width: 100%;
-  height: 100%;
-}
-.poster-tag {
-  position: absolute;
-  bottom: 12rpx;
-  left: 12rpx;
-  padding: 4rpx 14rpx;
-  border-radius: 999rpx;
-  background: rgba(8, 7, 10, 0.7);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  color: #FFFFFF;
-  font-size: 16rpx;
-  letter-spacing: 1rpx;
-}
-
-/* 无对比图时的高奢自律徽章（纯净真实） */
-.poster-no-photo-badge {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 56rpx 28rpx;
-  margin-bottom: 24rpx;
-  border-radius: 24rpx;
-  background: linear-gradient(135deg, rgba(234, 226, 220, 0.45) 0%, rgba(245, 237, 232, 0.9) 100%);
-  border: 1rpx dashed rgba(186, 36, 40, 0.25);
-  text-align: center;
-}
-.poster-badge-icon {
-  font-size: 40rpx;
-  color: var(--brand-crimson);
-  margin-bottom: 12rpx;
-}
-.poster-badge-title {
-  font-size: 26rpx;
-  font-weight: 600;
-  color: #1C1415;
-  letter-spacing: 2rpx;
-  margin-bottom: 8rpx;
-}
-.poster-badge-sub {
-  font-size: 20rpx;
-  color: #8C6A6B;
-  letter-spacing: 1rpx;
-}
-
-.poster-analysis-box {
-  position: relative;
-  background: rgba(255, 255, 255, 0.75);
-  border-radius: 20rpx;
-  padding: 20rpx 24rpx 20rpx 44rpx;
-  margin-bottom: 28rpx;
-  border: 1rpx solid rgba(28, 20, 21, 0.04);
-}
-.poster-quote {
-  position: absolute;
-  top: 10rpx;
-  left: 16rpx;
-  font-family: Georgia, serif;
-  font-size: 32rpx;
-  color: var(--brand-crimson);
-  opacity: 0.6;
-}
-.poster-analysis {
-  font-size: 24rpx;
-  line-height: 1.6;
-  color: #381617;
-  font-style: italic;
-}
-
-.poster-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: 20rpx;
-  border-top: 1rpx solid rgba(28, 20, 21, 0.08);
-}
-.poster-footer-left {
-  display: flex;
-  flex-direction: column;
-  gap: 4rpx;
-}
-.poster-sign {
-  font-size: 22rpx;
-  font-weight: 500;
-  color: #1C1415;
-}
-.poster-slogan {
-  font-size: 18rpx;
-  color: #8C6A6B;
-  letter-spacing: 1rpx;
-}
-.poster-stamp {
-  width: 76rpx;
-  height: 76rpx;
-  border-radius: 50%;
-  border: 1.5rpx dashed var(--brand-crimson);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transform: rotate(-12deg);
-}
-.poster-stamp-inner {
-  font-size: 14rpx;
-  line-height: 1.2;
-  font-weight: 700;
-  color: var(--brand-crimson);
-  text-align: center;
-  letter-spacing: 1rpx;
-}
-
-.poster-scroll-bottom-spacer {
-  height: calc(env(safe-area-inset-bottom) + 260rpx);
-  width: 100%;
-  flex-shrink: 0;
-}
-
-/* 底部固定吸底操作栏：无论何时何地，保存按钮永远悬浮在屏幕最底端，一眼可见！ */
-.poster-fixed-bottom {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 24rpx 44rpx calc(env(safe-area-inset-bottom) + 24rpx);
-  background: linear-gradient(180deg, rgba(8, 7, 10, 0) 0%, rgba(8, 7, 10, 0.88) 35%, rgba(8, 7, 10, 0.98) 100%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16rpx;
-  z-index: 100002;
-  box-sizing: border-box;
-}
-
-.poster-btn-primary {
-  width: 100% !important;
-  height: 92rpx;
-  line-height: 92rpx;
-  background: linear-gradient(135deg, #BA2428 0%, #8C161A 100%);
-  color: #FFFFFF;
-  border-radius: 999rpx;
-  font-size: 28rpx;
-  font-weight: 600;
-  letter-spacing: 2rpx;
-  text-align: center;
-  border: 1rpx solid rgba(255, 255, 255, 0.35);
-  box-shadow: 0 10rpx 32rpx rgba(186, 36, 40, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  margin: 0;
-  transition: transform 140ms ease;
-}
-.poster-btn-primary:active {
-  transform: scale(0.98);
-}
-.poster-btn-spark {
-  font-size: 22rpx;
-  margin-right: 8rpx;
-  color: inherit;
-  display: inline-block;
-  vertical-align: middle;
-}
-
-.poster-bottom-subrow {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 20rpx;
-}
-
-.poster-btn-secondary {
-  flex: 1;
-  height: 76rpx;
-  line-height: 76rpx;
-  background: rgba(255, 255, 255, 0.16);
-  color: #FFFFFF;
-  border-radius: 999rpx;
-  font-size: 24rpx;
-  font-weight: 500;
-  letter-spacing: 1.5rpx;
-  text-align: center;
-  border: 1rpx solid rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  margin: 0;
-  transition: transform 140ms ease;
-}
-.poster-btn-secondary:active {
-  transform: scale(0.98);
-}
-
-.poster-btn-close-pill {
-  padding: 0 36rpx;
-  height: 76rpx;
-  line-height: 76rpx;
-  border-radius: 999rpx;
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 24rpx;
-  letter-spacing: 1rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: opacity 140ms ease;
-}
-.poster-btn-close-pill:active {
-  opacity: 0.6;
-}
-
-.poster-canvas-hidden {
-  position: fixed;
-  left: -9999px;
-  top: 0;
-  width: 750px;
-  height: 1260px;
-  opacity: 0;
-  pointer-events: none;
-  z-index: -999;
-}
 
 /* ================= 极简高奢开屏海报 ================= */
 .splash-screen {
