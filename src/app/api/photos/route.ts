@@ -52,11 +52,27 @@ export async function POST(request: NextRequest) {
     const takenAt = formData.get("takenAt") as string | null;
     const file = formData.get("file") as File | null;
 
-    if (!memberIdRaw || !file) {
+    if (!file) {
       return NextResponse.json(
-        { error: "缺少必填字段 memberId 或 file" },
+        { error: "缺少上传文件 file" },
         { status: 400 }
       );
+    }
+
+    // 若无 memberId，支持管理后台通用品牌大片上传（月度之星、场馆相册、团队肖像等）
+    if (!memberIdRaw) {
+      const BRAND_DIR = path.join(process.cwd(), "public", "brand", "uploads");
+      await mkdir(BRAND_DIR, { recursive: true });
+
+      const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+      const filename = `brand-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const filePath = path.join(BRAND_DIR, filename);
+
+      const bytes = await file.arrayBuffer();
+      await writeFile(filePath, Buffer.from(bytes));
+
+      const url = `/brand/uploads/${filename}`;
+      return NextResponse.json({ url }, { status: 201 });
     }
 
     const mid = typeof memberIdRaw === "string" ? parseInt(memberIdRaw, 10) : (memberIdRaw as unknown as number);
