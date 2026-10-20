@@ -1,14 +1,18 @@
-/* pages/growth/growth.wxss - 成长首页 · 朱红流光 + 磨砂微光卡片体系 */
+/* ==========================================================================
+   pages/growth/growth.wxss - 徕舞 · 私人身体美学手札 (Editorial Magazine Edition)
+   彻底推倒 AI 模板塑料盒子，重塑大牌杂志画报感、纵深呼吸感与女子静奢情调
+   ========================================================================== */
 
+/* 全局手札画卷容器 */
 .growth-page {
   min-height: 100vh;
-  padding-top: calc(env(safe-area-inset-top) + 124rpx);
-  padding-bottom: calc(env(safe-area-inset-bottom) + 300rpx);
+  padding-top: calc(env(safe-area-inset-top) + 96rpx);
+  padding-bottom: calc(env(safe-area-inset-bottom) + 260rpx);
   box-sizing: border-box;
   animation: pageTransitIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* ================= 加载态 ================= */
+/* 加载态 */
 .loading-view {
   min-height: 70vh;
   display: flex;
@@ -16,955 +20,793 @@
   justify-content: center;
 }
 .loading-text {
-  font-size: 28rpx;
-  color: rgba(255, 255, 255, 0.9);
-  letter-spacing: 2rpx;
-}
-
-/* ================= 通用板块 ================= */
-.section-block {
-  margin: 0 32rpx 32rpx;
-}
-.section-title {
-  display: block;
   font-family: "Songti SC", Georgia, serif;
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  padding: 0;
-  font-size: 26rpx;
-  font-weight: 600;
-  color: #381617;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  margin: 40rpx 0 20rpx 12rpx;
-  text-shadow: 0 1rpx 12rpx rgba(255, 245, 240, 0.45);
+  font-size: 28rpx;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 3rpx;
 }
 
-
-/* ================= 模块：问候区（高奢呼吸感排印） ================= */
-.greeting-area {
-  padding: 16rpx 36rpx 32rpx;
+/* ================= 章节公共排印规范 (The Editorial Standards) ================= */
+.editorial-section {
+  padding: 0 40rpx;
   box-sizing: border-box;
 }
-.greeting-top-row {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
+
+/* 章节头部引子 */
+.editorial-header {
+  margin-bottom: 28rpx;
 }
-.greeting-salute {
-  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Songti SC", serif;
-  font-size: 46rpx;
+.editorial-chapter-tag {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6rpx;
+  margin-bottom: 6rpx;
+}
+.chapter-code {
+  font-family: "Didot", "Bodoni MT", Georgia, serif;
+  font-size: 20rpx;
+  font-weight: 600;
+  color: #FFE5A3;
+  letter-spacing: 0.12em;
+}
+.chapter-dot {
+  font-size: 18rpx;
+  color: rgba(255, 255, 255, 0.35);
+  margin: 0 2rpx;
+}
+.chapter-label {
+  font-size: 19rpx;
   font-weight: 500;
+  color: rgba(255, 245, 240, 0.65);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+.editorial-title {
+  display: block;
+  font-family: "Songti SC", Georgia, "PingFang SC", serif;
+  font-size: 38rpx;
+  font-weight: 600;
   color: #1C1415;
+  letter-spacing: 0.05em;
   line-height: 1.25;
 }
-.greeting-name {
-  font-family: Georgia, "Songti SC", -apple-system, BlinkMacSystemFont, "PingFang SC", serif;
+.editorial-subtitle {
+  display: block;
+  font-family: "Didot", "Bodoni MT", Georgia, serif;
+  font-size: 18rpx;
+  letter-spacing: 0.28em;
+  color: rgba(28, 20, 21, 0.42);
+  margin-top: 4rpx;
+  text-transform: uppercase;
+}
+
+/* 极细发丝分隔律动线 (Hairline Rhythm Divider) */
+.editorial-hairline {
+  height: 1rpx;
+  margin: 52rpx 40rpx;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.25) 50%, rgba(255, 255, 255, 0.04) 100%);
+}
+
+/* ================= 章节一：光影场馆 · 空间策展 (Chapter 01: The Sanctuary) ================= */
+.venue-gallery-scroll {
+  width: 100%;
+  white-space: nowrap;
+  box-sizing: border-box;
+  overflow-x: scroll;
+  padding: 8rpx 0 16rpx;
+}
+.venue-gallery-item {
+  display: inline-block;
+  width: 540rpx;
+  height: 338rpx; /* 16:10 电影宽屏构图 */
+  margin-right: 24rpx;
+  border-radius: 20rpx;
+  overflow: hidden;
+  box-shadow: 0 16rpx 40rpx rgba(18, 14, 15, 0.18);
+  border: 1rpx solid rgba(255, 255, 255, 0.55);
+  background: #2A181A;
+  vertical-align: top;
+  transition: transform 180ms cubic-bezier(0.2, 0.8, 0.25, 1);
+}
+.venue-gallery-item:last-child {
+  margin-right: 0;
+}
+.venue-gallery-item:active {
+  transform: scale(0.98);
+}
+.venue-gallery-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ================= 章节二：同行导师 · 真实陪伴 (Chapter 02: Mentors) ================= */
+.team-portrait-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20rpx;
+}
+.team-portrait-col {
+  display: flex;
+  flex-direction: column;
+  transition: transform 180ms ease;
+}
+.team-portrait-col:active {
+  transform: scale(0.97);
+}
+.portrait-frame {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: 18rpx;
+  overflow: hidden;
+  box-shadow: 0 12rpx 32rpx rgba(28, 20, 21, 0.14);
+  border: 1rpx solid rgba(255, 255, 255, 0.55);
+  background: #EAE3DE;
+  margin-bottom: 16rpx;
+}
+.portrait-photo {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.portrait-meta {
+  padding: 0 4rpx;
+}
+.portrait-name {
+  display: block;
+  font-family: "Songti SC", Georgia, serif;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1C1415;
+  letter-spacing: 0.05em;
+  line-height: 1.3;
+}
+.portrait-role {
+  display: block;
+  font-size: 20rpx;
+  color: #BA2428;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  margin-top: 4rpx;
+}
+.portrait-bio {
+  display: block;
+  font-size: 19rpx;
+  line-height: 1.45;
+  color: rgba(28, 20, 21, 0.58);
+  margin-top: 8rpx;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ================= 章节三：问候与沉淀岁月 (Chapter 03: Greeting & Bond) ================= */
+.greeting-header-row {
+  margin-bottom: 36rpx;
+}
+.greeting-headline-group {
+  display: flex;
+  flex-direction: column;
+}
+.greeting-lead {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  font-size: 24rpx;
+  font-weight: 500;
+  color: rgba(28, 20, 21, 0.55);
+  letter-spacing: 0.08em;
+  margin-bottom: 6rpx;
+}
+.greeting-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+.greeting-hero-name {
+  font-family: "Songti SC", Georgia, serif;
   font-size: 52rpx;
   font-weight: 600;
   color: #1C1415;
-  line-height: 1.25;
   letter-spacing: 0.03em;
-  word-break: break-all;
+  line-height: 1.2;
 }
-.greeting-companion-lockup {
-  margin-top: 18rpx;
-  display: inline-flex;
-  align-items: center;
-  max-width: 100%;
-}
-.companion-tier-pill {
+.stars-chic-trigger {
   display: inline-flex;
   align-items: center;
   gap: 8rpx;
-  padding: 8rpx 20rpx;
+  padding: 10rpx 24rpx;
   border-radius: 999rpx;
-  background: rgba(255, 255, 255, 0.78);
-  border: 1rpx solid rgba(255, 255, 255, 0.95);
-  box-shadow: 0 4rpx 14rpx rgba(186, 36, 40, 0.06);
-  flex-shrink: 0;
+  background: rgba(28, 20, 21, 0.88);
+  border: 1rpx solid rgba(255, 215, 0, 0.45);
+  box-shadow: 0 4rpx 16rpx rgba(28, 20, 21, 0.2);
   transition: transform 140ms ease;
 }
-.companion-tier-pill:active {
-  transform: scale(0.96);
+.stars-chic-trigger:active {
+  transform: scale(0.94);
 }
-.companion-spark {
+.stars-chic-spark {
   font-size: 16rpx;
-  color: var(--brand-crimson);
+  color: #FFE5A3;
 }
-.companion-tier-title {
-  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
-  font-size: 22rpx;
-  font-weight: 600;
-  color: #1C1415;
-  letter-spacing: 0.06em;
-}
-.companion-tier-pill.tier-pill-gold {
-  background: linear-gradient(135deg, rgba(28, 20, 21, 0.92) 0%, rgba(68, 24, 26, 0.92) 100%) !important;
-  border: 1rpx solid rgba(255, 215, 0, 0.45) !important;
-  box-shadow: 0 4rpx 16rpx rgba(60, 20, 20, 0.35) !important;
-}
-.companion-tier-pill.tier-pill-gold .companion-spark,
-.companion-tier-pill.tier-pill-gold .companion-tier-title {
-  color: #FFE5A3 !important;
-}
-.companion-divider {
-  width: 2rpx;
-  height: 24rpx;
-  background: rgba(28, 20, 21, 0.18);
-  margin: 0 18rpx;
-  flex-shrink: 0;
-}
-.companion-days-box {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 4rpx;
-  flex-shrink: 0;
-}
-.companion-days-label {
-  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+.stars-chic-text {
   font-size: 22rpx;
   font-weight: 500;
-  color: rgba(28, 20, 21, 0.65);
-  letter-spacing: 0.04em;
-}
-.companion-days-number {
-  font-family: "Didot", "Bodoni MT", "Times New Roman", -apple-system, "PingFang SC", serif;
-  font-size: 30rpx;
-  font-weight: 600;
-  color: #120E0F;
-  line-height: 1;
-  font-variant-numeric: lining-nums tabular-nums;
-  letter-spacing: 0.02em;
-  margin: 0 2rpx;
-}
-.companion-days-unit {
-  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
-  font-size: 20rpx;
-  font-weight: 500;
-  color: rgba(28, 20, 21, 0.65);
+  color: #FFF6E5;
+  letter-spacing: 1.5rpx;
 }
 
-/* ================= 统一磨砂微光卡片 ================= */
-.coach-message-card,
-.milestone-card,
-.whisper-card,
-.feedback-card,
-.photo-compare-card,
-.reply-card,
-.training-item {
-  background: var(--card-glass);
-  backdrop-filter: blur(28px) saturate(160%);
-  -webkit-backdrop-filter: blur(28px) saturate(160%);
-  border-radius: 36rpx;
-  border: var(--card-border);
-  box-shadow: var(--card-shadow);
-  box-sizing: border-box;
+/* 进阶经纬：线性水平刻度，告别粗暴药丸盒子 */
+.progression-horizon {
+  margin-bottom: 40rpx;
+  padding: 28rpx 28rpx 24rpx;
+  border-radius: 20rpx;
+  background: rgba(255, 255, 255, 0.45);
+  border: 1rpx solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 8rpx 24rpx rgba(186, 36, 40, 0.04);
 }
-
-/* ================= 小桥的最新鼓励 ================= */
-.coach-message-card {
-  margin: 0 32rpx 32rpx;
-  padding: 36rpx 32rpx;
-}
-.coach-message-label {
-  display: block;
-  font-size: 22rpx;
-  color: var(--text-muted);
-  letter-spacing: 2rpx;
-  margin-bottom: 16rpx;
-}
-.coach-message-text {
-  display: block;
-  font-size: 30rpx;
-  line-height: 1.8;
-  color: var(--text-body);
-}
-.coach-message-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12rpx;
-  margin-top: 20rpx;
-}
-.coach-tag-item {
-  padding: 8rpx 22rpx;
-  border-radius: 999rpx;
-  background: rgba(186, 36, 40, 0.08);
-  border: 1rpx solid rgba(186, 36, 40, 0.12);
-  color: var(--brand-crimson);
-  font-size: 22rpx;
-  letter-spacing: 1rpx;
-  transition: transform 140ms ease;
-}
-.coach-tag-item:active {
-  transform: scale(0.95);
-}
-.coach-message-date {
-  display: block;
-  margin-top: 18rpx;
-  font-size: 22rpx;
-  color: var(--text-muted);
-}
-
-/* ================= 模块二：里程碑成就 ================= */
-.milestone-card {
-  margin: 0 32rpx 32rpx;
-  padding: 36rpx 32rpx;
-}
-.milestone-card-top {
+.horizon-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 24rpx;
 }
-.section-title-inline {
-  font-family: "Songti SC", Georgia, serif;
-  font-size: 26rpx;
+.horizon-title {
+  font-size: 22rpx;
   font-weight: 600;
-  color: #381617;
-  letter-spacing: 0.14em;
+  color: #1C1415;
+  letter-spacing: 0.08em;
 }
-.milestone-level-badge {
+.horizon-badge {
+  font-family: "Songti SC", Georgia, serif;
   font-size: 20rpx;
   font-weight: 500;
-  color: var(--brand-crimson);
-  background: rgba(186, 36, 40, 0.08);
-  border: 1rpx solid rgba(186, 36, 40, 0.16);
-  padding: 4rpx 16rpx;
-  border-radius: 999rpx;
+  color: #BA2428;
+  letter-spacing: 0.06em;
 }
-/* 高定水平进阶轨：细轨 + 节点，已达成实心、未达成半透香槟银 */
-.milestone-tags {
+.horizon-track {
   display: flex;
-  align-items: flex-start;
-  margin: 8rpx 0 0;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12rpx;
+  margin-bottom: 20rpx;
 }
-.milestone-tag {
-  position: relative;
-  flex: 1;
-  text-align: center;
-  padding: 32rpx 0 0;
-  font-family: Georgia, "Songti SC", serif;
-  font-size: 24rpx;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  box-shadow: none;
-  transition: color 0.25s ease;
-}
-/* 轨道线：每节点各画左右两半，首尾各收一半 */
-.milestone-tag::before {
-  content: '';
-  position: absolute;
-  top: 7rpx;
-  left: 0;
-  right: 0;
-  height: 2rpx;
-  background: rgba(196, 182, 164, 0.5);
-}
-.milestone-tag:first-child::before {
-  left: 50%;
-}
-.milestone-tag:last-child::before {
-  right: 50%;
-}
-/* 节点圆点 */
-.milestone-tag::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 50%;
-  margin-left: -8rpx;
-  width: 16rpx;
-  height: 16rpx;
-  border-radius: 50%;
-  box-sizing: border-box;
-  background: rgba(196, 182, 164, 0.55);
-}
-.tag-achieved {
-  color: #120E0F;
-  font-weight: 600;
-}
-.tag-achieved::before {
-  background: rgba(18, 14, 15, 0.35);
-}
-.tag-achieved::after {
-  background: #120E0F;
-  box-shadow: 0 0 0 4rpx rgba(18, 14, 15, 0.12);
-}
-.tag-locked {
-  color: rgba(196, 182, 164, 0.9);
-}
-.next-goal {
-  margin-top: 30rpx;
-  padding-top: 26rpx;
-  border-top: 1rpx solid rgba(28, 20, 21, 0.06);
-}
-.next-goal-label {
-  display: block;
-  font-size: 22rpx;
-  color: var(--text-muted);
-  letter-spacing: 2rpx;
-  margin-bottom: 10rpx;
-}
-.next-goal-value {
-  display: block;
-  font-size: 24rpx;
-  font-weight: 500;
-  color: rgba(28, 22, 23, 0.55);
-  line-height: 1.6;
-}
-
-/* ================= 模块三：核心自律资产双拼大卡 ================= */
-.stats-grid-dual {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20rpx;
-  margin: 0 32rpx 32rpx;
-  box-sizing: border-box;
-}
-.stat-card-dual {
-  padding: 36rpx 28rpx;
-  border-radius: 36rpx;
-  background: var(--card-glass);
-  backdrop-filter: blur(28px) saturate(160%);
-  -webkit-backdrop-filter: blur(28px) saturate(160%);
-  border: var(--card-border);
-  box-shadow: var(--card-shadow);
+.horizon-node {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  text-align: center;
-  box-sizing: border-box;
-  transition: transform 140ms cubic-bezier(0.2, 0.8, 0.25, 1);
+  gap: 8rpx;
 }
-.stat-card-dual:active {
-  transform: scale(0.97);
+.node-bullet {
+  width: 14rpx;
+  height: 14rpx;
+  border-radius: 50%;
+  background: rgba(28, 20, 21, 0.22);
+  border: 2rpx solid transparent;
+  transition: all 200ms ease;
 }
-.stat-number-wrap {
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 6rpx;
-}
-.stat-card-dual .stat-number {
-  font-family: "Didot", "Bodoni MT", "Times New Roman", "PingFang SC", serif;
-  font-size: 64rpx;
-  font-weight: 600;
-  color: #120E0F;
-  line-height: 1;
-  font-variant-numeric: lining-nums tabular-nums;
-}
-.stat-card-dual .stat-unit {
-  font-size: 24rpx;
-  font-weight: 500;
-  color: #5A3A3A;
-  margin-left: 2rpx;
-}
-.stat-card-dual .stat-label {
-  margin-top: 14rpx;
-  font-size: 24rpx;
-  font-weight: 500;
-  color: rgba(28, 20, 21, 0.65);
-  letter-spacing: 1.5rpx;
-}
-.stat-card-dual .stat-sub {
-  margin-top: 6rpx;
+.node-name {
   font-size: 20rpx;
-  color: var(--text-muted);
-  letter-spacing: 0.5rpx;
+  color: rgba(28, 20, 21, 0.45);
+  letter-spacing: 0.06em;
+}
+.horizon-node.node-reached .node-bullet {
+  background: #BA2428;
+  box-shadow: 0 0 10rpx rgba(186, 36, 40, 0.4);
+  transform: scale(1.15);
+}
+.horizon-node.node-reached .node-name {
+  color: #1C1415;
+  font-weight: 600;
+}
+.horizon-line {
+  flex: 1;
+  height: 2rpx;
+  background: rgba(28, 20, 21, 0.15);
+  margin: 0 10rpx;
+  margin-bottom: 28rpx;
+}
+.horizon-line.line-reached {
+  background: #BA2428;
+}
+.horizon-target-text {
+  font-family: "Songti SC", Georgia, serif;
+  font-size: 21rpx;
+  line-height: 1.6;
+  color: rgba(28, 20, 21, 0.65);
+  padding-top: 16rpx;
+  border-top: 1rpx dashed rgba(28, 20, 21, 0.12);
 }
 
-/* ================= 模块四：训练寄语 ================= */
-.whisper-card {
+/* 身体自律资产：大牌杂志开放式排印尺度 */
+.metrics-editorial-row {
   display: flex;
-  gap: 24rpx;
-  margin: 0 32rpx 32rpx;
-  padding: 36rpx 32rpx 36rpx 34rpx;
+  align-items: center;
+  justify-content: space-around;
+  padding: 24rpx 0 12rpx;
 }
-.whisper-bar {
-  width: 4rpx;
-  border-radius: 4rpx;
-  background: linear-gradient(180deg, #E5534C 0%, #BA2428 100%);
-  box-shadow: 0 0 10rpx rgba(206, 56, 52, 0.35);
-  flex-shrink: 0;
+.metric-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
-.whisper-content {
-  flex: 1;
+.metric-num-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 8rpx;
+  margin-bottom: 8rpx;
 }
-.whisper-label {
-  display: block;
-  font-size: 22rpx;
-  color: var(--text-muted);
-  letter-spacing: 2rpx;
-  margin-bottom: 12rpx;
+.metric-big-num {
+  font-family: "Didot", "Bodoni MT", Georgia, serif;
+  font-size: 68rpx;
+  font-weight: 600;
+  line-height: 1;
+  color: #1C1415;
+  letter-spacing: -0.02em;
 }
-.whisper-title {
-  display: block;
-  font-family: "Songti SC", Georgia, -apple-system, BlinkMacSystemFont, "PingFang SC", serif;
+.metric-unit {
+  font-family: "Didot", "Bodoni MT", Georgia, serif;
+  font-size: 19rpx;
+  font-weight: 600;
+  color: #BA2428;
+  letter-spacing: 0.18em;
+}
+.metric-label {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #1C1415;
+  letter-spacing: 0.04em;
+  margin-bottom: 4rpx;
+}
+.metric-caption {
+  font-size: 19rpx;
+  color: rgba(28, 20, 21, 0.52);
+  letter-spacing: 0.02em;
+}
+.metric-vertical-divider {
+  width: 1rpx;
+  height: 72rpx;
+  background: linear-gradient(180deg, transparent 0%, rgba(28, 20, 21, 0.18) 50%, transparent 100%);
+}
+
+/* ================= 章节四：小桥私语 · 亲笔手札 (Chapter 04: The Whisper) ================= */
+.stationery-note-card {
+  padding: 36rpx 32rpx;
+  border-radius: 24rpx;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1rpx solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 14rpx 36rpx rgba(186, 36, 40, 0.06);
+  position: relative;
+}
+.stationery-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+.stationery-title-wrap {
+  display: flex;
+  flex-direction: column;
+}
+.stationery-tag {
+  font-size: 19rpx;
+  font-weight: 600;
+  color: #BA2428;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 6rpx;
+}
+.stationery-heading {
+  font-family: "Songti SC", Georgia, serif;
   font-size: 32rpx;
   font-weight: 600;
-  font-style: normal;
-  color: #1C1213;
+  color: #1C1415;
   letter-spacing: 0.04em;
-  line-height: 1.45;
 }
-.whisper-body {
-  display: block;
-  margin-top: 16rpx;
-  font-size: 28rpx;
-  line-height: 1.75;
-  color: rgba(28, 20, 21, 0.72);
+.stationery-seal {
+  width: 52rpx;
+  height: 52rpx;
+  border-radius: 8rpx;
+  background: rgba(186, 36, 40, 0.88);
+  color: #FFE5A3;
+  font-family: "Songti SC", Georgia, serif;
+  font-size: 24rpx;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 12rpx rgba(186, 36, 40, 0.25);
+  transform: rotate(-6deg);
 }
-.whisper-sign {
+.stationery-body {
   display: block;
-  margin-top: 18rpx;
+  font-family: "Songti SC", Georgia, serif;
+  font-size: 26rpx;
+  line-height: 1.8;
+  color: #2B2426;
+  letter-spacing: 0.04em;
+  margin-bottom: 24rpx;
+}
+.stationery-sign-row {
+  display: flex;
+  justify-content: flex-end;
+}
+.stationery-sign {
+  font-family: "Songti SC", Georgia, serif;
   font-size: 22rpx;
-  color: var(--text-muted);
+  font-style: italic;
+  color: rgba(28, 20, 21, 0.65);
+  letter-spacing: 0.06em;
+}
+
+/* ================= 章节五：身形蜕变定格 (Chapter 05: Metamorphosis) ================= */
+.editorial-header-split {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+.editorial-share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 8rpx 20rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1rpx solid rgba(255, 255, 255, 0.85);
+  transition: transform 140ms ease;
+}
+.editorial-share-btn:active {
+  transform: scale(0.95);
+}
+.share-btn-spark {
+  font-size: 16rpx;
+  color: #BA2428;
+}
+.share-btn-txt {
+  font-size: 20rpx;
+  font-weight: 600;
+  color: #1C1415;
+  letter-spacing: 0.08em;
+}
+
+/* 占位态 */
+.editorial-empty-state {
+  padding: 44rpx 28rpx;
+  border-radius: 20rpx;
+  background: rgba(255, 255, 255, 0.4);
+  border: 1rpx dashed rgba(186, 36, 40, 0.22);
+  text-align: center;
+}
+.editorial-empty-lead {
+  display: block;
+  font-family: "Songti SC", Georgia, serif;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #1C1415;
+  margin-bottom: 8rpx;
+}
+.editorial-empty-sub {
+  display: block;
+  font-size: 20rpx;
+  line-height: 1.5;
+  color: rgba(28, 20, 21, 0.58);
+  margin-bottom: 24rpx;
+}
+.editorial-poster-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 14rpx 32rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(135deg, #BA2428 0%, #8C161A 100%);
+  color: #FFFFFF;
+  box-shadow: 0 6rpx 20rpx rgba(186, 36, 40, 0.28);
+}
+.poster-trigger-spark {
+  font-size: 18rpx;
+  color: #FFE5A3;
+}
+.poster-trigger-text {
+  font-size: 22rpx;
+  font-weight: 500;
   letter-spacing: 1rpx;
 }
 
-/* ================= 模块五：最近训练 ================= */
-.training-list {
+/* 对比画框 */
+.editorial-compare-frame {
+  margin-bottom: 32rpx;
+  padding: 24rpx;
+  border-radius: 24rpx;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1rpx solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 10rpx 28rpx rgba(28, 20, 21, 0.05);
+}
+.compare-frame-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18rpx;
+}
+.compare-labels {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+.compare-label-text {
+  font-family: "Songti SC", Georgia, serif;
+  font-size: 22rpx;
+  font-weight: 600;
+  color: #1C1415;
+  letter-spacing: 0.04em;
+}
+.compare-label-arrow {
+  font-size: 20rpx;
+  color: #BA2428;
+}
+.compare-inline-share {
+  font-size: 20rpx;
+  color: #BA2428;
+  letter-spacing: 0.04em;
+}
+.compare-diptych {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16rpx;
+  margin-bottom: 18rpx;
+}
+.diptych-pane {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  border-radius: 18rpx;
+  overflow: hidden;
+  background: #EAE3DE;
+  box-shadow: 0 6rpx 18rpx rgba(28, 20, 21, 0.08);
+  border: 1rpx solid rgba(255, 255, 255, 0.7);
+}
+.diptych-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.diptych-caption {
+  position: absolute;
+  bottom: 12rpx;
+  left: 12rpx;
+  right: 12rpx;
+  padding: 6rpx 12rpx;
+  border-radius: 999rpx;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #FFFFFF;
+  font-size: 18rpx;
+  letter-spacing: 1rpx;
+  text-align: center;
+}
+.compare-editorial-analysis {
+  display: block;
+  font-family: "Songti SC", Georgia, serif;
+  font-size: 23rpx;
+  line-height: 1.65;
+  color: rgba(28, 20, 21, 0.75);
+  font-style: italic;
+  padding: 12rpx 8rpx 0;
+  border-top: 1rpx dashed rgba(28, 20, 21, 0.1);
+}
+
+/* 极简下划线视角切换 (Minimal Underline Tabs) */
+.editorial-angle-tabs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 48rpx;
+  margin: 20rpx 0 28rpx;
+}
+.angle-tab-item {
+  position: relative;
+  padding: 12rpx 8rpx;
+  transition: opacity 140ms ease;
+}
+.angle-tab-text {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  font-size: 24rpx;
+  color: rgba(28, 20, 21, 0.45);
+  letter-spacing: 0.08em;
+  transition: color 180ms ease;
+}
+.angle-tab-active .angle-tab-text {
+  color: #1C1415;
+  font-weight: 600;
+}
+.angle-tab-underline {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 28rpx;
+  height: 3rpx;
+  border-radius: 2rpx;
+  background: #BA2428;
+}
+
+/* ================= 章节六：雕塑印记 · 训练足迹 (Chapter 06: Footprints) ================= */
+.practice-timeline {
   display: flex;
   flex-direction: column;
   gap: 18rpx;
 }
-.training-card-luxury {
-  background: var(--card-glass);
-  backdrop-filter: blur(28px) saturate(160%);
-  -webkit-backdrop-filter: blur(28px) saturate(160%);
-  border-radius: 32rpx;
-  border: var(--card-border);
-  box-shadow: var(--card-shadow);
-  padding: 30rpx 32rpx;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  transition: transform 140ms cubic-bezier(0.2, 0.8, 0.25, 1);
-}
-.training-card-luxury:active {
-  transform: scale(0.985);
-}
-.training-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 14rpx;
-}
-.training-date {
-  font-family: "Didot", "Bodoni MT", Georgia, "PingFang SC", serif;
-  font-size: 24rpx;
-  color: var(--text-muted);
-  letter-spacing: 1rpx;
-}
-.course-category-badge {
-  padding: 4rpx 18rpx;
-  border-radius: 999rpx;
-  font-size: 20rpx;
-  font-weight: 500;
-  letter-spacing: 1rpx;
-}
-.badge-pilates {
-  background: rgba(186, 36, 40, 0.08);
-  color: var(--brand-crimson);
-  border: 1rpx solid rgba(186, 36, 40, 0.16);
-}
-.badge-private {
-  background: rgba(28, 20, 21, 0.06);
-  color: #1C1415;
-  border: 1rpx solid rgba(28, 20, 21, 0.12);
-}
-.badge-sculpt {
-  background: rgba(198, 122, 59, 0.10);
-  color: #9E5616;
-  border: 1rpx solid rgba(198, 122, 59, 0.20);
-}
-.badge-group {
-  background: rgba(60, 110, 180, 0.08);
-  color: #245A96;
-  border: 1rpx solid rgba(60, 110, 180, 0.18);
-}
-.training-duration {
-  font-size: 22rpx;
-  color: var(--text-muted);
-  font-family: "Didot", "Bodoni MT", "Times New Roman", serif;
-}
-.training-course-name {
-  font-family: Georgia, "Songti SC", serif;
-  font-size: 30rpx;
-  font-weight: 600;
-  color: #1C1415;
-  line-height: 1.35;
-  letter-spacing: 0.02em;
-}
-.training-focus-row {
-  display: flex;
-  align-items: center;
-  gap: 8rpx;
-  margin-top: 14rpx;
-  padding-top: 12rpx;
-  border-top: 1rpx dashed rgba(28, 20, 21, 0.06);
-}
-.focus-icon {
-  font-size: 18rpx;
-  color: var(--brand-crimson);
-}
-.focus-label {
-  font-size: 22rpx;
-  color: var(--text-muted);
-}
-.focus-val {
-  font-size: 22rpx;
-  color: #5A3A3A;
-  font-weight: 500;
-}
-
-/* ================= 模块六：最近来信 ================= */
-.feedback-card {
-  padding: 32rpx 28rpx;
-}
-.feedback-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 18rpx;
-}
-.feedback-type-label {
-  padding: 6rpx 22rpx;
-  border-radius: 999rpx;
-  background: var(--noir-btn);
-  color: #FFFFFF;
-  font-size: 22rpx;
-  letter-spacing: 1rpx;
-}
-.feedback-date {
-  font-size: 24rpx;
-  color: var(--text-muted);
-}
-.feedback-summary {
-  display: block;
-  font-size: 28rpx;
-  line-height: 1.8;
-  color: var(--text-body);
-}
-
-/* ================= 体态照片对比 ================= */
-.photo-compare-card {
-  padding: 32rpx 28rpx;
-  margin-bottom: 16rpx;
-}
-.photo-compare-dates {
-  display: flex;
-  align-items: center;
-  gap: 16rpx;
-  margin-bottom: 18rpx;
-}
-.compare-badge {
-  padding: 4rpx 16rpx;
-  border-radius: 999rpx;
-  background: rgba(186, 36, 40, 0.08);
-  border: 1rpx solid rgba(186, 36, 40, 0.16);
-  font-size: 20rpx;
-  font-weight: 500;
-  color: var(--brand-crimson);
-  letter-spacing: 1rpx;
-}
-.share-trigger-btn {
-  margin-left: auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 6rpx;
-  padding: 6rpx 18rpx;
-  border-radius: 999rpx;
-  background: rgba(8, 7, 10, 0.06);
-  border: 1rpx solid rgba(8, 7, 10, 0.12);
-  font-size: 20rpx;
-  font-weight: 500;
-  color: #120E0F;
-  letter-spacing: 1rpx;
-  transition: transform 140ms ease, background 140ms ease;
-}
-.share-trigger-btn:active {
-  transform: scale(0.95);
-  background: rgba(8, 7, 10, 0.12);
-}
-.share-trigger-icon {
-  font-size: 18rpx;
-  color: var(--brand-crimson);
-}
-.pinned-compare-card {
-  border-color: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 22rpx 52rpx -6rpx rgba(120, 20, 20, 0.18), inset 0 1.5rpx 0 rgba(255, 255, 255, 0.95);
-}
-
-/* 角度切换胶囊栏：正面 · 侧面 · 背面 */
-.angle-tabs {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16rpx;
-  margin: 20rpx 0 24rpx;
-}
-.angle-tab-item {
-  padding: 10rpx 36rpx;
-  border-radius: 999rpx;
-  font-size: 24rpx;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  color: #381617;
-  background: rgba(255, 255, 255, 0.52);
-  border: 1rpx solid rgba(255, 255, 255, 0.85);
-  box-shadow: 0 4rpx 12rpx rgba(120, 20, 20, 0.04);
-  transition: transform 160ms cubic-bezier(0.2, 0.8, 0.25, 1), background-color 200ms ease, color 200ms ease;
-}
-.angle-tab-item:active {
-  transform: scale(0.95);
-}
-.angle-tab-active {
-  background: #08070A;
-  color: #FFFFFF;
-  border-color: #08070A;
-  box-shadow: 0 6rpx 20rpx rgba(8, 7, 10, 0.3), inset 0 1rpx 0 rgba(255, 255, 255, 0.25);
-}
-.photo-date-label {
-  font-size: 24rpx;
-  color: var(--text-secondary);
-  letter-spacing: 1rpx;
-}
-.photo-arrow {
-  font-size: 26rpx;
-  color: var(--brand-crimson);
-}
-.photo-analysis {
-  display: block;
-  font-size: 28rpx;
-  line-height: 1.8;
-  color: var(--text-body);
-}
-
-/* 对比图：左右两张，等宽 3:4 */
-.photo-compare-pair {
-  display: flex;
-  gap: 16rpx;
-  margin-bottom: 20rpx;
-}
-.photo-compare-img {
-  flex: 1;
-  width: 0;
-  aspect-ratio: 3 / 4;
-  border-radius: 24rpx;
-  background: rgba(28, 22, 23, 0.06);
-  border: 1.5rpx solid rgba(255, 255, 255, 0.85);
-  box-shadow: 0 8rpx 20rpx rgba(120, 20, 20, 0.08);
-  transition: transform 160ms cubic-bezier(0.2, 0.8, 0.25, 1);
-}
-.photo-compare-img:active {
-  transform: scale(0.97);
-}
-
-/* 体态定格：可滑动的照片墙 */
-.photo-strip {
-  display: flex;
-  gap: 16rpx;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: 8rpx;
-}
-.photo-strip-img {
-  flex-shrink: 0;
-  width: 200rpx;
-  height: 266rpx;
-  border-radius: 24rpx;
-  background: rgba(28, 22, 23, 0.06);
-  border: 1.5rpx solid rgba(255, 255, 255, 0.85);
-  box-shadow: 0 8rpx 20rpx rgba(120, 20, 20, 0.08);
-  transition: transform 160ms cubic-bezier(0.2, 0.8, 0.25, 1);
-}
-.photo-strip-img:active {
-  transform: scale(0.96);
-}
-
-/* ================= 空状态与身形变化标题栏 ================= */
-.section-head-flex {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20rpx;
-}
-.section-head-flex .section-title {
-  margin: 0 0 0 12rpx;
-}
-.share-pill-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8rpx;
-  padding: 8rpx 24rpx;
-  border-radius: 999rpx;
-  background: rgba(186, 36, 40, 0.08);
-  border: 1rpx solid rgba(186, 36, 40, 0.2);
-  transition: transform 140ms ease, background 140ms ease;
-}
-.share-pill-btn:active {
-  transform: scale(0.95);
-  background: rgba(186, 36, 40, 0.16);
-}
-.share-pill-icon {
-  font-size: 20rpx;
-  color: var(--brand-crimson);
-}
-.share-pill-text {
-  font-size: 22rpx;
-  font-weight: 500;
-  color: var(--brand-crimson);
-  letter-spacing: 1rpx;
-}
-
-.empty-state {
-  padding: 60rpx 24rpx;
-  text-align: center;
-  background: rgba(255, 255, 255, 0.5);
-  border-radius: 32rpx;
-  border: 1rpx solid rgba(255, 255, 255, 0.7);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.empty-title {
-  display: block;
-  font-size: 26rpx;
-  color: var(--text-secondary);
-  line-height: 1.8;
-}
-
-.training-empty-state {
-  padding: 56rpx 40rpx;
-  background: rgba(255, 255, 255, 0.92);
-  border-radius: 36rpx;
-  border: 1rpx solid rgba(220, 195, 185, 0.45);
-  box-shadow: 0 12rpx 36rpx rgba(186, 36, 40, 0.05);
-}
-.empty-icon-wrap {
-  width: 68rpx;
-  height: 68rpx;
-  border-radius: 50%;
-  background: rgba(186, 36, 40, 0.07);
-  border: 1.5rpx solid rgba(186, 36, 40, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 18rpx;
-}
-.empty-icon {
-  color: #BA2428;
-  font-size: 26rpx;
-}
-.training-empty-state .empty-title {
-  font-family: "Songti SC", Georgia, serif;
-  font-size: 28rpx;
-  font-weight: 600;
-  color: #1C1415;
-  margin-bottom: 10rpx;
-}
-.empty-desc {
-  display: block;
-  font-size: 23rpx;
-  line-height: 1.65;
-  color: rgba(28, 20, 21, 0.62);
-  text-align: center;
-  max-width: 520rpx;
-}
-.empty-poster-btn {
-  margin-top: 28rpx;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12rpx;
-  padding: 18rpx 44rpx;
-  border-radius: 999rpx;
-  background: linear-gradient(135deg, #BA2428 0%, #8C161A 100%);
-  color: #FFFFFF;
-  box-shadow: 0 8rpx 24rpx rgba(186, 36, 40, 0.35);
-  transition: transform 140ms ease;
-}
-.empty-poster-btn:active {
-  transform: scale(0.96);
-}
-.empty-poster-icon {
-  font-size: 26rpx;
-}
-.empty-poster-text {
-  font-size: 24rpx;
-  font-weight: 600;
-  letter-spacing: 1.5rpx;
-}
-
-/* ================= 模块七：体态觉察 · 私密便签 ================= */
-.feeling-section-head {
+.practice-entry {
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
-  margin-bottom: 8rpx;
+  gap: 24rpx;
+  padding: 20rpx 24rpx;
+  border-radius: 18rpx;
+  background: rgba(255, 255, 255, 0.52);
+  border: 1rpx solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 6rpx 18rpx rgba(186, 36, 40, 0.03);
 }
-.feeling-hint {
-  font-size: 22rpx;
-  color: rgba(255, 255, 255, 0.9);
-  letter-spacing: 1rpx;
-  margin-right: 8rpx;
-  text-shadow: 0 1rpx 4rpx rgba(138, 22, 26, 0.35);
+.practice-date-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 110rpx;
+}
+.practice-date {
+  font-family: "Didot", "Bodoni MT", Georgia, serif;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1C1415;
+  letter-spacing: 0.04em;
+}
+.practice-duration {
+  font-size: 19rpx;
+  color: rgba(28, 20, 21, 0.45);
+  margin-top: 2rpx;
+}
+.practice-body-col {
+  flex: 1;
+}
+.practice-top-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6rpx;
+}
+.practice-course-name {
+  font-family: "Songti SC", Georgia, serif;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #1C1415;
+}
+.practice-cat-tag {
+  font-size: 18rpx;
+  color: #BA2428;
+  padding: 2rpx 12rpx;
+  border-radius: 999rpx;
+  background: rgba(186, 36, 40, 0.08);
+}
+.practice-focus-line {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+.focus-dot {
+  font-size: 20rpx;
+  color: #BA2428;
+}
+.focus-text {
+  font-size: 21rpx;
+  color: rgba(28, 20, 21, 0.65);
 }
 
-/* 快捷体感便签胶囊 */
-.feeling-tags-wrapper {
+/* ================= 章节七：双向倾听 · 私享便签 (Chapter 07: Intimate Note) ================= */
+.note-stationery-box {
+  padding: 32rpx 28rpx 24rpx;
+  border-radius: 24rpx;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1rpx solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 12rpx 32rpx rgba(186, 36, 40, 0.05);
+}
+.note-tags-flow {
   display: flex;
   flex-wrap: wrap;
   gap: 12rpx;
-  margin: 16rpx 0 24rpx;
+  margin-bottom: 20rpx;
 }
-.feeling-tag-pill {
-  padding: 10rpx 26rpx;
+.note-tag-chip {
+  padding: 8rpx 20rpx;
   border-radius: 999rpx;
+  font-size: 20rpx;
+  color: rgba(28, 20, 21, 0.65);
   background: rgba(255, 255, 255, 0.65);
-  border: 1rpx solid rgba(255, 255, 255, 0.9);
-  font-size: 22rpx;
-  color: #381617;
-  letter-spacing: 1rpx;
-  box-shadow: 0 4rpx 10rpx rgba(120, 20, 20, 0.04);
-  transition: transform 140ms ease, background 140ms ease, color 140ms ease;
+  border: 1rpx solid rgba(28, 20, 21, 0.08);
+  transition: all 140ms ease;
 }
-.feeling-tag-pill:active {
+.note-tag-chip.note-tag-active {
+  background: #1C1415;
+  color: #FFE5A3;
+  border-color: #1C1415;
+}
+.note-textarea {
+  width: 100%;
+  height: 180rpx;
+  box-sizing: border-box;
+  padding: 20rpx;
+  border-radius: 16rpx;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1rpx solid rgba(28, 20, 21, 0.08);
+  font-size: 25rpx;
+  line-height: 1.6;
+  color: #1C1415;
+  margin-bottom: 20rpx;
+}
+.note-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+.note-privacy-hint {
+  font-size: 19rpx;
+  color: rgba(28, 20, 21, 0.45);
+  line-height: 1.4;
+  flex: 1;
+}
+.btn-note-submit {
+  height: 64rpx;
+  line-height: 64rpx;
+  padding: 0 28rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(135deg, #BA2428 0%, #8C161A 100%);
+  color: #FFFFFF;
+  font-size: 22rpx;
+  font-weight: 500;
+  letter-spacing: 1rpx;
+  box-shadow: 0 4rpx 14rpx rgba(186, 36, 40, 0.28);
+  border: none;
+  flex-shrink: 0;
+  margin: 0 !important;
+  transition: transform 140ms ease;
+}
+.btn-note-submit:active {
   transform: scale(0.95);
 }
-.feeling-tag-active {
-  background: #08070A;
-  color: #FFFFFF;
-  border-color: #08070A;
-  box-shadow: 0 4rpx 16rpx rgba(8, 7, 10, 0.25);
+.btn-note-submit[disabled] {
+  opacity: 0.45;
 }
-
-.textarea-field {
-  width: 100%;
-  min-height: 200rpx;
-  box-sizing: border-box;
-  padding: 28rpx;
-  background: var(--card-glass);
-  backdrop-filter: blur(28px) saturate(160%);
-  -webkit-backdrop-filter: blur(28px) saturate(160%);
-  border-radius: 32rpx;
-  border: var(--card-border);
-  box-shadow: var(--card-shadow);
-  font-size: 28rpx;
-  line-height: 1.7;
-  color: var(--text-main);
-  transition: border-color 200ms ease, box-shadow 200ms ease;
-}
-
-.feeling-footer {
+.note-reply-box {
   margin-top: 24rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx dashed rgba(28, 20, 21, 0.12);
+}
+.note-reply-header {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 20rpx;
-}
-.feeling-privacy-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10rpx;
-  padding: 10rpx 28rpx;
-  border-radius: 999rpx;
-  background: rgba(255, 255, 255, 0.22);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1rpx solid rgba(255, 255, 255, 0.45);
-  box-shadow: 0 4rpx 14rpx rgba(0, 0, 0, 0.06);
-}
-.feeling-privacy-badge .privacy-lock {
-  font-size: 20rpx;
-}
-.feeling-privacy-badge .privacy-text {
-  font-size: 23rpx;
-  font-weight: 500;
-  color: #FFFFFF;
-  letter-spacing: 1rpx;
-  text-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.25);
-}
-.feeling-privacy-note {
-  text-align: center;
-  font-size: 22rpx;
-  font-weight: 500;
-  color: #FFFFFF;
-  letter-spacing: 1rpx;
-  text-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.25);
-}
-.btn-submit-feeling {
-  width: 100% !important;
-}
-
-.btn-primary {
-  background: #08070A;
-  color: #FFFFFF;
-  border-radius: 999rpx;
-  border: none;
-  padding: 26rpx 48rpx;
-  font-size: 28rpx;
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  text-align: center;
-  box-shadow: 
-    0 12rpx 28rpx rgba(8, 7, 10, 0.28),
-    inset 0 1rpx 0 rgba(255, 255, 255, 0.25);
-  transition: transform 140ms cubic-bezier(0.2, 0.8, 0.25, 1), opacity 140ms ease;
-}
-.btn-primary:active {
-  transform: scale(0.965);
-  opacity: 0.9;
-}
-/* 未输入时的禁用态：半透曜黑微光胶囊 + 清晰暖白字 */
-button.btn-primary[disabled],
-button.btn-primary[disabled]:not([type]) {
-  background: rgba(28, 16, 17, 0.42);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1rpx solid rgba(255, 255, 255, 0.35);
-  color: rgba(255, 255, 255, 0.88);
-  opacity: 1;
-  box-shadow: none;
-}
-
-.reply-card {
-  margin-top: 26rpx;
-  padding: 32rpx 28rpx;
-}
-.reply-card-header {
-  display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 14rpx;
+  margin-bottom: 8rpx;
 }
-.reply-label {
-  font-size: 24rpx;
+.note-reply-tag {
+  font-family: "Songti SC", Georgia, serif;
+  font-size: 21rpx;
   font-weight: 600;
-  color: #1C1213;
-  letter-spacing: 2rpx;
+  color: #BA2428;
 }
-.reply-badge {
+.note-reply-date {
   font-size: 18rpx;
-  color: var(--brand-crimson);
-  background: rgba(186, 36, 40, 0.08);
-  border: 1rpx solid rgba(186, 36, 40, 0.16);
-  padding: 2rpx 14rpx;
-  border-radius: 999rpx;
+  color: rgba(28, 20, 21, 0.45);
 }
-.reply-text {
+.note-reply-content {
   display: block;
-  font-size: 28rpx;
-  line-height: 1.8;
-  color: var(--text-body);
+  font-family: "Songti SC", Georgia, serif;
+  font-size: 24rpx;
+  line-height: 1.7;
+  color: rgba(28, 20, 21, 0.85);
 }
 
 /* ================= 画报级体态美学分享卡 弹窗 ================= */
@@ -1451,159 +1293,6 @@ button.btn-primary[disabled]:not([type]) {
   letter-spacing: 1.5rpx;
 }
 
-/* ================= 通用副标题与微交互排印 ================= */
-.section-title-wrap {
-  display: flex;
-  flex-direction: column;
-}
-.section-sub-en {
-  font-family: "Didot", "Bodoni MT", Georgia, serif;
-  font-size: 18rpx;
-  letter-spacing: 0.22em;
-  color: rgba(28, 20, 21, 0.42);
-  margin-top: 4rpx;
-  margin-left: 12rpx;
-}
-.venue-hint {
-  font-size: 20rpx;
-  color: rgba(28, 20, 21, 0.45);
-  letter-spacing: 1rpx;
-}
-
-/* ================= 模块：场馆空间 · 光影与器械 (纯图画报 · 静奢留白) ================= */
-.venue-section {
-  padding: 32rpx 28rpx;
-  background: var(--card-glass);
-  backdrop-filter: blur(28px) saturate(160%);
-  -webkit-backdrop-filter: blur(28px) saturate(160%);
-  border-radius: 36rpx;
-  border: var(--card-border);
-  box-shadow: var(--card-shadow);
-}
-.venue-scroll-row {
-  width: 100%;
-  white-space: nowrap;
-  box-sizing: border-box;
-  padding: 12rpx 0 8rpx;
-}
-.venue-card-item {
-  display: inline-block;
-  width: 520rpx;
-  height: 325rpx; /* 16:10 电影感画幅 */
-  margin-right: 20rpx;
-  position: relative;
-  border-radius: 24rpx;
-  overflow: hidden;
-  box-shadow: 0 12rpx 32rpx rgba(28, 20, 21, 0.12);
-  border: 1rpx solid rgba(255, 255, 255, 0.85);
-  background: #EAE3DE;
-  transition: transform 180ms cubic-bezier(0.2, 0.8, 0.25, 1);
-  vertical-align: top;
-}
-.venue-card-item:last-child {
-  margin-right: 0;
-}
-.venue-card-item:active {
-  transform: scale(0.975);
-}
-.venue-card-img {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-.venue-card-overlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 40rpx 24rpx 20rpx;
-  background: linear-gradient(180deg, transparent 0%, rgba(18, 14, 15, 0.72) 100%);
-  display: flex;
-  align-items: flex-end;
-}
-.venue-card-title {
-  font-family: "Songti SC", Georgia, serif;
-  font-size: 24rpx;
-  font-weight: 500;
-  color: #FFFFFF;
-  letter-spacing: 1.5rpx;
-  text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.55);
-}
-
-/* ================= 模块：徕舞团队 (真实温润陪伴 · 克制大牌) ================= */
-.team-section {
-  padding: 32rpx 28rpx;
-  background: var(--card-glass);
-  backdrop-filter: blur(28px) saturate(160%);
-  -webkit-backdrop-filter: blur(28px) saturate(160%);
-  border-radius: 36rpx;
-  border: var(--card-border);
-  box-shadow: var(--card-shadow);
-}
-.team-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16rpx;
-  margin-top: 14rpx;
-}
-.team-card-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  background: rgba(255, 255, 255, 0.68);
-  border: 1rpx solid rgba(255, 255, 255, 0.95);
-  border-radius: 24rpx;
-  padding: 24rpx 12rpx 20rpx;
-  box-shadow: 0 6rpx 18rpx rgba(186, 36, 40, 0.04);
-  transition: transform 180ms cubic-bezier(0.2, 0.8, 0.25, 1);
-}
-.team-card-item:active {
-  transform: scale(0.96);
-}
-.team-avatar-wrap {
-  width: 140rpx;
-  height: 186rpx; /* 3:4 经典肖像画幅 */
-  border-radius: 20rpx;
-  overflow: hidden;
-  margin-bottom: 16rpx;
-  border: 1.5rpx solid rgba(220, 195, 185, 0.7);
-  background: #EAE3DE;
-  box-shadow: 0 6rpx 16rpx rgba(28, 20, 21, 0.08);
-}
-.team-avatar {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-.team-name {
-  font-family: "Songti SC", Georgia, serif;
-  font-size: 26rpx;
-  font-weight: 600;
-  color: #1C1415;
-  letter-spacing: 1rpx;
-  line-height: 1.3;
-}
-.team-role {
-  font-size: 20rpx;
-  color: #BA2428;
-  letter-spacing: 0.8rpx;
-  margin-top: 4rpx;
-  font-weight: 500;
-}
-.team-bio {
-  font-size: 19rpx;
-  line-height: 1.45;
-  color: rgba(28, 20, 21, 0.62);
-  margin-top: 8rpx;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* ================= 开屏「✦ 徕舞 · 月度之星 ✦」沉浸式大片画廊弹窗 (Lululemon 级仪式感) ================= */
 /* ================= 开屏「✦ 徕舞 · 月度之星 ✦」沉浸式全屏大片 (1:1 对标 Lululemon 经典画幅) ================= */
 .stars-lulu-container {
   position: fixed;
@@ -1842,4 +1531,3 @@ button.btn-primary[disabled]:not([type]) {
   color: rgba(255, 255, 255, 0.8);
   margin-left: 4rpx;
 }
-

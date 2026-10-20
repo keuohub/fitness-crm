@@ -16,314 +16,335 @@ module.exports = {
 
   <block wx:else>
 
-    <!-- ====== 顶部模块一：场馆空间 (纯图画报 · 静奢留白 · 绝不覆盖文字) ====== -->
-    <view class="section-block venue-section stagger-1" wx:if="{{venueList && venueList.length > 0}}">
-      <view class="section-head-flex">
-        <view class="section-title-wrap">
-          <text class="section-title">场馆空间</text>
-          <text class="section-sub-en">THE SANCTUARY</text>
+    <!-- ====== 章节一：光影场馆 · 空间策展 (Chapter 01: The Sanctuary) ====== -->
+    <!-- 去除白盒容器，以无界画廊横滑画报破格呈现，营造呼吸感与大牌感 -->
+    <view class="editorial-section venue-editorial stagger-1" wx:if="{{venueList && venueList.length > 0}}">
+      <view class="editorial-header">
+        <view class="editorial-chapter-tag">
+          <text class="chapter-code">01</text>
+          <text class="chapter-dot">/</text>
+          <text class="chapter-label">空间策展</text>
         </view>
+        <text class="editorial-title">场馆光影</text>
+        <text class="editorial-subtitle">THE SANCTUARY</text>
       </view>
-      <scroll-view class="venue-scroll-row" scroll-x="true" enhanced="true" show-scrollbar="false">
-        <view class="venue-card-item" wx:for="{{venueList}}" wx:key="id" bindtap="previewVenueImage" data-src="{{item.imageUrl}}">
-          <image class="venue-card-img" src="{{item.imageUrl}}" mode="aspectFill" lazy-load="true"></image>
+      <scroll-view class="venue-gallery-scroll" scroll-x="true" enhanced="true" show-scrollbar="false">
+        <view class="venue-gallery-item" wx:for="{{venueList}}" wx:key="id" bindtap="previewVenueImage" data-src="{{item.imageUrl}}">
+          <image class="venue-gallery-img" src="{{item.imageUrl}}" mode="aspectFill" lazy-load="true"></image>
         </view>
       </scroll-view>
     </view>
 
-    <!-- ====== 顶部模块二：徕舞团队 (真实温润 · 匠心陪伴) ====== -->
-    <view class="section-block team-section stagger-2" wx:if="{{teamList && teamList.length > 0}}">
-      <view class="section-head-flex">
-        <view class="section-title-wrap">
-          <text class="section-title">徕舞团队</text>
-          <text class="section-sub-en">OUR TEAM</text>
+    <!-- 极细发丝分隔律动线 -->
+    <view class="editorial-hairline"></view>
+
+    <!-- ====== 章节二：同行导师 · 真实陪伴 (Chapter 02: Mentors & Companions) ====== -->
+    <!-- 告别僵硬三等分卡片，采用温润肖像画幅与纯净排印留白 -->
+    <view class="editorial-section team-editorial stagger-2" wx:if="{{teamList && teamList.length > 0}}">
+      <view class="editorial-header">
+        <view class="editorial-chapter-tag">
+          <text class="chapter-code">02</text>
+          <text class="chapter-dot">/</text>
+          <text class="chapter-label">同行导师</text>
         </view>
+        <text class="editorial-title">徕舞团队</text>
+        <text class="editorial-subtitle">THE MENTORS</text>
       </view>
-      <view class="team-grid">
-        <view class="team-card-item" wx:for="{{teamList}}" wx:key="id" bindtap="previewTeamImage" data-src="{{item.avatarUrl}}">
-          <view class="team-avatar-wrap">
-            <image class="team-avatar" src="{{item.avatarUrl}}" mode="aspectFill" lazy-load="true"></image>
+      <view class="team-portrait-row">
+        <view class="team-portrait-col" wx:for="{{teamList}}" wx:key="id" bindtap="previewTeamImage" data-src="{{item.avatarUrl}}">
+          <view class="portrait-frame">
+            <image class="portrait-photo" src="{{item.avatarUrl}}" mode="aspectFill" lazy-load="true"></image>
           </view>
-          <view class="team-name">{{item.name}}</view>
-          <view class="team-role">{{item.roleTitle}}</view>
-          <view class="team-bio" wx:if="{{item.bio}}">“{{item.bio}}”</view>
+          <view class="portrait-meta">
+            <text class="portrait-name">{{item.name}}</text>
+            <text class="portrait-role">{{item.roleTitle}}</text>
+            <text class="portrait-bio" wx:if="{{item.bio}}">“{{item.bio}}”</text>
+          </view>
         </view>
       </view>
     </view>
 
-    <!-- ====== 模块三：问候与自律荣誉区 ====== -->
-    <view class="greeting-area stagger-3">
-      <view class="greeting-top-row">
-        <text class="greeting-salute">你好，</text>
-        <text class="greeting-name">{{memberName}}</text>
-        <view class="stars-open-pill" bindtap="openStarsModal">
-          <text class="stars-spark">✦</text>
-          <text class="stars-pill-txt">月度之星</text>
-        </view>
-      </view>
-      <view class="greeting-companion-lockup">
-        <view class="companion-tier-pill {{joinDays >= 365 ? 'tier-pill-gold' : ''}}">
-          <text class="companion-spark">✦</text>
-          <text class="companion-tier-title">{{joinDays >= 365 ? '资深自律挚友' : '身体掌权者'}}</text>
-        </view>
-        <view class="companion-divider"></view>
-        <view class="companion-days-box" wx:if="{{joinDays > 0}}">
-          <text class="companion-days-label">相伴自律</text>
-          <text class="companion-days-number">{{formattedDays}}</text>
-          <text class="companion-days-unit">天</text>
-        </view>
-        <view class="companion-days-box" wx:else>
-          <text class="companion-days-label">相伴自律启程之日</text>
-        </view>
-      </view>
-    </view>
+    <!-- 极细发丝分隔律动线 -->
+    <view class="editorial-hairline"></view>
 
-    <!-- ====== 模块四：进阶轨迹 · 坚持不易的每一步激励 ====== -->
-    <view class="milestone-card stagger-4">
-      <view class="milestone-card-top">
-        <text class="section-title-inline">进阶轨迹 · 每一步坚持都有印记</text>
-        <text class="milestone-level-badge">{{stageName}}</text>
-      </view>
-      <view class="milestone-tags">
-        <view class="milestone-tag {{trainCount >= 1 ? 'tag-achieved' : 'tag-locked'}}">
-          觉知
-        </view>
-        <view class="milestone-tag {{trainCount >= 6 ? 'tag-achieved' : 'tag-locked'}}">
-          掌控
-        </view>
-        <view class="milestone-tag {{trainCount >= 21 ? 'tag-achieved' : 'tag-locked'}}">
-          掌权
-        </view>
-        <view class="milestone-tag {{trainCount >= 51 ? 'tag-achieved' : 'tag-locked'}}">
-          优雅
+    <!-- ====== 章节三：问候与沉淀岁月 (Chapter 03: The Greeting & Bond) ====== -->
+    <view class="editorial-section greeting-editorial stagger-3">
+      <view class="greeting-header-row">
+        <view class="greeting-headline-group">
+          <text class="greeting-lead">早安，与身体对话的</text>
+          <view class="greeting-name-row">
+            <text class="greeting-hero-name">{{memberName || '身体掌权者'}}</text>
+            <view class="stars-chic-trigger" bindtap="openStarsModal">
+              <text class="stars-chic-spark">✦</text>
+              <text class="stars-chic-text">月度之星</text>
+            </view>
+          </view>
         </view>
       </view>
-      <view class="next-goal">
-        <text class="next-goal-value">
+
+      <!-- 进阶经纬：线性水平刻度，取代粗暴药丸盒子 -->
+      <view class="progression-horizon">
+        <view class="horizon-header">
+          <text class="horizon-title">进阶经纬 · 身体觉知</text>
+          <text class="horizon-badge">{{stageName}}</text>
+        </view>
+        <view class="horizon-track">
+          <view class="horizon-node {{trainCount >= 1 ? 'node-reached' : ''}}">
+            <view class="node-bullet"></view>
+            <text class="node-name">觉知</text>
+          </view>
+          <view class="horizon-line {{trainCount >= 6 ? 'line-reached' : ''}}"></view>
+          <view class="horizon-node {{trainCount >= 6 ? 'node-reached' : ''}}">
+            <view class="node-bullet"></view>
+            <text class="node-name">掌控</text>
+          </view>
+          <view class="horizon-line {{trainCount >= 21 ? 'line-reached' : ''}}"></view>
+          <view class="horizon-node {{trainCount >= 21 ? 'node-reached' : ''}}">
+            <view class="node-bullet"></view>
+            <text class="node-name">掌权</text>
+          </view>
+          <view class="horizon-line {{trainCount >= 51 ? 'line-reached' : ''}}"></view>
+          <view class="horizon-node {{trainCount >= 51 ? 'node-reached' : ''}}">
+            <view class="node-bullet"></view>
+            <text class="node-name">优雅</text>
+          </view>
+        </view>
+        <view class="horizon-target-text">
           <block wx:if="{{trainCount < 6}}">坚持不易。再完成 {{6 - trainCount}} 次私教训练，迈入「身体掌控」进阶阶段</block>
           <block wx:elif="{{trainCount < 21}}">渐入佳境。仅余 {{21 - trainCount}} 次私教训练，迈入「身体掌权」深层蜕变期</block>
           <block wx:elif="{{trainCount < 51}}">自律已成习惯。仅余 {{51 - trainCount}} 次训练，晋升「终生优雅」卓越境界</block>
           <block wx:else>自律已成骨骼，挺拔从容是你呼吸自带的底气</block>
-        </text>
-      </view>
-    </view>
-
-    <!-- ====== 模块五：核心自律资产双拼大卡 (摒弃6宫格，数据清晰不折行) ====== -->
-    <view class="stats-grid-dual stagger-5">
-      <view class="stat-card-dual">
-        <view class="stat-number-wrap">
-          <text class="stat-number">{{formattedDays}}</text>
-          <text class="stat-unit">天</text>
-        </view>
-        <text class="stat-label">相伴自律坚持</text>
-        <text class="stat-sub">深层体态觉察与蜕变</text>
-      </view>
-      <view class="stat-card-dual">
-        <view class="stat-number-wrap">
-          <text class="stat-number">{{trainCount || 0}}</text>
-          <text class="stat-unit">节</text>
-        </view>
-        <text class="stat-label">核心私教训练</text>
-        <text class="stat-sub">普拉提与体态精雕</text>
-      </view>
-    </view>
-
-    <!-- ====== 模块六：主理人私语 (简短温暖，拒绝堆砌) ====== -->
-    <view class="whisper-card stagger-6">
-      <view class="whisper-bar"></view>
-      <view class="whisper-content">
-        <text class="whisper-label">小桥私语</text>
-        <text class="whisper-title">{{whisperTitle}}</text>
-        <text class="whisper-body">{{whisperBody}}</text>
-        <text class="whisper-sign">— 小桥 · 亲笔</text>
-      </view>
-    </view>
-
-    <!-- ====== 模块五：你的身形变化（最直观的视觉刺激） ====== -->
-    <view class="section-block stagger-5">
-      <view class="section-head-flex">
-        <text class="section-title">你的身形变化</text>
-        <view class="share-pill-btn" bindtap="openShareModal">
-          <text class="share-pill-icon">✦</text>
-          <text class="share-pill-text">自律画报</text>
         </view>
       </view>
 
-      <!-- 一组数据都没有时显示温柔占位与生成海报按钮 -->
-      <view wx:if="{{!photoComparisons || photoComparisons.length === 0}}" class="empty-state">
-        <text class="empty-title">小桥正在为你收录专属体态蜕变 · 每一次自律都在重塑身姿</text>
-        <view class="empty-poster-btn" bindtap="openShareModal">
-          <text class="empty-poster-icon">✦</text>
-          <text class="empty-poster-text">生成自律档案海报并保存到相册</text>
+      <!-- 身体自律资产：大牌杂志开放式排印尺度 (Open Editorial Metric) -->
+      <view class="metrics-editorial-row">
+        <view class="metric-block">
+          <view class="metric-num-wrap">
+            <text class="metric-big-num">{{formattedDays}}</text>
+            <text class="metric-unit">DAYS</text>
+          </view>
+          <text class="metric-label">相伴自律时光</text>
+          <text class="metric-caption">深层体态觉察与呼吸沉淀</text>
+        </view>
+        <view class="metric-vertical-divider"></view>
+        <view class="metric-block">
+          <view class="metric-num-wrap">
+            <text class="metric-big-num">{{trainCount || 0}}</text>
+            <text class="metric-unit">SESSIONS</text>
+          </view>
+          <text class="metric-label">核心私教蜕变</text>
+          <text class="metric-caption">普拉提大器械与体态精雕</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 极细发丝分隔律动线 -->
+    <view class="editorial-hairline"></view>
+
+    <!-- ====== 章节四：小桥私语 · 亲笔手札 (Chapter 04: The Whisper Note) ====== -->
+    <view class="editorial-section whisper-editorial stagger-4">
+      <view class="stationery-note-card">
+        <view class="stationery-header">
+          <view class="stationery-title-wrap">
+            <text class="stationery-tag">主理人私语</text>
+            <text class="stationery-heading">{{whisperTitle}}</text>
+          </view>
+          <view class="stationery-seal">印</view>
+        </view>
+        <text class="stationery-body">{{whisperBody}}</text>
+        <view class="stationery-sign-row">
+          <text class="stationery-sign">— 小桥 · 亲笔于徕舞</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 极细发丝分隔律动线 -->
+    <view class="editorial-hairline"></view>
+
+    <!-- ====== 章节五：身形蜕变定格 (Chapter 05: Posture Metamorphosis) ====== -->
+    <view class="editorial-section compare-editorial stagger-5">
+      <view class="editorial-header">
+        <view class="editorial-header-split">
+          <view>
+            <view class="editorial-chapter-tag">
+              <text class="chapter-code">05</text>
+              <text class="chapter-dot">/</text>
+              <text class="chapter-label">视觉定格</text>
+            </view>
+            <text class="editorial-title">身形蜕变</text>
+            <text class="editorial-subtitle">METAMORPHOSIS</text>
+          </view>
+          <view class="editorial-share-btn" bindtap="openShareModal">
+            <text class="share-btn-spark">✦</text>
+            <text class="share-btn-txt">自律画报</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 一组数据都没有时显示温柔占位与生成海报入口 -->
+      <view wx:if="{{!photoComparisons || photoComparisons.length === 0}}" class="editorial-empty-state">
+        <text class="editorial-empty-lead">小桥正在为你收录专属体态蜕变</text>
+        <text class="editorial-empty-sub">每一次普拉提核心训练，都在悄然重塑肩颈与背脊线条</text>
+        <view class="editorial-poster-trigger" bindtap="openShareModal">
+          <text class="poster-trigger-spark">✦</text>
+          <text class="poster-trigger-text">生成自律档案海报并保存到相册</text>
         </view>
       </view>
 
       <!-- 有对比数据 -->
       <block wx:else>
-
-        <!-- 置顶：之前 → 现在（第一次 vs 最近一次） -->
-        <view wx:if="{{pinnedComparison}}" class="photo-compare-card pinned-compare-card">
-          <view class="photo-compare-dates">
-            <text class="photo-date-label">蜕变前</text>
-            <text class="photo-arrow">→</text>
-            <text class="photo-date-label">当下身形</text>
-            <text class="compare-badge">初次定格 · 当下沉淀</text>
-            <view class="share-trigger-btn" bindtap="openShareModal" data-item="{{pinnedComparison}}">
-              <text class="share-trigger-icon">✦</text> 画报分享
+        <!-- 置顶对比：蜕变前 vs 当下 -->
+        <view wx:if="{{pinnedComparison}}" class="editorial-compare-frame">
+          <view class="compare-frame-header">
+            <view class="compare-labels">
+              <text class="compare-label-text">初见</text>
+              <text class="compare-label-arrow">→</text>
+              <text class="compare-label-text">当下新身</text>
+            </view>
+            <view class="compare-inline-share" bindtap="openShareModal" data-item="{{pinnedComparison}}">
+              <text>画报分享 ✦</text>
             </view>
           </view>
-          <view class="photo-compare-pair">
-            <image
-              class="photo-compare-img"
-              src="{{pinnedComparison.photo1_url}}"
-              mode="aspectFill"
-              data-src="{{pinnedComparison.photo1_url}}"
-              data-p1="{{pinnedComparison.photo1_url}}"
-              data-p2="{{pinnedComparison.photo2_url}}"
-              bindtap="previewPhoto"
-            />
-            <image
-              class="photo-compare-img"
-              src="{{pinnedComparison.photo2_url}}"
-              mode="aspectFill"
-              data-src="{{pinnedComparison.photo2_url}}"
-              data-p1="{{pinnedComparison.photo1_url}}"
-              data-p2="{{pinnedComparison.photo2_url}}"
-              bindtap="previewPhoto"
-            />
+          <view class="compare-diptych">
+            <view class="diptych-pane">
+              <image class="diptych-img" src="{{pinnedComparison.photo1_url}}" mode="aspectFill"
+                     data-src="{{pinnedComparison.photo1_url}}" data-p1="{{pinnedComparison.photo1_url}}" data-p2="{{pinnedComparison.photo2_url}}" bindtap="previewPhoto" />
+              <text class="diptych-caption">初见 · 蜕变前</text>
+            </view>
+            <view class="diptych-pane">
+              <image class="diptych-img" src="{{pinnedComparison.photo2_url}}" mode="aspectFill"
+                     data-src="{{pinnedComparison.photo2_url}}" data-p1="{{pinnedComparison.photo1_url}}" data-p2="{{pinnedComparison.photo2_url}}" bindtap="previewPhoto" />
+              <text class="diptych-caption">当下 · 沉淀后</text>
+            </view>
           </view>
-          <text wx:if="{{pinnedComparison.analysis}}" class="photo-analysis">{{pinnedComparison.analysis}}</text>
+          <text wx:if="{{pinnedComparison.analysis}}" class="compare-editorial-analysis">“{{pinnedComparison.analysis}}”</text>
         </view>
 
-        <!-- 角度切换：正面 · 侧面 · 背面 -->
-        <view class="angle-tabs">
-          <view
-            wx:for="{{angleTabs}}"
-            wx:key="key"
-            class="angle-tab-item {{selectedAngle === item.key ? 'angle-tab-active' : ''}}"
-            data-angle="{{item.key}}"
-            bindtap="switchAngle"
-          >
-            {{item.label}}
+        <!-- 极简下划线视角切换 (Minimal Underline Tabs) -->
+        <view class="editorial-angle-tabs">
+          <view wx:for="{{angleTabs}}" wx:key="key"
+                class="angle-tab-item {{selectedAngle === item.key ? 'angle-tab-active' : ''}}"
+                data-angle="{{item.key}}" bindtap="switchAngle">
+            <text class="angle-tab-text">{{item.label}}</text>
+            <view class="angle-tab-underline" wx:if="{{selectedAngle === item.key}}"></view>
           </view>
         </view>
 
-        <!-- 历史对比：按时间倒序，能一直往下加 -->
+        <!-- 历史对比序列 -->
         <block wx:if="{{historyComparisons.length > 0}}">
-          <view wx:for="{{historyComparisons}}" wx:key="id" class="photo-compare-card">
-            <view class="photo-compare-dates">
-              <text class="photo-date-label">蜕变前</text>
-              <text class="photo-arrow">→</text>
-              <text class="photo-date-label">当下身形</text>
-              <view class="share-trigger-btn" bindtap="openShareModal" data-item="{{item}}">
-                <text class="share-trigger-icon">✦</text> 画报分享
+          <view wx:for="{{historyComparisons}}" wx:key="id" class="editorial-compare-frame">
+            <view class="compare-frame-header">
+              <view class="compare-labels">
+                <text class="compare-label-text">初见</text>
+                <text class="compare-label-arrow">→</text>
+                <text class="compare-label-text">当下新身</text>
+              </view>
+              <view class="compare-inline-share" bindtap="openShareModal" data-item="{{item}}">
+                <text>画报分享 ✦</text>
               </view>
             </view>
-            <view class="photo-compare-pair">
-              <image
-                class="photo-compare-img"
-                src="{{item.photo1_url}}"
-                mode="aspectFill"
-                data-src="{{item.photo1_url}}"
-                data-p1="{{item.photo1_url}}"
-                data-p2="{{item.photo2_url}}"
-                bindtap="previewPhoto"
-              />
-              <image
-                class="photo-compare-img"
-                src="{{item.photo2_url}}"
-                mode="aspectFill"
-                data-src="{{item.photo2_url}}"
-                data-p1="{{item.photo1_url}}"
-                data-p2="{{item.photo2_url}}"
-                bindtap="previewPhoto"
-              />
+            <view class="compare-diptych">
+              <view class="diptych-pane">
+                <image class="diptych-img" src="{{item.photo1_url}}" mode="aspectFill"
+                       data-src="{{item.photo1_url}}" data-p1="{{item.photo1_url}}" data-p2="{{item.photo2_url}}" bindtap="previewPhoto" />
+                <text class="diptych-caption">初见 · 蜕变前</text>
+              </view>
+              <view class="diptych-pane">
+                <image class="diptych-img" src="{{item.photo2_url}}" mode="aspectFill"
+                       data-src="{{item.photo2_url}}" data-p1="{{item.photo1_url}}" data-p2="{{item.photo2_url}}" bindtap="previewPhoto" />
+                <text class="diptych-caption">当下 · 沉淀后</text>
+              </view>
             </view>
-            <text wx:if="{{item.analysis}}" class="photo-analysis">{{item.analysis}}</text>
+            <text wx:if="{{item.analysis}}" class="compare-editorial-analysis">“{{item.analysis}}”</text>
           </view>
         </block>
-
-        <!-- 当前角度无历史对比且无置顶时占位 -->
-        <view wx:elif="{{!pinnedComparison}}" class="empty-state">
-          <text class="empty-title">该视角体态定格记录沉淀中 · 每一次自律都在重塑身形</text>
-        </view>
-
       </block>
     </view>
 
-    <!-- ====== 模块五：最近训练记录 ====== -->
-    <view class="section-block stagger-5">
-      <text class="section-title">雕塑足迹 · 每一节都在沉淀从容</text>
-      <view wx:if="{{recentTrainings.length > 0}}" class="training-list">
-        <view wx:for="{{recentTrainings}}" wx:key="id" class="training-card-luxury">
-          <view class="training-card-header">
-            <text class="training-date">{{item.date}}</text>
-            <text class="course-category-badge {{item.badgeClass}}">{{item.category}}</text>
-            <text class="training-duration" wx:if="{{item.duration}}">{{item.duration}}</text>
+    <!-- 极细发丝分隔律动线 -->
+    <view class="editorial-hairline"></view>
+
+    <!-- ====== 章节六：雕塑印记 · 训练足迹 (Chapter 06: Footprints) ====== -->
+    <view class="editorial-section practice-editorial stagger-6">
+      <view class="editorial-header">
+        <view class="editorial-chapter-tag">
+          <text class="chapter-code">06</text>
+          <text class="chapter-dot">/</text>
+          <text class="chapter-label">雕塑印记</text>
+        </view>
+        <text class="editorial-title">雕塑足迹</text>
+        <text class="editorial-subtitle">THE PRACTICE</text>
+      </view>
+
+      <view wx:if="{{recentTrainings.length > 0}}" class="practice-timeline">
+        <view wx:for="{{recentTrainings}}" wx:key="id" class="practice-entry">
+          <view class="practice-date-col">
+            <text class="practice-date">{{item.date}}</text>
+            <text class="practice-duration" wx:if="{{item.duration}}">{{item.duration}}</text>
           </view>
-          <text class="training-course-name">{{item.type}}</text>
-          <view class="training-focus-row" wx:if="{{item.focusArea}}">
-            <text class="focus-icon">✦</text>
-            <text class="focus-label">重点部位：</text>
-            <text class="focus-val">{{item.focusArea}}</text>
+          <view class="practice-body-col">
+            <view class="practice-top-line">
+              <text class="practice-course-name">{{item.type}}</text>
+              <text class="practice-cat-tag">{{item.category}}</text>
+            </view>
+            <view class="practice-focus-line" wx:if="{{item.focusArea}}">
+              <text class="focus-dot">·</text>
+              <text class="focus-text">重点精雕：{{item.focusArea}}</text>
+            </view>
           </view>
         </view>
       </view>
-      <view wx:else class="empty-state training-empty-state">
-        <view class="empty-icon-wrap">
-          <text class="empty-icon">✦</text>
-        </view>
-        <text class="empty-title">静候你的首次开练记录</text>
-        <text class="empty-desc">每一次普拉提大器械、一对一私教或维密塑形，小桥都会在此为你沉淀课时与重点雕塑部位。</text>
+
+      <view wx:else class="editorial-empty-state">
+        <text class="editorial-empty-lead">静候你的首次开练记录</text>
+        <text class="editorial-empty-sub">每一次核心私教与体态精雕，小桥都会在此为你沉淀课时印记。</text>
       </view>
     </view>
 
-    <!-- ====== 模块六：今日私享便签 ====== -->
-    <view class="section-block stagger-6">
-      <view class="feeling-section-head">
-        <text class="section-title">今日私享便签</text>
-        <text class="feeling-hint">直达小桥后台 · 双向倾听</text>
+    <!-- 极细发丝分隔律动线 -->
+    <view class="editorial-hairline"></view>
+
+    <!-- ====== 章节七：双向倾听 · 私享便签 (Chapter 07: Intimate Note) ====== -->
+    <view class="editorial-section note-editorial stagger-7">
+      <view class="editorial-header">
+        <view class="editorial-chapter-tag">
+          <text class="chapter-code">07</text>
+          <text class="chapter-dot">/</text>
+          <text class="chapter-label">双向倾听</text>
+        </view>
+        <text class="editorial-title">私享便签</text>
+        <text class="editorial-subtitle">INTIMATE NOTE</text>
       </view>
 
-      <!-- 快捷体感标签胶囊 -->
-      <view class="feeling-tags-wrapper">
-        <view
-          wx:for="{{feelingTags}}"
-          wx:key="*this"
-          class="feeling-tag-pill {{tools.includes(selectedFeelingTags, item) ? 'feeling-tag-active' : ''}}"
-          bindtap="toggleFeelingTag"
-          data-tag="{{item}}"
-        >
-          #{{item}}
+      <view class="note-stationery-box">
+        <!-- 标签流式排印 -->
+        <view class="note-tags-flow">
+          <view wx:for="{{feelingTags}}" wx:key="*this"
+                class="note-tag-chip {{tools.includes(selectedFeelingTags, item) ? 'note-tag-active' : ''}}"
+                bindtap="toggleFeelingTag" data-tag="{{item}}">
+            #{{item}}
+          </view>
         </view>
-      </view>
 
-      <textarea
-        class="textarea-field"
-        value="{{feeling}}"
-        placeholder="跟小桥说说：今天练完身体感觉怎么样？哪里舒展了，或者有什么想交流的..."
-        bindinput="onFeelingInput"
-        maxlength="500"
-      />
-      <view class="feeling-footer">
-        <view class="feeling-privacy-badge">
-          <text class="privacy-lock">✦</text>
-          <text class="privacy-text">便签仅你与教练可见 · 小桥会认真阅读并回复</text>
+        <textarea class="note-textarea" value="{{feeling}}"
+                  placeholder="跟小桥说说：今天练完身体感觉怎么样？哪里舒展了，或者有什么想交流的..."
+                  bindinput="onFeelingInput" maxlength="500" />
+
+        <view class="note-action-row">
+          <text class="note-privacy-hint">便签仅你与教练可见 · 小桥会认真阅读并回复</text>
+          <button class="btn-note-submit" bindtap="submitFeeling" disabled="{{feelingSubmitting || feeling === ''}}">
+            {{feelingSubmitting ? "发送中..." : "发给小桥"}}
+          </button>
         </view>
-        <button
-          class="btn-primary btn-submit-feeling"
-          bindtap="submitFeeling"
-          disabled="{{feelingSubmitting || feeling === ''}}"
-        >
-          {{feelingSubmitting ? "发送中..." : "发给小桥"}}
-        </button>
-      </view>
-      <view wx:if="{{feelingReply}}" class="reply-card">
-        <view class="reply-card-header">
-          <text class="reply-label">小桥回音 · 亲笔</text>
-          <text class="reply-badge">已收入手札</text>
+
+        <view wx:if="{{feelingReply}}" class="note-reply-box">
+          <view class="note-reply-header">
+            <text class="note-reply-tag">小桥回音 · 亲笔</text>
+            <text class="note-reply-date">已收录手札</text>
+          </view>
+          <text class="note-reply-content">{{feelingReply}}</text>
         </view>
-        <text class="reply-text">{{feelingReply}}</text>
       </view>
     </view>
 
