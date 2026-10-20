@@ -65,7 +65,7 @@
   font-weight: 500;
   color: #2D2727;
   letter-spacing: 0.06em;
-  font-family: -apple-system, "PingFang SC", sans-serif;
+  font-family: "Songti SC", -apple-system, "PingFang SC", sans-serif;
   transition: color 200ms ease, font-weight 200ms ease, letter-spacing 200ms ease;
 }
 

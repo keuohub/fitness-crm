@@ -2,7 +2,7 @@
   
   <!-- 加载中 -->
   <view wx:if="{{loading}}" class="loading">
-    <text class="loading-text">正在呈递手札...</text>
+    <text class="loading-text">正在翻开你的专属手札...</text>
   </view>
 
   <!-- 错误 -->
@@ -13,168 +13,193 @@
   <!-- 正常内容 -->
   <block wx:else>
 
-    <!-- 引导语 -->
-    <view class="guide stagger-1">
-      <view class="guide-tag-wrap">
-        <text class="guide-pill">✦ 专属私教手札</text>
+    <!-- 章节引言：小桥来信 (Editorial Epistle Header) -->
+    <view class="epistle-header stagger-1">
+      <view class="epistle-chapter-tag">
+        <text class="chapter-code">EPISTLES</text>
+        <text class="chapter-dot">/</text>
+        <text class="chapter-label">见字如面</text>
       </view>
-      <text class="guide-label">小桥来信</text>
-      <text class="guide-subtitle">见字如面 · 每一寸改变，我都替你珍藏</text>
+      <text class="epistle-hero-title">小桥来信</text>
+      <text class="epistle-hero-subtitle">见字如面 · 每一寸身体的微妙改变，我都替你细心珍藏</text>
     </view>
 
-    <!-- 最新手札信纸大卡片 -->
-    <view wx:if="{{latestFeedback}}" class="section stagger-2">
-      <view class="section-header-row">
-        <text class="section-title">最新一封</text>
-        <text class="section-badge">专属于你</text>
+    <!-- 最新一封手札信笺 (The Masterpiece Letter) -->
+    <view wx:if="{{latestFeedback}}" class="epistle-section stagger-2">
+      <view class="epistle-section-header">
+        <view class="header-left">
+          <text class="section-chapter-num">01</text>
+          <text class="section-title">最新手札</text>
+        </view>
+        <text class="section-postmark">LATEST EPISTLE</text>
       </view>
-      <view class="latest-card letter-paper" bindtap="toggleLatest">
-        <!-- 信笺装饰暗纹与引用符号 -->
-        <text class="letter-watermark">“</text>
-        <view class="paper-top-border"></view>
 
-        <!-- 卡片头部元信息 -->
-        <view class="card-header">
-          <view class="type-pill-luxury">
-            <text class="pill-dot"></text>
-            <text class="pill-label">{{latestFeedback.typeLabel}}</text>
+      <view class="stationery-letter-sheet" bindtap="toggleLatest">
+        <!-- 信笺装饰暗纹 -->
+        <text class="letter-watermark">“</text>
+        <view class="letter-top-crimson-line"></view>
+
+        <!-- 信笺元信息 -->
+        <view class="letter-meta-row">
+          <view class="letter-type-tag">
+            <view class="tag-point"></view>
+            <text class="tag-text">{{latestFeedback.typeLabel}}</text>
           </view>
-          <text class="card-date">{{latestFeedback.date}}</text>
+          <text class="letter-postmark-date">{{latestFeedback.date}}</text>
         </view>
 
         <!-- 信笺正文 -->
-        <view class="letter-body">
-          <text class="card-summary" wx:if="{{!latestExpanded}}">{{latestFeedback.summary}}</text>
-          <text class="card-full" wx:if="{{latestExpanded}}">{{latestFeedback.content}}</text>
+        <view class="letter-body-text">
+          <text class="letter-summary" wx:if="{{!latestExpanded}}">{{latestFeedback.summary}}</text>
+          <text class="letter-full" wx:if="{{latestExpanded}}">{{latestFeedback.content}}</text>
         </view>
 
         <!-- 专属私教印鉴与落款 (展开时展示) -->
         <view class="letter-sign-block" wx:if="{{latestExpanded}}">
           <view class="sign-left">
-            <text class="sign-role">你的专属导师</text>
-            <text class="sign-author">小桥 · 徕舞女性体态手札</text>
+            <text class="sign-role">你的同行导师</text>
+            <text class="sign-author">小桥 · 亲笔于徕舞</text>
           </view>
           <view class="letter-seal-stamp">
-            <text class="seal-text">徕舞私享</text>
+            <text class="seal-text">徕舞\n私享</text>
           </view>
         </view>
 
         <!-- 折叠/展开按键 -->
-        <view class="card-toggle">
-          <view class="toggle-pill">
-            <text class="toggle-label">{{latestExpanded ? "收起手札" : "展阅完整手札"}}</text>
-            <text class="toggle-arrow">{{latestExpanded ? "▴" : "▾"}}</text>
+        <view class="letter-toggle-row">
+          <view class="letter-toggle-btn">
+            <text class="toggle-text">{{latestExpanded ? "收起手札" : "展阅完整手札"}}</text>
+            <text class="toggle-icon">{{latestExpanded ? "▴" : "▾"}}</text>
           </view>
         </view>
 
-        <!-- 交互操作条 (直达私享便签，防冒泡) -->
+        <!-- 直达私享便签 -->
         <view class="letter-action-bar">
-          <view class="action-btn-single" catchtap="goToFeeling">
-            <text class="action-icon">✦</text>
-            <text class="action-txt">给小桥写便签回音 · 记录今日体感</text>
+          <view class="action-trigger-btn" catchtap="goToFeeling">
+            <text class="action-spark">✦</text>
+            <text class="action-txt">给小桥写回音便签 · 记录今日体感</text>
+            <text class="action-arrow">→</text>
           </view>
         </view>
       </view>
     </view>
 
-    <!-- 「自律长跑 · 蜕变时光轴」消除空白赤贫感 -->
-    <view class="section stagger-3 timeline-section">
-      <view class="section-header-row">
-        <text class="section-title">自律长跑 · 蜕变时光轴</text>
-        <text class="section-badge">相伴 {{joinDays}} 天</text>
-      </view>
-      <view class="timeline-card">
-        <view class="timeline-track"></view>
+    <!-- 极细发丝分隔律动线 -->
+    <view class="editorial-hairline"></view>
 
+    <!-- 「自律长跑 · 蜕变时光轴」 -->
+    <view class="epistle-section stagger-3">
+      <view class="epistle-section-header">
+        <view class="header-left">
+          <text class="section-chapter-num">02</text>
+          <text class="section-title">自律经纬</text>
+        </view>
+        <text class="section-postmark">相伴 {{joinDays}} 天</text>
+      </view>
+
+      <view class="timeline-spine-card">
         <!-- 里程碑 1 -->
-        <view class="milestone-item milestone-done">
-          <view class="milestone-dot"><text class="dot-inner">✓</text></view>
-          <view class="milestone-content">
-            <view class="milestone-head">
-              <text class="milestone-title">初见测评 · 身体建档</text>
-              <text class="milestone-status status-done">已启程</text>
+        <view class="milestone-spine-item milestone-done">
+          <view class="spine-col">
+            <view class="spine-dot"><text class="dot-text">01</text></view>
+            <view class="spine-line"></view>
+          </view>
+          <view class="milestone-info">
+            <view class="milestone-title-row">
+              <text class="milestone-name">初见测评 · 身体建档</text>
+              <text class="milestone-status-badge status-done">已启程</text>
             </view>
-            <text class="milestone-desc">完成身体多维问卷与静态评估，已定制专属三阶蜕变手札与呼吸复位路径。</text>
+            <text class="milestone-narrative">完成身体多维问卷与静态评估，已定制专属三阶蜕变手札与呼吸复位路径。</text>
           </view>
         </view>
 
         <!-- 里程碑 2 -->
-        <view class="milestone-item {{trainCount >= 10 ? 'milestone-done' : 'milestone-active'}}">
-          <view class="milestone-dot"><text class="dot-inner">{{trainCount >= 10 ? '✓' : '2'}}</text></view>
-          <view class="milestone-content">
-            <view class="milestone-head">
-              <text class="milestone-title">第 10 节 · 核心觉知与体态复位</text>
-              <text class="milestone-status {{trainCount >= 10 ? 'status-done' : 'status-ongoing'}}">
+        <view class="milestone-spine-item {{trainCount >= 10 ? 'milestone-done' : 'milestone-active'}}">
+          <view class="spine-col">
+            <view class="spine-dot"><text class="dot-text">02</text></view>
+            <view class="spine-line"></view>
+          </view>
+          <view class="milestone-info">
+            <view class="milestone-title-row">
+              <text class="milestone-name">第 10 节 · 核心觉知与体态复位</text>
+              <text class="milestone-status-badge {{trainCount >= 10 ? 'status-done' : 'status-ongoing'}}">
                 {{trainCount >= 10 ? '已达成' : (trainCount > 0 ? '进行中 ' + trainCount + '/10节' : '待开启')}}
               </text>
             </view>
-            <text class="milestone-desc">横膈膜呼吸与核心床深层唤醒，骨盆中立位回弹，卸下日常耸肩与腰椎代偿。</text>
+            <text class="milestone-narrative">横膈膜呼吸与核心床深层唤醒，骨盆中立位回弹，卸下日常耸肩与腰椎代偿。</text>
           </view>
         </view>
 
         <!-- 里程碑 3 -->
-        <view class="milestone-item {{trainCount >= 30 ? 'milestone-done' : (trainCount >= 10 ? 'milestone-active' : 'milestone-locked')}}">
-          <view class="milestone-dot"><text class="dot-inner">{{trainCount >= 30 ? '✓' : '3'}}</text></view>
-          <view class="milestone-content">
-            <view class="milestone-head">
-              <text class="milestone-title">第 30 节 · 线条精雕与体态升华</text>
-              <text class="milestone-status {{trainCount >= 30 ? 'status-done' : (trainCount >= 10 ? 'status-ongoing' : 'status-locked')}}">
+        <view class="milestone-spine-item {{trainCount >= 30 ? 'milestone-done' : (trainCount >= 10 ? 'milestone-active' : 'milestone-locked')}}">
+          <view class="spine-col">
+            <view class="spine-dot"><text class="dot-text">03</text></view>
+            <view class="spine-line"></view>
+          </view>
+          <view class="milestone-info">
+            <view class="milestone-title-row">
+              <text class="milestone-name">第 30 节 · 线条精雕与体态升华</text>
+              <text class="milestone-status-badge {{trainCount >= 30 ? 'status-done' : (trainCount >= 10 ? 'status-ongoing' : 'status-locked')}}">
                 {{trainCount >= 30 ? '已达成' : (trainCount >= 10 ? '冲刺中 ' + trainCount + '/30节' : '锁定中')}}
               </text>
             </view>
-            <text class="milestone-desc">针对减脂塑形与肌肉走向精准雕琢，天鹅颈、直角肩与紧致臀腿初现成效。</text>
+            <text class="milestone-narrative">针对塑形与肌肉走向精准雕琢，天鹅颈、直角肩与紧致臀腿初现成效。</text>
           </view>
         </view>
 
         <!-- 里程碑 4 -->
-        <view class="milestone-item {{joinDays >= 365 ? 'milestone-done' : 'milestone-locked'}}">
-          <view class="milestone-dot"><text class="dot-inner">✦</text></view>
-          <view class="milestone-content">
-            <view class="milestone-head">
-              <text class="milestone-title">终生优雅 · 掌控身体与生活</text>
-              <text class="milestone-status status-locked">终身守候</text>
+        <view class="milestone-spine-item {{joinDays >= 365 ? 'milestone-done' : 'milestone-locked'}}">
+          <view class="spine-col">
+            <view class="spine-dot"><text class="dot-text">04</text></view>
+          </view>
+          <view class="milestone-info">
+            <view class="milestone-title-row">
+              <text class="milestone-name">终生优雅 · 掌控身体与生活</text>
+              <text class="milestone-status-badge status-locked">终身守候</text>
             </view>
-            <text class="milestone-desc">挺拔从容融于呼吸本能，自律化为骨骼底气，无论岁月流转，皆为大女主从容气场。</text>
+            <text class="milestone-narrative">挺拔从容融于呼吸本能，自律化为骨骼底气，无论岁月流转，皆为从容大女主气场。</text>
           </view>
         </view>
       </view>
     </view>
 
+    <!-- 极细发丝分隔律动线 -->
+    <view class="editorial-hairline"></view>
+
     <!-- 无反馈空状态 -->
-    <view wx:if="{{!latestFeedback && historyFeedbacks.length === 0}}" class="empty-state stagger-2 letter-empty-stationery">
-      <view class="stationery-seal">✦</view>
-      <text class="empty-title">第一封专属手札 · 正在为你执笔</text>
-      <text class="empty-desc">每一次深层呼吸与肌肉延展，都值得被温柔记录与珍藏</text>
-      <view class="stationery-line"></view>
-      <text class="stationery-footer">徕舞 · 私教手札团队</text>
+    <view wx:if="{{!latestFeedback && historyFeedbacks.length === 0}}" class="epistle-empty-state stagger-2">
+      <view class="empty-seal-stamp">印</view>
+      <text class="empty-lead">第一封专属手札 · 正在为你执笔</text>
+      <text class="empty-caption">每一次深层呼吸与肌肉延展，都值得被温柔记录与珍藏</text>
+      <view class="empty-divider"></view>
+      <text class="empty-sign">徕舞 · 私教手札团队</text>
     </view>
 
     <!-- 历史反馈列表 -->
-    <view wx:if="{{historyFeedbacks.length > 0}}" class="section stagger-4">
-      <view class="section-header-row">
-        <text class="section-title">过往手札珍藏</text>
-        <text class="section-badge">{{historyFeedbacks.length}} 封</text>
+    <view wx:if="{{historyFeedbacks.length > 0}}" class="epistle-section stagger-4">
+      <view class="epistle-section-header">
+        <view class="header-left">
+          <text class="section-chapter-num">03</text>
+          <text class="section-title">手札珍藏</text>
+        </view>
+        <text class="section-postmark">{{historyFeedbacks.length}} 封</text>
       </view>
-      <view class="history-list">
+
+      <view class="history-epistles-list">
         <block wx:for="{{historyFeedbacks}}" wx:key="id">
-          <view class="history-item" bindtap="toggleItem" data-index="{{index}}">
-            <view class="card-header">
-              <view class="type-pill-luxury">
-                <text class="pill-dot"></text>
-                <text class="pill-label">{{item.typeLabel}}</text>
-              </view>
-              <text class="card-date">{{item.date}}</text>
+          <view class="history-epistle-card" bindtap="toggleItem" data-index="{{index}}">
+            <view class="history-meta-row">
+              <text class="history-type-label">{{item.typeLabel}}</text>
+              <text class="history-date">{{item.date}}</text>
             </view>
-            <text class="card-summary" wx:if="{{!item.expanded}}">{{item.summary}}</text>
-            <text class="card-full" wx:if="{{item.expanded}}">{{item.content}}</text>
-            <view class="card-toggle">
-              <view class="toggle-pill small">
-                <text class="toggle-label">{{item.expanded ? "收起" : "展开"}}</text>
-                <text class="toggle-arrow">{{item.expanded ? "▴" : "▾"}}</text>
-              </view>
+            <text class="history-summary" wx:if="{{!item.expanded}}">{{item.summary}}</text>
+            <text class="history-full" wx:if="{{item.expanded}}">{{item.content}}</text>
+            <view class="history-toggle-row">
+              <text class="history-toggle-txt">{{item.expanded ? "收起" : "展阅"}}</text>
+              <text class="history-toggle-arrow">{{item.expanded ? "▴" : "▾"}}</text>
             </view>
           </view>
-          <view wx:if="{{index < historyFeedbacks.length - 1}}" class="divider"></view>
+          <view wx:if="{{index < historyFeedbacks.length - 1}}" class="history-item-hairline"></view>
         </block>
       </view>
     </view>

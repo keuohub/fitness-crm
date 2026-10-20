@@ -2,96 +2,134 @@
   
   <!-- 加载中 -->
   <view wx:if="{{loading}}" class="loading">
-    <text class="loading-text">正在加载...</text>
+    <text class="loading-text">正在呈递你的私享手札...</text>
   </view>
 
   <!-- 正常内容 -->
   <block wx:else>
 
-    <!-- 模块一：Lululemon 级高奢会员专属身份卡 (对标品牌会员状态卡) -->
-    <view class="profile-card-luxury stagger-1">
-      <view class="avatar" bindtap="handleAvatarTap">
+    <!-- 模块一：会员尊享画卷 (Member Sanctuary Profile) -->
+    <view class="profile-editorial-hero stagger-1">
+      <view class="avatar-editorial-wrap" bindtap="handleAvatarTap">
         <image wx:if="{{avatarUrl}}" class="avatar-img" src="{{avatarUrl}}" mode="aspectFill" />
         <text wx:else class="avatar-placeholder">{{initial}}</text>
+        <view class="avatar-edit-badge">写真</view>
       </view>
-      <text class="profile-name">{{memberName}}</text>
-      <view class="profile-companion-lockup">
-        <view class="profile-tier-pill {{joinDays >= 365 ? 'tier-pill-gold' : ''}}">
-          <text class="tier-spark">✦</text>
-          <text class="tier-title">{{joinDays >= 365 ? '资深自律挚友' : '身体掌权者'}}</text>
-        </view>
-        <view class="profile-divider"></view>
-        <view class="profile-days-box" wx:if="{{joinDays > 0}}">
-          <text class="profile-days-label">相伴自律</text>
-          <text class="profile-days-number">{{formattedDays}}</text>
-          <text class="profile-days-unit">天</text>
-        </view>
-        <view class="profile-days-box" wx:else>
-          <text class="profile-days-label">相伴自律启程之日</text>
-        </view>
-      </view>
-      <text class="avatar-hint">轻触头像可更换私享写真</text>
-    </view>
 
-    <!-- 模块二：约课入口（优雅保留，不干扰现有运营） -->
-    <view class="booking-entry stagger-2" bindtap="navigateToBooking">
-      <view class="booking-entry-left">
-        <text class="booking-entry-title">预约专属私享席位</text>
-        <text class="booking-entry-desc">如需调整私教排课，可在此轻点或直接微信小桥</text>
-      </view>
-      <text class="booking-entry-arrow">›</text>
-    </view>
-
-    <!-- 模块三：我的身体资产档案 -->
-    <view class="section stagger-3">
-      <text class="section-title">身体资产档案</text>
-      <view class="data-list">
-        <view class="data-row">
-          <text class="data-label">塑形进阶阶段</text>
-          <text class="data-value data-stage">{{stageName}}</text>
-        </view>
-        <view class="data-row">
-          <text class="data-label">私教训练课时</text>
-          <text class="data-value">{{trainCount || 0}} 节</text>
-        </view>
-        <view class="data-row">
-          <text class="data-label">体态深度测评</text>
-          <text class="data-value">{{questionnaireCount || 0}} 次</text>
-        </view>
-        <view class="data-row">
-          <text class="data-label">身形蜕变定格</text>
-          <text class="data-value">{{photoCount || 0}} 组</text>
+      <view class="profile-hero-meta">
+        <text class="profile-name">{{memberName}}</text>
+        <view class="profile-status-line">
+          <text class="profile-tier-text">{{joinDays >= 365 ? '资深自律挚友' : '身体掌权者'}}</text>
+          <text class="status-dot">·</text>
+          <text class="profile-days-text" wx:if="{{joinDays > 0}}">相伴自律 {{formattedDays}} 天</text>
+          <text class="profile-days-text" wx:else>相伴自律启程之日</text>
         </view>
       </view>
     </view>
 
-    <!-- 模块四：我的私享便签 -->
-    <view class="section stagger-4" wx:if="{{feelings.length > 0}}">
-      <text class="section-title">我的私享便签</text>
-      <view class="feeling-list">
-        <view wx:for="{{feelings}}" wx:key="id" class="feeling-item">
-          <text class="feeling-text">{{item.feeling}}</text>
-          <view wx:if="{{item.xiaoqiaoReply}}" class="feeling-reply">
-            <text class="reply-label">小桥回复</text>
-            <text class="reply-text">{{item.xiaoqiaoReply}}</text>
+    <!-- 极细发丝分隔律动线 -->
+    <view class="editorial-hairline"></view>
+
+    <!-- 模块二：私享预约席位 (The Private Concierge) -->
+    <view class="concierge-editorial-card stagger-2" bindtap="navigateToBooking">
+      <view class="concierge-content">
+        <view class="concierge-tag">
+          <text class="concierge-code">CONCIERGE</text>
+          <text class="concierge-dot">/</text>
+          <text class="concierge-label">私享排课</text>
+        </view>
+        <text class="concierge-title">预约专属私享席位</text>
+        <text class="concierge-desc">调整核心床私教排课，可在此轻点或直联导师小桥</text>
+      </view>
+      <view class="concierge-arrow-wrap">
+        <text class="concierge-arrow">→</text>
+      </view>
+    </view>
+
+    <!-- 极细发丝分隔律动线 -->
+    <view class="editorial-hairline"></view>
+
+    <!-- 模块三：身体资产档案 (Body Portfolio) -->
+    <view class="portfolio-section stagger-3">
+      <view class="section-editorial-header">
+        <view class="section-tag-group">
+          <text class="section-num">01</text>
+          <text class="section-title">身体资产档案</text>
+        </view>
+        <text class="section-en">PORTFOLIO</text>
+      </view>
+
+      <!-- 4 宫格开放式排印度量 (4-Metric Editorial Grid) -->
+      <view class="portfolio-metrics-grid">
+        <view class="portfolio-metric-box">
+          <text class="metric-val metric-stage">{{stageName}}</text>
+          <text class="metric-caption">塑形进阶阶段</text>
+        </view>
+        <view class="portfolio-metric-box">
+          <text class="metric-val">{{trainCount || 0}}<text class="metric-unit">节</text></text>
+          <text class="metric-caption">私教训练课时</text>
+        </view>
+        <view class="portfolio-metric-box">
+          <text class="metric-val">{{questionnaireCount || 0}}<text class="metric-unit">次</text></text>
+          <text class="metric-caption">体态深度测评</text>
+        </view>
+        <view class="portfolio-metric-box">
+          <text class="metric-val">{{photoCount || 0}}<text class="metric-unit">组</text></text>
+          <text class="metric-caption">身形蜕变定格</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 极细发丝分隔律动线 -->
+    <view class="editorial-hairline" wx:if="{{feelings.length > 0}}"></view>
+
+    <!-- 模块四：我的私享便签 (Private Notes) -->
+    <view class="notes-history-section stagger-4" wx:if="{{feelings.length > 0}}">
+      <view class="section-editorial-header">
+        <view class="section-tag-group">
+          <text class="section-num">02</text>
+          <text class="section-title">我的私享便签</text>
+        </view>
+        <text class="section-en">INTIMATE NOTES</text>
+      </view>
+
+      <view class="notes-feed">
+        <view wx:for="{{feelings}}" wx:key="id" class="note-feed-card">
+          <text class="note-feed-body">“{{item.feeling}}”</text>
+          <view wx:if="{{item.xiaoqiaoReply}}" class="note-reply-bar">
+            <view class="reply-seal">印</view>
+            <view class="reply-text-wrap">
+              <text class="reply-lead">小桥回音 · 亲笔</text>
+              <text class="reply-quote">{{item.xiaoqiaoReply}}</text>
+            </view>
           </view>
-          <text class="feeling-date">{{item.createdAt}}</text>
+          <text class="note-feed-date">{{item.createdAt}}</text>
         </view>
       </view>
     </view>
 
-    <!-- 模块五：我的预约 -->
-    <view class="section stagger-5" wx:if="{{bookings.length > 0}}">
-      <text class="section-title">我的预约</text>
-      <view class="booking-list">
-        <view wx:for="{{bookings}}" wx:key="id" class="booking-item">
-          <view class="booking-info">
-            <text class="booking-date">{{item.bookingDate}}</text>
-            <text class="booking-time">{{item.bookingTime}}</text>
+    <!-- 极细发丝分隔律动线 -->
+    <view class="editorial-hairline" wx:if="{{bookings.length > 0}}"></view>
+
+    <!-- 模块五：我的预约 (Bookings) -->
+    <view class="bookings-section stagger-5" wx:if="{{bookings.length > 0}}">
+      <view class="section-editorial-header">
+        <view class="section-tag-group">
+          <text class="section-num">03</text>
+          <text class="section-title">我的私享排课</text>
+        </view>
+        <text class="section-en">SCHEDULE</text>
+      </view>
+
+      <view class="bookings-spine-list">
+        <view wx:for="{{bookings}}" wx:key="id" class="booking-spine-item">
+          <view class="booking-time-block">
+            <text class="booking-date-text">{{item.bookingDate}}</text>
+            <text class="booking-time-text">{{item.bookingTime}}</text>
           </view>
-          <view class="booking-right">
-            <text class="booking-type">{{item.courseType}}</text>
-            <text class="booking-status status-{{item.status}}">
+          <view class="booking-body-block">
+            <text class="booking-type-text">{{item.courseType}}</text>
+            <text class="booking-status-tag status-{{item.status}}">
               {{item.status === "pending" ? "待确认" : item.status === "confirmed" ? "已确认" : "已取消"}}
             </text>
           </view>
@@ -99,13 +137,17 @@
       </view>
     </view>
 
-    <!-- 模块六：账号操作 -->
-    <view class="account-actions stagger-5">
-      <view class="switch-account-btn" bindtap="handleSwitchAccount">
-        <text class="switch-icon">⇄</text>
-        <text class="switch-text">切换会员档案 / 口令</text>
+    <!-- 极细发丝分隔律动线 -->
+    <view class="editorial-hairline"></view>
+
+    <!-- 模块六：账号操作 (Account Operations) -->
+    <view class="account-actions-editorial stagger-5">
+      <view class="switch-account-editorial" bindtap="handleSwitchAccount">
+        <text class="switch-txt">切换会员档案 / 口令</text>
       </view>
-      <button class="logout-btn" bindtap="handleLogout">暂时离开</button>
+      <view class="logout-link-editorial" bindtap="handleLogout">
+        <text class="logout-txt">暂时离开手札</text>
+      </view>
     </view>
 
   </block>

@@ -1,96 +1,181 @@
+<!-- pages/booking/booking.wxml · 席位预约 · 私享礼遇与身体对话 -->
 <view class="booking-page">
-  
-  <!-- 课程类型选择 -->
-  <view class="section stagger-1">
-    <text class="section-title">选择专属课程</text>
-    <view class="course-types">
+
+  <!-- 顶部返回与序言 -->
+  <view class="editorial-header">
+    <view class="nav-back-row" bindtap="goBack">
+      <text class="back-arrow">‹</text>
+      <text class="back-label">返回手札</text>
+    </view>
+    <view class="header-tag-row">
+      <text class="header-roman">ATELIER RESERVATION</text>
+      <text class="header-dot">·</text>
+      <text class="header-cn-tag">席位预约</text>
+    </view>
+    <text class="header-headline">从容预约 · 身体对话</text>
+    <text class="header-subhead">每次抵达，皆是与身体的一次笃定独处。请选择您专属的私教时段。</text>
+  </view>
+
+  <!-- 章节一：课程定制 -->
+  <view class="editorial-chapter">
+    <view class="chapter-label-row">
+      <text class="chapter-num">01</text>
+      <text class="chapter-hairline"></text>
+      <text class="chapter-name">选择专属课程</text>
+    </view>
+
+    <view class="course-editorial-list">
       <view 
-        class="course-item {{selectedCourse === '普拉提大器械私教' ? 'course-item-active' : ''}}"
+        class="course-editorial-card {{selectedCourse === '普拉提大器械私教' ? 'card-selected' : ''}}"
         bindtap="selectCourse"
         data-course="普拉提大器械私教"
       >
-        <text class="course-name">普拉提大器械私教</text>
-        <text class="course-desc">深层核心塑形 · 脊柱舒展延展</text>
+        <view class="course-index-col">
+          <text class="course-roman">01</text>
+        </view>
+        <view class="course-detail-col">
+          <view class="course-name-row">
+            <text class="course-name-text">普拉提大器械私教</text>
+            <text wx:if="{{selectedCourse === '普拉提大器械私教'}}" class="course-selected-mark">✦ 已选</text>
+          </view>
+          <text class="course-desc-text">深层核心塑形 · 脊柱舒展延展</text>
+        </view>
       </view>
+
       <view 
-        class="course-item {{selectedCourse === '一对一体态精雕' ? 'course-item-active' : ''}}"
+        class="course-editorial-card {{selectedCourse === '一对一体态精雕' ? 'card-selected' : ''}}"
         bindtap="selectCourse"
         data-course="一对一体态精雕"
       >
-        <text class="course-name">一对一体态精雕</text>
-        <text class="course-desc">天鹅颈 · 直角肩 · 骨盆回弹</text>
+        <view class="course-index-col">
+          <text class="course-roman">02</text>
+        </view>
+        <view class="course-detail-col">
+          <view class="course-name-row">
+            <text class="course-name-text">一对一体态精雕</text>
+            <text wx:if="{{selectedCourse === '一对一体态精雕'}}" class="course-selected-mark">✦ 已选</text>
+          </view>
+          <text class="course-desc-text">天鹅颈 · 直角肩 · 骨盆回弹</text>
+        </view>
       </view>
+
       <view 
-        class="course-item {{selectedCourse === '维密急速减脂塑形' ? 'course-item-active' : ''}}"
+        class="course-editorial-card {{selectedCourse === '维密急速减脂塑形' ? 'card-selected' : ''}}"
         bindtap="selectCourse"
         data-course="维密急速减脂塑形"
       >
-        <text class="course-name">维密急速减脂塑形</text>
-        <text class="course-desc">腰腹线条紧致 · 优雅高效燃脂</text>
+        <view class="course-index-col">
+          <text class="course-roman">03</text>
+        </view>
+        <view class="course-detail-col">
+          <view class="course-name-row">
+            <text class="course-name-text">维密急速减脂塑形</text>
+            <text wx:if="{{selectedCourse === '维密急速减脂塑形'}}" class="course-selected-mark">✦ 已选</text>
+          </view>
+          <text class="course-desc-text">腰腹线条紧致 · 优雅高效燃脂</text>
+        </view>
       </view>
+
       <view 
-        class="course-item {{selectedCourse === '大器械韵律团课' ? 'course-item-active' : ''}}"
+        class="course-editorial-card {{selectedCourse === '大器械韵律团课' ? 'card-selected' : ''}}"
         bindtap="selectCourse"
         data-course="大器械韵律团课"
       >
-        <text class="course-name">大器械韵律团课</text>
-        <text class="course-desc">器械掌控 · 身心能量共振</text>
+        <view class="course-index-col">
+          <text class="course-roman">04</text>
+        </view>
+        <view class="course-detail-col">
+          <view class="course-name-row">
+            <text class="course-name-text">大器械韵律团课</text>
+            <text wx:if="{{selectedCourse === '大器械韵律团课'}}" class="course-selected-mark">✦ 已选</text>
+          </view>
+          <text class="course-desc-text">器械掌控 · 身心能量共振</text>
+        </view>
       </view>
     </view>
   </view>
 
-  <!-- 日期选择 -->
-  <view class="section stagger-2">
-    <text class="section-title">选择日期</text>
-    <view class="date-list">
+  <!-- 章节二：日期甄选 -->
+  <view class="editorial-chapter">
+    <view class="chapter-label-row">
+      <text class="chapter-num">02</text>
+      <text class="chapter-hairline"></text>
+      <text class="chapter-name">甄选席位日期</text>
+    </view>
+
+    <scroll-view class="date-scroll-row" scroll-x="true" enable-flex="true" show-scrollbar="false">
       <block wx:for="{{dates}}" wx:key="value">
         <view 
-          class="date-item {{item.value === selectedDate ? 'date-item-active' : ''}}"
+          class="date-cell {{item.value === selectedDate ? 'date-cell-active' : ''}}"
           bindtap="selectDate"
           data-date="{{item.value}}"
         >
-          <text class="date-weekday">{{item.weekday}}</text>
-          <text class="date-day">{{item.day}}</text>
+          <text class="date-weekday-label">{{item.weekday}}</text>
+          <text class="date-day-num">{{item.day}}</text>
+          <view class="date-indicator-dot" wx:if="{{item.value === selectedDate}}"></view>
         </view>
       </block>
-    </view>
+    </scroll-view>
   </view>
 
-  <!-- 时段选择 -->
-  <view class="section stagger-3">
-    <text class="section-title">选择时段</text>
-    <view class="time-slots">
+  <!-- 章节三：私享时段 -->
+  <view class="editorial-chapter">
+    <view class="chapter-label-row">
+      <text class="chapter-num">03</text>
+      <text class="chapter-hairline"></text>
+      <text class="chapter-name">练习时段</text>
+    </view>
+
+    <view class="time-grid-editorial">
       <view 
         wx:for="{{timeSlots}}" 
         wx:key="*this"
-        class="time-item {{item === selectedTime ? 'time-item-active' : ''}}"
+        class="time-pill {{item === selectedTime ? 'time-pill-active' : ''}}"
         bindtap="selectTime"
         data-time="{{item}}"
       >
-        <text>{{item}}</text>
+        <text class="time-text">{{item}}</text>
       </view>
     </view>
   </view>
 
-  <!-- 备注 -->
-  <view class="section stagger-4">
-    <text class="section-title">备注（选填）</text>
-    <textarea
-      class="textarea-field"
-      value="{{notes}}"
-      placeholder="有什么需要教练特别注意的吗？"
-      bindinput="onNotesInput"
-      maxlength="200"
-    />
+  <!-- 章节四：私享嘱咐 -->
+  <view class="editorial-chapter">
+    <view class="chapter-label-row">
+      <text class="chapter-num">04</text>
+      <text class="chapter-hairline"></text>
+      <text class="chapter-name">私享嘱咐（选填）</text>
+    </view>
+
+    <view class="stationery-input-card">
+      <textarea
+        class="stationery-textarea"
+        value="{{notes}}"
+        placeholder="今日有经期、肩颈酸痛或特殊体态关注吗？可在此轻声留言..."
+        placeholder-class="textarea-placeholder"
+        bindinput="onNotesInput"
+        maxlength="200"
+      />
+      <view class="textarea-corner-seal">
+        <text class="seal-mark">私</text>
+      </view>
+    </view>
   </view>
 
-  <!-- 确认预约 -->
-  <button
-    class="btn-primary stagger-5"
-    bindtap="submitBooking"
-    disabled="{{submitting || !selectedCourse || !selectedDate || !selectedTime}}"
-  >
-    {{submitting ? "正在提交私享席位..." : "确认预约私享席位"}}
-  </button>
+  <!-- 章节五：确认预约与私享保障 -->
+  <view class="submit-section">
+    <button
+      class="btn-editorial-submit"
+      bindtap="submitBooking"
+      disabled="{{submitting || !selectedCourse || !selectedDate || !selectedTime}}"
+    >
+      <text class="btn-submit-text">{{submitting ? "正在锁定理疗席位..." : "锁定私享练习席位"}}</text>
+    </button>
+    
+    <view class="atelier-guarantee">
+      <text class="guarantee-icon">✦</text>
+      <text class="guarantee-text">一对一私享交付 · 预约后教练将轻声致意 · 课前可从容调整</text>
+    </view>
+  </view>
 
 </view>

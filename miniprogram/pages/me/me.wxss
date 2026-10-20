@@ -1,8 +1,11 @@
-/* pages/me · 我的 · 朱红流光 + 磨砂微光卡片 */
+/* ==========================================================================
+   pages/me/me.wxss - 我的 · 会员尊享中心 (The Member Sanctuary)
+   大牌艺术手札质感、身体资产矩阵与私享排课
+   ========================================================================== */
 
 .me-container {
   min-height: 100vh;
-  padding: calc(env(safe-area-inset-top) + 124rpx) 32rpx calc(env(safe-area-inset-bottom) + 300rpx);
+  padding: calc(env(safe-area-inset-top) + 96rpx) 40rpx calc(env(safe-area-inset-bottom) + 260rpx);
   box-sizing: border-box;
   animation: pageTransitIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
@@ -12,418 +15,425 @@
   text-align: center;
 }
 .loading-text {
+  font-family: "Songti SC", Georgia, serif;
   font-size: 26rpx;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.88);
   letter-spacing: 2rpx;
 }
 
-/* ================= 模块一：Lululemon 级高奢会员专属身份卡 ================= */
-.profile-card-luxury {
-  background: var(--card-glass);
-  backdrop-filter: blur(28px) saturate(160%);
-  -webkit-backdrop-filter: blur(28px) saturate(160%);
-  border-radius: 40rpx;
-  border: var(--card-border);
-  box-shadow: var(--card-shadow);
-  padding: 44rpx 36rpx;
-  margin-bottom: 32rpx;
-  box-sizing: border-box;
-  text-align: center;
+/* 极细发丝分隔律动线 */
+.editorial-hairline {
+  height: 1rpx;
+  margin: 48rpx 0;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.25) 50%, rgba(255, 255, 255, 0.04) 100%);
+}
+
+/* ================= 模块一：会员尊享画卷 (Profile Hero) ================= */
+.profile-editorial-hero {
   display: flex;
   flex-direction: column;
   align-items: center;
-  position: relative;
-  overflow: hidden;
+  text-align: center;
+  padding: 12rpx 0 20rpx;
 }
 
-.avatar {
-  width: 140rpx;
-  height: 140rpx;
-  border-radius: 70rpx;
-  background: #08070A;
+.avatar-editorial-wrap {
+  width: 156rpx;
+  height: 156rpx;
+  border-radius: 50%;
+  position: relative;
+  margin-bottom: 24rpx;
+  border: 2rpx solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 16rpx 44rpx rgba(28, 20, 21, 0.16), 0 0 0 8rpx rgba(186, 36, 40, 0.08);
+  background: #1C1415;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  border: 3rpx solid rgba(255, 255, 255, 0.95);
-  box-shadow: 0 0 0 8rpx rgba(186, 36, 40, 0.12), 0 16rpx 36rpx rgba(120, 20, 20, 0.16);
-  margin: 10rpx auto 20rpx;
   transition: transform 160ms cubic-bezier(0.2, 0.8, 0.25, 1);
 }
-.avatar:active {
-  transform: scale(0.94);
+.avatar-editorial-wrap:active {
+  transform: scale(0.95);
 }
 .avatar-img {
-  width: 140rpx;
-  height: 140rpx;
+  width: 156rpx;
+  height: 156rpx;
+  border-radius: 50%;
+  display: block;
 }
 .avatar-placeholder {
-  font-family: Georgia, "Songti SC", serif;
-  font-size: 54rpx;
+  font-family: "Songti SC", Georgia, serif;
+  font-size: 56rpx;
   font-weight: 500;
   color: #FFFFFF;
 }
-.profile-name {
-  font-family: Georgia, "Songti SC", -apple-system, BlinkMacSystemFont, "PingFang SC", serif;
-  font-size: 44rpx;
-  font-weight: 600;
-  color: #1C1415;
-  letter-spacing: 0.04em;
-}
-
-.profile-companion-lockup {
-  margin-top: 20rpx;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 8rpx;
-}
-.profile-tier-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8rpx;
-  padding: 8rpx 22rpx;
+.avatar-edit-badge {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  padding: 4rpx 14rpx;
   border-radius: 999rpx;
-  background: rgba(186, 36, 40, 0.06);
-  border: 1rpx solid rgba(186, 36, 40, 0.18);
-  flex-shrink: 0;
-}
-.profile-tier-pill .tier-spark {
+  background: rgba(28, 20, 21, 0.85);
+  border: 1rpx solid rgba(255, 255, 255, 0.6);
+  color: #FFE5A3;
   font-size: 16rpx;
-  color: var(--brand-crimson);
-}
-.profile-tier-pill .tier-title {
-  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
-  font-size: 22rpx;
-  font-weight: 600;
-  color: #1C1415;
-  letter-spacing: 0.06em;
-}
-.profile-tier-pill.tier-pill-gold {
-  background: linear-gradient(135deg, rgba(28, 20, 21, 0.92) 0%, rgba(68, 24, 26, 0.92) 100%) !important;
-  border: 1rpx solid rgba(255, 215, 0, 0.45) !important;
-  box-shadow: 0 4rpx 16rpx rgba(60, 20, 20, 0.35) !important;
-}
-.profile-tier-pill.tier-pill-gold .tier-spark,
-.profile-tier-pill.tier-pill-gold .tier-title {
-  color: #FFE5A3 !important;
-}
-.profile-divider {
-  width: 2rpx;
-  height: 24rpx;
-  background: rgba(28, 20, 21, 0.18);
-  margin: 0 16rpx;
-  flex-shrink: 0;
-}
-.profile-days-box {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 4rpx;
-  flex-shrink: 0;
-}
-.profile-days-label {
-  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
-  font-size: 22rpx;
-  font-weight: 500;
-  color: rgba(28, 20, 21, 0.65);
-  letter-spacing: 0.04em;
-}
-.profile-days-number {
-  font-family: "Didot", "Bodoni MT", "Times New Roman", -apple-system, "PingFang SC", serif;
-  font-size: 30rpx;
-  font-weight: 600;
-  color: #120E0F;
-  line-height: 1;
-  font-variant-numeric: lining-nums tabular-nums;
-  letter-spacing: 0.02em;
-  margin: 0 2rpx;
-}
-.profile-days-unit {
-  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
-  font-size: 20rpx;
-  font-weight: 500;
-  color: rgba(28, 20, 21, 0.65);
-}
-
-.avatar-hint {
-  margin-top: 18rpx;
-  font-size: 22rpx;
-  color: rgba(26, 20, 21, 0.45);
-  letter-spacing: 0.06em;
-}
-
-/* 统一磨砂微光卡片 */
-.booking-entry,
-.data-list,
-.feeling-item,
-.booking-item {
-  background: var(--card-glass);
-  backdrop-filter: blur(28px) saturate(160%);
-  -webkit-backdrop-filter: blur(28px) saturate(160%);
-  border-radius: 36rpx;
-  border: var(--card-border);
-  box-shadow: var(--card-shadow);
-  box-sizing: border-box;
-}
-
-/* 约课入口 */
-.booking-entry {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 36rpx 32rpx;
-  margin-bottom: 40rpx;
-  transition: transform 0.2s ease;
-}
-.booking-entry:active {
-  transform: scale(0.985);
-}
-.booking-entry-left {
-  display: flex;
-  flex-direction: column;
-}
-.booking-entry-title {
-  font-family: Georgia, "Songti SC", serif;
-  font-size: 32rpx;
-  font-weight: 600;
-  color: var(--text-main);
-}
-.booking-entry-desc {
-  margin-top: 10rpx;
-  font-size: 24rpx;
-  color: var(--text-muted);
   letter-spacing: 1rpx;
 }
-.booking-entry-arrow {
-  font-size: 40rpx;
-  font-weight: 300;
-  color: rgba(28, 20, 21, 0.35);
-  line-height: 1;
-  font-family: Georgia, serif;
-  transition: transform 180ms cubic-bezier(0.2, 0.8, 0.25, 1), color 180ms ease;
+
+.profile-hero-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
-.booking-entry:active .booking-entry-arrow {
-  transform: translateX(6rpx);
-  color: var(--brand-crimson);
+.profile-name {
+  font-family: "Songti SC", Georgia, serif;
+  font-size: 48rpx;
+  font-weight: 600;
+  color: #1C1415;
+  letter-spacing: 0.04em;
+  line-height: 1.25;
+  margin-bottom: 10rpx;
+}
+.profile-status-line {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+}
+.profile-tier-text {
+  font-family: "Songti SC", Georgia, serif;
+  font-size: 22rpx;
+  font-weight: 600;
+  color: #BA2428;
+  letter-spacing: 0.06em;
+}
+.status-dot {
+  font-size: 20rpx;
+  color: rgba(28, 20, 21, 0.35);
+}
+.profile-days-text {
+  font-family: "Didot", "Bodoni MT", Georgia, serif;
+  font-size: 22rpx;
+  color: rgba(28, 20, 21, 0.58);
+  letter-spacing: 0.04em;
 }
 
-.section {
-  margin-bottom: 40rpx;
+/* ================= 模块二：私享预约席位 (Concierge Card) ================= */
+.concierge-editorial-card {
+  padding: 32rpx 32rpx;
+  border-radius: 24rpx;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border: 1rpx solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 12rpx 36rpx rgba(186, 36, 40, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+  transition: transform 140ms ease;
 }
-.section-title {
+.concierge-editorial-card:active {
+  transform: scale(0.985);
+}
+.concierge-content {
+  flex: 1;
+}
+.concierge-tag {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6rpx;
+  margin-bottom: 6rpx;
+}
+.concierge-code {
+  font-family: "Didot", "Bodoni MT", Georgia, serif;
+  font-size: 19rpx;
+  font-weight: 600;
+  color: #FFE5A3;
+  letter-spacing: 0.12em;
+}
+.concierge-dot {
+  font-size: 16rpx;
+  color: rgba(28, 20, 21, 0.35);
+  margin: 0 2rpx;
+}
+.concierge-label {
+  font-size: 18rpx;
+  color: #BA2428;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.concierge-title {
   display: block;
   font-family: "Songti SC", Georgia, serif;
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  padding: 0;
-  font-size: 26rpx;
-  font-weight: 600;
-  color: #381617;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  margin: 40rpx 0 20rpx 12rpx;
-  text-shadow: 0 1rpx 12rpx rgba(255, 245, 240, 0.45);
-}
-/* 我的记录 */
-.data-list {
-  padding: 8rpx 32rpx;
-}
-.data-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  min-height: 104rpx;
-  height: auto;
-  padding: 24rpx 12rpx;
-  margin: 0 -12rpx;
-  border-radius: 18rpx;
-  box-sizing: border-box;
-  border-bottom: 1rpx solid rgba(28, 20, 21, 0.06);
-  transition: background-color 140ms ease;
-}
-.data-row:active {
-  background: rgba(255, 255, 255, 0.35);
-}
-.data-row:last-child {
-  border-bottom: none;
-}
-.data-label {
-  font-size: 26rpx;
-  color: rgba(28, 20, 21, 0.65);
-}
-.data-value {
-  font-family: "Didot", "Bodoni MT", "Times New Roman", "PingFang SC", serif;
-  font-variant-numeric: lining-nums tabular-nums;
-  font-feature-settings: "lnum" 1, "tnum" 1;
   font-size: 30rpx;
   font-weight: 600;
-  color: #120E0F;
-  letter-spacing: 0.02em;
+  color: #1C1415;
+  letter-spacing: 0.04em;
+  margin-bottom: 6rpx;
 }
-.data-stage {
-  color: #CE3834;
+.concierge-desc {
+  display: block;
+  font-size: 21rpx;
+  line-height: 1.5;
+  color: rgba(28, 20, 21, 0.58);
+}
+.concierge-arrow-wrap {
+  width: 52rpx;
+  height: 52rpx;
+  border-radius: 50%;
+  background: rgba(186, 36, 40, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.concierge-arrow {
+  font-size: 26rpx;
+  color: #BA2428;
+  line-height: 1;
 }
 
-/* 训练感受 */
-.feeling-list {
+/* ================= 模块三：身体资产档案 (Portfolio Grid) ================= */
+.section-editorial-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 22rpx;
+}
+.section-tag-group {
+  display: flex;
+  align-items: baseline;
+  gap: 10rpx;
+}
+.section-num {
+  font-family: "Didot", "Bodoni MT", Georgia, serif;
+  font-size: 22rpx;
+  font-weight: 600;
+  color: #FFE5A3;
+  letter-spacing: 0.08em;
+}
+.section-title {
+  font-family: "Songti SC", Georgia, serif;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1C1415;
+  letter-spacing: 0.05em;
+}
+.section-en {
+  font-family: "Didot", "Bodoni MT", Georgia, serif;
+  font-size: 20rpx;
+  letter-spacing: 0.18em;
+  color: rgba(28, 20, 21, 0.42);
+  text-transform: uppercase;
+}
+
+.portfolio-metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18rpx;
+}
+.portfolio-metric-box {
+  padding: 28rpx 24rpx;
+  border-radius: 20rpx;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1rpx solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 6rpx 20rpx rgba(186, 36, 40, 0.03);
   display: flex;
   flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
-.feeling-item {
-  padding: 32rpx 28rpx;
+.metric-val {
+  font-family: "Didot", "Bodoni MT", Georgia, serif;
+  font-size: 48rpx;
+  font-weight: 600;
+  color: #1C1415;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  margin-bottom: 6rpx;
+}
+.metric-stage {
+  font-family: "Songti SC", Georgia, serif;
+  font-size: 36rpx;
+  color: #BA2428;
+}
+.metric-unit {
+  font-size: 20rpx;
+  font-weight: 500;
+  color: #BA2428;
+  margin-left: 4rpx;
+}
+.metric-caption {
+  font-size: 20rpx;
+  color: rgba(28, 20, 21, 0.55);
+  letter-spacing: 0.04em;
+}
+
+/* ================= 模块四：我的私享便签 (Notes History) ================= */
+.notes-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 18rpx;
+}
+.note-feed-card {
+  padding: 28rpx 28rpx 24rpx;
+  border-radius: 20rpx;
+  background: rgba(255, 255, 255, 0.58);
+  border: 1rpx solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 6rpx 18rpx rgba(186, 36, 40, 0.03);
+}
+.note-feed-body {
+  display: block;
+  font-family: "Songti SC", Georgia, serif;
+  font-size: 25rpx;
+  line-height: 1.7;
+  color: #1C1415;
+  font-style: italic;
   margin-bottom: 16rpx;
 }
-.feeling-text {
-  display: block;
-  font-size: 28rpx;
-  line-height: 1.8;
-  color: var(--text-body);
+.note-reply-bar {
+  display: flex;
+  align-items: flex-start;
+  gap: 14rpx;
+  padding: 16rpx 20rpx;
+  border-radius: 14rpx;
+  background: rgba(186, 36, 40, 0.05);
+  border: 1rpx solid rgba(186, 36, 40, 0.12);
+  margin-bottom: 14rpx;
 }
-.feeling-reply {
-  margin-top: 20rpx;
-  padding-top: 20rpx;
-  border-top: 1rpx solid rgba(13, 12, 15, 0.08);
+.reply-seal {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 8rpx;
+  background: rgba(186, 36, 40, 0.88);
+  color: #FFE5A3;
+  font-family: "Songti SC", Georgia, serif;
+  font-size: 20rpx;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transform: rotate(-6deg);
 }
-.reply-label {
-  display: block;
-  font-size: 22rpx;
-  color: var(--text-muted);
-  letter-spacing: 2rpx;
-  margin-bottom: 8rpx;
+.reply-text-wrap {
+  flex: 1;
 }
-.reply-text {
+.reply-lead {
   display: block;
-  font-size: 26rpx;
-  line-height: 1.8;
-  color: var(--text-body);
+  font-family: "Songti SC", Georgia, serif;
+  font-size: 20rpx;
+  font-weight: 600;
+  color: #BA2428;
+  margin-bottom: 4rpx;
 }
-.feeling-date {
+.reply-quote {
   display: block;
-  margin-top: 16rpx;
-  font-size: 22rpx;
-  color: var(--text-muted);
+  font-family: "Songti SC", Georgia, serif;
+  font-size: 23rpx;
+  line-height: 1.6;
+  color: rgba(28, 20, 21, 0.82);
+}
+.note-feed-date {
+  display: block;
+  font-family: "Didot", "Bodoni MT", Georgia, serif;
+  font-size: 19rpx;
+  color: rgba(28, 20, 21, 0.42);
 }
 
-/* 我的预约 */
-.booking-list {
+/* ================= 模块五：我的预约 (Bookings Schedule) ================= */
+.bookings-spine-list {
   display: flex;
   flex-direction: column;
+  gap: 16rpx;
 }
-.booking-item {
+.booking-spine-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 28rpx;
-  margin-bottom: 16rpx;
+  padding: 24rpx 28rpx;
+  border-radius: 20rpx;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1rpx solid rgba(255, 255, 255, 0.85);
 }
-.booking-info {
+.booking-time-block {
   display: flex;
   flex-direction: column;
+  gap: 4rpx;
 }
-.booking-date {
-  font-size: 28rpx;
-  font-weight: 500;
-  color: var(--text-main);
+.booking-date-text {
+  font-family: "Didot", "Bodoni MT", Georgia, serif;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #1C1415;
 }
-.booking-time {
-  margin-top: 8rpx;
-  font-size: 24rpx;
-  color: var(--text-muted);
-}
-.booking-right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-}
-.booking-type {
-  font-size: 24rpx;
-  color: var(--text-secondary);
-}
-.booking-status {
-  margin-top: 10rpx;
-  padding: 4rpx 18rpx;
-  border-radius: 999rpx;
+.booking-time-text {
   font-size: 20rpx;
-  background: rgba(186, 36, 40, 0.08);
-  color: var(--brand-crimson);
+  color: rgba(28, 20, 21, 0.5);
+}
+.booking-body-block {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+}
+.booking-type-text {
+  font-family: "Songti SC", Georgia, serif;
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #1C1415;
+}
+.booking-status-tag {
+  font-size: 19rpx;
+  padding: 2rpx 14rpx;
+  border-radius: 999rpx;
 }
 .status-confirmed {
-  background: rgba(31, 138, 112, 0.12);
-  color: #1F8A70;
+  color: #BA2428;
+  background: rgba(186, 36, 40, 0.08);
+}
+.status-pending {
+  color: rgba(28, 20, 21, 0.6);
+  background: rgba(28, 20, 21, 0.06);
 }
 .status-cancelled {
-  background: rgba(13, 12, 15, 0.06);
-  color: var(--text-muted);
+  color: rgba(28, 20, 21, 0.35);
+  background: rgba(28, 20, 21, 0.04);
 }
 
-/* 退出 */
-.account-actions {
-  margin-top: 48rpx;
+/* ================= 模块六：账号操作 (Account Operations) ================= */
+.account-actions-editorial {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20rpx;
+  gap: 24rpx;
+  margin-top: 12rpx;
 }
-.switch-account-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10rpx;
-  padding: 18rpx 48rpx;
+.switch-account-editorial {
+  padding: 16rpx 36rpx;
   border-radius: 999rpx;
-  background: rgba(8, 7, 10, 0.65);
-  border: 1rpx solid rgba(255, 255, 255, 0.4);
-  color: #FFFFFF;
-  font-size: 24rpx;
-  letter-spacing: 1.5rpx;
-  box-shadow: 0 8rpx 24rpx rgba(8, 7, 10, 0.25);
-  transition: transform 140ms ease, background 140ms ease;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1rpx solid rgba(255, 255, 255, 0.85);
+  transition: transform 140ms ease;
 }
-.switch-account-btn:active {
+.switch-account-editorial:active {
   transform: scale(0.96);
-  background: rgba(8, 7, 10, 0.85);
 }
-.switch-icon {
-  font-size: 26rpx;
-  color: #FFFFFF;
-}
-.switch-text {
+.switch-txt {
+  font-size: 22rpx;
   font-weight: 500;
+  color: #1C1415;
+  letter-spacing: 0.06em;
 }
-
-.logout-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 280rpx;
-  height: 76rpx;
-  margin: 0 auto;
-  box-sizing: border-box;
-  background: rgba(255, 255, 255, 0.16);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  color: rgba(255, 255, 255, 0.85);
-  border: 1rpx solid rgba(255, 255, 255, 0.35);
-  border-radius: 999rpx;
-  padding: 0;
-  font-size: 24rpx;
+.logout-link-editorial {
+  padding: 8rpx 20rpx;
+  transition: opacity 140ms ease;
+}
+.logout-link-editorial:active {
+  opacity: 0.5;
+}
+.logout-txt {
+  font-family: "Songti SC", Georgia, serif;
+  font-size: 21rpx;
+  color: rgba(28, 20, 21, 0.42);
   letter-spacing: 0.08em;
-  transition: transform 140ms cubic-bezier(0.2, 0.8, 0.25, 1), background-color 140ms ease;
-}
-.logout-btn:active {
-  transform: scale(0.96);
-  background: rgba(255, 255, 255, 0.28);
-}
-
-.status-pill-gold {
-  background: linear-gradient(135deg, #1C1415 0%, #3D1C1E 100%) !important;
-  border-color: rgba(255, 215, 0, 0.4) !important;
-  color: #FFE5A3 !important;
-  box-shadow: 0 4rpx 16rpx rgba(60, 20, 20, 0.3), inset 0 1rpx 0 rgba(255, 215, 0, 0.35) !important;
-}
-
-.fade-in {
-  animation: cardFadeSlide 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
 }

@@ -42,6 +42,15 @@ Page({
     this.setData({ dates: dates });
   },
 
+  goBack: function() {
+    var pages = getCurrentPages();
+    if (pages && pages.length > 1) {
+      wx.navigateBack();
+    } else {
+      wx.switchTab({ url: "/pages/growth/growth" });
+    }
+  },
+
   selectCourse: function(e) {
     this.setData({ selectedCourse: e.currentTarget.dataset.course });
   },
