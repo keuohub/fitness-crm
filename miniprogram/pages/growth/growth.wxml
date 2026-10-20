@@ -419,13 +419,15 @@ module.exports = {
 <view class="stars-lulu-container {{showStarsModal ? 'lulu-visible' : 'lulu-hidden'}} {{starsClosing ? 'lulu-closing' : ''}}" 
       wx:if="{{showStarsModal}}">
   
-  <!-- 顶部常驻悬浮栏：左上角 LAIWU 品牌标 + 右上角避让胶囊的高奢毛玻璃关闭/跳过按钮 -->
+  <!-- 顶部常驻悬浮栏：左上角 LAIWU 品牌标 -->
   <view class="stars-lulu-top-nav">
     <text class="stars-lulu-brand">LAIWU</text>
-    <view class="stars-lulu-close-pill" catchtap="closeStarsModal">
-      <text class="stars-lulu-close-text">跳过</text>
-      <text class="stars-lulu-close-x">✕</text>
-    </view>
+  </view>
+
+  <!-- 右上角避让胶囊的高奢毛玻璃关闭/跳过按钮 (独立定位，确保不被任何刘海/胶囊遮挡) -->
+  <view class="stars-lulu-close-pill" catchtap="closeStarsModal">
+    <text class="stars-lulu-close-text">跳过</text>
+    <text class="stars-lulu-close-x">✕</text>
   </view>
 
   <!-- Lululemon 级全屏沉浸画报横滑 Swiper (单张铺满，手势丝滑) -->
@@ -459,9 +461,29 @@ module.exports = {
   <view class="stars-lulu-bottom-bar" catchtap="closeStarsModal">
     <view class="stars-lulu-frosted-pill">
       <text class="stars-lulu-spark">✦</text>
-      <text class="stars-lulu-enter-txt">开启今日训练 · 进入主页</text>
+      <text class="stars-lulu-enter-txt">进入成长主页 · 开启今日自律</text>
       <text class="stars-lulu-enter-arrow">❯</text>
     </view>
+  </view>
+</view>
+
+<!-- ====== 全屏开屏：到徕舞 一起好状态 ======
+     必须放在 .growth-page 之外。
+     .growth-page 带进场动画（transform），会让内部的 position: fixed
+     以它为参照物，全屏层被撑成整页高度，内容就掉到屏幕下方去了。 -->
+<view class="splash-screen {{splashFadeOut ? 'splash-fade-out' : ''}}" wx:if="{{showSplash}}" catchtouchmove="noop">
+  <view class="splash-center">
+    <!-- 高奢衬线品牌拼音：置于「到徕舞」正上方 -->
+    <text class="splash-brand-luxury">L A I W U</text>
+    <view class="splash-brand-line"></view>
+
+    <!-- 核心文案 -->
+    <text class="splash-sub">到徕舞</text>
+    <text class="splash-main">一起</text>
+    <text class="splash-main">好状态</text>
+
+    <!-- 唯一交互入口 -->
+    <view class="splash-cta" bindtap="skipSplash">即刻开启</view>
   </view>
 </view>
 

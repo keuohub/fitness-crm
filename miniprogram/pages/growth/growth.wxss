@@ -1618,64 +1618,66 @@ button.btn-primary[disabled]:not([type]) {
   pointer-events: none;
 }
 
-/* 顶部常驻悬浮栏：左上角 LAIWU 品牌标 + 右上角避让胶囊的毛玻璃跳过/关闭按钮 */
+/* 顶部常驻悬浮栏：左上角 LAIWU 品牌标 */
 .stars-lulu-top-nav {
   position: fixed;
-  top: calc(env(safe-area-inset-top) + 12rpx);
+  top: 104rpx;
   left: 0;
   right: 0;
   height: 64rpx;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 36rpx;
+  padding: 0 40rpx;
   z-index: 1000002;
   box-sizing: border-box;
+  pointer-events: none;
 }
 
 /* 左上角大牌排印：LAIWU */
 .stars-lulu-brand {
   font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Didot", "Bodoni MT", Georgia, sans-serif;
-  font-size: 42rpx;
+  font-size: 40rpx;
   font-weight: 800;
   color: #FFFFFF;
-  letter-spacing: 0.16em;
-  text-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.65);
+  letter-spacing: 0.18em;
+  text-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.7);
+  pointer-events: auto;
 }
 
-/* 右上角毛玻璃关闭/跳过胶囊（严格避让微信右上角 190rpx 胶囊区） */
+/* 右上角独立高奢毛玻璃关闭/跳过胶囊（避让胶囊与刘海，置于胶囊正下方，一眼即见） */
 .stars-lulu-close-pill {
   position: fixed;
-  top: calc(env(safe-area-inset-top) + 12rpx);
-  right: 200rpx;
-  height: 60rpx;
-  padding: 0 24rpx;
+  top: 180rpx;
+  right: 32rpx;
+  height: 64rpx;
+  padding: 0 28rpx;
   border-radius: 999rpx;
-  background: rgba(0, 0, 0, 0.38);
+  background: rgba(0, 0, 0, 0.48);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1.5rpx solid rgba(255, 255, 255, 0.45);
+  border: 1.5rpx solid rgba(255, 255, 255, 0.55);
   display: flex;
   align-items: center;
   gap: 10rpx;
-  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.35);
+  box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.4);
   transition: transform 140ms ease, background 140ms ease;
   z-index: 1000003;
+  pointer-events: auto;
 }
 .stars-lulu-close-pill:active {
   transform: scale(0.92);
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.7);
 }
 .stars-lulu-close-text {
-  font-size: 23rpx;
+  font-size: 24rpx;
   font-weight: 500;
   color: #FFFFFF;
-  letter-spacing: 1.5rpx;
+  letter-spacing: 2rpx;
 }
 .stars-lulu-close-x {
   font-size: 24rpx;
   font-weight: 300;
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 /* Lululemon 级全屏沉浸画报横滑 Swiper (铺满 100vw × 100vh) */
@@ -1721,7 +1723,7 @@ button.btn-primary[disabled]:not([type]) {
 /* 下半部核心信息区：白字「徕舞月度之星 —— 名字」，绝无“立即选购” */
 .stars-lulu-content-box {
   position: absolute;
-  bottom: calc(env(safe-area-inset-bottom) + 210rpx);
+  bottom: calc(env(safe-area-inset-bottom) + 220rpx);
   left: 0;
   right: 0;
   padding: 0 44rpx;
@@ -1746,7 +1748,7 @@ button.btn-primary[disabled]:not([type]) {
 .stars-lulu-quote {
   font-family: Georgia, -apple-system, "Songti SC", serif;
   font-size: 24rpx;
-  color: rgba(255, 255, 255, 0.82);
+  color: rgba(255, 255, 255, 0.85);
   margin-top: 14rpx;
   font-style: italic;
   letter-spacing: 1rpx;
@@ -1758,7 +1760,7 @@ button.btn-primary[disabled]:not([type]) {
 /* Lululemon 同款经典细条分页指示器 (细胶囊当前页 + 微透圆点) */
 .stars-lulu-pagination {
   position: absolute;
-  bottom: calc(env(safe-area-inset-bottom) + 160rpx);
+  bottom: calc(env(safe-area-inset-bottom) + 170rpx);
   left: 0;
   right: 0;
   display: flex;
@@ -1786,27 +1788,28 @@ button.btn-primary[disabled]:not([type]) {
 /* 底部毛玻璃操作栏：与小程序原生磨砂质感深度呼应，一触即入 */
 .stars-lulu-bottom-bar {
   position: absolute;
-  bottom: calc(env(safe-area-inset-bottom) + 40rpx);
+  bottom: calc(env(safe-area-inset-bottom) + 50rpx);
   left: 0;
   right: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 48rpx;
-  z-index: 1000001;
+  padding: 0 44rpx;
+  z-index: 1000003;
   box-sizing: border-box;
+  pointer-events: auto;
 }
 
 .stars-lulu-frosted-pill {
   width: 100%;
-  max-width: 600rpx;
-  height: 88rpx;
+  max-width: 620rpx;
+  height: 92rpx;
   border-radius: 999rpx;
-  background: rgba(255, 255, 255, 0.20);
+  background: rgba(255, 255, 255, 0.24);
   backdrop-filter: blur(28px) saturate(180%);
   -webkit-backdrop-filter: blur(28px) saturate(180%);
-  border: 1.5rpx solid rgba(255, 255, 255, 0.5);
-  box-shadow: 0 14rpx 36rpx rgba(0, 0, 0, 0.32);
+  border: 1.5rpx solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 16rpx 40rpx rgba(0, 0, 0, 0.35);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1815,21 +1818,21 @@ button.btn-primary[disabled]:not([type]) {
 }
 .stars-lulu-frosted-pill:active {
   transform: scale(0.97);
-  background: rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.36);
 }
 .stars-lulu-spark {
   font-size: 20rpx;
   color: #FFE5A3;
 }
 .stars-lulu-enter-txt {
-  font-size: 26rpx;
+  font-size: 28rpx;
   font-weight: 500;
   color: #FFFFFF;
   letter-spacing: 2rpx;
 }
 .stars-lulu-enter-arrow {
   font-size: 24rpx;
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.8);
   margin-left: 4rpx;
 }
 

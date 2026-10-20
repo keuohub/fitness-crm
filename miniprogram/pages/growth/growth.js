@@ -144,11 +144,11 @@ Page({
     savingPoster: false,
     baseUrl: "",
     memberId: null,
-    showSplash: false,
+    showSplash: true,
     splashFadeOut: false,
     formattedDays: "0",
-    // 新增：月度之星开屏弹窗与品牌资产
-    showStarsModal: true,
+    // 月度之星全屏画报（在即刻开启后无缝切入，或点击头部月度之星胶囊随时唤起）
+    showStarsModal: false,
     currentStarIndex: 0,
     starsClosing: false,
     monthlyStarsList: LOCAL_STARS,
@@ -258,6 +258,7 @@ Page({
       currentStarIndex: 0,
       starsClosing: false
     });
+    this.setTabBarHidden(true);
   },
 
   closeStarsModal: function() {
@@ -271,6 +272,7 @@ Page({
         showStarsModal: false,
         starsClosing: false
       });
+      that.setTabBarHidden(false);
     }, 280);
   },
 
@@ -1147,21 +1149,28 @@ Page({
       that._splashTimer = null;
     }
     if (!that.data.showSplash) return;
+    if (wx.vibrateShort) wx.vibrateShort({ type: "light" });
     that.setData({ splashFadeOut: true });
     setTimeout(function() {
-      that.setData({ showSplash: false, splashFadeOut: false });
-      that.setTabBarHidden(false);
-    }, 500);
+      that.setData({
+        showSplash: false,
+        splashFadeOut: false,
+        showStarsModal: true, // 点击「即刻开启」后，无缝切入 Lululemon 级全屏月度之星大片
+        starsClosing: false,
+        currentStarIndex: 0
+      });
+      that.setTabBarHidden(true); // 保持全屏纯净，关闭月度之星时再显露 tabBar 进入成长主页
+    }, 450);
   },
 
   onReady: function() {
-    // 开屏期间藏起底部胶囊栏（自定义 tabBar 是独立图层，z-index 盖不住它）
-    this.setTabBarHidden(this.data.showSplash);
+    // 开屏或月度之星大片期间藏起底部胶囊栏（自定义 tabBar 是独立图层，z-index 盖不住它）
+    this.setTabBarHidden(this.data.showSplash || this.data.showStarsModal);
   },
 
   onShow: function() {
     if (typeof this.getTabBar === "function" && this.getTabBar()) {
-      this.getTabBar().setData({ selected: 0, hidden: this.data.showSplash });
+      this.getTabBar().setData({ selected: 0, hidden: this.data.showSplash || this.data.showStarsModal });
     }
 
     var currentMemberId = Number(wx.getStorageSync("memberId") || 0);
