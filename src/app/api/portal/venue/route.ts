@@ -6,28 +6,28 @@ import { eq, asc } from "drizzle-orm";
 const DEFAULT_VENUES = [
   {
     id: 1,
-    title: "01 / 核心床私密舱",
+    title: "",
     imageUrl: "/brand/venue/venue-1.jpg",
     sortOrder: 1,
     isActive: 1,
   },
   {
     id: 2,
-    title: "02 / 凯迪拉克重力空间",
+    title: "",
     imageUrl: "/brand/venue/venue-2.jpg",
     sortOrder: 2,
     isActive: 1,
   },
   {
     id: 3,
-    title: "03 / 普拉提舒展净室",
+    title: "",
     imageUrl: "/brand/venue/venue-3.jpg",
     sortOrder: 3,
     isActive: 1,
   },
   {
     id: 4,
-    title: "04 / 私享茶饮休憩区",
+    title: "",
     imageUrl: "/brand/venue/venue-4.jpg",
     sortOrder: 4,
     isActive: 1,

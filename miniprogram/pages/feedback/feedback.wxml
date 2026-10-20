@@ -70,7 +70,7 @@
         <!-- 交互操作条 (直达私享便签，防冒泡) -->
         <view class="letter-action-bar">
           <view class="action-btn-single" catchtap="goToFeeling">
-            <text class="action-icon">💌</text>
+            <text class="action-icon">✦</text>
             <text class="action-txt">给小桥写便签回音 · 记录今日体感</text>
           </view>
         </view>

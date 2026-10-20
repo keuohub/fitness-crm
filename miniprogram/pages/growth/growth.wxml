@@ -16,8 +16,43 @@ module.exports = {
 
   <block wx:else>
 
-    <!-- ====== 模块一：问候与自律荣誉区 (严格避让微信右上角胶囊，对标 lululemon 高奢呼吸感排印) ====== -->
-    <view class="greeting-area stagger-1">
+    <!-- ====== 顶部模块一：场馆空间 (纯图画报 · 静奢留白 · 绝不覆盖文字) ====== -->
+    <view class="section-block venue-section stagger-1" wx:if="{{venueList && venueList.length > 0}}">
+      <view class="section-head-flex">
+        <view class="section-title-wrap">
+          <text class="section-title">场馆空间</text>
+          <text class="section-sub-en">THE SANCTUARY</text>
+        </view>
+      </view>
+      <scroll-view class="venue-scroll-row" scroll-x="true" enhanced="true" show-scrollbar="false">
+        <view class="venue-card-item" wx:for="{{venueList}}" wx:key="id" bindtap="previewVenueImage" data-src="{{item.imageUrl}}">
+          <image class="venue-card-img" src="{{item.imageUrl}}" mode="aspectFill" lazy-load="true"></image>
+        </view>
+      </scroll-view>
+    </view>
+
+    <!-- ====== 顶部模块二：徕舞团队 (真实温润 · 匠心陪伴) ====== -->
+    <view class="section-block team-section stagger-2" wx:if="{{teamList && teamList.length > 0}}">
+      <view class="section-head-flex">
+        <view class="section-title-wrap">
+          <text class="section-title">徕舞团队</text>
+          <text class="section-sub-en">OUR TEAM</text>
+        </view>
+      </view>
+      <view class="team-grid">
+        <view class="team-card-item" wx:for="{{teamList}}" wx:key="id" bindtap="previewTeamImage" data-src="{{item.avatarUrl}}">
+          <view class="team-avatar-wrap">
+            <image class="team-avatar" src="{{item.avatarUrl}}" mode="aspectFill" lazy-load="true"></image>
+          </view>
+          <view class="team-name">{{item.name}}</view>
+          <view class="team-role">{{item.roleTitle}}</view>
+          <view class="team-bio" wx:if="{{item.bio}}">“{{item.bio}}”</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- ====== 模块三：问候与自律荣誉区 ====== -->
+    <view class="greeting-area stagger-3">
       <view class="greeting-top-row">
         <text class="greeting-salute">你好，</text>
         <text class="greeting-name">{{memberName}}</text>
@@ -43,8 +78,8 @@ module.exports = {
       </view>
     </view>
 
-    <!-- ====== 模块二：进阶轨迹 · 坚持不易的每一步激励 ====== -->
-    <view class="milestone-card stagger-2">
+    <!-- ====== 模块四：进阶轨迹 · 坚持不易的每一步激励 ====== -->
+    <view class="milestone-card stagger-4">
       <view class="milestone-card-top">
         <text class="section-title-inline">进阶轨迹 · 每一步坚持都有印记</text>
         <text class="milestone-level-badge">{{stageName}}</text>
@@ -73,8 +108,8 @@ module.exports = {
       </view>
     </view>
 
-    <!-- ====== 模块三：核心自律资产双拼大卡 (摒弃6宫格，数据清晰不折行) ====== -->
-    <view class="stats-grid-dual stagger-3">
+    <!-- ====== 模块五：核心自律资产双拼大卡 (摒弃6宫格，数据清晰不折行) ====== -->
+    <view class="stats-grid-dual stagger-5">
       <view class="stat-card-dual">
         <view class="stat-number-wrap">
           <text class="stat-number">{{formattedDays}}</text>
@@ -93,53 +128,14 @@ module.exports = {
       </view>
     </view>
 
-    <!-- ====== 模块四：主理人私语 (简短温暖，拒绝堆砌) ====== -->
-    <view class="whisper-card stagger-4">
+    <!-- ====== 模块六：主理人私语 (简短温暖，拒绝堆砌) ====== -->
+    <view class="whisper-card stagger-6">
       <view class="whisper-bar"></view>
       <view class="whisper-content">
         <text class="whisper-label">小桥私语</text>
         <text class="whisper-title">{{whisperTitle}}</text>
         <text class="whisper-body">{{whisperBody}}</text>
         <text class="whisper-sign">— 小桥 · 亲笔</text>
-      </view>
-    </view>
-
-    <!-- ====== 模块：场馆空间 · 光影与器械 (纯图画报 · 静奢留白) ====== -->
-    <view class="section-block venue-section stagger-5" wx:if="{{venueList && venueList.length > 0}}">
-      <view class="section-head-flex">
-        <view class="section-title-wrap">
-          <text class="section-title">场馆空间 · 光影与器械</text>
-          <text class="section-sub-en">THE SANCTUARY</text>
-        </view>
-        <text class="venue-hint">轻触浏览空间</text>
-      </view>
-      <scroll-view class="venue-scroll-row" scroll-x="true" enhanced="true" show-scrollbar="false">
-        <view class="venue-card-item" wx:for="{{venueList}}" wx:key="id" bindtap="previewVenueImage" data-src="{{item.imageUrl}}">
-          <image class="venue-card-img" src="{{item.imageUrl}}" mode="aspectFill" lazy-load="true"></image>
-          <view class="venue-card-overlay">
-            <text class="venue-card-title">{{item.title}}</text>
-          </view>
-        </view>
-      </scroll-view>
-    </view>
-
-    <!-- ====== 模块：徕舞团队 (真实温润 · 无推销) ====== -->
-    <view class="section-block team-section stagger-6" wx:if="{{teamList && teamList.length > 0}}">
-      <view class="section-head-flex">
-        <view class="section-title-wrap">
-          <text class="section-title">徕舞团队 · 真实陪伴</text>
-          <text class="section-sub-en">OUR TEAM</text>
-        </view>
-      </view>
-      <view class="team-grid">
-        <view class="team-card-item" wx:for="{{teamList}}" wx:key="id" bindtap="previewTeamImage" data-src="{{item.avatarUrl}}">
-          <view class="team-avatar-wrap">
-            <image class="team-avatar" src="{{item.avatarUrl}}" mode="aspectFill" lazy-load="true"></image>
-          </view>
-          <view class="team-name">{{item.name}}</view>
-          <view class="team-role">{{item.roleTitle}}</view>
-          <view class="team-bio" wx:if="{{item.bio}}">“{{item.bio}}”</view>
-        </view>
       </view>
     </view>
 
@@ -157,7 +153,7 @@ module.exports = {
       <view wx:if="{{!photoComparisons || photoComparisons.length === 0}}" class="empty-state">
         <text class="empty-title">小桥正在为你收录专属体态蜕变 · 每一次自律都在重塑身姿</text>
         <view class="empty-poster-btn" bindtap="openShareModal">
-          <text class="empty-poster-icon">📥</text>
+          <text class="empty-poster-icon">✦</text>
           <text class="empty-poster-text">生成自律档案海报并保存到相册</text>
         </view>
       </view>
@@ -311,7 +307,7 @@ module.exports = {
       />
       <view class="feeling-footer">
         <view class="feeling-privacy-badge">
-          <text class="privacy-lock">🔒</text>
+          <text class="privacy-lock">✦</text>
           <text class="privacy-text">便签仅你与教练可见 · 小桥会认真阅读并回复</text>
         </view>
         <button
@@ -399,11 +395,11 @@ module.exports = {
   <!-- 底部固定吸底操作栏：无论何时何地，保存按钮永远悬浮在屏幕最底端，一眼可见！ -->
   <view class="poster-fixed-bottom" catchtap="noop">
     <button class="poster-btn-primary" bindtap="savePosterToAlbum" loading="{{savingPoster}}">
-      📥 保存海报到手机相册
+      <text class="poster-btn-spark">✦</text> 保存海报到手机相册
     </button>
     <view class="poster-bottom-subrow">
       <button class="poster-btn-secondary" open-type="share">
-        💬 分享给微信好友
+        <text class="poster-btn-spark">✦</text> 分享给微信好友
       </button>
       <view class="poster-btn-close-pill" bindtap="closeShareModal">
         ✕ 关闭

@@ -93,10 +93,10 @@ var LOCAL_STARS = [
 ];
 
 var LOCAL_VENUES = [
-  { id: 1, title: "01 / 核心床私密舱", imageUrl: "/images/venue/venue-1.jpg" },
-  { id: 2, title: "02 / 凯迪拉克重力空间", imageUrl: "/images/venue/venue-2.jpg" },
-  { id: 3, title: "03 / 普拉提舒展净室", imageUrl: "/images/venue/venue-3.jpg" },
-  { id: 4, title: "04 / 私享茶饮休憩区", imageUrl: "/images/venue/venue-4.jpg" }
+  { id: 1, imageUrl: "/images/venue/venue-1.jpg" },
+  { id: 2, imageUrl: "/images/venue/venue-2.jpg" },
+  { id: 3, imageUrl: "/images/venue/venue-3.jpg" },
+  { id: 4, imageUrl: "/images/venue/venue-4.jpg" }
 ];
 
 var LOCAL_TEAM = [

@@ -42,9 +42,9 @@
 }
 
 
-/* ================= 模块一：问候区（严格避让右上角微信胶囊，对标 lululemon 高奢呼吸感排印） ================= */
+/* ================= 模块：问候区（高奢呼吸感排印） ================= */
 .greeting-area {
-  padding: 12rpx 220rpx 32rpx 36rpx;
+  padding: 16rpx 36rpx 32rpx;
   box-sizing: border-box;
 }
 .greeting-top-row {
@@ -1249,6 +1249,13 @@ button.btn-primary[disabled]:not([type]) {
 }
 .poster-btn-primary:active {
   transform: scale(0.98);
+}
+.poster-btn-spark {
+  font-size: 22rpx;
+  margin-right: 8rpx;
+  color: inherit;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .poster-bottom-subrow {
