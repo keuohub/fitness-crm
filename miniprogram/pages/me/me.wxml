@@ -142,9 +142,6 @@
 
     <!-- 模块六：账号操作 (Account Operations) -->
     <view class="account-actions-editorial stagger-5">
-      <view class="switch-account-editorial" bindtap="handleSwitchAccount">
-        <text class="switch-txt">切换会员档案 / 口令</text>
-      </view>
       <view class="logout-link-editorial" bindtap="handleLogout">
         <text class="logout-txt">暂时离开手札</text>
       </view>

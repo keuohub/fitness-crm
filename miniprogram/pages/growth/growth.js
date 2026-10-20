@@ -1088,8 +1088,12 @@ Page({
 
   submitFeeling: function() {
     var that = this;
-    var feeling = that.data.feeling.trim();
-    if (!feeling) return;
+    if (that.data.feelingSubmitting) return;
+    var feeling = (that.data.feeling || "").trim();
+    if (!feeling) {
+      wx.showToast({ title: "请先写下身体感受", icon: "none" });
+      return;
+    }
     try {
       if (wx.vibrateShort) wx.vibrateShort({ type: "medium" });
     } catch (err) {}

@@ -318,24 +318,17 @@ module.exports = {
       </view>
 
       <view class="note-stationery-box">
-        <!-- 标签流式排印 -->
-        <view class="note-tags-flow">
-          <view wx:for="{{feelingTags}}" wx:key="*this"
-                class="note-tag-chip {{tools.includes(selectedFeelingTags, item) ? 'note-tag-active' : ''}}"
-                bindtap="toggleFeelingTag" data-tag="{{item}}">
-            #{{item}}
-          </view>
-        </view>
-
         <textarea class="note-textarea" value="{{feeling}}"
                   placeholder="跟小桥说说：今天练完身体感觉怎么样？哪里舒展了，或者有什么想交流的..."
+                  placeholder-class="note-textarea-placeholder"
                   bindinput="onFeelingInput" maxlength="500" />
 
         <view class="note-action-row">
           <text class="note-privacy-hint">便签仅你与教练可见 · 小桥会认真阅读并回复</text>
-          <button class="btn-note-submit" bindtap="submitFeeling" disabled="{{feelingSubmitting || feeling === ''}}">
-            {{feelingSubmitting ? "发送中..." : "发给小桥"}}
-          </button>
+          <view class="btn-note-submit {{feeling && feeling.length > 0 ? 'btn-note-active' : 'btn-note-idle'}}"
+                bindtap="submitFeeling">
+            <text class="btn-note-txt">{{feelingSubmitting ? "发送中..." : "发给小桥"}}</text>
+          </view>
         </view>
 
         <view wx:if="{{feelingReply}}" class="note-reply-box">

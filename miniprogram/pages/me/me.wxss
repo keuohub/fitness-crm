@@ -405,27 +405,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 24rpx;
-  margin-top: 12rpx;
-}
-.switch-account-editorial {
-  padding: 16rpx 36rpx;
-  border-radius: 999rpx;
-  background: rgba(255, 255, 255, 0.6);
-  border: 1rpx solid rgba(255, 255, 255, 0.85);
-  transition: transform 140ms ease;
-}
-.switch-account-editorial:active {
-  transform: scale(0.96);
-}
-.switch-txt {
-  font-size: 22rpx;
-  font-weight: 500;
-  color: #1C1415;
-  letter-spacing: 0.06em;
+  margin-top: 24rpx;
+  padding-bottom: 20rpx;
 }
 .logout-link-editorial {
-  padding: 8rpx 20rpx;
+  padding: 12rpx 32rpx;
   transition: opacity 140ms ease;
 }
 .logout-link-editorial:active {

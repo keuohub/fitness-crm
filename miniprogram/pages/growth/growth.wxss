@@ -713,72 +713,82 @@
   border: 1rpx solid rgba(255, 255, 255, 0.9);
   box-shadow: 0 12rpx 32rpx rgba(186, 36, 40, 0.05);
 }
-.note-tags-flow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12rpx;
-  margin-bottom: 20rpx;
-}
-.note-tag-chip {
-  padding: 8rpx 20rpx;
-  border-radius: 999rpx;
-  font-size: 20rpx;
-  color: rgba(28, 20, 21, 0.65);
-  background: rgba(255, 255, 255, 0.65);
-  border: 1rpx solid rgba(28, 20, 21, 0.08);
-  transition: all 140ms ease;
-}
-.note-tag-chip.note-tag-active {
-  background: #1C1415;
-  color: #FFE5A3;
-  border-color: #1C1415;
-}
 .note-textarea {
   width: 100%;
   height: 180rpx;
   box-sizing: border-box;
-  padding: 20rpx;
+  padding: 22rpx 24rpx;
   border-radius: 16rpx;
-  background: rgba(255, 255, 255, 0.75);
-  border: 1rpx solid rgba(28, 20, 21, 0.08);
+  background: rgba(255, 255, 255, 0.88);
+  border: 1rpx solid rgba(28, 20, 21, 0.12);
+  font-family: "Songti SC", Georgia, serif;
   font-size: 25rpx;
-  line-height: 1.6;
+  line-height: 1.65;
   color: #1C1415;
-  margin-bottom: 20rpx;
+  margin-bottom: 22rpx;
+}
+.note-textarea-placeholder {
+  font-family: "Songti SC", Georgia, serif;
+  font-size: 23rpx;
+  color: rgba(28, 20, 21, 0.45);
 }
 .note-action-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16rpx;
+  gap: 20rpx;
 }
 .note-privacy-hint {
-  font-size: 19rpx;
-  color: rgba(28, 20, 21, 0.45);
-  line-height: 1.4;
+  font-family: "Songti SC", Georgia, serif;
+  font-size: 21rpx;
+  color: rgba(28, 20, 21, 0.72);
+  line-height: 1.5;
   flex: 1;
 }
+
+/* 发给小桥 按钮状态 · 彻底告别发灰模糊，字字清晰高质感 */
 .btn-note-submit {
-  height: 64rpx;
-  line-height: 64rpx;
-  padding: 0 28rpx;
+  height: 68rpx;
+  padding: 0 34rpx;
   border-radius: 999rpx;
-  background: linear-gradient(135deg, #BA2428 0%, #8C161A 100%);
-  color: #FFFFFF;
-  font-size: 22rpx;
-  font-weight: 500;
-  letter-spacing: 1rpx;
-  box-shadow: 0 4rpx 14rpx rgba(186, 36, 40, 0.28);
-  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  margin: 0 !important;
-  transition: transform 140ms ease;
+  transition: all 180ms cubic-bezier(0.2, 0.8, 0.25, 1);
+  box-sizing: border-box;
 }
 .btn-note-submit:active {
-  transform: scale(0.95);
+  transform: scale(0.96);
 }
-.btn-note-submit[disabled] {
-  opacity: 0.45;
+
+/* 激活态：深邃曜黑底配典雅微金字，字字清晰可见 */
+.btn-note-submit.btn-note-active {
+  background: #1C1415;
+  border: 1.5rpx solid rgba(255, 229, 163, 0.45);
+  box-shadow: 0 6rpx 20rpx rgba(28, 20, 21, 0.28);
+}
+.btn-note-submit.btn-note-active .btn-note-txt {
+  color: #FFE5A3;
+  font-weight: 600;
+}
+
+/* 待输入态：浅白温润质感底，深色字体清晰高对比，绝不模糊发暗 */
+.btn-note-submit.btn-note-idle {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1rpx solid rgba(28, 20, 21, 0.18);
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+}
+.btn-note-submit.btn-note-idle .btn-note-txt {
+  color: rgba(28, 20, 21, 0.65);
+  font-weight: 500;
+}
+
+.btn-note-txt {
+  font-family: "Songti SC", Georgia, serif;
+  font-size: 23rpx;
+  letter-spacing: 0.06em;
+  transition: color 160ms ease;
 }
 .note-reply-box {
   margin-top: 24rpx;
