@@ -21,6 +21,10 @@ module.exports = {
       <view class="greeting-top-row">
         <text class="greeting-salute">你好，</text>
         <text class="greeting-name">{{memberName}}</text>
+        <view class="stars-open-pill" bindtap="openStarsModal">
+          <text class="stars-spark">✦</text>
+          <text class="stars-pill-txt">月度之星</text>
+        </view>
       </view>
       <view class="greeting-companion-lockup">
         <view class="companion-tier-pill {{joinDays >= 365 ? 'tier-pill-gold' : ''}}">
@@ -97,6 +101,45 @@ module.exports = {
         <text class="whisper-title">{{whisperTitle}}</text>
         <text class="whisper-body">{{whisperBody}}</text>
         <text class="whisper-sign">— 小桥 · 亲笔</text>
+      </view>
+    </view>
+
+    <!-- ====== 模块：场馆空间 · 光影与器械 (纯图画报 · 静奢留白) ====== -->
+    <view class="section-block venue-section stagger-5" wx:if="{{venueList && venueList.length > 0}}">
+      <view class="section-head-flex">
+        <view class="section-title-wrap">
+          <text class="section-title">场馆空间 · 光影与器械</text>
+          <text class="section-sub-en">THE SANCTUARY</text>
+        </view>
+        <text class="venue-hint">轻触浏览空间</text>
+      </view>
+      <scroll-view class="venue-scroll-row" scroll-x="true" enhanced="true" show-scrollbar="false">
+        <view class="venue-card-item" wx:for="{{venueList}}" wx:key="id" bindtap="previewVenueImage" data-src="{{item.imageUrl}}">
+          <image class="venue-card-img" src="{{item.imageUrl}}" mode="aspectFill" lazy-load="true"></image>
+          <view class="venue-card-overlay">
+            <text class="venue-card-title">{{item.title}}</text>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+
+    <!-- ====== 模块：徕舞团队 (真实温润 · 无推销) ====== -->
+    <view class="section-block team-section stagger-6" wx:if="{{teamList && teamList.length > 0}}">
+      <view class="section-head-flex">
+        <view class="section-title-wrap">
+          <text class="section-title">徕舞团队 · 真实陪伴</text>
+          <text class="section-sub-en">OUR TEAM</text>
+        </view>
+      </view>
+      <view class="team-grid">
+        <view class="team-card-item" wx:for="{{teamList}}" wx:key="id" bindtap="previewTeamImage" data-src="{{item.avatarUrl}}">
+          <view class="team-avatar-wrap">
+            <image class="team-avatar" src="{{item.avatarUrl}}" mode="aspectFill" lazy-load="true"></image>
+          </view>
+          <view class="team-name">{{item.name}}</view>
+          <view class="team-role">{{item.roleTitle}}</view>
+          <view class="team-bio" wx:if="{{item.bio}}">“{{item.bio}}”</view>
+        </view>
       </view>
     </view>
 
@@ -372,23 +415,56 @@ module.exports = {
 <!-- 离屏海报绘制画布 (用于生成保存到相册的高清图片) -->
 <canvas type="2d" id="posterCanvas" class="poster-canvas-hidden"></canvas>
 
-<!-- ====== 全屏开屏 ======
-     必须放在 .growth-page 之外。
-     .growth-page 带进场动画（transform），会让内部的 position: fixed
-     以它为参照物，全屏层被撑成整页高度，内容就掉到屏幕下方去了。 -->
-<view class="splash-screen {{splashFadeOut ? 'splash-fade-out' : ''}}" wx:if="{{showSplash}}" catchtouchmove="noop">
-  <view class="splash-center">
-    <!-- 高奢衬线品牌拼音：置于「到徕舞」正上方 -->
-    <text class="splash-brand-luxury">L A I W U</text>
-    <view class="splash-brand-line"></view>
+<!-- ====== 开屏「✦ 徕舞 · 月度之星 ✦」沉浸式大片画廊弹窗 (Lululemon 级仪式感) ====== -->
+<view class="stars-modal-backdrop {{showStarsModal ? 'modal-visible' : 'modal-hidden'}}" 
+      wx:if="{{showStarsModal}}" 
+      catchtouchmove="noop">
+  
+  <view class="stars-modal-dialog">
+    <!-- 极奢仪式感抬头 -->
+    <view class="stars-ceremony-header">
+      <view class="ceremony-eyebrow">✦  L A I W U  ✦</view>
+      <view class="ceremony-title">—— 徕舞 · 月度之星 ——</view>
+      <view class="ceremony-sub">MONTHLY STARS OF LAIWU</view>
+    </view>
 
-    <!-- 核心文案 -->
-    <text class="splash-sub">到徕舞</text>
-    <text class="splash-main">一起</text>
-    <text class="splash-main">好状态</text>
+    <!-- Lululemon 级左右横滑大片 Swiper (支持 previous-margin / next-margin 漏边手感) -->
+    <swiper class="stars-swiper" 
+            previous-margin="50rpx" 
+            next-margin="50rpx" 
+            current="{{currentStarIndex}}"
+            bindchange="onStarSwiperChange">
+      <swiper-item wx:for="{{monthlyStarsList}}" wx:key="id" class="star-swiper-item">
+        <view class="star-card-luxury {{index === currentStarIndex ? 'star-card-active' : ''}}">
+          <image class="star-card-img" src="{{item.avatarUrl}}" mode="aspectFill" lazy-load="true"></image>
+          <view class="star-card-gradient"></view>
+          
+          <!-- 卡片文字信息 (尊崇克制，拒绝俗套营销) -->
+          <view class="star-card-info">
+            <view class="star-card-tag-badge" wx:if="{{item.tag}}">
+              <text class="star-tag-spark">✦</text>
+              <text class="star-tag-txt">{{item.tag}}</text>
+            </view>
+            <view class="star-card-name">{{item.name}}</view>
+            <view class="star-card-quote" wx:if="{{item.quote}}">“{{item.quote}}”</view>
+          </view>
+        </view>
+      </swiper-item>
+    </swiper>
 
-    <!-- 唯一交互入口 -->
-    <view class="splash-cta" bindtap="skipSplash">即刻开启</view>
+    <!-- 分页胶囊长条指示器 -->
+    <view class="stars-pagination">
+      <view wx:for="{{monthlyStarsList}}" wx:key="id" 
+            class="star-dot {{index === currentStarIndex ? 'star-dot-active' : ''}}"></view>
+    </view>
+
+    <!-- 退出进入操作栏 -->
+    <view class="stars-dismiss-row">
+      <view class="stars-dismiss-btn" bindtap="closeStarsModal">
+        <text class="stars-dismiss-txt">开启今日训练 · 进入主页</text>
+        <text class="stars-dismiss-icon">✕</text>
+      </view>
+    </view>
   </view>
 </view>
 

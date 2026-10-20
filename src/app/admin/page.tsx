@@ -203,6 +203,21 @@ export default async function AdminPage() {
         </div>
 
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 24 }}>
+          <Link href="/admin/stars" style={{
+            background: "#5E1914", padding: "12px 24px", borderRadius: 10,
+            fontSize: 14, color: "#FFFFFF", fontWeight: 600, textDecoration: "none",
+            boxShadow: "0 2px 8px rgba(94,25,20,0.2)"
+          }}>✦ 月度之星管理</Link>
+          <Link href="/admin/venue" style={{
+            background: "#8B5E3C", padding: "12px 24px", borderRadius: 10,
+            fontSize: 14, color: "#FFFFFF", fontWeight: 600, textDecoration: "none",
+            boxShadow: "0 2px 8px rgba(139,94,60,0.2)"
+          }}>✦ 场馆相册管理</Link>
+          <Link href="/admin/team" style={{
+            background: "#4A403E", padding: "12px 24px", borderRadius: 10,
+            fontSize: 14, color: "#FFFFFF", fontWeight: 600, textDecoration: "none",
+            boxShadow: "0 2px 8px rgba(74,64,62,0.2)"
+          }}>✦ 徕舞团队管理</Link>
           <Link href="/members" style={{
             background: "#FFFFFF", padding: "12px 24px", borderRadius: 10,
             fontSize: 14, color: "#1A1A1A", fontWeight: 500, textDecoration: "none",

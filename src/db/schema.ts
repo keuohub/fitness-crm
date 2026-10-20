@@ -306,3 +306,37 @@ export const coachNotes = pgTable("coach_notes", {
   aiMessage: text("ai_message"), // AI生成的人文关怀鼓励语
   createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
 });
+
+// ====== 月度之星 (Stars of Laiwu) ======
+export const monthlyStars = pgTable("monthly_stars", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  avatarUrl: text("avatar_url").notNull(),
+  tag: text("tag"),
+  quote: text("quote"),
+  sortOrder: integer("sort_order").default(0),
+  isActive: integer("is_active").default(1),
+  createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
+});
+
+// ====== 场馆空间相册 (Venue & Space) ======
+export const venueItems = pgTable("venue_items", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  imageUrl: text("image_url").notNull(),
+  sortOrder: integer("sort_order").default(0),
+  isActive: integer("is_active").default(1),
+  createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
+});
+
+// ====== 徕舞团队 (Team Laiwu) ======
+export const teamMembers = pgTable("team_members", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  roleTitle: text("role_title").notNull(),
+  avatarUrl: text("avatar_url").notNull(),
+  bio: text("bio"),
+  sortOrder: integer("sort_order").default(0),
+  isActive: integer("is_active").default(1),
+  createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
+});

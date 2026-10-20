@@ -83,6 +83,28 @@ function formatCourseType(type, focusArea) {
   return name;
 }
 
+var LOCAL_STARS = [
+  { id: 1, name: "苏晴", avatarUrl: "/images/stars/star-1.jpg", tag: "从容", quote: "在呼吸的节律里，重新找回身体原本的力量。" },
+  { id: 2, name: "念安", avatarUrl: "/images/stars/star-2.jpg", tag: "深耕", quote: "每一次对抗与拉伸，都是与自己最真实的对话。" },
+  { id: 3, name: "黛萌", avatarUrl: "/images/stars/star-3.jpg", tag: "专注", quote: "心神定下来，身体自会给出优雅的回应。" },
+  { id: 4, name: "语晨", avatarUrl: "/images/stars/star-4.jpg", tag: "觉知", quote: "卸下外界的喧嚣，在这里只专注向内的深邃。" },
+  { id: 5, name: "若薇", avatarUrl: "/images/stars/star-5.jpg", tag: "自在", quote: "不执着于速度，每一步坚持都在沉淀笃定。" },
+  { id: 6, name: "听澜", avatarUrl: "/images/stars/star-6.jpg", tag: "恒温", quote: "舒展的不仅是脊柱线条，更是内在的从容与热爱。" }
+];
+
+var LOCAL_VENUES = [
+  { id: 1, title: "01 / 核心床私密舱", imageUrl: "/images/venue/venue-1.jpg" },
+  { id: 2, title: "02 / 凯迪拉克重力空间", imageUrl: "/images/venue/venue-2.jpg" },
+  { id: 3, title: "03 / 普拉提舒展净室", imageUrl: "/images/venue/venue-3.jpg" },
+  { id: 4, title: "04 / 私享茶饮休憩区", imageUrl: "/images/venue/venue-4.jpg" }
+];
+
+var LOCAL_TEAM = [
+  { id: 1, name: "小桥", roleTitle: "徕舞主理人", avatarUrl: "/images/team/team-1.jpg", bio: "慢下来，用呼吸唤醒身体的每一寸记忆。" },
+  { id: 2, name: "嘉敏", roleTitle: "普拉提导师", avatarUrl: "/images/team/team-2.jpg", bio: "专注当下每一次发力，感受从容舒展的蜕变。" },
+  { id: 3, name: "若琳", roleTitle: "普拉提导师", avatarUrl: "/images/team/team-3.jpg", bio: "在对抗与平衡中，雕刻坚韧而柔软的内在力量。" }
+];
+
 Page({
   data: {
     memberName: "",
@@ -122,14 +144,19 @@ Page({
     savingPoster: false,
     baseUrl: "",
     memberId: null,
-    showSplash: true,
+    showSplash: false,
     splashFadeOut: false,
-    formattedDays: "0"
+    formattedDays: "0",
+    // 新增：月度之星开屏弹窗与品牌资产
+    showStarsModal: true,
+    currentStarIndex: 0,
+    monthlyStarsList: LOCAL_STARS,
+    venueList: LOCAL_VENUES,
+    teamList: LOCAL_TEAM
   },
 
   onLoad: function() {
     var page = this;
-    page._splashTimer = setTimeout(function() { page.skipSplash(); }, 3500);
 
     var memberId = wx.getStorageSync("memberId");
     if (!memberId) {
@@ -154,6 +181,7 @@ Page({
     this.loadCoachNote();
     this.loadPhotoComparisons();
     this.loadPhotos();
+    this.loadBrandAssets();
 
     if (wx.showShareMenu) {
       wx.showShareMenu({
@@ -161,6 +189,105 @@ Page({
         menus: ["shareAppMessage", "shareTimeline"]
       });
     }
+  },
+
+  loadBrandAssets: function() {
+    var that = this;
+    var baseUrl = that.data.baseUrl || api.DEFAULT_BASE_URL;
+
+    // 1. 月度之星
+    api.request({
+      url: "/api/portal/stars",
+      header: that.apiHeaders(),
+      success: function(res) {
+        if (res.statusCode === 200 && Array.isArray(res.data) && res.data.length > 0) {
+          var mapped = res.data.map(function(item) {
+            var url = item.avatarUrl || "";
+            if (url.indexOf("/brand/") === 0) {
+              url = baseUrl + url;
+            }
+            return Object.assign({}, item, { avatarUrl: url });
+          });
+          that.setData({ monthlyStarsList: mapped });
+        }
+      }
+    });
+
+    // 2. 场馆空间
+    api.request({
+      url: "/api/portal/venue",
+      header: that.apiHeaders(),
+      success: function(res) {
+        if (res.statusCode === 200 && Array.isArray(res.data) && res.data.length > 0) {
+          var mapped = res.data.map(function(item) {
+            var url = item.imageUrl || "";
+            if (url.indexOf("/brand/") === 0) {
+              url = baseUrl + url;
+            }
+            return Object.assign({}, item, { imageUrl: url });
+          });
+          that.setData({ venueList: mapped });
+        }
+      }
+    });
+
+    // 3. 徕舞团队
+    api.request({
+      url: "/api/portal/team",
+      header: that.apiHeaders(),
+      success: function(res) {
+        if (res.statusCode === 200 && Array.isArray(res.data) && res.data.length > 0) {
+          var mapped = res.data.map(function(item) {
+            var url = item.avatarUrl || "";
+            if (url.indexOf("/brand/") === 0) {
+              url = baseUrl + url;
+            }
+            return Object.assign({}, item, { avatarUrl: url });
+          });
+          that.setData({ teamList: mapped });
+        }
+      }
+    });
+  },
+
+  openStarsModal: function() {
+    if (wx.vibrateShort) wx.vibrateShort({ type: "light" });
+    this.setData({
+      showStarsModal: true,
+      currentStarIndex: 0
+    });
+  },
+
+  closeStarsModal: function() {
+    this.setData({
+      showStarsModal: false
+    });
+  },
+
+  onStarSwiperChange: function(e) {
+    var current = e.detail.current;
+    this.setData({ currentStarIndex: current });
+    if (wx.vibrateShort) {
+      wx.vibrateShort({ type: "light" });
+    }
+  },
+
+  previewVenueImage: function(e) {
+    var current = e.currentTarget.dataset.src;
+    var urls = this.data.venueList.map(function(v) { return v.imageUrl; });
+    wx.previewImage({
+      current: current,
+      urls: urls
+    });
+  },
+
+  previewTeamImage: function(e) {
+    var current = e.currentTarget.dataset.src;
+    var urls = this.data.teamList.map(function(t) { return t.avatarUrl; });
+    wx.previewImage({
+      current: current,
+      urls: urls
+    });
   },
 
   apiHeaders: function() {
