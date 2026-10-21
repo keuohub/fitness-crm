@@ -38,34 +38,70 @@ function request(options) {
     path = "/" + path;
   }
 
-  // 微信云托管私有链路优先调用
-  if (wx.cloud && typeof wx.cloud.callContainer === "function") {
-    var callHeader = Object.assign({
-      "X-WX-SERVICE": SERVICE_NAME,
-      "content-type": "application/json"
-    }, header);
+  // 检测是否处于微信开发者工具或已指定本地测试服务
+  var isDevTools = false;
+  try {
+    var sys = wx.getSystemInfoSync();
+    if (sys.platform === "devtools") {
+      isDevTools = true;
+    }
+  } catch(e) {}
 
-    wx.cloud.callContainer({
-      config: {
-        env: ENV_ID
-      },
-      path: path,
+  var customBase = wx.getStorageSync("baseUrl");
+  var activeLocalBase = customBase || (isDevTools ? "http://localhost:3001" : "");
+
+  // 本地联调优先：若在开发者工具环境，直接走本机 3001 端口，实现后台保存即时在小程序呈现
+  if (activeLocalBase) {
+    var targetUrl = activeLocalBase + path;
+    wx.request({
+      url: targetUrl,
       method: method,
-      header: callHeader,
+      header: Object.assign({ "content-type": "application/json" }, header),
       data: data,
       success: function(res) {
         success(res);
       },
       fail: function(err) {
-        console.warn("wx.cloud.callContainer 调用微异常，尝试切换至公网链路:", err);
-        fallbackToWxRequest();
+        console.warn("本机服务请求微异常，平滑降级至云容器/公网链路:", err);
+        fallbackToCloudOrPublic();
       },
       complete: complete
     });
     return;
   }
 
-  fallbackToWxRequest();
+  fallbackToCloudOrPublic();
+
+  function fallbackToCloudOrPublic() {
+    // 微信云托管私有链路优先调用
+    if (wx.cloud && typeof wx.cloud.callContainer === "function") {
+      var callHeader = Object.assign({
+        "X-WX-SERVICE": SERVICE_NAME,
+        "content-type": "application/json"
+      }, header);
+
+      wx.cloud.callContainer({
+        config: {
+          env: ENV_ID
+        },
+        path: path,
+        method: method,
+        header: callHeader,
+        data: data,
+        success: function(res) {
+          success(res);
+        },
+        fail: function(err) {
+          console.warn("wx.cloud.callContainer 调用微异常，尝试切换至公网链路:", err);
+          fallbackToWxRequest();
+        },
+        complete: complete
+      });
+      return;
+    }
+
+    fallbackToWxRequest();
+  }
 
   function fallbackToWxRequest() {
     var finalUrl = url;

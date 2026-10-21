@@ -48,19 +48,26 @@ export async function PUT(
         )
       : null;
 
+    const updatePayload: any = {};
+    if (body.name !== undefined) updatePayload.name = body.name;
+    if (body.phone !== undefined) updatePayload.phone = body.phone || null;
+    if (body.memberCode !== undefined) updatePayload.memberCode = body.memberCode;
+    if (body.mentorName !== undefined) updatePayload.mentorName = body.mentorName;
+    if (body.totalHours !== undefined) updatePayload.totalHours = Number(body.totalHours);
+    if (body.hoursPilates !== undefined) updatePayload.hoursPilates = Number(body.hoursPilates);
+    if (body.hoursEquipment !== undefined) updatePayload.hoursEquipment = Number(body.hoursEquipment);
+    if (body.hoursFatBurn !== undefined) updatePayload.hoursFatBurn = Number(body.hoursFatBurn);
+    if (body.gender !== undefined) updatePayload.gender = body.gender || null;
+    if (body.stage !== undefined) updatePayload.stage = body.stage || null;
+    if (tagsValue !== null) updatePayload.tags = tagsValue;
+    if (body.status !== undefined) updatePayload.status = body.status || "active";
+    if (body.joinedAt !== undefined) updatePayload.joinedAt = body.joinedAt || null;
+    if (body.birthday !== undefined) updatePayload.birthday = body.birthday || null;
+    if (body.notes !== undefined) updatePayload.notes = body.notes || null;
+
     const result = await db
       .update(members)
-      .set({
-        name: body.name,
-        phone: body.phone || null,
-        gender: body.gender || null,
-        stage: body.stage || null,
-        tags: tagsValue,
-        status: body.status || "active",
-        joinedAt: body.joinedAt || null,
-        birthday: body.birthday || null,
-        notes: body.notes || null,
-      })
+      .set(updatePayload)
       .where(eq(members.id, id))
       .returning();
 

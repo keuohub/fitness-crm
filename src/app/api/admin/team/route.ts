@@ -34,7 +34,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name, roleTitle, avatarUrl, bio, sortOrder = 0, isActive = 1 } = body;
+    const { name, roleTitle, avatarUrl, bio, experience, creds, quote, sortOrder = 0, isActive = 1 } = body;
 
     if (!name || !roleTitle || !avatarUrl) {
       return NextResponse.json({ error: "姓名、称谓与照片为必填项" }, { status: 400 });
@@ -47,6 +47,9 @@ export async function POST(req: NextRequest) {
         roleTitle,
         avatarUrl,
         bio: bio || null,
+        experience: experience || "",
+        creds: creds || "",
+        quote: quote || "",
         sortOrder: Number(sortOrder) || 0,
         isActive: Number(isActive) || 1,
       })
@@ -63,7 +66,7 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, name, roleTitle, avatarUrl, bio, sortOrder, isActive } = body;
+    const { id, name, roleTitle, avatarUrl, bio, experience, creds, quote, sortOrder, isActive } = body;
 
     if (!id) {
       return NextResponse.json({ error: "ID 为必填项" }, { status: 400 });
@@ -74,6 +77,9 @@ export async function PUT(req: NextRequest) {
     if (roleTitle !== undefined) updateData.roleTitle = roleTitle;
     if (avatarUrl !== undefined) updateData.avatarUrl = avatarUrl;
     if (bio !== undefined) updateData.bio = bio;
+    if (experience !== undefined) updateData.experience = experience;
+    if (creds !== undefined) updateData.creds = creds;
+    if (quote !== undefined) updateData.quote = quote;
     if (sortOrder !== undefined) updateData.sortOrder = Number(sortOrder);
     if (isActive !== undefined) updateData.isActive = Number(isActive);
 

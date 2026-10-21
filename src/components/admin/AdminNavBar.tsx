@@ -35,6 +35,13 @@ export default function AdminNavBar() {
       icon: "🧘",
     },
     {
+      title: "2. 了解徕舞 · 课程",
+      subtitle: "5大类目文字与重点",
+      href: "/admin/offerings",
+      active: pathname.startsWith("/admin/offerings"),
+      icon: "✨",
+    },
+    {
       title: "3. 我的蜕变",
       subtitle: "体态对比档案与目标",
       href: "/admin/transformation",

@@ -14,9 +14,14 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     memberId: member.id,
     memberName: member.name,
-    memberCode: member.memberCode,
-    joinedAt: member.joinedAt,
+    memberCode: member.memberCode || `LW-${String(member.id).padStart(6, "0")}`,
+    joinedAt: member.joinedAt || "2025-10-20",
     avatarUrl: member.avatarUrl,
     portalEnabled: member.portalEnabled,
+    mentorName: member.mentorName || "导师 小桥",
+    totalHours: member.totalHours ?? 42,
+    hoursPilates: member.hoursPilates ?? 18,
+    hoursEquipment: member.hoursEquipment ?? 16,
+    hoursFatBurn: member.hoursFatBurn ?? 8,
   });
 }

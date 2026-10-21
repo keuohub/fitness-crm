@@ -8,7 +8,7 @@
     </view>
   </view>
 
-  <!-- 模块一：黑金高奢会员身份画卷 (Black Obsidian Member Card) -->
+  <!-- 模块一：黑金高奢会员身份画卷 (Black Obsidian Member Card，严禁展示电话号码) -->
   <view class="member-obsidian-card">
     <view class="card-top-row">
       <view class="card-brand-mark">
@@ -28,7 +28,6 @@
       <view class="card-profile-info">
         <text class="card-member-name">{{memberName}}</text>
         <text class="card-member-code">卡号 · {{memberCode}}</text>
-        <text class="card-member-phone">{{memberPhone}}</text>
       </view>
     </view>
 
@@ -51,7 +50,7 @@
   <!-- 极细发丝分隔律动线 -->
   <view class="editorial-hairline"></view>
 
-  <!-- 模块二：身体资产矩阵 (01 ASSET PORTFOLIO) -->
+  <!-- 模块二：身体资产矩阵 (01 ASSET PORTFOLIO - 总课时数在上方突出，各分课时在下方) -->
   <view class="me-section">
     <view class="section-title-bar">
       <view class="section-tag-group">
@@ -62,22 +61,65 @@
     </view>
     <text class="section-intro">每一次深层对抗与呼吸，都在沉淀为可被验证的内在力量。</text>
 
-    <view class="assets-grid-box">
-      <view class="asset-grid-cell">
-        <text class="grid-cell-val">{{stageName}}</text>
-        <text class="grid-cell-caption">体态进阶阶段</text>
+    <!-- 顶部突出大字卡片：总课时数 -->
+    <view class="total-hours-hero-card">
+      <view class="total-hours-content">
+        <view class="total-hours-header">
+          <text class="total-hours-badge-label">累计完成训练</text>
+          <text class="total-hours-stage-pill">{{stageName}}</text>
+        </view>
+        <view class="total-hours-num-row">
+          <text class="total-hours-big">{{totalHours}}</text>
+          <text class="total-hours-unit">节课时</text>
+        </view>
+        <text class="total-hours-footnote">包含垫上核心、大器械阻力对抗与专属超模减脂训练</text>
       </view>
-      <view class="asset-grid-cell">
-        <text class="grid-cell-val">{{trainCount}}<text class="cell-unit">节</text></text>
-        <text class="grid-cell-caption">累计私教课时</text>
+    </view>
+
+    <!-- 下方网格：各分课时明细 (后台可实时更改同步) -->
+    <view class="sub-hours-grid">
+      <view class="sub-hour-card">
+        <view class="sub-hour-top">
+          <text class="sub-hour-name">精选普拉提</text>
+          <view class="sub-hour-count-wrap">
+            <text class="sub-hour-count">{{hoursPilates}}</text>
+            <text class="sub-hour-unit">节</text>
+          </view>
+        </view>
+        <text class="sub-hour-desc">垫上核心与呼吸模式激活</text>
       </view>
-      <view class="asset-grid-cell">
-        <text class="grid-cell-val">{{questionnaireCount}}<text class="cell-unit">次</text></text>
-        <text class="grid-cell-caption">体态深度测评</text>
+
+      <view class="sub-hour-card">
+        <view class="sub-hour-top">
+          <text class="sub-hour-name">高定大器械</text>
+          <view class="sub-hour-count-wrap">
+            <text class="sub-hour-count">{{hoursEquipment}}</text>
+            <text class="sub-hour-unit">节</text>
+          </view>
+        </view>
+        <text class="sub-hour-desc">核心床与阻力深层雕刻</text>
       </view>
-      <view class="asset-grid-cell">
-        <text class="grid-cell-val">{{photoCount}}<text class="cell-unit">组</text></text>
-        <text class="grid-cell-caption">身形蜕变定格</text>
+
+      <view class="sub-hour-card">
+        <view class="sub-hour-top">
+          <text class="sub-hour-name">超模减脂班</text>
+          <view class="sub-hour-count-wrap">
+            <text class="sub-hour-count">{{hoursFatBurn}}</text>
+            <text class="sub-hour-unit">节</text>
+          </view>
+        </view>
+        <text class="sub-hour-desc">间歇燃脂与直角肩塑形</text>
+      </view>
+
+      <view class="sub-hour-card">
+        <view class="sub-hour-top">
+          <text class="sub-hour-name">体态深度测评</text>
+          <view class="sub-hour-count-wrap">
+            <text class="sub-hour-count">{{questionnaireCount}}</text>
+            <text class="sub-hour-unit">次</text>
+          </view>
+        </view>
+        <text class="sub-hour-desc">医学级临床影像跟踪</text>
       </view>
     </view>
   </view>
@@ -85,7 +127,7 @@
   <!-- 极细发丝分隔律动线 -->
   <view class="editorial-hairline"></view>
 
-  <!-- 模块三：我的私享便签与回音 (02 INTIMATE FEEDBACKS) -->
+  <!-- 模块三：我的私享便签与回音 (02 INTIMATE FEEDBACKS - 富有情绪价值，让会员有截图分享欲) -->
   <view class="me-section" wx:if="{{feelings.length > 0}}">
     <view class="section-title-bar">
       <view class="section-tag-group">
@@ -100,13 +142,14 @@
       <view wx:for="{{feelings}}" wx:key="id" class="feedback-feed-item">
         <view class="feedback-date-row">
           <text class="feedback-date-badge">{{item.date}}</text>
+          <text class="feedback-share-tip">可截图分享</text>
         </view>
         <text class="feedback-user-quote">“{{item.feeling}}”</text>
 
         <view class="mentor-reply-block" wx:if="{{item.xiaoqiaoReply}}">
           <view class="reply-seal-tag">印</view>
           <view class="reply-text-col">
-            <text class="reply-mentor-title">导师小桥 · 亲笔回音</text>
+            <text class="reply-mentor-title">导师小桥 · 亲笔手札回音</text>
             <text class="reply-mentor-body">{{item.xiaoqiaoReply}}</text>
           </view>
         </view>

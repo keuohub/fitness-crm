@@ -7,6 +7,12 @@ interface MemberItem {
   id: number;
   name: string;
   phone: string | null;
+  memberCode: string | null;
+  mentorName: string | null;
+  totalHours: number | null;
+  hoursPilates: number | null;
+  hoursEquipment: number | null;
+  hoursFatBurn: number | null;
   joinedAt: string | null;
   status: string;
   notes: string | null;
@@ -26,20 +32,38 @@ export default function AdminMembersPage() {
   const [feelings, setFeelings] = useState<FeelingItem[]>([]);
   const [activeTab, setActiveTab] = useState<"members" | "feelings">("members");
   const [loading, setLoading] = useState(true);
+
+  // 回信弹窗状态
   const [replyingItem, setReplyingItem] = useState<FeelingItem | null>(null);
   const [replyText, setReplyText] = useState("");
   const [savingReply, setSavingReply] = useState(false);
+
+  // 会员编辑弹窗状态
+  const [editingMember, setEditingMember] = useState<Partial<MemberItem> | null>(null);
+  const [savingMember, setSavingMember] = useState(false);
+
+  // 新增手札状态
+  const [showAddFeeling, setShowAddFeeling] = useState(false);
+  const [newFeelingMemberId, setNewFeelingMemberId] = useState<number>(0);
+  const [newFeelingText, setNewFeelingText] = useState("");
+  const [newFeelingReply, setNewFeelingReply] = useState("");
+  const [savingNewFeeling, setSavingNewFeeling] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
     try {
       const [resM, resF] = await Promise.all([
         fetch("/api/members"),
-        fetch("/api/portal/training-feelings?limit=30").catch(() => null),
+        fetch("/api/admin/training-feelings").catch(() => null),
       ]);
       if (resM.ok) {
         const mData = await resM.json();
-        if (Array.isArray(mData)) setMembers(mData);
+        if (Array.isArray(mData)) {
+          setMembers(mData);
+          if (mData.length > 0 && newFeelingMemberId === 0) {
+            setNewFeelingMemberId(mData[0].id);
+          }
+        }
       }
       if (resF && resF.ok) {
         const fData = await resF.json();
@@ -83,42 +107,141 @@ export default function AdminMembersPage() {
     }
   };
 
+  const handleSaveMember = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingMember || !editingMember.id) return;
+    setSavingMember(true);
+    try {
+      const res = await fetch(`/api/members/${editingMember.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editingMember.name,
+          memberCode: editingMember.memberCode,
+          mentorName: editingMember.mentorName,
+          totalHours: Number(editingMember.totalHours ?? 42),
+          hoursPilates: Number(editingMember.hoursPilates ?? 18),
+          hoursEquipment: Number(editingMember.hoursEquipment ?? 16),
+          hoursFatBurn: Number(editingMember.hoursFatBurn ?? 8),
+          joinedAt: editingMember.joinedAt,
+          status: editingMember.status,
+        }),
+      });
+      if (res.ok) {
+        setEditingMember(null);
+        fetchData();
+      } else {
+        alert("保存会员信息失败");
+      }
+    } catch (err) {
+      alert("请求异常");
+    } finally {
+      setSavingMember(false);
+    }
+  };
+
+  const handleCreateFeeling = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newFeelingMemberId || !newFeelingText.trim()) {
+      alert("请选择学员并输入体感手札！");
+      return;
+    }
+    setSavingNewFeeling(true);
+    try {
+      const res = await fetch("/api/admin/training-feelings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          memberId: newFeelingMemberId,
+          feeling: newFeelingText.trim(),
+          xiaoqiaoReply: newFeelingReply.trim() || null,
+        }),
+      });
+      if (res.ok) {
+        setShowAddFeeling(false);
+        setNewFeelingText("");
+        setNewFeelingReply("");
+        fetchData();
+      } else {
+        alert("录入失败");
+      }
+    } catch (err) {
+      alert("网络请求失败");
+    } finally {
+      setSavingNewFeeling(false);
+    }
+  };
+
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 20px", fontFamily: "-apple-system, sans-serif" }}>
       {/* 头部标题 */}
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontSize: 26, fontWeight: 700, color: "#1C1415", margin: 0 }}>
-          💬 第 4 板块：我的账户 · 会员档案与手札回音管理
-        </h1>
-        <p style={{ fontSize: 13, color: "#7A6B69", marginTop: 8, margin: 0, lineHeight: 1.5 }}>
-          对应微信小程序第四个板块「我的账户」，管理学员的基础档案资料、伴行自律数据，并对学员提交的体感手札进行<b>导师小桥亲笔回音</b>。
-        </p>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 28 }}>
+        <div>
+          <Link href="/admin" style={{ fontSize: 13, color: "#8B5E3C", textDecoration: "none", display: "inline-block", marginBottom: 8 }}>
+            ← 返回管理总览
+          </Link>
+          <h1 style={{ fontSize: 26, fontWeight: 700, color: "#1C1415", margin: 0 }}>
+            💬 第 4 板块：我的账户 · 会员资产与手札回音管理
+          </h1>
+          <p style={{ fontSize: 13, color: "#7A6B69", marginTop: 8, margin: 0, lineHeight: 1.5 }}>
+            对应微信小程序第四个板块「我的账户」。总课时数在上方突出展示，各分课时（普拉提/大器械/超模减脂）在下方细分，支持直接修改并实时同步到小程序。
+          </p>
+        </div>
       </div>
 
       {/* 切换栏 */}
-      <div style={{ display: "flex", gap: 12, borderBottom: "1px solid #EBE4DF", marginBottom: 24 }}>
-        <button
-          onClick={() => setActiveTab("members")}
-          style={{
-            padding: "10px 20px", background: "none", border: "none",
-            borderBottom: activeTab === "members" ? "2px solid #0E0D10" : "2px solid transparent",
-            color: activeTab === "members" ? "#1C1415" : "#8C827B",
-            fontWeight: activeTab === "members" ? 700 : 500, fontSize: 14, cursor: "pointer"
-          }}
-        >
-          会员名录 ({members.length})
-        </button>
-        <button
-          onClick={() => setActiveTab("feelings")}
-          style={{
-            padding: "10px 20px", background: "none", border: "none",
-            borderBottom: activeTab === "feelings" ? "2px solid #0E0D10" : "2px solid transparent",
-            color: activeTab === "feelings" ? "#1C1415" : "#8C827B",
-            fontWeight: activeTab === "feelings" ? 700 : 500, fontSize: 14, cursor: "pointer"
-          }}
-        >
-          学员体感手札 & 导师回音 ({feelings.length})
-        </button>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #EBE4DF", marginBottom: 24 }}>
+        <div style={{ display: "flex", gap: 12 }}>
+          <button
+            onClick={() => setActiveTab("members")}
+            style={{
+              padding: "10px 20px",
+              background: "none",
+              border: "none",
+              borderBottom: activeTab === "members" ? "2px solid #0E0D10" : "2px solid transparent",
+              color: activeTab === "members" ? "#1C1415" : "#8C827B",
+              fontWeight: activeTab === "members" ? 700 : 500,
+              fontSize: 14,
+              cursor: "pointer",
+            }}
+          >
+            会员名录与课时资产 ({members.length})
+          </button>
+          <button
+            onClick={() => setActiveTab("feelings")}
+            style={{
+              padding: "10px 20px",
+              background: "none",
+              border: "none",
+              borderBottom: activeTab === "feelings" ? "2px solid #0E0D10" : "2px solid transparent",
+              color: activeTab === "feelings" ? "#1C1415" : "#8C827B",
+              fontWeight: activeTab === "feelings" ? 700 : 500,
+              fontSize: 14,
+              cursor: "pointer",
+            }}
+          >
+            学员体感手札 & 导师回音 ({feelings.length})
+          </button>
+        </div>
+
+        {activeTab === "feelings" && (
+          <button
+            onClick={() => setShowAddFeeling(true)}
+            style={{
+              padding: "8px 16px",
+              background: "#5E1914",
+              color: "#FFFFFF",
+              border: "none",
+              borderRadius: 6,
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: "pointer",
+              boxShadow: "0 2px 6px rgba(94,25,20,0.2)",
+            }}
+          >
+            ＋ 录入真实学员体感手札
+          </button>
+        )}
       </div>
 
       {loading ? (
@@ -129,31 +252,70 @@ export default function AdminMembersPage() {
             <thead>
               <tr style={{ background: "#FAF7F5", borderBottom: "1px solid #EBE4DF", color: "#6D645D" }}>
                 <th style={{ padding: "14px 18px", fontWeight: 600 }}>会员卡号</th>
-                <th style={{ padding: "14px 18px", fontWeight: 600 }}>会员姓名</th>
-                <th style={{ padding: "14px 18px", fontWeight: 600 }}>绑定手机号</th>
+                <th style={{ padding: "14px 18px", fontWeight: 600 }}>姓名</th>
+                <th style={{ padding: "14px 18px", fontWeight: 600 }}>专属导师</th>
+                <th style={{ padding: "14px 18px", fontWeight: 600 }}>总课时数</th>
+                <th style={{ padding: "14px 18px", fontWeight: 600 }}>分课时明细 (普拉提/大器械/减脂)</th>
                 <th style={{ padding: "14px 18px", fontWeight: 600 }}>入会时间</th>
-                <th style={{ padding: "14px 18px", fontWeight: 600 }}>状态</th>
                 <th style={{ padding: "14px 18px", fontWeight: 600, textAlign: "right" }}>操作</th>
               </tr>
             </thead>
             <tbody>
               {members.map((m) => (
                 <tr key={m.id} style={{ borderBottom: "1px solid #F0EAE6" }}>
-                  <td style={{ padding: "14px 18px", fontWeight: 600, color: "#1C1415" }}>LW{m.id}</td>
+                  <td style={{ padding: "14px 18px", fontWeight: 600, color: "#1C1415" }}>
+                    {m.memberCode || `LW-${String(m.id).padStart(6, "0")}`}
+                  </td>
                   <td style={{ padding: "14px 18px", fontWeight: 600, color: "#1C1415", fontFamily: "serif" }}>{m.name}</td>
-                  <td style={{ padding: "14px 18px", color: "#6D645D" }}>{m.phone || "—"}</td>
-                  <td style={{ padding: "14px 18px", color: "#8C827B" }}>{m.joinedAt ? m.joinedAt.slice(0, 10) : "2026-10-02"}</td>
-                  <td style={{ padding: "14px 18px" }}>
-                    <span style={{ fontSize: 11, background: "rgba(46, 125, 50, 0.1)", color: "#2E7D32", padding: "3px 8px", borderRadius: 12, fontWeight: 600 }}>
-                      活跃
+                  <td style={{ padding: "14px 18px", color: "#5E1914", fontWeight: 500 }}>
+                    {m.mentorName || "导师 小桥"}
+                  </td>
+                  <td style={{ padding: "14px 18px", fontWeight: 700, color: "#0E0D10", fontSize: 14 }}>
+                    {m.totalHours ?? 42} <span style={{ fontSize: 11, fontWeight: 400, color: "#8C827B" }}>节</span>
+                  </td>
+                  <td style={{ padding: "14px 18px", color: "#4A403E" }}>
+                    <span style={{ background: "#F5ECE5", color: "#5E1914", padding: "2px 6px", borderRadius: 4, marginRight: 6 }}>
+                      普拉提: {m.hoursPilates ?? 18}
+                    </span>
+                    <span style={{ background: "#F5ECE5", color: "#5E1914", padding: "2px 6px", borderRadius: 4, marginRight: 6 }}>
+                      大器械: {m.hoursEquipment ?? 16}
+                    </span>
+                    <span style={{ background: "#F5ECE5", color: "#5E1914", padding: "2px 6px", borderRadius: 4 }}>
+                      减脂: {m.hoursFatBurn ?? 8}
                     </span>
                   </td>
-                  <td style={{ padding: "14px 18px", textAlign: "right" }}>
+                  <td style={{ padding: "14px 18px", color: "#8C827B" }}>{m.joinedAt ? m.joinedAt.slice(0, 10) : "2025-10-20"}</td>
+                  <td style={{ padding: "14px 18px", textAlign: "right", whiteSpace: "nowrap" }}>
+                    <button
+                      onClick={() => setEditingMember(m)}
+                      style={{
+                        fontSize: 12,
+                        color: "#5E1914",
+                        fontWeight: 600,
+                        background: "#FAF7F5",
+                        padding: "6px 12px",
+                        borderRadius: 6,
+                        border: "1px solid #D1C7C1",
+                        marginRight: 8,
+                        cursor: "pointer",
+                      }}
+                    >
+                      编辑课时与档案
+                    </button>
                     <Link
                       href={`/admin/transformation`}
-                      style={{ fontSize: 12, color: "#0E0D10", fontWeight: 600, textDecoration: "none", background: "#FAF7F5", padding: "6px 12px", borderRadius: 6, border: "1px solid #D1C7C1" }}
+                      style={{
+                        fontSize: 12,
+                        color: "#0E0D10",
+                        fontWeight: 600,
+                        textDecoration: "none",
+                        background: "#FAF7F5",
+                        padding: "6px 12px",
+                        borderRadius: 6,
+                        border: "1px solid #D1C7C1",
+                      }}
                     >
-                      查看蜕变档案 →
+                      蜕变档案 →
                     </Link>
                   </td>
                 </tr>
@@ -186,12 +348,16 @@ export default function AdminMembersPage() {
                 </div>
 
                 <div style={{ background: "#FAF7F5", padding: "12px 16px", borderRadius: 8, fontSize: 13, color: "#4A403E", marginBottom: 10, lineHeight: 1.5 }}>
-                  <strong style={{ color: "#1C1415" }}>学员手札：</strong> {f.feeling}
+                  <strong style={{ color: "#1C1415" }}>学员手札：</strong> “{f.feeling}”
                 </div>
 
                 {f.xiaoqiao_reply && (
-                  <div style={{ background: "rgba(158, 42, 43, 0.05)", borderLeft: "3px solid #9E2A2B", padding: "10px 14px", borderRadius: 4, fontSize: 13, color: "#5E1914" }}>
-                    <strong>印 导师小桥 · 亲笔回音：</strong> {f.xiaoqiao_reply}
+                  <div style={{ background: "rgba(158, 42, 43, 0.05)", borderLeft: "3px solid #9E2A2B", padding: "12px 16px", borderRadius: 4, fontSize: 13, color: "#5E1914", lineHeight: 1.6 }}>
+                    <div style={{ fontWeight: 700, marginBottom: 4, display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ background: "#9E2A2B", color: "#fff", fontSize: 11, padding: "1px 5px", borderRadius: 3 }}>印</span>
+                      导师小桥 · 亲笔手札回音：
+                    </div>
+                    <div>{f.xiaoqiao_reply}</div>
                   </div>
                 )}
               </div>
@@ -200,22 +366,233 @@ export default function AdminMembersPage() {
         </div>
       )}
 
-      {/* 回信弹窗 */}
+      {/* 编辑会员课时与档案弹窗 */}
+      {editingMember && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999 }}>
+          <div style={{ background: "#FFFFFF", borderRadius: 16, width: "100%", maxWidth: 520, maxHeight: "90vh", overflowY: "auto", padding: 28, boxShadow: "0 20px 50px rgba(0,0,0,0.2)" }}>
+            <h3 style={{ margin: "0 0 18px 0", fontSize: 18, color: "#1C1415", fontWeight: 700 }}>
+              编辑会员档案与课时资产 · {editingMember.name}
+            </h3>
+            <form onSubmit={handleSaveMember} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div style={{ display: "flex", gap: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#4A403E", marginBottom: 6 }}>
+                    会员姓名 <span style={{ color: "#C62828" }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editingMember.name || ""}
+                    onChange={(e) => setEditingMember({ ...editingMember, name: e.target.value })}
+                    style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 13, boxSizing: "border-box" }}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#4A403E", marginBottom: 6 }}>
+                    会员卡号
+                  </label>
+                  <input
+                    type="text"
+                    value={editingMember.memberCode || ""}
+                    onChange={(e) => setEditingMember({ ...editingMember, memberCode: e.target.value })}
+                    style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 13, boxSizing: "border-box" }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#4A403E", marginBottom: 6 }}>
+                    专属导师
+                  </label>
+                  <input
+                    type="text"
+                    value={editingMember.mentorName || "导师 小桥"}
+                    onChange={(e) => setEditingMember({ ...editingMember, mentorName: e.target.value })}
+                    style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 13, boxSizing: "border-box" }}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#4A403E", marginBottom: 6 }}>
+                    入会日期
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="如：2025-10-20"
+                    value={editingMember.joinedAt || ""}
+                    onChange={(e) => setEditingMember({ ...editingMember, joinedAt: e.target.value })}
+                    style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 13, boxSizing: "border-box" }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ background: "#FAF7F5", padding: 16, borderRadius: 10, border: "1px solid #EBE4DF" }}>
+                <h4 style={{ margin: "0 0 12px 0", fontSize: 13, color: "#5E1914", fontWeight: 700 }}>
+                  📊 训练度量资产（实时同步小程序端）
+                </h4>
+
+                <div style={{ marginBottom: 12 }}>
+                  <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#1C1415", marginBottom: 6 }}>
+                    总课时数 (顶部高光大字展示)
+                  </label>
+                  <input
+                    type="number"
+                    value={editingMember.totalHours ?? 42}
+                    onChange={(e) => setEditingMember({ ...editingMember, totalHours: Number(e.target.value) })}
+                    style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 14, fontWeight: 700, color: "#5E1914", boxSizing: "border-box" }}
+                  />
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: 11, fontWeight: 500, color: "#6D645D", marginBottom: 4 }}>
+                      精选普拉提 (节)
+                    </label>
+                    <input
+                      type="number"
+                      value={editingMember.hoursPilates ?? 18}
+                      onChange={(e) => setEditingMember({ ...editingMember, hoursPilates: Number(e.target.value) })}
+                      style={{ width: "100%", padding: "8px 10px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 13, boxSizing: "border-box" }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: 11, fontWeight: 500, color: "#6D645D", marginBottom: 4 }}>
+                      高定大器械 (节)
+                    </label>
+                    <input
+                      type="number"
+                      value={editingMember.hoursEquipment ?? 16}
+                      onChange={(e) => setEditingMember({ ...editingMember, hoursEquipment: Number(e.target.value) })}
+                      style={{ width: "100%", padding: "8px 10px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 13, boxSizing: "border-box" }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: 11, fontWeight: 500, color: "#6D645D", marginBottom: 4 }}>
+                      超模减脂班 (节)
+                    </label>
+                    <input
+                      type="number"
+                      value={editingMember.hoursFatBurn ?? 8}
+                      onChange={(e) => setEditingMember({ ...editingMember, hoursFatBurn: Number(e.target.value) })}
+                      style={{ width: "100%", padding: "8px 10px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 13, boxSizing: "border-box" }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 14 }}>
+                <button
+                  type="button"
+                  onClick={() => setEditingMember(null)}
+                  style={{ padding: "8px 18px", background: "#FAF7F5", border: "1px solid #D1C7C1", borderRadius: 6, fontSize: 13, cursor: "pointer" }}
+                >
+                  取消
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingMember}
+                  style={{ padding: "8px 24px", background: "#5E1914", color: "#FFFFFF", border: "none", borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+                >
+                  {savingMember ? "保存中..." : "保存课时修改"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 新增学员体感手札弹窗 */}
+      {showAddFeeling && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999 }}>
+          <div style={{ background: "#FFFFFF", borderRadius: 16, width: "100%", maxWidth: 540, maxHeight: "90vh", overflowY: "auto", padding: 28, boxShadow: "0 20px 50px rgba(0,0,0,0.2)" }}>
+            <h3 style={{ margin: "0 0 16px 0", fontSize: 18, color: "#1C1415", fontWeight: 700 }}>
+              录入真实学员体感手札与回音
+            </h3>
+            <p style={{ fontSize: 12, color: "#6D645D", marginBottom: 14, lineHeight: 1.5 }}>
+              录入真实的训练体感细节与小桥亲笔手札，将直接同步展示在对应学员微信小程序的「我的账户」中，极具情感共鸣与社交分享欲。
+            </p>
+            <form onSubmit={handleCreateFeeling} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div>
+                <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#4A403E", marginBottom: 6 }}>
+                  所属学员
+                </label>
+                <select
+                  value={newFeelingMemberId}
+                  onChange={(e) => setNewFeelingMemberId(Number(e.target.value))}
+                  style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 13, boxSizing: "border-box" }}
+                >
+                  {members.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name} ({m.memberCode || `LW${m.id}`})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#4A403E", marginBottom: 6 }}>
+                  学员真实体感描述 <span style={{ color: "#C62828" }}>*</span>
+                </label>
+                <textarea
+                  rows={3}
+                  required
+                  value={newFeelingText}
+                  onChange={(e) => setNewFeelingText(e.target.value)}
+                  placeholder="例如：连续练了两个月普拉提大器械，最神奇的是前两天拍证件照，摄影师突然说我肩膀完全是平的，脖子线条显得特别长。以前我习惯性右肩内扣高低肩，现在坐一天电脑居然不自觉会沉肩呼吸。"
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 13, lineHeight: 1.5, boxSizing: "border-box" }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#4A403E", marginBottom: 6 }}>
+                  导师小桥亲笔手札回音 (富有情绪价值与专业洞察)
+                </label>
+                <textarea
+                  rows={3}
+                  value={newFeelingReply}
+                  onChange={(e) => setNewFeelingReply(e.target.value)}
+                  placeholder="例如：知意，看到你分享这个瞬间我由衷为你感动。这不是摄影师的角度巧合，而是你过去几十个小时里，每一次在核心床滑行台对抗弹簧、每一次把肋骨收拢和下斜方肌激活沉淀出来的身体记忆。骨骼回归中立位后，从容感是由内而外散发出来的。身体永远不会辜负专注的练习，继续享受这种舒展。"
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 13, lineHeight: 1.5, boxSizing: "border-box" }}
+                />
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 14 }}>
+                <button
+                  type="button"
+                  onClick={() => setShowAddFeeling(false)}
+                  style={{ padding: "8px 18px", background: "#FAF7F5", border: "1px solid #D1C7C1", borderRadius: 6, fontSize: 13, cursor: "pointer" }}
+                >
+                  取消
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingNewFeeling}
+                  style={{ padding: "8px 24px", background: "#5E1914", color: "#FFFFFF", border: "none", borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+                >
+                  {savingNewFeeling ? "录入中..." : "保存手札"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 修改回信弹窗 */}
       {replyingItem && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999 }}>
           <div style={{ background: "#FFFFFF", borderRadius: 16, width: "100%", maxWidth: 540, padding: 28, boxShadow: "0 20px 50px rgba(0,0,0,0.2)" }}>
             <h3 style={{ margin: "0 0 16px 0", fontSize: 18, color: "#1C1415", fontWeight: 700 }}>
-              撰写导师小桥亲笔回音 · {replyingItem.member_name}
+              修改导师小桥亲笔回音 · {replyingItem.member_name}
             </h3>
             <p style={{ fontSize: 13, color: "#6D645D", marginBottom: 14 }}>
-              <strong>学员原留言：</strong> {replyingItem.feeling}
+              <strong>学员原留言：</strong> “{replyingItem.feeling}”
             </p>
             <form onSubmit={handleSendReply}>
               <textarea
                 rows={4}
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
-                placeholder="亲爱的，看到你说肩颈舒展了、呼吸顺畅了，我特别开心！..."
+                placeholder="撰写小桥导师亲笔手札..."
                 style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: "1px solid #D1C7C1", fontSize: 13, lineHeight: 1.5, boxSizing: "border-box" }}
               />
               <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 16 }}>

@@ -8,7 +8,10 @@ interface TeamMember {
   name: string;
   roleTitle: string;
   avatarUrl: string;
-  bio: string | null;
+  experience?: string | null;
+  creds?: string | null;
+  quote?: string | null;
+  bio?: string | null;
   sortOrder: number;
   isActive: number;
   createdAt: string;
@@ -164,9 +167,19 @@ export default function AdminTeamPage() {
                     <h3 style={{ margin: "0 0 4px 0", fontSize: 18, fontWeight: 600, color: "#1C1415" }}>{m.name}</h3>
                     <span style={{ fontSize: 12, color: "#8B5E3C" }}>排序: {m.sortOrder}</span>
                   </div>
-                  <div style={{ fontSize: 13, color: "#8B5E3C", fontWeight: 500, marginBottom: 8 }}>{m.roleTitle}</div>
-                  <p style={{ margin: 0, fontSize: 13, color: "#665E5C", lineHeight: 1.5, fontStyle: "italic" }}>
-                    {m.bio ? `“${m.bio}”` : "（暂无自述）"}
+                  <div style={{ fontSize: 13, color: "#8B5E3C", fontWeight: 500, marginBottom: 4 }}>{m.roleTitle}</div>
+                  {m.experience && (
+                    <div style={{ fontSize: 11, color: "#5E1914", fontWeight: 600, marginBottom: 4 }}>
+                      {m.experience}
+                    </div>
+                  )}
+                  {m.creds && (
+                    <div style={{ fontSize: 11, color: "#8C827B", marginBottom: 6, lineHeight: 1.4 }}>
+                      {m.creds}
+                    </div>
+                  )}
+                  <p style={{ margin: 0, fontSize: 12, color: "#665E5C", lineHeight: 1.5, fontStyle: "italic" }}>
+                    {m.quote || m.bio ? `“${m.quote || m.bio}”` : "（暂无心语）"}
                   </p>
                 </div>
 
@@ -202,9 +215,9 @@ export default function AdminTeamPage() {
           position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
           background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000
         }}>
-          <div style={{ background: "#FFFFFF", borderRadius: 14, width: 440, maxWidth: "90%", padding: 28, boxShadow: "0 10px 30px rgba(0,0,0,0.15)" }}>
+          <div style={{ background: "#FFFFFF", borderRadius: 14, width: 480, maxWidth: "90%", maxHeight: "90vh", overflowY: "auto", padding: 28, boxShadow: "0 10px 30px rgba(0,0,0,0.15)" }}>
             <h2 style={{ margin: "0 0 20px 0", fontSize: 20, color: "#1C1415" }}>
-              {editingMember.id ? "编辑成员信息" : "添加团队成员"}
+              {editingMember.id ? "编辑导师信息" : "添加团队导师"}
             </h2>
             <form onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div>
@@ -223,15 +236,54 @@ export default function AdminTeamPage() {
 
               <div>
                 <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "#4A403E", marginBottom: 6 }}>
-                  团队称谓 / 角色 <span style={{ color: "#C62828" }}>*</span>
+                  导师角色 / 称谓 <span style={{ color: "#C62828" }}>*</span>
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="如：徕舞主理人 / 普拉提导师"
+                  placeholder="如：创始人 / 教学主理人"
                   value={editingMember.roleTitle || ""}
                   onChange={(e) => setEditingMember({ ...editingMember, roleTitle: e.target.value })}
                   style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 14, boxSizing: "border-box" }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "#4A403E", marginBottom: 6 }}>
+                  研习资历 (展示在小程序导师卡中)
+                </label>
+                <input
+                  type="text"
+                  placeholder="如：12 年普拉提与运动解剖研习"
+                  value={editingMember.experience || ""}
+                  onChange={(e) => setEditingMember({ ...editingMember, experience: e.target.value })}
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 14, boxSizing: "border-box" }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "#4A403E", marginBottom: 6 }}>
+                  认证资质与特长
+                </label>
+                <input
+                  type="text"
+                  placeholder="如：PMA 国际认证普拉提导师 · 脊柱侧弯与体态力学康复认证"
+                  value={editingMember.creds || ""}
+                  onChange={(e) => setEditingMember({ ...editingMember, creds: e.target.value })}
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 14, boxSizing: "border-box" }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "#4A403E", marginBottom: 6 }}>
+                  导师心语 / 亲笔手札 (让会员产生情感共鸣与信任)
+                </label>
+                <textarea
+                  rows={3}
+                  placeholder="如：“不追求花哨夸张的高难动作，而是在每一次深长呼吸里找准深层核心，让紧绷的脊柱自然舒展。”"
+                  value={editingMember.quote || editingMember.bio || ""}
+                  onChange={(e) => setEditingMember({ ...editingMember, quote: e.target.value, bio: e.target.value })}
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 13, boxSizing: "border-box" }}
                 />
               </div>
 
@@ -243,7 +295,7 @@ export default function AdminTeamPage() {
                   <input
                     type="text"
                     required
-                    placeholder="/brand/team/team-1.jpg 或图片地址"
+                    placeholder="/images/team/team-1.jpg 或图片地址"
                     value={editingMember.avatarUrl || ""}
                     onChange={(e) => setEditingMember({ ...editingMember, avatarUrl: e.target.value })}
                     style={{ flex: 1, padding: "10px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 13, boxSizing: "border-box" }}
@@ -256,19 +308,6 @@ export default function AdminTeamPage() {
                     <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: "none" }} />
                   </label>
                 </div>
-              </div>
-
-              <div>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "#4A403E", marginBottom: 6 }}>
-                  导师自述 / 心语 (简短一句话，选填)
-                </label>
-                <textarea
-                  rows={2}
-                  placeholder="如：慢下来，用呼吸唤醒身体的每一寸记忆。"
-                  value={editingMember.bio || ""}
-                  onChange={(e) => setEditingMember({ ...editingMember, bio: e.target.value })}
-                  style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 13, boxSizing: "border-box" }}
-                />
               </div>
 
               <div style={{ display: "flex", gap: 14 }}>

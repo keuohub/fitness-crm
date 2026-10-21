@@ -4,18 +4,25 @@ import { venueItems } from "@/db/schema";
 import { eq, desc, asc } from "drizzle-orm";
 import { invalidateCache } from "@/lib/api-cache";
 
+async function ensureVenueSchema() {
+  await rawSql`
+    CREATE TABLE IF NOT EXISTS venue_items (
+      id SERIAL PRIMARY KEY,
+      title TEXT NOT NULL,
+      image_url TEXT NOT NULL,
+      sort_order INTEGER DEFAULT 0,
+      is_active INTEGER DEFAULT 1,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+  `;
+  await rawSql`ALTER TABLE venue_items ADD COLUMN IF NOT EXISTS name TEXT;`;
+  await rawSql`ALTER TABLE venue_items ADD COLUMN IF NOT EXISTS tag TEXT;`;
+  await rawSql`ALTER TABLE venue_items ADD COLUMN IF NOT EXISTS "desc" TEXT;`;
+}
+
 export async function GET() {
   try {
-    await rawSql`
-      CREATE TABLE IF NOT EXISTS venue_items (
-        id SERIAL PRIMARY KEY,
-        title TEXT NOT NULL,
-        image_url TEXT NOT NULL,
-        sort_order INTEGER DEFAULT 0,
-        is_active INTEGER DEFAULT 1,
-        created_at TIMESTAMP NOT NULL DEFAULT NOW()
-      );
-    `;
+    await ensureVenueSchema();
 
     const rows = await db
       .select()
@@ -31,17 +38,22 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    await ensureVenueSchema();
     const body = await req.json();
-    const { title, imageUrl, sortOrder = 0, isActive = 1 } = body;
+    const { title, name, tag, desc: descText, imageUrl, sortOrder = 0, isActive = 1 } = body;
 
-    if (!title || !imageUrl) {
-      return NextResponse.json({ error: "标题和照片为必填项" }, { status: 400 });
+    const displayTitle = title || name || "空间实景";
+    if (!imageUrl) {
+      return NextResponse.json({ error: "照片为必填项" }, { status: 400 });
     }
 
     const [created] = await db
       .insert(venueItems)
       .values({
-        title,
+        title: displayTitle,
+        name: name || displayTitle,
+        tag: tag || "01 / 空间实景",
+        desc: descText || "",
         imageUrl,
         sortOrder: Number(sortOrder) || 0,
         isActive: Number(isActive) || 1,
@@ -58,8 +70,9 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
+    await ensureVenueSchema();
     const body = await req.json();
-    const { id, title, imageUrl, sortOrder, isActive } = body;
+    const { id, title, name, tag, desc: descText, imageUrl, sortOrder, isActive } = body;
 
     if (!id) {
       return NextResponse.json({ error: "ID 为必填项" }, { status: 400 });
@@ -67,6 +80,9 @@ export async function PUT(req: NextRequest) {
 
     const updateData: any = {};
     if (title !== undefined) updateData.title = title;
+    if (name !== undefined) updateData.name = name;
+    if (tag !== undefined) updateData.tag = tag;
+    if (descText !== undefined) updateData.desc = descText;
     if (imageUrl !== undefined) updateData.imageUrl = imageUrl;
     if (sortOrder !== undefined) updateData.sortOrder = Number(sortOrder);
     if (isActive !== undefined) updateData.isActive = Number(isActive);

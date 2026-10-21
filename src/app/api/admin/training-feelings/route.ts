@@ -44,7 +44,22 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { feelingId, reply } = await request.json();
+    const body = await request.json();
+    const { feelingId, reply, memberId, feeling, xiaoqiaoReply } = body;
+
+    if (memberId && feeling) {
+      const [created] = await db
+        .insert(trainingFeelings)
+        .values({
+          tenantId: 1,
+          memberId: Number(memberId),
+          feeling: feeling.trim(),
+          xiaoqiaoReply: (xiaoqiaoReply || reply || "").trim() || null,
+        })
+        .returning();
+      return NextResponse.json(created, { status: 201 });
+    }
+
     if (!feelingId || !reply) {
       return NextResponse.json({ error: "缺少 feelingId 或 reply" }, { status: 400 });
     }

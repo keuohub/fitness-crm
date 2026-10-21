@@ -1,4 +1,4 @@
-// pages/brand/brand.js
+var api = require("../../utils/api.js");
 
 var VENUE_DATA = [
   {
@@ -113,7 +113,19 @@ Page({
   data: {
     venueList: VENUE_DATA,
     teamList: TEAM_DATA,
-    offeringsList: OFFERINGS_DATA
+    offeringsList: OFFERINGS_DATA,
+    baseUrl: ""
+  },
+
+  onLoad: function() {
+    var isDevTools = false;
+    try {
+      var sys = wx.getSystemInfoSync();
+      if (sys.platform === "devtools") isDevTools = true;
+    } catch(e) {}
+    var baseUrl = wx.getStorageSync("baseUrl") || (isDevTools ? "http://localhost:3001" : api.DEFAULT_BASE_URL);
+    this.setData({ baseUrl: baseUrl });
+    this.fetchAllBrandData();
   },
 
   onShow: function() {
@@ -123,6 +135,84 @@ Page({
         hidden: false
       });
     }
+    // 每次进入页面实时同步后台最新数据
+    this.fetchAllBrandData();
+  },
+
+  fullUrl: function(p) {
+    if (!p) return "";
+    if (p.indexOf("http") === 0) return p;
+    if (p.indexOf("/images/") === 0) return p;
+    if (p.indexOf("/brand/uploads/") === 0) {
+      return p.replace("/brand/uploads/", "/images/uploads/");
+    }
+    var base = this.data.baseUrl || api.DEFAULT_BASE_URL;
+    return base + p;
+  },
+
+  fetchAllBrandData: function() {
+    var that = this;
+
+    // 1. 同步空间列表
+    api.request({
+      url: "/api/portal/venue",
+      success: function(res) {
+        if (res.statusCode === 200 && Array.isArray(res.data) && res.data.length > 0) {
+          var mapped = res.data.map(function(v) {
+            return {
+              id: v.id,
+              imageUrl: that.fullUrl(v.imageUrl),
+              tag: v.tag || "01 / 空间实景",
+              name: v.name || v.title || "空间实景",
+              desc: v.desc || ""
+            };
+          });
+          that.setData({ venueList: mapped });
+        }
+      }
+    });
+
+    // 2. 同步导师阵容
+    api.request({
+      url: "/api/portal/team",
+      success: function(res) {
+        if (res.statusCode === 200 && Array.isArray(res.data) && res.data.length > 0) {
+          var mappedTeam = res.data.map(function(t) {
+            return {
+              id: t.id,
+              name: t.name,
+              roleTitle: t.roleTitle,
+              avatarUrl: that.fullUrl(t.avatarUrl),
+              experience: t.experience || "",
+              creds: t.creds || "",
+              quote: t.quote || (t.bio ? "“" + t.bio + "”" : "")
+            };
+          });
+          that.setData({ teamList: mappedTeam });
+        }
+      }
+    });
+
+    // 3. 同步体系课程类目 (5大核心类目)
+    api.request({
+      url: "/api/portal/offerings",
+      success: function(res) {
+        if (res.statusCode === 200 && Array.isArray(res.data) && res.data.length > 0) {
+          var mappedOfferings = res.data.map(function(o) {
+            return {
+              id: o.id,
+              num: o.num,
+              name: o.name,
+              enName: o.enName,
+              summary: o.summary,
+              target: o.target,
+              highlight: o.highlight
+            };
+          });
+          that.setData({ offeringsList: mappedOfferings });
+        }
+      }
+    });
   },
 
   previewVenueImage: function(e) {
@@ -154,3 +244,4 @@ Page({
     };
   }
 });
+

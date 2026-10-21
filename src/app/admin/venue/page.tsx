@@ -6,6 +6,9 @@ import Link from "next/link";
 interface VenueItem {
   id: number;
   title: string;
+  name?: string;
+  tag?: string;
+  desc?: string;
   imageUrl: string;
   sortOrder: number;
   isActive: number;
@@ -158,8 +161,16 @@ export default function AdminVenuePage() {
 
               <div style={{ padding: 16, flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                 <div>
-                  <h3 style={{ margin: "0 0 6px 0", fontSize: 16, fontWeight: 600, color: "#1C1415" }}>{item.title}</h3>
-                  <span style={{ fontSize: 12, color: "#8B5E3C" }}>排序权重: {item.sortOrder}</span>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                    <span style={{ fontSize: 11, color: "#8B5E3C", fontWeight: 600 }}>{item.tag || "01 / 空间实景"}</span>
+                    <span style={{ fontSize: 11, color: "#8C827B" }}>排序: {item.sortOrder}</span>
+                  </div>
+                  <h3 style={{ margin: "4px 0 6px 0", fontSize: 16, fontWeight: 600, color: "#1C1415" }}>{item.name || item.title}</h3>
+                  {item.desc && (
+                    <p style={{ margin: 0, fontSize: 12, color: "#665E5C", lineHeight: 1.5 }}>
+                      {item.desc}
+                    </p>
+                  )}
                 </div>
 
                 <div style={{ display: "flex", gap: 10, marginTop: 16, borderTop: "1px solid #F0EAE6", paddingTop: 10 }}>
@@ -194,22 +205,49 @@ export default function AdminVenuePage() {
           position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
           background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000
         }}>
-          <div style={{ background: "#FFFFFF", borderRadius: 14, width: 440, maxWidth: "90%", padding: 28, boxShadow: "0 10px 30px rgba(0,0,0,0.15)" }}>
+          <div style={{ background: "#FFFFFF", borderRadius: 14, width: 480, maxWidth: "90%", maxHeight: "90vh", overflowY: "auto", padding: 28, boxShadow: "0 10px 30px rgba(0,0,0,0.15)" }}>
             <h2 style={{ margin: "0 0 20px 0", fontSize: 20, color: "#1C1415" }}>
-              {editingItem.id ? "编辑空间图片" : "上传空间图片"}
+              {editingItem.id ? "编辑空间与器械" : "上传新空间图片"}
             </h2>
             <form onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div>
                 <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "#4A403E", marginBottom: 6 }}>
-                  空间标题 / 编号 <span style={{ color: "#C62828" }}>*</span>
+                  空间分类标签 <span style={{ color: "#C62828" }}>*</span>
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="如：01 / 核心床私密舱"
-                  value={editingItem.title || ""}
-                  onChange={(e) => setEditingItem({ ...editingItem, title: e.target.value })}
+                  placeholder="如：01 / 核心床静修区"
+                  value={editingItem.tag || ""}
+                  onChange={(e) => setEditingItem({ ...editingItem, tag: e.target.value })}
                   style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 14, boxSizing: "border-box" }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "#4A403E", marginBottom: 6 }}>
+                  空间/器械名称 <span style={{ color: "#C62828" }}>*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="如：静谧大器械空间"
+                  value={editingItem.name || editingItem.title || ""}
+                  onChange={(e) => setEditingItem({ ...editingItem, name: e.target.value, title: e.target.value })}
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 14, boxSizing: "border-box" }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "#4A403E", marginBottom: 6 }}>
+                  空间特色与器械描述
+                </label>
+                <textarea
+                  rows={3}
+                  placeholder="如：德国原装进口实木核心床，配合温润漫射自然光照，专注于深层小肌群与呼吸节律。"
+                  value={editingItem.desc || ""}
+                  onChange={(e) => setEditingItem({ ...editingItem, desc: e.target.value })}
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 13, boxSizing: "border-box" }}
                 />
               </div>
 
@@ -221,7 +259,7 @@ export default function AdminVenuePage() {
                   <input
                     type="text"
                     required
-                    placeholder="/brand/venue/venue-1.jpg 或图片地址"
+                    placeholder="/images/venue/venue-1.jpg 或图片地址"
                     value={editingItem.imageUrl || ""}
                     onChange={(e) => setEditingItem({ ...editingItem, imageUrl: e.target.value })}
                     style={{ flex: 1, padding: "10px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 13, boxSizing: "border-box" }}

@@ -52,6 +52,11 @@ export const members = pgTable("members", {
   currentQuestionnaireId: integer("current_questionnaire_id"),
   wechatOpenId: text("wechat_open_id").unique(),
   avatarUrl: text("avatar_url"),
+  totalHours: integer("total_hours"),
+  hoursPilates: integer("hours_pilates"),
+  hoursEquipment: integer("hours_equipment"),
+  hoursFatBurn: integer("hours_fat_burn"),
+  mentorName: text("mentor_name"),
   createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { mode: "string" }).notNull().defaultNow(),
 });
@@ -327,6 +332,9 @@ export const monthlyStars = pgTable("monthly_stars", {
 export const venueItems = pgTable("venue_items", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
+  name: text("name"),
+  tag: text("tag"),
+  desc: text("desc"),
   imageUrl: text("image_url").notNull(),
   sortOrder: integer("sort_order").default(0),
   isActive: integer("is_active").default(1),
@@ -340,6 +348,23 @@ export const teamMembers = pgTable("team_members", {
   roleTitle: text("role_title").notNull(),
   avatarUrl: text("avatar_url").notNull(),
   bio: text("bio"),
+  experience: text("experience"),
+  creds: text("creds"),
+  quote: text("quote"),
+  sortOrder: integer("sort_order").default(0),
+  isActive: integer("is_active").default(1),
+  createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
+});
+
+// ====== 体系课程类目 (Course Offerings) ======
+export const courseOfferings = pgTable("course_offerings", {
+  id: serial("id").primaryKey(),
+  num: text("num").notNull(),
+  name: text("name").notNull(),
+  enName: text("en_name").notNull(),
+  summary: text("summary").notNull(),
+  target: text("target").notNull(),
+  highlight: text("highlight").notNull(),
   sortOrder: integer("sort_order").default(0),
   isActive: integer("is_active").default(1),
   createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
