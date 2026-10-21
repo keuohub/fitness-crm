@@ -66,7 +66,6 @@
       <view class="total-hours-content">
         <view class="total-hours-header">
           <text class="total-hours-badge-label">累计完成训练</text>
-          <text class="total-hours-stage-pill" wx:if="{{stageName}}">{{stageName}}</text>
         </view>
         <view class="total-hours-num-row">
           <text class="total-hours-big">{{totalHours}}</text>

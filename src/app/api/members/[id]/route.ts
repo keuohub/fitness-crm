@@ -57,6 +57,7 @@ export async function PUT(
     if (body.hoursPilates !== undefined) updatePayload.hoursPilates = Number(body.hoursPilates);
     if (body.hoursEquipment !== undefined) updatePayload.hoursEquipment = Number(body.hoursEquipment);
     if (body.hoursFatBurn !== undefined) updatePayload.hoursFatBurn = Number(body.hoursFatBurn);
+    if (body.hoursPrivate !== undefined) updatePayload.hoursPrivate = Number(body.hoursPrivate);
     if (body.gender !== undefined) updatePayload.gender = body.gender || null;
     if (body.stage !== undefined) updatePayload.stage = body.stage || null;
     if (tagsValue !== null) updatePayload.tags = tagsValue;

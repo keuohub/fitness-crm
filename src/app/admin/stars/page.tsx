@@ -146,10 +146,10 @@ export default function AdminStarsPage() {
             setEditingStar({
               name: "",
               avatarUrl: "",
-              joinDays: 100,
-              trainCount: 30,
+              joinDays: null,
+              trainCount: null,
               courseType: "大器械私教",
-              journey: "相伴自律 100 天 · 30 节大器械私教",
+              journey: "",
               quote: "",
               sortOrder: stars.length + 1,
               isActive: 1,

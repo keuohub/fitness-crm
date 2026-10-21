@@ -57,6 +57,7 @@ export const members = pgTable("members", {
   hoursPilates: integer("hours_pilates"),
   hoursEquipment: integer("hours_equipment"),
   hoursFatBurn: integer("hours_fat_burn"),
+  hoursPrivate: integer("hours_private"),
   mentorName: text("mentor_name"),
   createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { mode: "string" }).notNull().defaultNow(),

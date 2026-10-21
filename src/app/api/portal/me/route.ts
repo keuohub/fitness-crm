@@ -25,16 +25,40 @@ export async function GET(request: NextRequest) {
     .from(trainings)
     .where(eq(trainings.memberId, memberId));
 
-  const totalHours = trainingRows.length;
+  // 四类课时：以后台人工维护的四个数字为准（主理人可直接改），
+  // 没有人工数字时才回退到逐条训练记录计数。
+  const manualCounts = {
+    pilates: Number(member.hoursPilates || 0),
+    equipment: Number(member.hoursEquipment || 0),
+    fatBurn: Number(member.hoursFatBurn || 0),
+    private: Number(member.hoursPrivate || 0),
+  };
+  const hasManual =
+    member.hoursPilates != null ||
+    member.hoursEquipment != null ||
+    member.hoursFatBurn != null ||
+    member.hoursPrivate != null;
 
   const byTypeMap = new Map<string, number>();
   for (const row of trainingRows) {
     const key = String(row.type || "training");
     byTypeMap.set(key, (byTypeMap.get(key) || 0) + 1);
   }
-  const trainingsByType = Array.from(byTypeMap.entries())
-    .map(([key, count]) => ({ key, label: labelOfTrainingType(key), count }))
-    .sort((a, b) => b.count - a.count);
+
+  const courseCounts = [
+    { key: "pilates", label: "精品普拉提", count: hasManual ? manualCounts.pilates : Number(byTypeMap.get("pilates") || 0) },
+    { key: "equipment", label: "高定大器械", count: hasManual ? manualCounts.equipment : Number(byTypeMap.get("equipment") || 0) },
+    { key: "fat_burn", label: "维密超模班", count: hasManual ? manualCounts.fatBurn : Number(byTypeMap.get("fat_burn") || 0) },
+    { key: "private", label: "私教课", count: hasManual ? manualCounts.private : Number(byTypeMap.get("private") || 0) },
+  ];
+
+  const totalHours = hasManual
+    ? courseCounts.reduce((sum, item) => sum + item.count, 0)
+    : trainingRows.length;
+
+  const trainingsByType = courseCounts
+    .filter((item) => item.count > 0)
+    .map((item) => ({ key: item.key, label: item.label, count: item.count }));
 
   // 最近一次训练日期（会员端首页显示「上次练习」用得上）
   const lastTrainingDate =
@@ -81,6 +105,7 @@ export async function GET(request: NextRequest) {
 
     joinDays,
     totalHours,
+    courseCounts,
     trainingsByType,
     lastTrainingDate,
     questionnaireCount,
