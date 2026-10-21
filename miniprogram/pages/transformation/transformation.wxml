@@ -1,0 +1,241 @@
+<view class="transformation-container">
+
+  <!-- 加载状态 -->
+  <view wx:if="{{loading}}" class="trans-loading-box">
+    <text class="trans-loading-txt">正在呈递你的专属蜕变手札...</text>
+  </view>
+
+  <block wx:else>
+
+    <!-- 顶部会员档案与阶段名牌 (Member Header & Cartier Horizon) -->
+    <view class="trans-hero-header">
+      <view class="trans-hero-top">
+        <view class="member-badge-pill">
+          <text class="badge-en">DOSSIER</text>
+          <text class="badge-dot">/</text>
+          <text class="badge-cn">蜕变档案</text>
+        </view>
+        <text class="member-days-counter">相伴 {{formattedDays}} 天</text>
+      </view>
+
+      <view class="member-name-block">
+        <text class="member-name-text">{{memberName}}</text>
+        <text class="member-stage-title">{{levelTitle}}</text>
+      </view>
+
+      <view class="whisper-banner">
+        <text class="whisper-content">“{{whisperText}}”</text>
+      </view>
+    </view>
+
+    <!-- 卡地亚风格刻度仪与四维资产 (Cartier Caliber & Asset Matrix) -->
+    <view class="caliber-horizon-card">
+      <view class="caliber-gauge-wrap">
+        <view class="gauge-meta-row">
+          <text class="gauge-label">阶段进阶目标</text>
+          <text class="gauge-value">{{trainCount}} <text class="gauge-sub">/ {{targetGoal}} 节</text></text>
+        </view>
+        <!-- 极简高奢发光进度槽 -->
+        <view class="gauge-track">
+          <view class="gauge-bar" style="width: {{progressPercent}}%;"></view>
+        </view>
+      </view>
+
+      <view class="asset-matrix-grid">
+        <view class="asset-cell">
+          <text class="asset-num">{{trainCount}}<text class="asset-unit">节</text></text>
+          <text class="asset-caption">私教训练历程</text>
+        </view>
+        <view class="asset-cell">
+          <text class="asset-num">{{joinDays}}<text class="asset-unit">天</text></text>
+          <text class="asset-caption">相伴自律时光</text>
+        </view>
+        <view class="asset-cell">
+          <text class="asset-num">{{questionnaireCount}}<text class="asset-unit">次</text></text>
+          <text class="asset-caption">体态深度测评</text>
+        </view>
+        <view class="asset-cell">
+          <text class="asset-num">{{photoCount}}<text class="asset-unit">组</text></text>
+          <text class="asset-caption">身形蜕变定格</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 极细发丝线 -->
+    <view class="editorial-hairline"></view>
+
+    <!-- 核心板块：FIG. 01 / FIG. 02 迪奥展陈式体态对比档案 -->
+    <view class="diptych-section">
+      <view class="section-title-bar">
+        <view class="section-tag-group">
+          <text class="section-index">01</text>
+          <text class="section-heading">体态对比档案</text>
+        </view>
+        <!-- 角度切换 Tab -->
+        <view class="angle-tabs-pill">
+          <view
+            wx:for="{{angleTabs}}"
+            wx:key="key"
+            class="angle-tab-item {{selectedAngle === item.key ? 'angle-tab-active' : ''}}"
+            data-angle="{{item.key}}"
+            bindtap="switchAngle"
+          >
+            <text class="angle-tab-text">{{item.label}}</text>
+          </view>
+        </view>
+      </view>
+      <text class="section-intro">双幅展陈对比：记录刚来时的体态代偿与坚持至今的挺拔蜕变。</text>
+
+      <!-- 双幅置顶对比画卷 -->
+      <view class="diptych-exhibition-card" wx:if="{{pinnedComparison}}">
+        <view class="diptych-frames-row">
+          <!-- FIG. 01 初评 -->
+          <view class="diptych-frame" bindtap="previewComparisonImage" data-src="{{pinnedComparison.photo1_url}}">
+            <view class="frame-tag-bar">
+              <text class="frame-fig">FIG. 01</text>
+              <text class="frame-status">入学初测</text>
+            </view>
+            <view class="frame-img-box">
+              <image class="diptych-img" src="{{pinnedComparison.photo1_url}}" mode="aspectFill" />
+            </view>
+            <text class="frame-date">{{pinnedComparison.photo1_date}}</text>
+          </view>
+
+          <view class="diptych-axis-divider">
+            <view class="axis-line"></view>
+            <text class="axis-node">VS</text>
+            <view class="axis-line"></view>
+          </view>
+
+          <!-- FIG. 02 蜕变 -->
+          <view class="diptych-frame" bindtap="previewComparisonImage" data-src="{{pinnedComparison.photo2_url}}">
+            <view class="frame-tag-bar">
+              <text class="frame-fig">FIG. 02</text>
+              <text class="frame-status highlight">进阶定格</text>
+            </view>
+            <view class="frame-img-box">
+              <image class="diptych-img" src="{{pinnedComparison.photo2_url}}" mode="aspectFill" />
+            </view>
+            <text class="frame-date">{{pinnedComparison.photo2_date}}</text>
+          </view>
+        </view>
+
+        <!-- 导师小桥深度体态解析 -->
+        <view class="coach-analysis-card">
+          <view class="analysis-header">
+            <text class="analysis-seal">印</text>
+            <text class="analysis-title">导师小桥 · 体态诊断与进阶记录</text>
+          </view>
+          <text class="analysis-body">{{pinnedComparison.analysis}}</text>
+        </view>
+
+        <!-- 生成典藏海报按钮 -->
+        <view class="share-trigger-bar" bindtap="openSharePoster" data-comp="{{pinnedComparison}}">
+          <text class="share-icon">✦</text>
+          <text class="share-btn-text">生成我的高奢蜕变海报</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 极细发丝线 -->
+    <view class="editorial-hairline"></view>
+
+    <!-- 板块二：训练历程与足迹 (在徕舞的经历) -->
+    <view class="timeline-section">
+      <view class="section-title-bar">
+        <view class="section-tag-group">
+          <text class="section-index">02</text>
+          <text class="section-heading">训练档案与足迹</text>
+        </view>
+        <text class="section-en-label">TIMELINE</text>
+      </view>
+      <text class="section-intro">每一节课时的深层对抗与呼吸，都凝聚成不可替代的身体资产。</text>
+
+      <view class="timeline-stream">
+        <view
+          wx:for="{{recentTrainings}}"
+          wx:key="id"
+          class="timeline-node-card"
+        >
+          <view class="node-meta-row">
+            <view class="node-date-badge">
+              <text class="node-date">{{item.date}}</text>
+            </view>
+            <text class="node-duration">{{item.duration}}</text>
+          </view>
+
+          <view class="node-body">
+            <view class="node-course-row">
+              <text class="node-course-name">{{item.courseType}}</text>
+              <text class="node-coach-name">{{item.coachName}}</text>
+            </view>
+            <text class="node-feedback">“{{item.note}}”</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 极细发丝线 -->
+    <view class="editorial-hairline"></view>
+
+    <!-- 板块三：身体私享便签 (给小桥留言互动) -->
+    <view class="feeling-section">
+      <view class="section-title-bar">
+        <view class="section-tag-group">
+          <text class="section-index">03</text>
+          <text class="section-heading">身体感受便签</text>
+        </view>
+        <text class="section-en-label">INTIMATE NOTE</text>
+      </view>
+      <text class="section-intro">记录今日训练后的肌肉酸胀、肩颈呼吸或体态感悟，小桥会亲自阅读。</text>
+
+      <!-- 快捷体感标签 -->
+      <view class="feeling-chips-row">
+        <view
+          wx:for="{{feelingTags}}"
+          wx:key="*this"
+          class="feeling-chip {{selectedFeelingTags.indexOf(item) > -1 ? 'chip-active' : ''}}"
+          data-tag="{{item}}"
+          bindtap="toggleFeelingTag"
+        >
+          <text class="chip-text">{{item}}</text>
+        </view>
+      </view>
+
+      <view class="feeling-input-wrap">
+        <textarea
+          class="feeling-textarea"
+          placeholder="写下身体今天真实的感受与发力变化..."
+          placeholder-class="feeling-placeholder"
+          value="{{feeling}}"
+          bindinput="onFeelingInput"
+          maxlength="300"
+        />
+        <view class="feeling-submit-btn {{feelingSubmitting ? 'submitting' : ''}}" bindtap="submitFeeling">
+          <text class="submit-btn-txt">{{feelingSubmitting ? "正在记录..." : "呈递给导师小桥"}}</text>
+        </view>
+      </view>
+
+      <!-- 小桥回音卡片 -->
+      <view class="coach-reply-card" wx:if="{{feelingReply}}">
+        <view class="reply-header">
+          <text class="reply-seal">印</text>
+          <text class="reply-title">小桥回音 · 亲笔</text>
+        </view>
+        <text class="reply-content">{{feelingReply}}</text>
+      </view>
+    </view>
+
+    <!-- 底部垫片防胶囊遮挡 -->
+    <view class="dock-spacer"></view>
+
+  </block>
+
+  <!-- 蜕变海报弹窗组件 -->
+  <poster-modal
+    wx:if="{{showShareModal}}"
+    comparison="{{shareComparison}}"
+    bindclose="closeShareModal"
+  />
+
+</view>

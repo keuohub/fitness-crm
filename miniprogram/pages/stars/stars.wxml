@@ -1,0 +1,75 @@
+<page-meta page-style="overflow: hidden; height: 100vh;"></page-meta>
+
+<view class="stars-viewport">
+
+  <!-- 顶部极简品牌标识 (Minimal Luxury Brand Mark) -->
+  <view class="stars-header">
+    <view class="stars-brand-pill">
+      <text class="brand-en">LAIWU</text>
+      <text class="brand-dot">·</text>
+      <text class="brand-cn">徕舞之星</text>
+    </view>
+    <view class="stars-counter">
+      <text class="counter-curr">{{currentIndex + 1}}</text>
+      <text class="counter-sep">/</text>
+      <text class="counter-total">{{starsList.length}}</text>
+    </view>
+  </view>
+
+  <!-- 全屏满幅横滑画报 (100vh Full-Bleed Horizontal Swiper) -->
+  <swiper
+    class="stars-swiper"
+    current="{{currentIndex}}"
+    bindchange="onSwiperChange"
+    duration="420"
+    circular="{{true}}"
+    easing-function="easeInOutCubic"
+  >
+    <swiper-item wx:for="{{starsList}}" wx:key="id" class="star-slide-item">
+      <view class="image-wrapper">
+        <image
+          class="star-hero-img"
+          src="{{item.avatarUrl}}"
+          mode="aspectFill"
+          lazy-load="{{true}}"
+          bindtap="onImageTap"
+          data-src="{{item.avatarUrl}}"
+        />
+        <!-- 顶部温润微晕影 -->
+        <view class="vignette-top"></view>
+        <!-- 底部深邃渐变晕影，烘托文本与胶囊栏 -->
+        <view class="vignette-bottom"></view>
+      </view>
+    </swiper-item>
+  </swiper>
+
+  <!-- 浮动信息图层 (Editorial Lower Third - Above Dock) -->
+  <view class="stars-floating-overlay">
+    <view class="star-meta-row">
+      <view class="star-tag-badge">
+        <text class="tag-hash">#</text>
+        <text class="tag-title">{{currentStar.tag}}</text>
+      </view>
+      <text class="star-journey-text">{{currentStar.journey}}</text>
+    </view>
+
+    <view class="star-name-row">
+      <text class="star-name">{{currentStar.name}}</text>
+      <text class="star-name-en">MEMBER OF LAIWU</text>
+    </view>
+
+    <text class="star-quote-text">{{currentStar.quote}}</text>
+
+    <!-- lululemon 级别细长药丸指示器 (Elongated Pill Indicator) -->
+    <view class="pill-indicator-track">
+      <view
+        wx:for="{{starsList}}"
+        wx:key="id"
+        class="indicator-item {{index === currentIndex ? 'indicator-pill-active' : 'indicator-dot'}}"
+        data-index="{{index}}"
+        bindtap="jumpToSlide"
+      ></view>
+    </view>
+  </view>
+
+</view>

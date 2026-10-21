@@ -1,151 +1,163 @@
 <view class="me-container">
-  
-  <!-- 加载中 -->
-  <view wx:if="{{loading}}" class="loading">
-    <text class="loading-text">正在呈递你的私享手札...</text>
+
+  <!-- 顶部轻奢导航头 (Editorial Header) -->
+  <view class="me-hero-header">
+    <view class="me-pill-tag">
+      <text class="tag-letter">ACCOUNT</text>
+      <text class="tag-slash">/</text>
+      <text class="tag-sub">会员私享账户</text>
+    </view>
+    <view class="me-title-wrap">
+      <text class="me-hero-title">我的账户</text>
+      <text class="me-hero-subtitle">自律是赠予自己最珍贵的资产</text>
+    </view>
   </view>
 
-  <!-- 正常内容 -->
-  <block wx:else>
+  <!-- 模块一：黑金高奢会员身份画卷 (Black Obsidian Member Card) -->
+  <view class="member-obsidian-card">
+    <view class="card-top-row">
+      <view class="card-brand-mark">
+        <text class="card-brand-en">LAIWU</text>
+        <text class="card-brand-tier">{{memberTier}}</text>
+      </view>
+      <text class="card-status-pill">活跃会员</text>
+    </view>
 
-    <!-- 模块一：会员尊享画卷 (Member Sanctuary Profile) -->
-    <view class="profile-editorial-hero stagger-1">
-      <view class="avatar-editorial-wrap" bindtap="handleAvatarTap">
-        <image wx:if="{{avatarUrl}}" class="avatar-img" src="{{avatarUrl}}" mode="aspectFill" />
-        <text wx:else class="avatar-placeholder">{{initial}}</text>
-        <view class="avatar-edit-badge">写真</view>
+    <view class="card-profile-row">
+      <view class="card-avatar-wrap" bindtap="handleAvatarTap">
+        <image wx:if="{{avatarUrl}}" class="card-avatar-img" src="{{avatarUrl}}" mode="aspectFill" />
+        <text wx:else class="card-avatar-placeholder">{{initial}}</text>
+        <view class="card-avatar-edit-badge">写真</view>
       </view>
 
-      <view class="profile-hero-meta">
-        <text class="profile-name">{{memberName}}</text>
-        <view class="profile-status-line">
-          <text class="profile-tier-text">{{joinDays >= 365 ? '资深自律挚友' : '身体掌权者'}}</text>
-          <text class="status-dot">·</text>
-          <text class="profile-days-text" wx:if="{{joinDays > 0}}">相伴自律 {{formattedDays}} 天</text>
-          <text class="profile-days-text" wx:else>相伴自律启程之日</text>
-        </view>
+      <view class="card-profile-info">
+        <text class="card-member-name">{{memberName}}</text>
+        <text class="card-member-code">卡号 · {{memberCode}}</text>
+        <text class="card-member-phone">{{memberPhone}}</text>
       </view>
     </view>
 
-    <!-- 极细发丝分隔律动线 -->
-    <view class="editorial-hairline"></view>
-
-    <!-- 模块二：私享预约席位 (The Private Concierge) -->
-    <view class="concierge-editorial-card stagger-2" bindtap="navigateToBooking">
-      <view class="concierge-content">
-        <view class="concierge-tag">
-          <text class="concierge-code">CONCIERGE</text>
-          <text class="concierge-dot">/</text>
-          <text class="concierge-label">私享排课</text>
-        </view>
-        <text class="concierge-title">预约专属私享席位</text>
-        <text class="concierge-desc">调整核心床私教排课，可在此轻点或直联导师小桥</text>
+    <view class="card-footer-row">
+      <view class="card-footer-item">
+        <text class="footer-label">入会日期</text>
+        <text class="footer-val">{{joinedAt}}</text>
       </view>
-      <view class="concierge-arrow-wrap">
-        <text class="concierge-arrow">→</text>
+      <view class="card-footer-item">
+        <text class="footer-label">专属导师</text>
+        <text class="footer-val">{{mentorName}}</text>
+      </view>
+      <view class="card-footer-item">
+        <text class="footer-label">伴行天数</text>
+        <text class="footer-val">{{joinDays}} 天</text>
       </view>
     </view>
+  </view>
 
-    <!-- 极细发丝分隔律动线 -->
-    <view class="editorial-hairline"></view>
+  <!-- 极细发丝分隔律动线 -->
+  <view class="editorial-hairline"></view>
 
-    <!-- 模块三：身体资产档案 (Body Portfolio) -->
-    <view class="portfolio-section stagger-3">
-      <view class="section-editorial-header">
-        <view class="section-tag-group">
-          <text class="section-num">01</text>
-          <text class="section-title">身体资产档案</text>
-        </view>
-        <text class="section-en">PORTFOLIO</text>
+  <!-- 模块二：身体资产矩阵 (01 ASSET PORTFOLIO) -->
+  <view class="me-section">
+    <view class="section-title-bar">
+      <view class="section-tag-group">
+        <text class="section-index">01</text>
+        <text class="section-heading">训练度量资产</text>
       </view>
+      <text class="section-en-label">PORTFOLIO</text>
+    </view>
+    <text class="section-intro">每一次深层对抗与呼吸，都在沉淀为可被验证的内在力量。</text>
 
-      <!-- 4 宫格开放式排印度量 (4-Metric Editorial Grid) -->
-      <view class="portfolio-metrics-grid">
-        <view class="portfolio-metric-box">
-          <text class="metric-val metric-stage">{{stageName}}</text>
-          <text class="metric-caption">塑形进阶阶段</text>
-        </view>
-        <view class="portfolio-metric-box">
-          <text class="metric-val">{{trainCount || 0}}<text class="metric-unit">节</text></text>
-          <text class="metric-caption">私教训练课时</text>
-        </view>
-        <view class="portfolio-metric-box">
-          <text class="metric-val">{{questionnaireCount || 0}}<text class="metric-unit">次</text></text>
-          <text class="metric-caption">体态深度测评</text>
-        </view>
-        <view class="portfolio-metric-box">
-          <text class="metric-val">{{photoCount || 0}}<text class="metric-unit">组</text></text>
-          <text class="metric-caption">身形蜕变定格</text>
-        </view>
+    <view class="assets-grid-box">
+      <view class="asset-grid-cell">
+        <text class="grid-cell-val">{{stageName}}</text>
+        <text class="grid-cell-caption">体态进阶阶段</text>
+      </view>
+      <view class="asset-grid-cell">
+        <text class="grid-cell-val">{{trainCount}}<text class="cell-unit">节</text></text>
+        <text class="grid-cell-caption">累计私教课时</text>
+      </view>
+      <view class="asset-grid-cell">
+        <text class="grid-cell-val">{{questionnaireCount}}<text class="cell-unit">次</text></text>
+        <text class="grid-cell-caption">体态深度测评</text>
+      </view>
+      <view class="asset-grid-cell">
+        <text class="grid-cell-val">{{photoCount}}<text class="cell-unit">组</text></text>
+        <text class="grid-cell-caption">身形蜕变定格</text>
       </view>
     </view>
+  </view>
 
-    <!-- 极细发丝分隔律动线 -->
-    <view class="editorial-hairline" wx:if="{{feelings.length > 0}}"></view>
+  <!-- 极细发丝分隔律动线 -->
+  <view class="editorial-hairline"></view>
 
-    <!-- 模块四：我的私享便签 (Private Notes) -->
-    <view class="notes-history-section stagger-4" wx:if="{{feelings.length > 0}}">
-      <view class="section-editorial-header">
-        <view class="section-tag-group">
-          <text class="section-num">02</text>
-          <text class="section-title">我的私享便签</text>
-        </view>
-        <text class="section-en">INTIMATE NOTES</text>
+  <!-- 模块三：我的私享便签与回音 (02 INTIMATE FEEDBACKS) -->
+  <view class="me-section" wx:if="{{feelings.length > 0}}">
+    <view class="section-title-bar">
+      <view class="section-tag-group">
+        <text class="section-index">02</text>
+        <text class="section-heading">反馈与导师回音</text>
       </view>
-
-      <view class="notes-feed">
-        <view wx:for="{{feelings}}" wx:key="id" class="note-feed-card">
-          <text class="note-feed-body">“{{item.feeling}}”</text>
-          <view wx:if="{{item.xiaoqiaoReply}}" class="note-reply-bar">
-            <view class="reply-seal">印</view>
-            <view class="reply-text-wrap">
-              <text class="reply-lead">小桥回音 · 亲笔</text>
-              <text class="reply-quote">{{item.xiaoqiaoReply}}</text>
-            </view>
-          </view>
-          <text class="note-feed-date">{{item.createdAt}}</text>
-        </view>
-      </view>
+      <text class="section-en-label">ARCHIVE</text>
     </view>
+    <text class="section-intro">你在手札中记录的每一次体感变化，小桥的温暖回音皆妥善收录于此。</text>
 
-    <!-- 极细发丝分隔律动线 -->
-    <view class="editorial-hairline" wx:if="{{bookings.length > 0}}"></view>
-
-    <!-- 模块五：我的预约 (Bookings) -->
-    <view class="bookings-section stagger-5" wx:if="{{bookings.length > 0}}">
-      <view class="section-editorial-header">
-        <view class="section-tag-group">
-          <text class="section-num">03</text>
-          <text class="section-title">我的私享排课</text>
+    <view class="feedback-feed-list">
+      <view wx:for="{{feelings}}" wx:key="id" class="feedback-feed-item">
+        <view class="feedback-date-row">
+          <text class="feedback-date-badge">{{item.date}}</text>
         </view>
-        <text class="section-en">SCHEDULE</text>
-      </view>
+        <text class="feedback-user-quote">“{{item.feeling}}”</text>
 
-      <view class="bookings-spine-list">
-        <view wx:for="{{bookings}}" wx:key="id" class="booking-spine-item">
-          <view class="booking-time-block">
-            <text class="booking-date-text">{{item.bookingDate}}</text>
-            <text class="booking-time-text">{{item.bookingTime}}</text>
-          </view>
-          <view class="booking-body-block">
-            <text class="booking-type-text">{{item.courseType}}</text>
-            <text class="booking-status-tag status-{{item.status}}">
-              {{item.status === "pending" ? "待确认" : item.status === "confirmed" ? "已确认" : "已取消"}}
-            </text>
+        <view class="mentor-reply-block" wx:if="{{item.xiaoqiaoReply}}">
+          <view class="reply-seal-tag">印</view>
+          <view class="reply-text-col">
+            <text class="reply-mentor-title">导师小桥 · 亲笔回音</text>
+            <text class="reply-mentor-body">{{item.xiaoqiaoReply}}</text>
           </view>
         </view>
       </view>
     </view>
+  </view>
 
-    <!-- 极细发丝分隔律动线 -->
-    <view class="editorial-hairline"></view>
+  <!-- 极细发丝分隔律动线 -->
+  <view class="editorial-hairline"></view>
 
-    <!-- 模块六：账号操作 (Account Operations) -->
-    <view class="account-actions-editorial stagger-5">
-      <view class="logout-link-editorial" bindtap="handleLogout">
-        <text class="logout-txt">暂时离开手札</text>
+  <!-- 模块四：专属私享管家 (03 CONCIERGE & SUPPORT) -->
+  <view class="me-section">
+    <view class="section-title-bar">
+      <view class="section-tag-group">
+        <text class="section-index">03</text>
+        <text class="section-heading">专属私享管家</text>
+      </view>
+      <text class="section-en-label">CONCIERGE</text>
+    </view>
+    <text class="section-intro">课程沟通、训练疑问或定制建议，您的专属顾问随时静候。</text>
+
+    <view class="concierge-action-card" bindtap="copyConciergeWechat">
+      <view class="concierge-left-info">
+        <view class="concierge-wechat-tag">
+          <text class="wechat-prefix">WECHAT</text>
+          <text class="wechat-id">Laiwu0010</text>
+        </view>
+        <text class="concierge-desc-text">轻点直接复制专属顾问微信号，一对一沟通私享安排</text>
+      </view>
+      <view class="concierge-copy-pill">
+        <text class="copy-pill-text">一键复制</text>
       </view>
     </view>
+  </view>
 
-  </block>
+  <!-- 极细发丝分隔律动线 -->
+  <view class="editorial-hairline"></view>
+
+  <!-- 模块五：安全退出手札 (Account Operations) -->
+  <view class="logout-action-wrap">
+    <view class="logout-pill-btn" bindtap="handleLogout">
+      <text class="logout-btn-text">暂时离开当前手札</text>
+    </view>
+  </view>
+
+  <!-- 底部留白防遮挡 -->
+  <view class="dock-spacer"></view>
+
 </view>

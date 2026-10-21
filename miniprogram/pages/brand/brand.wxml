@@ -1,0 +1,144 @@
+<view class="brand-container">
+
+  <!-- 顶部轻奢导航头 (Editorial Header) -->
+  <view class="brand-hero-header">
+    <view class="brand-pill-tag">
+      <text class="tag-letter">SANCTUARY</text>
+      <text class="tag-slash">/</text>
+      <text class="tag-sub">空间与心法</text>
+    </view>
+    <view class="brand-title-wrap">
+      <text class="brand-hero-title">了解徕舞</text>
+      <text class="brand-hero-subtitle">以克制之道，唤醒身体内在的秩序与平衡</text>
+    </view>
+  </view>
+
+  <!-- 极细发丝线 -->
+  <view class="editorial-hairline"></view>
+
+  <!-- 板块一：场馆空间 (01 SANCTUARY SPACES) -->
+  <view class="brand-section">
+    <view class="section-title-bar">
+      <view class="section-tag-group">
+        <text class="section-index">01</text>
+        <text class="section-heading">场馆空间</text>
+      </view>
+      <text class="section-en-label">SPACES</text>
+    </view>
+    <text class="section-intro">柔和漫射日光、天然实木大器械与私密更衣室，营造沉静专注的练习氛围。</text>
+
+    <!-- 横向滑动画廊 (Horizontal Gallery) -->
+    <scroll-view class="venue-gallery-scroll" scroll-x="{{true}}" enable-flex="{{true}}" enhanced="{{true}}" show-scrollbar="{{false}}">
+      <view
+        wx:for="{{venueList}}"
+        wx:key="id"
+        class="venue-card-item"
+        bindtap="previewVenueImage"
+        data-src="{{item.imageUrl}}"
+      >
+        <view class="venue-image-wrap">
+          <image class="venue-img" src="{{item.imageUrl}}" mode="aspectFill" lazy-load="{{true}}" />
+          <view class="venue-tag-overlay">
+            <text class="venue-tag-pill">{{item.tag}}</text>
+          </view>
+        </view>
+        <view class="venue-meta">
+          <text class="venue-name">{{item.name}}</text>
+          <text class="venue-desc">{{item.desc}}</text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 极细发丝线 -->
+  <view class="editorial-hairline"></view>
+
+  <!-- 板块二：同行导师 (02 MENTORS) -->
+  <view class="brand-section">
+    <view class="section-title-bar">
+      <view class="section-tag-group">
+        <text class="section-index">02</text>
+        <text class="section-heading">同行导师</text>
+      </view>
+      <text class="section-en-label">MENTORS</text>
+    </view>
+    <text class="section-intro">深耕人体解剖与体态矫正，用细腻口令与精准触觉纠正，守护每次发力安全。</text>
+
+    <view class="team-cards-stack">
+      <view
+        wx:for="{{teamList}}"
+        wx:key="id"
+        class="mentor-card"
+        bindtap="previewTeamImage"
+        data-src="{{item.avatarUrl}}"
+      >
+        <view class="mentor-header">
+          <image class="mentor-avatar" src="{{item.avatarUrl}}" mode="aspectFill" />
+          <view class="mentor-info">
+            <view class="mentor-name-row">
+              <text class="mentor-name">{{item.name}}</text>
+              <text class="mentor-role-badge">{{item.roleTitle}}</text>
+            </view>
+            <text class="mentor-exp">{{item.experience}}</text>
+            <text class="mentor-creds">{{item.creds}}</text>
+          </view>
+        </view>
+        <view class="mentor-quote-box">
+          <text class="mentor-quote">{{item.quote}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 极细发丝线 -->
+  <view class="editorial-hairline"></view>
+
+  <!-- 板块三：项目介绍 (03 CURATED OFFERINGS - 严格5种类目，无预约入口) -->
+  <view class="brand-section offerings-section">
+    <view class="section-title-bar">
+      <view class="section-tag-group">
+        <text class="section-index">03</text>
+        <text class="section-heading">项目介绍</text>
+      </view>
+      <text class="section-en-label">OFFERINGS</text>
+    </view>
+    <text class="section-intro">针对不同阶段与体态目标，由主理团队精心研发的五大核心训练体系。</text>
+
+    <view class="offerings-list">
+      <view
+        wx:for="{{offeringsList}}"
+        wx:key="id"
+        class="offering-card"
+      >
+        <view class="offering-top">
+          <view class="offering-badge">
+            <text class="offering-num">{{item.num}}</text>
+          </view>
+          <view class="offering-names">
+            <text class="offering-title">{{item.name}}</text>
+            <text class="offering-en">{{item.enName}}</text>
+          </view>
+        </view>
+
+        <view class="offering-summary-pill">
+          <text class="offering-summary-txt">{{item.summary}}</text>
+        </view>
+
+        <view class="offering-detail-block">
+          <view class="detail-row">
+            <text class="detail-label">适合人群</text>
+            <text class="detail-content">{{item.target}}</text>
+          </view>
+          <view class="detail-row">
+            <text class="detail-label">训练重点</text>
+            <text class="detail-content">{{item.highlight}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部留白，保障悬浮胶囊底栏不遮挡 -->
+  <view class="dock-spacer"></view>
+
+</view>

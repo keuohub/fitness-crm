@@ -4,16 +4,20 @@ Component({
     hidden: false,
     list: [
       {
-        pagePath: "/pages/growth/growth",
-        text: "成长"
+        pagePath: "/pages/stars/stars",
+        text: "徕舞之星"
       },
       {
-        pagePath: "/pages/feedback/feedback",
-        text: "小桥来信"
+        pagePath: "/pages/brand/brand",
+        text: "了解徕舞"
+      },
+      {
+        pagePath: "/pages/transformation/transformation",
+        text: "我的蜕变"
       },
       {
         pagePath: "/pages/me/me",
-        text: "我的"
+        text: "我的账户"
       }
     ]
   },
