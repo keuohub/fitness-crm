@@ -47,6 +47,7 @@ export const members = pgTable("members", {
   joinedAt: text("joined_at"),
   birthday: text("birthday"),
   portalCode: text("portal_code").unique(),
+  loginPin: text("login_pin"),
   portalEnabled: integer("portal_enabled").default(0),
   portalActivatedAt: text("portal_activated_at"),
   currentQuestionnaireId: integer("current_questionnaire_id"),

@@ -63,20 +63,21 @@ function requestPromise(options) {
 Page({
   data: {
     loading: true,
+    loadError: "",
     memberId: null,
     baseUrl: "",
-    memberName: "你",
+    memberName: "",
     avatarUrl: "",
-    joinDays: 365,
-    formattedDays: "365",
-    trainCount: 42,
-    questionnaireCount: 4,
-    photoCount: 8,
-    stageName: "身体掌权",
-    levelTitle: "身体掌权者 · 深度蜕变",
-    targetGoal: 50,
-    progressPercent: 84,
-    whisperText: "肋骨自然收紧，深层腹横肌唤醒。每一次平稳呼吸，都在重构脊柱生理曲度的从容平衡。",
+    joinDays: null,
+    formattedDays: "",
+    trainCount: 0,
+    questionnaireCount: 0,
+    photoCount: 0,
+    stageName: "",
+    levelTitle: "",
+    targetGoal: 0,
+    progressPercent: 0,
+    whisperText: "",
 
     selectedAngle: "front",
     angleTabs: [
@@ -89,6 +90,7 @@ Page({
     historyComparisons: [],
 
     recentTrainings: [],
+    coachNotes: [],
     feeling: "",
     feelingSubmitting: false,
     feelingReply: "",
@@ -105,10 +107,9 @@ Page({
       wx.redirectTo({ url: "/pages/login/login" });
       return;
     }
-    var baseUrl = wx.getStorageSync("baseUrl") || api.DEFAULT_BASE_URL;
-    var memberName = wx.getStorageSync("memberName") || "陈知意";
-    var isDemo = wx.getStorageSync("isDemoMode") === true || memberName === "陈知意";
-    var cachedDays = wx.getStorageSync("joinDays") || (isDemo ? 365 : 0);
+    var baseUrl = api.getBaseUrl();
+    var memberName = wx.getStorageSync("memberName") || "";
+    var cachedDays = Number(wx.getStorageSync("joinDays") || 0);
     var formattedDays = String(cachedDays).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
     this.setData({
@@ -124,10 +125,13 @@ Page({
 
   onShow: function() {
     if (typeof this.getTabBar === "function" && this.getTabBar()) {
-      this.getTabBar().setData({
-        selected: 2,
-        hidden: false
-      });
+      this.getTabBar().setData({ selected: 2, hidden: false });
+    }
+    // 每次回到本页静默重取：后台录课/回音/照片改动，无需重启小程序
+    var now = Date.now();
+    if (this.data.memberId && (!this._lastLoad || now - this._lastLoad > 3000)) {
+      this._lastLoad = now;
+      this.loadTransformationData();
     }
   },
 
@@ -141,14 +145,7 @@ Page({
   fullUrl: function(p) {
     if (!p) return "";
     if (p.indexOf("http") === 0) return p;
-    if (p.indexOf("/images/") === 0) return p;
-    if (p.indexOf("/brand/uploads/") === 0) {
-      return p.replace("/brand/uploads/", "/images/uploads/");
-    }
-    if (p.indexOf("/brand/posture/") === 0) {
-      return p.replace("/brand/posture/", "/images/posture/");
-    }
-    return (this.data.baseUrl || "") + p;
+    return api.getBaseUrl() + p;
   },
 
   loadTransformationData: function() {
@@ -160,7 +157,7 @@ Page({
     var pTrainings = requestPromise({ url: "/api/trainings?memberId=" + memberId, header: headers });
     var pPhotoCompare = requestPromise({ url: "/api/photo-comparisons?memberId=" + memberId, header: headers });
     var pPhotos = requestPromise({ url: "/api/photos?memberId=" + memberId, header: headers });
-    var pCoachNote = requestPromise({ url: "/api/coach-notes?memberId=" + memberId, header: headers });
+    var pCoachNote = requestPromise({ url: "/api/portal/coach-notes?memberId=" + memberId, header: headers });
 
     Promise.all([pMe, pTrainings, pPhotoCompare, pPhotos, pCoachNote]).then(function(results) {
       var resMe = results[0];
@@ -262,9 +259,23 @@ Page({
         payload.photoCount = resPhotos.data.length;
       }
 
+      // 6. 问卷次数 + 教练手记（真实数据，后台写什么就显示什么）
+      if (resMe.statusCode === 200 && resMe.data) {
+        payload.questionnaireCount = Number(resMe.data.questionnaireCount || 0);
+      }
+      var notes = (resCoachNote.statusCode === 200 && Array.isArray(resCoachNote.data)) ? resCoachNote.data : [];
+      payload.coachNotes = notes.slice(0, 5).map(function(n) {
+        return {
+          id: n.id,
+          date: format.formatShortDate(n.createdAt),
+          content: format.cleanMarkdown(n.coachNote || ""),
+          tags: Array.isArray(n.tags) ? n.tags.join(" · ") : ""
+        };
+      });
+
       that.setData(payload);
     }).catch(function() {
-      that.setData({ loading: false });
+      that.setData({ loading: false, loadError: "暂时无法加载，请下拉重试" });
     });
   },
 

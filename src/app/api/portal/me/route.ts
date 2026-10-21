@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
 
   const stage = getMemberStage(totalHours);
 
-  return NextResponse.json({
+  const response = NextResponse.json({
     memberId: member.id,
     memberName: member.name,
     // 以下字段缺省一律为 null，由前端显示「待录入」，不再编造
@@ -88,4 +88,6 @@ export async function GET(request: NextRequest) {
 
     stage,
   });
+  response.headers.set("Cache-Control", "private, no-store");
+  return response;
 }

@@ -58,6 +58,25 @@
       </view>
     </view>
 
+    <!-- 体态评估与导师记录：只显示后台真实录入的内容 -->
+    <view class="editorial-hairline" wx:if="{{coachNotes.length > 0}}"></view>
+    <view class="timeline-section" wx:if="{{coachNotes.length > 0}}">
+      <view class="section-title-bar">
+        <view class="section-tag-group">
+          <text class="section-index">01</text>
+          <text class="section-heading">体态评估与导师记录</text>
+        </view>
+        <text class="section-en-label">NOTES</text>
+      </view>
+      <view class="timeline-node-card" wx:for="{{coachNotes}}" wx:key="id">
+        <view class="node-meta-row">
+          <text class="node-date">{{item.date}}</text>
+        </view>
+        <text class="analysis-body">{{item.content}}</text>
+        <text class="node-duration" wx:if="{{item.tags}}">{{item.tags}}</text>
+      </view>
+    </view>
+
     <!-- 极细发丝线 -->
     <view class="editorial-hairline"></view>
 
@@ -244,6 +263,9 @@
   <poster-modal
     wx:if="{{showShareModal}}"
     comparison="{{shareComparison}}"
+    memberName="{{memberName}}"
+    joinDays="{{joinDays}}"
+    trainCount="{{trainCount}}"
     bindclose="closeShareModal"
   />
 

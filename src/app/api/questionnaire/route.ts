@@ -3,7 +3,7 @@ import { db } from "@/db";
 import { questionnaireSubmissions, members } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { verifyMemberAccess } from "@/lib/auth/member-ownership";
-import { getCached, setCache } from "@/lib/api-cache";
+
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -23,20 +23,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "无权访问" }, { status: 401 });
   }
 
-  const cacheKey = `questionnaire:${memberId}`;
-  const cached = getCached(cacheKey);
-  if (cached) return NextResponse.json(cached);
-
   const data = await db
     .select()
     .from(questionnaireSubmissions)
     .where(eq(questionnaireSubmissions.memberId, memberId))
     .orderBy(desc(questionnaireSubmissions.submittedAt));
 
-  setCache(cacheKey, data);
-
   const response = NextResponse.json(data);
-    response.headers.set("Cache-Control", "public, max-age=300, s-maxage=300");
+    response.headers.set("Cache-Control", "private, no-store");
     return response;
 }
 

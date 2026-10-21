@@ -1,7 +1,0 @@
-{
-  "navigationBarTitleText": "成长",
-  "backgroundColor": "#FAFAFA",
-  "usingComponents": {
-    "poster-modal": "/components/poster-modal/poster-modal"
-  }
-}

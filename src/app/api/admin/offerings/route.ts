@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/auth/admin-session";
 import { db, rawSql } from "@/db";
 import { courseOfferings } from "@/db/schema";
 import { eq, asc } from "drizzle-orm";
@@ -90,7 +91,10 @@ async function ensureTableAndSeed() {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  if (!requireAdmin(request)) {
+    return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
+  }
   try {
     await ensureTableAndSeed();
     const rows = await db
@@ -105,6 +109,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  if (!requireAdmin(req)) {
+    return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
+  }
   try {
     await ensureTableAndSeed();
     const body = await req.json();
@@ -135,6 +142,9 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
+  if (!requireAdmin(req)) {
+    return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
+  }
   try {
     const body = await req.json();
     const { id, num, name, enName, summary, target, highlight, sortOrder, isActive } = body;
@@ -166,6 +176,9 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  if (!requireAdmin(req)) {
+    return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
+  }
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");

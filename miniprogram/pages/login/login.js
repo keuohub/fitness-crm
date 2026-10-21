@@ -5,8 +5,7 @@ Page({
     submitting: false,
     error: "",
     inviteCode: "",
-    phoneSuffix: "",
-    baseUrl: ""
+    phoneSuffix: ""
   },
 
   onLoad: function(options) {
@@ -21,12 +20,8 @@ Page({
       }
     } else {
       // 主动切换账号：彻底清除旧会话所有残余
-      var saved = wx.getStorageSync("baseUrl");
-      wx.clearStorageSync();
-      if (saved) wx.setStorageSync("baseUrl", saved);
+      api.clearSession();
     }
-    var saved = wx.getStorageSync("baseUrl");
-    this.setData({ baseUrl: saved || api.DEFAULT_BASE_URL });
 
     if (wx.showShareMenu) {
       wx.showShareMenu({
@@ -71,15 +66,12 @@ Page({
       success: function(res) {
         if (res.statusCode === 200 && res.data && res.data.memberId) {
           var data = res.data;
-          var savedBase = that.data.baseUrl;
-          // 全面彻底清除上一位会员的所有专属缓存，绝不串门
+          // 清除上一位会员的所有缓存，绝不串门
           wx.clearStorageSync();
-          
-          wx.setStorageSync("baseUrl", savedBase);
+          wx.setStorageSync("memberToken", data.token || "");
+          wx.setStorageSync("tokenExpiresAt", data.tokenExpiresAt || 0);
           wx.setStorageSync("memberId", data.memberId);
           wx.setStorageSync("memberName", data.memberName || "会员");
-          wx.setStorageSync("loginExpires", Date.now() + 30 * 24 * 60 * 60 * 1000);
-          wx.setStorageSync("isDemoMode", false);
           if (data.joinedAt) {
             var diff = Math.floor((Date.now() - new Date(String(data.joinedAt).replace(/-/g, "/")).getTime()) / 86400000);
             wx.setStorageSync("joinDays", Math.max(1, diff));
@@ -102,7 +94,7 @@ Page({
   onShareAppMessage: function() {
     return {
       title: "徕舞健身 · 会员专属成长手札",
-      path: "/pages/login/login"
+      path: "/pages/stars/stars"
     };
   },
 

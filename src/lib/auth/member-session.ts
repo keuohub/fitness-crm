@@ -6,6 +6,7 @@ import { db } from "@/db";
 import { memberSessions, members } from "@/db/schema";
 import { eq, and, gte } from "drizzle-orm";
 import crypto from "crypto";
+import { verifyMemberToken } from "./member-token";
 
 const SESSION_COOKIE = "member_session";
 const LEGACY_ID_COOKIE = "portal_member_id";
@@ -33,6 +34,19 @@ function verifySignature(payload: string, sig: string): boolean {
  * 优先 member_sessions（手机号登录），回退 portal_code cookie
  */
 export async function getPortalMemberId(request: NextRequest): Promise<number | null> {
+  // 0. 签名 token（小程序主路径）
+  const authHeader = request.headers.get("authorization") || "";
+  if (authHeader.startsWith("Bearer ")) {
+    const claim = verifyMemberToken(authHeader.slice(7));
+    if (claim) {
+      const [member] = await db
+        .select({ id: members.id, status: members.status })
+        .from(members)
+        .where(and(eq(members.id, claim.memberId), eq(members.portalEnabled, 1)));
+      if (member && member.status !== "archived") return member.id;
+    }
+  }
+
   // 1. 手机号 Session
   const token = request.cookies.get(SESSION_COOKIE)?.value;
   if (token) {
@@ -57,13 +71,6 @@ export async function getPortalMemberId(request: NextRequest): Promise<number | 
         .where(and(eq(members.id, memberId), eq(members.portalEnabled, 1)));
       if (member) return memberId;
     }
-  }
-
-  // 3. 兜底：小程序端用请求头透传会员身份（与 verifyMemberAccess 保持一致）
-  const headerId = request.headers.get("x-portal-member-id");
-  if (headerId) {
-    const id = parseInt(headerId, 10);
-    if (!isNaN(id)) return id;
   }
 
   return null;

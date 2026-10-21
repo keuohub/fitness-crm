@@ -52,29 +52,6 @@ export async function getAdminUser(request: NextRequest): Promise<AdminUser | nu
     }
   }
 
-  // 2. Fallback: legacy signed admin_session cookie
-  const legacyRaw = request.cookies.get("admin_session")?.value;
-  if (legacyRaw) {
-    try {
-      const { userId } = JSON.parse(legacyRaw);
-      const [user] = await db
-        .select({ id: users.id, name: users.name, email: users.email, role: users.role, status: users.status })
-        .from(users)
-        .where(eq(users.id, userId));
-
-      if (user) {
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role as AdminRole,
-        };
-      }
-    } catch {
-      // Fall through
-    }
-  }
-
   return null;
 }
 

@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/auth/admin-session";
 import { db, rawSql } from "@/db";
 import { teamMembers } from "@/db/schema";
 import { eq, desc, asc } from "drizzle-orm";
 import { invalidateCache } from "@/lib/api-cache";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  if (!requireAdmin(request)) {
+    return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
+  }
   try {
     await rawSql`
       CREATE TABLE IF NOT EXISTS team_members (
@@ -32,6 +36,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  if (!requireAdmin(req)) {
+    return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
+  }
   try {
     const body = await req.json();
     const { name, roleTitle, avatarUrl, bio, experience, creds, quote, sortOrder = 0, isActive = 1 } = body;
@@ -64,6 +71,9 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
+  if (!requireAdmin(req)) {
+    return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
+  }
   try {
     const body = await req.json();
     const { id, name, roleTitle, avatarUrl, bio, experience, creds, quote, sortOrder, isActive } = body;
@@ -98,6 +108,9 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  if (!requireAdmin(req)) {
+    return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
+  }
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");

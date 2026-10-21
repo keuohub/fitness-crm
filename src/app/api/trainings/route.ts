@@ -3,7 +3,7 @@ import { db } from "@/db";
 import { trainings, users } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { verifyMemberAccess } from "@/lib/auth/member-ownership";
-import { getCached, setCache, deleteCache } from "@/lib/api-cache";
+import { deleteCache } from "@/lib/api-cache";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -24,10 +24,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "无权访问" }, { status: 401 });
   }
 
-  const cacheKey = `trainings:${memberId}`;
-  const cached = getCached(cacheKey);
-  if (cached) return NextResponse.json(cached);
-
   // 带上导师姓名：之前前端拿不到 coachName，只能兜底成「导师 小桥」，
   // 导致所有课都挂在同一个人名下。
   const data = await db
@@ -47,8 +43,6 @@ export async function GET(request: NextRequest) {
     .leftJoin(users, eq(users.id, trainings.coachId))
     .where(eq(trainings.memberId, memberId))
     .orderBy(desc(trainings.trainingDate));
-
-  setCache(cacheKey, data);
 
   const response = NextResponse.json(data);
   // 个人训练数据不进任何共享缓存

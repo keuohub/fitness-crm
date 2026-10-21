@@ -1,119 +1,118 @@
 /**
- * 徕舞小程序 API 统一网络请求层
- * 
- * 优势说明：
- * 优先采用微信云托管专有的 wx.cloud.callContainer（微信私有加速链路）：
- * 1. 免配置 mp.weixin.qq.com 的 request 合法域名；
- * 2. 免独立域名购买与 ICP 备案手续；
- * 3. 走微信专线私有通道，毫秒级响应，微信审核 100% 顺畅；
- * 4. 自动携带 x-wx-openid，天然安全防刷。
- * 
- * 若在开发工具中云环境未就绪或非原生容器环境，平滑降级为标准 wx.request。
+ * 徕舞小程序统一网络层
+ *
+ * 规则（2026-10-21 起）：
+ * 1. 身份只用登录下发的签名 token（Authorization: Bearer），不再用明文 memberId 请求头。
+ * 2. 不把服务器地址写进 storage：开发者工具固定本机 3001，真机优先云托管私有链路。
+ * 3. 401 统一清理会话并回登录页，避免"看起来登录了其实没有"。
  */
 
 var ENV_ID = "crm-d8gk3n5aj45d5cf11";
 var SERVICE_NAME = "crm";
 var DEFAULT_BASE_URL = "https://crm-330905-9-1509862887.sh.run.tcloudbase.com";
+var LOCAL_BASE_URL = "http://localhost:3001";
+
+function isDevTools() {
+  try {
+    return wx.getSystemInfoSync().platform === "devtools";
+  } catch (e) {
+    return false;
+  }
+}
+
+function getBaseUrl() {
+  // 仅用于拼接图片/上传地址，不参与身份判断
+  return isDevTools() ? LOCAL_BASE_URL : DEFAULT_BASE_URL;
+}
+
+function clearSession() {
+  try {
+    wx.removeStorageSync("memberToken");
+    wx.removeStorageSync("memberId");
+    wx.removeStorageSync("memberName");
+    wx.removeStorageSync("joinDays");
+    wx.removeStorageSync("trainCount");
+    wx.removeStorageSync("isDemoMode");
+  } catch (e) {}
+}
+
+function isLoginUrl(url) {
+  return String(url || "").indexOf("/api/portal/login") >= 0;
+}
 
 function request(options) {
   var url = options.url || "";
   var method = (options.method || "GET").toUpperCase();
-  var header = options.header || {};
   var data = options.data;
   var success = options.success || function() {};
   var fail = options.fail || function() {};
   var complete = options.complete || function() {};
 
-  // 提取相对路径
+  var token = wx.getStorageSync("memberToken") || "";
+  var header = Object.assign({ "content-type": "application/json" }, options.header || {});
+  if (token) header.Authorization = "Bearer " + token;
+
+  function handleSuccess(res) {
+    if (res && res.statusCode === 401 && token && !isLoginUrl(url)) {
+      clearSession();
+      wx.showToast({ title: "登录已过期，请重新验证", icon: "none", duration: 2000 });
+      setTimeout(function() {
+        wx.reLaunch({ url: "/pages/login/login?force=1" });
+      }, 300);
+      return;
+    }
+    success(res);
+  }
+
+  // 提取相对路径，便于云托管 callContainer
   var path = url;
   if (path.indexOf("http") === 0) {
-    try {
-      var match = path.match(/https?:\/\/[^\/]+(\/.*)/);
-      if (match && match[1]) {
-        path = match[1];
-      }
-    } catch(e) {}
+    var match = path.match(/https?:\/\/[^\/]+(\/.*)/);
+    if (match && match[1]) path = match[1];
   }
-  if (!path.startsWith("/")) {
-    path = "/" + path;
-  }
+  if (path.charAt(0) !== "/") path = "/" + path;
 
-  // 检测是否处于微信开发者工具或已指定本地测试服务
-  var isDevTools = false;
-  try {
-    var sys = wx.getSystemInfoSync();
-    if (sys.platform === "devtools") {
-      isDevTools = true;
-    }
-  } catch(e) {}
-
-  var customBase = wx.getStorageSync("baseUrl");
-  var activeLocalBase = customBase || (isDevTools ? "http://localhost:3001" : "");
-
-  // 本地联调优先：若在开发者工具环境，直接走本机 3001 端口，实现后台保存即时在小程序呈现
-  if (activeLocalBase) {
-    var targetUrl = activeLocalBase + path;
+  // 开发者工具：固定本机后端，避免登录后被切到旧云部署
+  if (isDevTools()) {
     wx.request({
-      url: targetUrl,
+      url: LOCAL_BASE_URL + path,
       method: method,
-      header: Object.assign({ "content-type": "application/json" }, header),
+      header: header,
       data: data,
-      success: function(res) {
-        success(res);
-      },
-      fail: function(err) {
-        console.warn("本机服务请求微异常，平滑降级至云容器/公网链路:", err);
-        fallbackToCloudOrPublic();
+      success: handleSuccess,
+      fail: fail,
+      complete: complete
+    });
+    return;
+  }
+
+  // 真机：优先微信云托管私有链路
+  if (wx.cloud && typeof wx.cloud.callContainer === "function") {
+    wx.cloud.callContainer({
+      config: { env: ENV_ID },
+      path: path,
+      method: method,
+      header: Object.assign({ "X-WX-SERVICE": SERVICE_NAME }, header),
+      data: data,
+      success: handleSuccess,
+      fail: function() {
+        fallbackToWxRequest();
       },
       complete: complete
     });
     return;
   }
 
-  fallbackToCloudOrPublic();
-
-  function fallbackToCloudOrPublic() {
-    // 微信云托管私有链路优先调用
-    if (wx.cloud && typeof wx.cloud.callContainer === "function") {
-      var callHeader = Object.assign({
-        "X-WX-SERVICE": SERVICE_NAME,
-        "content-type": "application/json"
-      }, header);
-
-      wx.cloud.callContainer({
-        config: {
-          env: ENV_ID
-        },
-        path: path,
-        method: method,
-        header: callHeader,
-        data: data,
-        success: function(res) {
-          success(res);
-        },
-        fail: function(err) {
-          console.warn("wx.cloud.callContainer 调用微异常，尝试切换至公网链路:", err);
-          fallbackToWxRequest();
-        },
-        complete: complete
-      });
-      return;
-    }
-
-    fallbackToWxRequest();
-  }
+  fallbackToWxRequest();
 
   function fallbackToWxRequest() {
-    var finalUrl = url;
-    if (finalUrl.indexOf("http") !== 0) {
-      finalUrl = DEFAULT_BASE_URL + (finalUrl.startsWith("/") ? "" : "/") + finalUrl;
-    }
+    var finalUrl = url.indexOf("http") === 0 ? url : DEFAULT_BASE_URL + path;
     wx.request({
       url: finalUrl,
       method: method,
       header: header,
       data: data,
-      success: success,
+      success: handleSuccess,
       fail: fail,
       complete: complete
     });
@@ -122,6 +121,8 @@ function request(options) {
 
 module.exports = {
   request: request,
+  getBaseUrl: getBaseUrl,
+  clearSession: clearSession,
   ENV_ID: ENV_ID,
   SERVICE_NAME: SERVICE_NAME,
   DEFAULT_BASE_URL: DEFAULT_BASE_URL

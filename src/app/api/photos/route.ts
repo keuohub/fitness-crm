@@ -3,7 +3,8 @@ import { db } from "@/db";
 import { photos } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { verifyMemberAccess } from "@/lib/auth/member-ownership";
-import { getCached, setCache, deleteCache } from "@/lib/api-cache";
+import { requireAdmin } from "@/lib/auth/admin-session";
+import { deleteCache } from "@/lib/api-cache";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 
@@ -27,20 +28,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "无权访问" }, { status: 401 });
   }
 
-  const cacheKey = `photos:${memberId}`;
-  const cached = getCached(cacheKey);
-  if (cached) return NextResponse.json(cached);
-
   const data = await db
     .select()
     .from(photos)
     .where(eq(photos.memberId, memberId))
     .orderBy(desc(photos.takenAt));
 
-  setCache(cacheKey, data);
-
   const response = NextResponse.json(data);
-    response.headers.set("Cache-Control", "public, max-age=300, s-maxage=300");
+    response.headers.set("Cache-Control", "private, no-store");
     return response;
 }
 
@@ -61,6 +56,18 @@ export async function POST(request: NextRequest) {
 
     // 若无 memberId，支持管理后台通用品牌大片上传（月度之星、场馆相册、团队肖像、体态对比等）
     if (!memberIdRaw) {
+      // 品牌素材上传只允许已登录管理员
+      if (!requireAdmin(request)) {
+        return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        return NextResponse.json({ error: "图片不能超过 5MB" }, { status: 400 });
+      }
+      const allowedExt = ["jpg", "jpeg", "png", "webp"];
+      const rawExt = (file.name.split(".").pop() || "").toLowerCase();
+      if (allowedExt.indexOf(rawExt) < 0) {
+        return NextResponse.json({ error: "只支持 jpg/png/webp" }, { status: 400 });
+      }
       const BRAND_DIR = path.join(process.cwd(), "public", "brand", "uploads");
       const MINI_DIR = path.join(process.cwd(), "miniprogram", "images", "uploads");
       await mkdir(BRAND_DIR, { recursive: true });

@@ -33,7 +33,7 @@ Page({
       wx.redirectTo({ url: "/pages/login/login" });
       return;
     }
-    var baseUrl = wx.getStorageSync("baseUrl") || api.DEFAULT_BASE_URL;
+    var baseUrl = api.getBaseUrl();
     var cachedName = wx.getStorageSync("memberName") || "";
 
     this.setData({
@@ -60,14 +60,10 @@ Page({
       return;
     }
 
-    if (this.data.memberId && this.data.memberId !== currentMemberId) {
-      this.setData({
-        memberId: currentMemberId,
-        feelings: [],
-        totalHours: 0,
-        trainingsByType: [],
-        loading: true
-      });
+    // 每次切回本页都重取：后台改课时 / 回音 / 档案后无需重启
+    var now = Date.now();
+    if (!this._lastLoad || now - this._lastLoad > 3000) {
+      this._lastLoad = now;
       this.loadData();
     }
   },
@@ -89,7 +85,6 @@ Page({
   fullUrl: function(p) {
     if (!p) return "";
     if (p.indexOf("http") === 0) return p;
-    if (p.indexOf("/images/") === 0) return p;
     return (this.data.baseUrl || "") + p;
   },
 
@@ -230,7 +225,6 @@ Page({
   },
 
   handleLogout: function() {
-    var baseUrl = this.data.baseUrl;
     wx.showModal({
       title: "暂别提示",
       content: "确定要暂时离开当前专属账户吗？再次进入需重新验证身份口令。",
@@ -238,11 +232,10 @@ Page({
       confirmColor: "#9E2A2B",
       cancelText: "继续留在手札",
       success: function(res) {
-        if (res.confirm) {
-          wx.clearStorageSync();
-          if (baseUrl) wx.setStorageSync("baseUrl", baseUrl);
-          wx.reLaunch({ url: "/pages/login/login?force=1" });
-        }
+        if (!res.confirm) return;
+        try { wx.request({ url: api.getBaseUrl() + "/api/portal/logout", method: "POST" }); } catch (e) {}
+        api.clearSession();
+        wx.reLaunch({ url: "/pages/login/login?force=1" });
       }
     });
   },

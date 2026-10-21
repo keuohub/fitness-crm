@@ -19,12 +19,5 @@ export async function verifyMemberAccess(
     return { allowed: false, reason: "NOT_OWNER" };
   }
 
-  // Fallback: X-Portal-Member-Id header (for Portal SPA without HttpOnly cookies)
-  const headerId = request.headers.get("x-portal-member-id");
-  if (headerId) {
-    const id = parseInt(headerId, 10);
-    if (!isNaN(id) && id === requestedMemberId) return { allowed: true };
-  }
-
   return { allowed: false, reason: "NOT_AUTHENTICATED" };
 }

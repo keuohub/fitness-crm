@@ -3,7 +3,7 @@ import { db } from "@/db";
 import { aiFeedbackReports } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { verifyMemberAccess } from "@/lib/auth/member-ownership";
-import { getCached, setCache } from "@/lib/api-cache";
+
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -22,10 +22,6 @@ export async function GET(request: NextRequest) {
   if (!access.allowed) {
     return NextResponse.json({ error: "无权访问" }, { status: 401 });
   }
-
-  const cacheKey = `period_report:${memberId}`;
-  const cached = getCached(cacheKey);
-  if (cached) return NextResponse.json(cached);
 
   const reports = await db
     .select()
@@ -54,10 +50,8 @@ export async function GET(request: NextRequest) {
     };
   });
 
-  setCache(cacheKey, formattedReports);
-
   const response = NextResponse.json(formattedReports);
-  response.headers.set("Cache-Control", "public, max-age=300, s-maxage=300");
+  response.headers.set("Cache-Control", "private, no-store");
   return response;
 }
 

@@ -57,4 +57,11 @@
     </view>
   </view>
 
+  <!-- 无真实月度之星：空状态，绝不展示虚构会员 -->
+  <view wx:if="{{!loading && starsList.length === 0}}" style="position:fixed;left:0;right:0;top:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 90rpx;text-align:center;background:linear-gradient(170deg,#F5E5D9 0%,#D4423C 100%);">
+    <text style="font-size:22rpx;letter-spacing:4rpx;color:rgba(255,255,255,.7);">MONTHLY STARS</text>
+    <text style="margin-top:26rpx;font-size:46rpx;font-weight:600;color:#FFFFFF;font-family:serif;">本月之星 · 名单待定</text>
+    <text style="margin-top:22rpx;font-size:25rpx;line-height:1.9;color:rgba(255,255,255,.85);">我们只在本人点头之后，才放上她的照片和故事。这一期还在等她们答复。</text>
+  </view>
+  <view wx:if="{{loading}}" style="position:fixed;left:0;right:0;top:0;bottom:0;background:linear-gradient(170deg,#F5E5D9 0%,#D4423C 100%);"></view>
 </view>

@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { members } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import crypto from "crypto";
+import { signMemberToken } from "@/lib/auth/member-token";
 
 function getSignKey(): string {
   return process.env.COOKIE_SIGN_KEY || process.env.ADMIN_PASSWORD || "CHANGE_ME";
@@ -17,6 +18,23 @@ function sign(payload: string): string {
 
 const MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 
+// 简单内存限速：同一 IP + 邀请码 15 分钟内最多 5 次。
+// 单实例有效；云托管多实例时仍能挡住绝大部分脚本爆破。
+const LOGIN_ATTEMPTS = new Map<string, { count: number; resetAt: number }>();
+const RATE_WINDOW = 15 * 60 * 1000;
+const RATE_MAX = 5;
+
+function rateLimited(key: string): boolean {
+  const now = Date.now();
+  const rec = LOGIN_ATTEMPTS.get(key);
+  if (!rec || now > rec.resetAt) {
+    LOGIN_ATTEMPTS.set(key, { count: 1, resetAt: now + RATE_WINDOW });
+    return false;
+  }
+  rec.count += 1;
+  return rec.count > RATE_MAX;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -27,6 +45,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "请输入专属邀请码" }, { status: 400 });
     }
 
+    const ip = (request.headers.get("x-forwarded-for") || "local").split(",")[0].trim();
+    if (rateLimited(ip + ":" + rawCode)) {
+      return NextResponse.json({ error: "尝试次数过多，请 15 分钟后再试，或联系小桥" }, { status: 429 });
+    }
+
     const allMembers = await db
       .select({
         id: members.id,
@@ -35,6 +58,7 @@ export async function POST(request: NextRequest) {
         joinedAt: members.joinedAt,
         portalEnabled: members.portalEnabled,
         portalCode: members.portalCode,
+        loginPin: members.loginPin,
       })
       .from(members)
       .where(eq(members.portalEnabled, 1));
@@ -44,30 +68,30 @@ export async function POST(request: NextRequest) {
     );
 
     if (!member) {
-      return NextResponse.json({ error: "未找到该邀请码，请核对或联系小桥" }, { status: 404 });
+      return NextResponse.json({ error: "邀请码或手机尾号不匹配，请核对后重试，或联系小桥" }, { status: 401 });
     }
 
-    // 防串号安全校验：若会员在册手机号存在且长度>=4
-    if (member.phone && member.phone.replace(/\D/g, "").length >= 4) {
-      const cleanPhone = member.phone.replace(/\D/g, "");
-      // 如果会员有登记手机号，必须验证尾号后4位！如果不填或不匹配，坚决拦截
-      if (!phoneSuffix) {
-        return NextResponse.json({ error: "为保障您的私密档案安全，请输入手机尾号后4位" }, { status: 403 });
-      }
-      if (!cleanPhone.endsWith(phoneSuffix)) {
-        return NextResponse.json({ error: "邀请码与手机尾号不匹配，请核对或联系小桥" }, { status: 403 });
-      }
-    }
+    // 第二因子：有手机号必须验证尾号后4位；无手机号必须验证 6 位登录 PIN。
+    // 绝不允许只凭邀请码进入（LW88xx 是连号，可以被逐个尝试）。
+    const cleanPhone = (member.phone || "").replace(/\D/g, "");
+    const genericError = "邀请码或验证信息不匹配，请核对后重试，或联系小桥";
 
-    // 如果会员此前未录入手机号，而本次提供了尾号/手机号，则自动回填
-    if (!member.phone && phoneSuffix && phoneSuffix.length === 11) {
-      await db.update(members).set({ phone: phoneSuffix }).where(eq(members.id, member.id));
+    if (cleanPhone.length >= 4) {
+      if (!phoneSuffix || !cleanPhone.endsWith(phoneSuffix)) {
+        return NextResponse.json({ error: genericError }, { status: 401 });
+      }
+    } else {
+      if (!member.loginPin || phoneSuffix !== member.loginPin) {
+        return NextResponse.json({ error: genericError }, { status: 401 });
+      }
     }
 
     const response = NextResponse.json({
       memberId: member.id,
       memberName: member.name,
       joinedAt: member.joinedAt,
+      token: signMemberToken(member.id),
+      tokenExpiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
     });
 
     const commonOpts = {

@@ -58,7 +58,7 @@
         <view class="letter-sign-block" wx:if="{{latestExpanded}}">
           <view class="sign-left">
             <text class="sign-role">你的同行导师</text>
-            <text class="sign-author">小桥 · 亲笔于徕舞</text>
+            <text class="sign-author">小桥 · 于徕舞</text>
           </view>
           <view class="letter-seal-stamp">
             <text class="seal-text">徕舞\n私享</text>

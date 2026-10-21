@@ -9,6 +9,7 @@ interface MemberItem {
   phone: string | null;
   memberCode: string | null;
   mentorName: string | null;
+  loginPin?: string | null;
   totalHours: number | null;
   hoursPilates: number | null;
   hoursEquipment: number | null;
@@ -120,10 +121,10 @@ export default function AdminMembersPage() {
           name: editingMember.name,
           memberCode: editingMember.memberCode,
           mentorName: editingMember.mentorName,
-          totalHours: Number(editingMember.totalHours ?? 42),
-          hoursPilates: Number(editingMember.hoursPilates ?? 18),
-          hoursEquipment: Number(editingMember.hoursEquipment ?? 16),
-          hoursFatBurn: Number(editingMember.hoursFatBurn ?? 8),
+          totalHours: typeof editingMember.totalHours === "number" ? editingMember.totalHours : null,
+          hoursPilates: typeof editingMember.hoursPilates === "number" ? editingMember.hoursPilates : null,
+          hoursEquipment: typeof editingMember.hoursEquipment === "number" ? editingMember.hoursEquipment : null,
+          hoursFatBurn: typeof editingMember.hoursFatBurn === "number" ? editingMember.hoursFatBurn : null,
           joinedAt: editingMember.joinedAt,
           status: editingMember.status,
         }),
@@ -206,7 +207,7 @@ export default function AdminMembersPage() {
               cursor: "pointer",
             }}
           >
-            会员名录与课时资产 ({members.length})
+            会员名录与档案 ({members.length})
           </button>
           <button
             onClick={() => setActiveTab("feelings")}
@@ -255,7 +256,7 @@ export default function AdminMembersPage() {
                 <th style={{ padding: "14px 18px", fontWeight: 600 }}>会员卡号</th>
                 <th style={{ padding: "14px 18px", fontWeight: 600 }}>姓名</th>
                 <th style={{ padding: "14px 18px", fontWeight: 600 }}>专属导师</th>
-                <th style={{ padding: "14px 18px", fontWeight: 600 }}>总课时数</th>
+                <th style={{ padding: "14px 18px", fontWeight: 600 }}>卡内购买课时</th>
                 <th style={{ padding: "14px 18px", fontWeight: 600 }}>分课时明细 (普拉提/大器械/减脂)</th>
                 <th style={{ padding: "14px 18px", fontWeight: 600 }}>入会时间</th>
                 <th style={{ padding: "14px 18px", fontWeight: 600, textAlign: "right" }}>操作</th>
@@ -272,17 +273,17 @@ export default function AdminMembersPage() {
                     {m.mentorName || "导师 小桥"}
                   </td>
                   <td style={{ padding: "14px 18px", fontWeight: 700, color: "#0E0D10", fontSize: 14 }}>
-                    {m.totalHours ?? 42} <span style={{ fontSize: 11, fontWeight: 400, color: "#8C827B" }}>节</span>
+                    {m.totalHours ?? "—"} <span style={{ fontSize: 11, fontWeight: 400, color: "#8C827B" }}>节</span>
                   </td>
                   <td style={{ padding: "14px 18px", color: "#4A403E" }}>
                     <span style={{ background: "#F5ECE5", color: "#5E1914", padding: "2px 6px", borderRadius: 4, marginRight: 6 }}>
-                      普拉提: {m.hoursPilates ?? 18}
+                      普拉提: {m.hoursPilates ?? "—"}
                     </span>
                     <span style={{ background: "#F5ECE5", color: "#5E1914", padding: "2px 6px", borderRadius: 4, marginRight: 6 }}>
-                      大器械: {m.hoursEquipment ?? 16}
+                      大器械: {m.hoursEquipment ?? "—"}
                     </span>
                     <span style={{ background: "#F5ECE5", color: "#5E1914", padding: "2px 6px", borderRadius: 4 }}>
-                      减脂: {m.hoursFatBurn ?? 8}
+                      减脂: {m.hoursFatBurn ?? "—"}
                     </span>
                   </td>
                   <td style={{ padding: "14px 18px", color: "#8C827B" }}>{m.joinedAt ? m.joinedAt.slice(0, 10) : "2025-10-20"}</td>
@@ -425,6 +426,14 @@ export default function AdminMembersPage() {
                     style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 13, boxSizing: "border-box" }}
                   />
                 </div>
+              <div style={{ marginTop: 14 }}>
+                <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#4A403E", marginBottom: 6 }}>
+                  登录PIN（无手机号会员的第二因子）
+                </label>
+                <div style={{ fontSize: 13, color: "#1C1415", background: "#F3EDE8", borderRadius: 6, padding: "8px 12px", letterSpacing: 2 }}>
+                  {editingMember.loginPin || "该会员使用手机尾号验证"}
+                </div>
+              </div>
               </div>
 
               <div style={{ background: "#FAF7F5", padding: 16, borderRadius: 10, border: "1px solid #EBE4DF" }}>
@@ -434,11 +443,11 @@ export default function AdminMembersPage() {
 
                 <div style={{ marginBottom: 12 }}>
                   <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#1C1415", marginBottom: 6 }}>
-                    总课时数 (顶部高光大字展示)
+                    卡内购买课时（存档字段；会员端累计完成由训练记录自动统计）
                   </label>
                   <input
                     type="number"
-                    value={editingMember.totalHours ?? 42}
+                    value={editingMember.totalHours ?? ""}
                     onChange={(e) => setEditingMember({ ...editingMember, totalHours: Number(e.target.value) })}
                     style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 14, fontWeight: 700, color: "#5E1914", boxSizing: "border-box" }}
                   />
@@ -451,7 +460,7 @@ export default function AdminMembersPage() {
                     </label>
                     <input
                       type="number"
-                      value={editingMember.hoursPilates ?? 18}
+                      value={editingMember.hoursPilates ?? ""}
                       onChange={(e) => setEditingMember({ ...editingMember, hoursPilates: Number(e.target.value) })}
                       style={{ width: "100%", padding: "8px 10px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 13, boxSizing: "border-box" }}
                     />
@@ -462,7 +471,7 @@ export default function AdminMembersPage() {
                     </label>
                     <input
                       type="number"
-                      value={editingMember.hoursEquipment ?? 16}
+                      value={editingMember.hoursEquipment ?? ""}
                       onChange={(e) => setEditingMember({ ...editingMember, hoursEquipment: Number(e.target.value) })}
                       style={{ width: "100%", padding: "8px 10px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 13, boxSizing: "border-box" }}
                     />
@@ -473,7 +482,7 @@ export default function AdminMembersPage() {
                     </label>
                     <input
                       type="number"
-                      value={editingMember.hoursFatBurn ?? 8}
+                      value={editingMember.hoursFatBurn ?? ""}
                       onChange={(e) => setEditingMember({ ...editingMember, hoursFatBurn: Number(e.target.value) })}
                       style={{ width: "100%", padding: "8px 10px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 13, boxSizing: "border-box" }}
                     />
