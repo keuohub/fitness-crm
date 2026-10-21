@@ -25,16 +25,19 @@ export default function AdminLoginPage() {
       const res = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), password }),
+        body: JSON.stringify({ email: email.trim(), password: password.trim() }),
       });
 
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error || "登录失败");
+        setError(data.error || "账号或密码错误");
         return;
       }
 
-      window.location.href = "/members";
+      // 提取重定向地址，默认前往月度之星封面画报
+      const params = new URLSearchParams(window.location.search);
+      const redirectUrl = params.get("redirect") || "/admin/stars";
+      window.location.href = redirectUrl;
     } catch {
       setError("网络错误，请重试");
     } finally {
@@ -72,34 +75,34 @@ export default function AdminLoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs text-[#9E9E9E] mb-2">
-              账号
+            <label className="block text-xs text-[#666666] font-medium mb-2">
+              账号 (支持邮箱或直接输入 admin)
             </label>
             <input
               type="text"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@laiwu.fitness"
+              placeholder="admin@laiwu.fitness 或 admin"
               className="w-full h-12 px-4 rounded-xl bg-white text-sm text-[#1A1A1A] placeholder-[#9E9E9E] outline-none transition-all focus:ring-2 focus:ring-[#1A1A1A]/20"
               style={{ border: `1px solid ${COLORS.border}` }}
               autoFocus
             />
           </div>
           <div>
-            <label className="block text-xs text-[#9E9E9E] mb-2">
+            <label className="block text-xs text-[#666666] font-medium mb-2">
               密码
             </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="输入管理员密码"
+              placeholder="默认密码 laiwu2025"
               className="w-full h-12 px-4 rounded-xl bg-white text-sm text-[#1A1A1A] placeholder-[#9E9E9E] outline-none transition-all focus:ring-2 focus:ring-[#1A1A1A]/20"
               style={{ border: `1px solid ${COLORS.border}` }}
             />
           </div>
           {error && (
-            <p className="text-xs" style={{ color: "#666666" }}>
+            <p className="text-xs" style={{ color: "#C62828", fontWeight: 500 }}>
               {error}
             </p>
           )}
@@ -118,9 +121,18 @@ export default function AdminLoginPage() {
               (e.currentTarget.style.backgroundColor = COLORS.primary)
             }
           >
-            {loading ? "登录中..." : "登录"}
+            {loading ? "正在登录..." : "登 录"}
           </button>
         </form>
+
+        <div className="mt-8 pt-6 border-t border-[#EBE4DF] text-center">
+          <p className="text-xs text-[#8C827B]">
+            默认账号：<code className="text-[#1C1415] font-semibold">admin</code> 或 <code className="text-[#1C1415] font-semibold">admin@laiwu.fitness</code>
+          </p>
+          <p className="text-xs text-[#8C827B] mt-1">
+            初始口令：<code className="text-[#1C1415] font-semibold">laiwu2025</code>
+          </p>
+        </div>
       </motion.div>
     </div>
   );

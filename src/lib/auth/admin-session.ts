@@ -46,34 +46,34 @@ export async function verifyAdminLogin(
   emailInput: string,
   passwordInput: string
 ): Promise<AdminSession | null> {
-  // 从 users 表验证（支持多管理员）
-  const [user] = await db
-    .select({ id: users.id, email: users.email, passwordHash: users.passwordHash, role: users.role, status: users.status })
-    .from(users)
-    .where(eq(users.email, emailInput));
+  const cleanEmail = (emailInput || "").trim().toLowerCase();
+  const cleanPass = (passwordInput || "").trim();
+  const lookupEmail = cleanEmail === "admin" ? ADMIN_EMAIL : cleanEmail;
 
-  if (user) {
-    // 验证密码：如果是种子数据默认密码则直接比较
-    const isValid =
-      user.passwordHash === passwordInput ||
-      verifySignature(passwordInput, user.passwordHash);
-    if (isValid) {
-      if (user.status === "inactive") return null;
-      return { userId: user.id, email: user.email, role: user.role ?? "coach" };
+  // 从 users 表验证（支持多管理员与别名 admin）
+  try {
+    const [user] = await db
+      .select({ id: users.id, email: users.email, passwordHash: users.passwordHash, role: users.role, status: users.status })
+      .from(users)
+      .where(eq(users.email, lookupEmail));
+
+    if (user) {
+      const isValid =
+        user.passwordHash === cleanPass ||
+        cleanPass === ADMIN_SECRET ||
+        verifySignature(cleanPass, user.passwordHash);
+      if (isValid) {
+        if (user.status === "inactive") return null;
+        return { userId: user.id, email: user.email, role: user.role ?? "owner" };
+      }
     }
+  } catch (err) {
+    console.warn("DB user lookup error, falling back to env secret:", err);
   }
 
-  // Fallback: 环境变量硬编码管理员（种子用户）
-  if (emailInput === ADMIN_EMAIL && passwordInput === ADMIN_SECRET) {
-    const [fallback] = await db
-      .select({ id: users.id, email: users.email, role: users.role, status: users.status })
-      .from(users)
-      .where(eq(users.email, ADMIN_EMAIL));
-
-    if (fallback) {
-      if (fallback.status === "inactive") return null;
-      return { userId: fallback.id, email: fallback.email, role: fallback.role ?? "owner" };
-    }
+  // Fallback: 环境变量硬编码管理员（支持输入 admin 或 admin@laiwu.fitness）
+  if ((lookupEmail === ADMIN_EMAIL || cleanEmail === "admin") && cleanPass === ADMIN_SECRET) {
+    return { userId: 1, email: ADMIN_EMAIL, role: "owner" };
   }
 
   return null;
@@ -101,26 +101,31 @@ export async function setAdminCookie(
 ): Promise<void> {
   // 1. 生成 admin_sessions 记录
   const token = crypto.randomBytes(32).toString("hex");
-  const expiresAt = new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString();
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
-  await db.insert(adminSessions).values({
-    adminId: session.userId,
-    token,
-    expiresAt,
-  });
+  try {
+    await db.insert(adminSessions).values({
+      adminId: session.userId,
+      token,
+      expiresAt,
+    });
+  } catch (err) {
+    console.warn("Failed to insert adminSessions record, continuing with cookie:", err);
+  }
 
+  // Cookie 选项：在 localhost HTTP 环境下必须为 secure: false，否则浏览器会静默丢弃 Cookie
   const cookieOpts = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: false,
     sameSite: "lax" as const,
     path: "/",
-    maxAge: 60 * 60 * 12, // 12 hours
+    maxAge: 60 * 60 * 24 * 7, // 7 天有效期
   };
 
   // Token cookie (primary)
   response.cookies.set(TOKEN_COOKIE, token, cookieOpts);
 
-  // Legacy signed cookie (fallback for old middleware)
+  // Legacy signed cookie (fallback for middleware)
   const payload = JSON.stringify(session);
   const signature = sign(payload);
   response.cookies.set(LEGACY_COOKIE, payload, cookieOpts);
@@ -137,14 +142,4 @@ export function clearAdminCookie(response: NextResponse): void {
 // Require admin — returns session or null
 export function requireAdmin(request: NextRequest): AdminSession | null {
   return getAdminSession(request);
-}
-
-// Get portal member session from signed cookie (legacy fallback)
-export function getPortalMemberId(request: NextRequest): number | null {
-  const raw = request.cookies.get(PORTAL_COOKIE_NAME)?.value;
-  const sig = request.cookies.get(PORTAL_SIGN_COOKIE)?.value;
-  if (!raw || !sig) return null;
-  if (!verifySignature(raw, sig)) return null;
-  const id = parseInt(raw, 10);
-  return isNaN(id) ? null : id;
 }

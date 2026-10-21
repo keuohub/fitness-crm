@@ -30,7 +30,9 @@ export function proxy(request: NextRequest) {
       return NextResponse.next();
     }
     if (!adminSession && !adminToken) {
-      return NextResponse.redirect(new URL("/admin/login", request.url));
+      const redirectUrl = new URL("/admin/login", request.url);
+      redirectUrl.searchParams.set("redirect", pathname);
+      return NextResponse.redirect(redirectUrl);
     }
     return NextResponse.next();
   }

@@ -96,11 +96,11 @@ export async function GET() {
         is_active INTEGER DEFAULT 1,
         created_at TIMESTAMP NOT NULL DEFAULT NOW()
       );
-      ALTER TABLE monthly_stars ADD COLUMN IF NOT EXISTS join_days INTEGER;
-      ALTER TABLE monthly_stars ADD COLUMN IF NOT EXISTS train_count INTEGER;
-      ALTER TABLE monthly_stars ADD COLUMN IF NOT EXISTS course_type TEXT;
-      ALTER TABLE monthly_stars ADD COLUMN IF NOT EXISTS journey TEXT;
     `;
+    await rawSql`ALTER TABLE monthly_stars ADD COLUMN IF NOT EXISTS join_days INTEGER;`;
+    await rawSql`ALTER TABLE monthly_stars ADD COLUMN IF NOT EXISTS train_count INTEGER;`;
+    await rawSql`ALTER TABLE monthly_stars ADD COLUMN IF NOT EXISTS course_type TEXT;`;
+    await rawSql`ALTER TABLE monthly_stars ADD COLUMN IF NOT EXISTS journey TEXT;`;
 
     const rows = await db
       .select()
