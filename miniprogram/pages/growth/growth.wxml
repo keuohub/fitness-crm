@@ -375,10 +375,14 @@ module.exports = {
           </view>
         </view>
 
+        <view wx:if="{{feelingReceipt}}" class="note-receipt">
+          <text class="note-receipt-txt">{{feelingReceipt}}</text>
+        </view>
+
         <view wx:if="{{feelingReply}}" class="note-reply-box">
           <view class="note-reply-header">
-            <text class="note-reply-tag">小桥回音 · 亲笔</text>
-            <text class="note-reply-date">已收录手札</text>
+            <text class="note-reply-tag">小桥回音</text>
+            <text class="note-reply-date">她本人写给你的</text>
           </view>
           <text class="note-reply-content">{{feelingReply}}</text>
         </view>

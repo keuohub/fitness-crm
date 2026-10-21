@@ -6,7 +6,12 @@ import { verifyMemberAccess } from "@/lib/auth/member-ownership";
 
 const DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions";
 
-async function generateXiaoqiaoReply(feeling: string, memberName?: string): Promise<string> {
+/**
+ * 注意命名：这是「参考草稿」，不是小桥的回音。
+ * 生成后只写入 ai_draft，会员端永远看不到；
+ * 必须由小桥在 /admin/feelings 里改过、按过发送，才算真的回了。
+ */
+async function generateReplyDraft(feeling: string, memberName?: string): Promise<string> {
   const apiKey = process.env.DEEPSEEK_API_KEY;
   if (!apiKey) return "";
 
@@ -23,11 +28,16 @@ async function generateXiaoqiaoReply(feeling: string, memberName?: string): Prom
           {
             role: "system",
             content:
-              "你是小桥，徕舞女子塑形的私人教练。会员刚训练完给你发了一段感受。请用温暖、鼓励的语气回应她。必须提到她说的具体内容。不超过150字。纯文本，不用 markdown。语气像闺蜜聊天，不冷漠、不说教。",
+              "你在帮徕舞女子塑形的主理人小桥起草一条回复草稿，最终会由她本人改写后发出。" +
+              "要求：用温暖、具体、像熟人说话的语气，不超过120字，纯文本不用 markdown。" +
+              "严禁说教、严禁空洞夸奖堆砌、严禁使用「亲爱的」开头以外的套话堆叠。" +
+              "绝对不要编造会员没表达过的内容；如果她只发了标签词，就围绕标签本身说一句具体的观察，不要假装她讲了一整段话。" +
+              "不要提及你是 AI，但也不要冒充小桥本人已经确认过的判断——只给一句能落地的回应。",
           },
           {
             role: "user",
-            content: `会员${memberName ? "「" + memberName + "」" : ""}说：${feeling}\n\n请以"小桥"的口吻回应她。`,
+            content:
+              `会员${memberName ? "「" + memberName + "」" : ""}课后留下：${feeling}\n\n请起草一条回复草稿。`,
           },
         ],
         temperature: 0.8,
@@ -57,7 +67,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "无权操作" }, { status: 401 });
     }
 
-    // 写入感受
+    // 写入感受 —— 只有会员本人写下的一句话，不带任何拼装
     const [record] = await db
       .insert(trainingFeelings)
       .values({
@@ -65,23 +75,26 @@ export async function POST(request: NextRequest) {
         memberId,
         trainingId: trainingId || null,
         feeling: feeling.trim(),
+        replyStatus: "pending",
       })
       .returning();
 
-    // 生成小桥的回应（异步，不阻塞返回）
-    const reply = await generateXiaoqiaoReply(feeling.trim());
+    // 只生成「参考草稿」，写入 ai_draft。
+    // 关键改动：绝不再自动写进 xiaoqiao_reply ——
+    // 会员看到的回音必须是小桥本人按过发送的，否则就是机器在冒充她。
+    const draft = await generateReplyDraft(feeling.trim());
 
-    if (reply) {
+    if (draft) {
       await db
         .update(trainingFeelings)
-        .set({ xiaoqiaoReply: reply })
+        .set({ aiDraft: draft })
         .where(eq(trainingFeelings.id, record.id));
     }
 
     return NextResponse.json({
       id: record.id,
       feeling: record.feeling,
-      xiaoqiaoReply: reply,
+      replyStatus: "pending",
       createdAt: record.createdAt,
     });
   } catch (err) {
@@ -108,8 +121,17 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "无权访问" }, { status: 401 });
   }
 
+  // 显式列出字段：ai_draft 是小桥的内参底稿，绝不能下发到会员端
   const feelings = await db
-    .select()
+    .select({
+      id: trainingFeelings.id,
+      memberId: trainingFeelings.memberId,
+      trainingId: trainingFeelings.trainingId,
+      feeling: trainingFeelings.feeling,
+      xiaoqiaoReply: trainingFeelings.xiaoqiaoReply,
+      replyStatus: trainingFeelings.replyStatus,
+      createdAt: trainingFeelings.createdAt,
+    })
     .from(trainingFeelings)
     .where(eq(trainingFeelings.memberId, memberId))
     .orderBy(desc(trainingFeelings.createdAt));

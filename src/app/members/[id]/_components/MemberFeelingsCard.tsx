@@ -22,8 +22,9 @@ export default function MemberFeelingsCard({ memberId }: { memberId: number }) {
     fetch(`/api/admin/training-feelings?memberId=${memberId}`)
       .then((res) => res.json())
       .then((data) => {
-        if (Array.isArray(data)) {
-          setFeelings(data);
+        const list = Array.isArray(data) ? data : data?.items;
+        if (Array.isArray(list)) {
+          setFeelings(list);
         }
         setLoading(false);
       })
@@ -39,9 +40,9 @@ export default function MemberFeelingsCard({ memberId }: { memberId: number }) {
     setSaving(true);
     try {
       const res = await fetch("/api/admin/training-feelings", {
-        method: "POST",
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ feelingId, reply: replyText.trim() }),
+        body: JSON.stringify({ id: feelingId, reply: replyText.trim(), action: "reply" }),
       });
       if (res.ok) {
         setEditingId(null);

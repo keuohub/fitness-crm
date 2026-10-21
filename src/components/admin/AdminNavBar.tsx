@@ -56,6 +56,20 @@ export default function AdminNavBar() {
       icon: "💬",
     },
     {
+      title: "待回便签",
+      subtitle: "课后留言 · 真人回",
+      href: "/admin/feelings",
+      active: pathname.startsWith("/admin/feelings"),
+      icon: "✉️",
+    },
+    {
+      title: "预约管理",
+      subtitle: "约课确认与取消",
+      href: "/admin/bookings",
+      active: pathname.startsWith("/admin/bookings"),
+      icon: "🗓️",
+    },
+    {
       title: "总览数据",
       subtitle: "运营与关怀",
       href: "/admin",
@@ -133,7 +147,7 @@ export default function AdminNavBar() {
         </Link>
 
         {/* 4 Main Tabs corresponding to 4 Mini-program tabs */}
-        <nav style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <nav style={{ display: "flex", alignItems: "center", gap: 3 }}>
           {navItems.map((item) => {
             const isActive = item.active;
             return (
@@ -144,16 +158,17 @@ export default function AdminNavBar() {
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "flex-start",
-                  padding: "6px 14px",
+                  padding: "6px 9px",
                   borderRadius: 8,
                   textDecoration: "none",
                   transition: "all 0.15s ease",
+                  whiteSpace: "nowrap",
                   background: isActive ? "#0E0D10" : "transparent",
                   color: isActive ? "#FFFFFF" : "#4A403E",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, fontWeight: 600 }}>
-                  <span style={{ fontSize: 12 }}>{item.icon}</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12.5, fontWeight: 600 }}>
+                  <span style={{ fontSize: 11 }}>{item.icon}</span>
                   <span>{item.title}</span>
                 </div>
                 <div

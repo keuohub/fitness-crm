@@ -274,7 +274,12 @@ export const trainingFeelings = pgTable("training_feelings", {
     .references(() => members.id),
   trainingId: integer("training_id").references(() => trainings.id),
   feeling: text("feeling").notNull(),
+  /** 小桥本人确认后才会写入这里。AI 生成的内容一律不进这个字段。 */
   xiaoqiaoReply: text("xiaoqiao_reply"),
+  /** AI 起草的参考回复，仅后台可见，会员端不下发。 */
+  aiDraft: text("ai_draft"),
+  /** pending=待小桥回 / replied=小桥已回 / auto_legacy=改造前机器自动回的旧数据 */
+  replyStatus: text("reply_status").notNull().default("pending"),
   createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
 });
 

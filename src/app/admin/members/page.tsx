@@ -67,7 +67,8 @@ export default function AdminMembersPage() {
       }
       if (resF && resF.ok) {
         const fData = await resF.json();
-        if (Array.isArray(fData)) setFeelings(fData);
+        const fList = Array.isArray(fData) ? fData : fData?.items;
+        if (Array.isArray(fList)) setFeelings(fList);
       }
     } catch (err) {
       console.error(err);

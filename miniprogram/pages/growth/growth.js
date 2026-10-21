@@ -131,6 +131,7 @@ Page({
     feeling: "",
     feelingSubmitting: false,
     feelingReply: "",
+    feelingReceipt: "",
     feelingTags: ["肩颈舒展", "核心收紧", "整个人轻盈了", "体态更挺拔", "呼吸顺畅"],
     selectedFeelingTags: [],
     loading: true,
@@ -627,10 +628,13 @@ Page({
             feelingSubmitting: false,
             feeling: "",
             selectedFeelingTags: [],
-            feelingReply: res.data.xiaoqiaoReply || "已妥善收入你的专属手札。每一次用心的记录，都是蜕变的印记。小桥一直在你身边。"
+            // 以前这里直接放 AI 生成的「小桥回音」并标成"亲笔"。
+            // 现在只给一张回执：让她知道话已经到了小桥手上，而且要等。
+            feelingReply: "",
+            feelingReceipt: "已经放进小桥的便签本了。她会亲自看、亲自回，所以会比机器慢一点——但那是她本人写给你的话。"
           });
           wx.showToast({
-            title: "已发给小桥",
+            title: "已交给小桥",
             icon: "success",
             duration: 2000
           });

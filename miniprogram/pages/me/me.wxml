@@ -147,7 +147,7 @@
           <view class="reply-seal-tag">待</view>
           <view class="reply-text-col">
             <text class="reply-mentor-title">小桥已收到</text>
-            <text class="reply-mentor-body">正在读，通常当天会回你。</text>
+            <text class="reply-mentor-body">正在读。这条是她本人回，不会秒回。</text>
           </view>
         </view>
       </view>
