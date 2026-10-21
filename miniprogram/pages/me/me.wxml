@@ -1,12 +1,7 @@
 <view class="me-container">
 
-  <!-- 顶部轻奢导航头 (Editorial Header) -->
+  <!-- 顶部标题区 (避开顶部刘海与状态栏，呈现从容留白) -->
   <view class="me-hero-header">
-    <view class="me-pill-tag">
-      <text class="tag-letter">ACCOUNT</text>
-      <text class="tag-slash">/</text>
-      <text class="tag-sub">会员私享账户</text>
-    </view>
     <view class="me-title-wrap">
       <text class="me-hero-title">我的账户</text>
       <text class="me-hero-subtitle">自律是赠予自己最珍贵的资产</text>
@@ -18,7 +13,7 @@
     <view class="card-top-row">
       <view class="card-brand-mark">
         <text class="card-brand-en">LAIWU</text>
-        <text class="card-brand-tier">{{memberTier}}</text>
+        <text class="card-brand-tier">会员档案</text>
       </view>
       <text class="card-status-pill">活跃会员</text>
     </view>
@@ -116,44 +111,6 @@
           </view>
         </view>
       </view>
-    </view>
-  </view>
-
-  <!-- 极细发丝分隔律动线 -->
-  <view class="editorial-hairline"></view>
-
-  <!-- 模块四：专属私享管家 (03 CONCIERGE & SUPPORT) -->
-  <view class="me-section">
-    <view class="section-title-bar">
-      <view class="section-tag-group">
-        <text class="section-index">03</text>
-        <text class="section-heading">专属私享管家</text>
-      </view>
-      <text class="section-en-label">CONCIERGE</text>
-    </view>
-    <text class="section-intro">课程沟通、训练疑问或定制建议，您的专属顾问随时静候。</text>
-
-    <view class="concierge-action-card" bindtap="copyConciergeWechat">
-      <view class="concierge-left-info">
-        <view class="concierge-wechat-tag">
-          <text class="wechat-prefix">WECHAT</text>
-          <text class="wechat-id">Laiwu0010</text>
-        </view>
-        <text class="concierge-desc-text">轻点直接复制专属顾问微信号，一对一沟通私享安排</text>
-      </view>
-      <view class="concierge-copy-pill">
-        <text class="copy-pill-text">一键复制</text>
-      </view>
-    </view>
-  </view>
-
-  <!-- 极细发丝分隔律动线 -->
-  <view class="editorial-hairline"></view>
-
-  <!-- 模块五：安全退出手札 (Account Operations) -->
-  <view class="logout-action-wrap">
-    <view class="logout-pill-btn" bindtap="handleLogout">
-      <text class="logout-btn-text">暂时离开当前手札</text>
     </view>
   </view>
 

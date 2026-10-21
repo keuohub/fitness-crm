@@ -1,12 +1,7 @@
 <view class="brand-container">
 
-  <!-- 顶部轻奢导航头 (Editorial Header) -->
+  <!-- 顶部标题区 (避开顶部刘海与状态栏，呈现从容留白) -->
   <view class="brand-hero-header">
-    <view class="brand-pill-tag">
-      <text class="tag-letter">SANCTUARY</text>
-      <text class="tag-slash">/</text>
-      <text class="tag-sub">空间与心法</text>
-    </view>
     <view class="brand-title-wrap">
       <text class="brand-hero-title">了解徕舞</text>
       <text class="brand-hero-subtitle">以克制之道，唤醒身体内在的秩序与平衡</text>

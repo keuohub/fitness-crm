@@ -1,56 +1,139 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, rawSql } from "@/db";
-import { photos, members } from "@/db/schema";
-import { eq, inArray } from "drizzle-orm";
+import { members } from "@/db/schema";
+import { eq } from "drizzle-orm";
 import { getAdminSession } from "@/lib/auth/admin-session";
 
-const DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions";
+export async function GET(request: NextRequest) {
+  const admin = getAdminSession(request);
+  if (!admin) return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
+
+  try {
+    await rawSql`ALTER TABLE photo_comparisons ADD COLUMN IF NOT EXISTS photo1_url TEXT;`;
+    await rawSql`ALTER TABLE photo_comparisons ADD COLUMN IF NOT EXISTS photo2_url TEXT;`;
+    await rawSql`ALTER TABLE photo_comparisons ADD COLUMN IF NOT EXISTS photo1_date TEXT;`;
+    await rawSql`ALTER TABLE photo_comparisons ADD COLUMN IF NOT EXISTS photo2_date TEXT;`;
+    await rawSql`ALTER TABLE photo_comparisons ADD COLUMN IF NOT EXISTS photo1_type TEXT;`;
+    await rawSql`ALTER TABLE photo_comparisons ADD COLUMN IF NOT EXISTS photo2_type TEXT;`;
+
+    const { searchParams } = new URL(request.url);
+    const memberId = searchParams.get("memberId");
+
+    const rows = memberId
+      ? await rawSql`
+          SELECT c.id, c.tenant_id, c.member_id, c.analysis, c.created_at,
+                 COALESCE(c.photo1_url, p1.file_path, '/images/posture/posture_front_before.jpg') AS photo1_url,
+                 COALESCE(c.photo1_date, p1.taken_at, '2025-10-20') AS photo1_date,
+                 COALESCE(c.photo1_type, p1.photo_type, 'front') AS photo1_type,
+                 COALESCE(c.photo2_url, p2.file_path, '/images/posture/posture_front_after.jpg') AS photo2_url,
+                 COALESCE(c.photo2_date, p2.taken_at, '2026-10-18') AS photo2_date,
+                 COALESCE(c.photo2_type, p2.photo_type, 'front') AS photo2_type
+            FROM photo_comparisons c
+            LEFT JOIN photos p1 ON p1.id = c.photo_id_1
+            LEFT JOIN photos p2 ON p2.id = c.photo_id_2
+           WHERE c.member_id = ${parseInt(memberId, 10)}
+           ORDER BY c.created_at DESC
+        `
+      : await rawSql`
+          SELECT c.*, m.name AS member_name
+            FROM photo_comparisons c
+            LEFT JOIN members m ON m.id = c.member_id
+           ORDER BY c.created_at DESC
+           LIMIT 50
+        `;
+
+    return NextResponse.json(rows);
+  } catch (err: any) {
+    console.error("admin photo-compare error:", err);
+    return NextResponse.json([]);
+  }
+}
 
 export async function POST(request: NextRequest) {
   const admin = getAdminSession(request);
   if (!admin) return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
 
   try {
-    const { memberId, photoId1, photoId2, analysis: manualAnalysis } = await request.json();
-    if (!memberId || !photoId1 || !photoId2) return NextResponse.json({ error: "缺少参数" }, { status: 400 });
+    await rawSql`ALTER TABLE photo_comparisons ADD COLUMN IF NOT EXISTS photo1_url TEXT;`;
+    await rawSql`ALTER TABLE photo_comparisons ADD COLUMN IF NOT EXISTS photo2_url TEXT;`;
+    await rawSql`ALTER TABLE photo_comparisons ADD COLUMN IF NOT EXISTS photo1_date TEXT;`;
+    await rawSql`ALTER TABLE photo_comparisons ADD COLUMN IF NOT EXISTS photo2_date TEXT;`;
+    await rawSql`ALTER TABLE photo_comparisons ADD COLUMN IF NOT EXISTS photo1_type TEXT;`;
+    await rawSql`ALTER TABLE photo_comparisons ADD COLUMN IF NOT EXISTS photo2_type TEXT;`;
 
-    const [member] = await db.select({ id: members.id, name: members.name }).from(members).where(eq(members.id, memberId));
-    if (!member) return NextResponse.json({ error: "会员不存在" }, { status: 404 });
+    const body = await request.json();
+    const {
+      memberId,
+      photo1_url,
+      photo2_url,
+      photo1_date = "2025-10-20",
+      photo2_date = "2026-10-18",
+      photo1_type = "front",
+      photo2_type = "front",
+      analysis = "",
+    } = body;
 
-    const photoRows = await db.select().from(photos).where(inArray(photos.id, [photoId1, photoId2]));
-    if (photoRows.length !== 2) return NextResponse.json({ error: "照片不存在" }, { status: 404 });
-
-    const p1 = photoRows[0], p2 = photoRows[1];
-    const prompt = `你是小桥，请分析会员${member.name}的两张体态照片变化。\n照片1(${p1.takenAt} 类型:${p1.photoType}): ${p1.notes||"无备注"}\n照片2(${p2.takenAt} 类型:${p2.photoType}): ${p2.notes||"无备注"}\n\n用温暖具体的语言写一段分析，不超过200字。指出可见变化，如看不出变化则强调坚持的力量。永远用"你"称呼。不提AI/系统/数据/算法。署名：小桥`;
-
-    // 小桥手写的评价优先；没写才让 AI 起草
-    let analysis = typeof manualAnalysis === "string" ? manualAnalysis.trim() : "";
-    if (!analysis) {
-      const apiKey = process.env.DEEPSEEK_API_KEY || "";
-      if (apiKey) {
-        const res = await fetch(DEEPSEEK_API_URL, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` }, body: JSON.stringify({ model: "deepseek-chat", messages: [{ role: "system", content: "你是小桥" },{ role: "user", content: prompt }], temperature: 0.7, max_tokens: 500 }) });
-        if (res.ok) { const d = await res.json(); analysis = d.choices?.[0]?.message?.content?.trim() || ""; }
-      }
+    if (!memberId || !photo1_url || !photo2_url) {
+      return NextResponse.json({ error: "会员与两张对比照片为必填" }, { status: 400 });
     }
 
-    const result = await rawSql`INSERT INTO photo_comparisons (tenant_id, member_id, photo_id_1, photo_id_2, analysis) VALUES (1, ${memberId}, ${photoId1}, ${photoId2}, ${analysis}) RETURNING id`;
+    const mid = Number(memberId);
+    const result = await rawSql`
+      INSERT INTO photo_comparisons (
+        tenant_id, member_id, photo1_url, photo2_url, photo1_date, photo2_date, photo1_type, photo2_type, analysis
+      ) VALUES (
+        1, ${mid}, ${photo1_url}, ${photo2_url}, ${photo1_date}, ${photo2_date}, ${photo1_type}, ${photo2_type}, ${analysis}
+      ) RETURNING id
+    `;
 
-    return NextResponse.json({ id: result[0].id, analysis, photo1: { date: p1.takenAt, type: p1.photoType }, photo2: { date: p2.takenAt, type: p2.photoType } });
-  } catch (err) { console.error("photo-compare error:", err); return NextResponse.json({ error: "服务器错误" }, { status: 500 }); }
+    return NextResponse.json({ success: true, id: result[0]?.id }, { status: 201 });
+  } catch (err: any) {
+    console.error("admin photo-compare POST error:", err);
+    return NextResponse.json({ error: err.message || "创建对比失败" }, { status: 500 });
+  }
 }
 
-export async function GET(request: NextRequest) {
+export async function PUT(request: NextRequest) {
   const admin = getAdminSession(request);
   if (!admin) return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
-  const { searchParams } = new URL(request.url);
-  const memberId = searchParams.get("memberId");
+
   try {
-    const rows = memberId 
-      ? await rawSql`SELECT * FROM photo_comparisons WHERE member_id = ${parseInt(memberId)} ORDER BY created_at DESC LIMIT 10`
-      : await rawSql`SELECT * FROM photo_comparisons ORDER BY created_at DESC LIMIT 20`;
-    return NextResponse.json(rows);
-  } catch (err) {
-    console.error("admin photo-compare error:", err);
-    return NextResponse.json([]);
+    const body = await request.json();
+    const { id, photo1_url, photo2_url, photo1_date, photo2_date, photo1_type, photo2_type, analysis } = body;
+    if (!id) return NextResponse.json({ error: "缺少对比 ID" }, { status: 400 });
+
+    await rawSql`
+      UPDATE photo_comparisons
+         SET photo1_url = COALESCE(${photo1_url}, photo1_url),
+             photo2_url = COALESCE(${photo2_url}, photo2_url),
+             photo1_date = COALESCE(${photo1_date}, photo1_date),
+             photo2_date = COALESCE(${photo2_date}, photo2_date),
+             photo1_type = COALESCE(${photo1_type}, photo1_type),
+             photo2_type = COALESCE(${photo2_type}, photo2_type),
+             analysis = COALESCE(${analysis}, analysis)
+       WHERE id = ${Number(id)}
+    `;
+
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
+    console.error("admin photo-compare PUT error:", err);
+    return NextResponse.json({ error: err.message || "更新对比失败" }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  const admin = getAdminSession(request);
+  if (!admin) return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
+
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+    if (!id) return NextResponse.json({ error: "缺少对比 ID" }, { status: 400 });
+
+    await rawSql`DELETE FROM photo_comparisons WHERE id = ${Number(id)}`;
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
+    console.error("admin photo-compare DELETE error:", err);
+    return NextResponse.json({ error: err.message || "删除对比失败" }, { status: 500 });
   }
 }

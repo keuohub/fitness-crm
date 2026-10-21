@@ -59,20 +59,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 若无 memberId，支持管理后台通用品牌大片上传（月度之星、场馆相册、团队肖像等）
+    // 若无 memberId，支持管理后台通用品牌大片上传（月度之星、场馆相册、团队肖像、体态对比等）
     if (!memberIdRaw) {
       const BRAND_DIR = path.join(process.cwd(), "public", "brand", "uploads");
+      const MINI_DIR = path.join(process.cwd(), "miniprogram", "images", "uploads");
       await mkdir(BRAND_DIR, { recursive: true });
+      await mkdir(MINI_DIR, { recursive: true });
 
       const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
       const filename = `brand-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
       const filePath = path.join(BRAND_DIR, filename);
+      const miniPath = path.join(MINI_DIR, filename);
 
       const bytes = await file.arrayBuffer();
-      await writeFile(filePath, Buffer.from(bytes));
+      const buffer = Buffer.from(bytes);
+      await writeFile(filePath, buffer);
+      try {
+        await writeFile(miniPath, buffer);
+      } catch (err) {
+        console.warn("Failed to sync to miniprogram dir:", err);
+      }
 
       const url = `/brand/uploads/${filename}`;
-      return NextResponse.json({ url }, { status: 201 });
+      const localMiniprogramUrl = `/images/uploads/${filename}`;
+      return NextResponse.json({ url, localMiniprogramUrl }, { status: 201 });
     }
 
     const mid = typeof memberIdRaw === "string" ? parseInt(memberIdRaw, 10) : (memberIdRaw as unknown as number);

@@ -13,7 +13,7 @@ page {
 .brand-container {
   min-height: 100vh;
   box-sizing: border-box;
-  padding: calc(env(safe-area-inset-top) + 36rpx) 40rpx 0;
+  padding: calc(env(safe-area-inset-top) + 80rpx) 40rpx 0;
 }
 
 /* 顶部轻奢导航头 */

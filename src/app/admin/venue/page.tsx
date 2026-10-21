@@ -111,8 +111,8 @@ export default function AdminVenuePage() {
           <Link href="/admin" style={{ fontSize: 13, color: "#8B5E3C", textDecoration: "none", display: "inline-block", marginBottom: 8 }}>
             ← 返回管理总览
           </Link>
-          <h1 style={{ fontSize: 26, fontWeight: 600, color: "#1C1415", margin: 0 }}>
-            ✦ 场馆空间相册管理
+          <h1 style={{ fontSize: 26, fontWeight: 700, color: "#1C1415", margin: 0 }}>
+            🏛️ 第 2 板块：了解徕舞 · 场馆空间管理
           </h1>
           <p style={{ fontSize: 13, color: "#7A6B69", marginTop: 6, margin: 0 }}>
             管理小程序主框架展示的场馆实景与器械大片，留纯净标题框架供后台随心撰写

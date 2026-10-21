@@ -141,6 +141,13 @@ Page({
   fullUrl: function(p) {
     if (!p) return "";
     if (p.indexOf("http") === 0) return p;
+    if (p.indexOf("/images/") === 0) return p;
+    if (p.indexOf("/brand/uploads/") === 0) {
+      return p.replace("/brand/uploads/", "/images/uploads/");
+    }
+    if (p.indexOf("/brand/posture/") === 0) {
+      return p.replace("/brand/posture/", "/images/posture/");
+    }
     return (this.data.baseUrl || "") + p;
   },
 
@@ -251,14 +258,14 @@ Page({
           };
         });
       } else {
-        // 演示兜底对比图（使用处理好的会员对比画卷）
+        // 专业体态对比档案（与首屏“徕舞之星”写真彻底区分开，采用临床评估网格照）
         photoComparisons = [
           {
             id: 201,
             photo1_type: "front",
             photo2_type: "front",
-            photo1_url: "/images/stars/member_star_1.jpg",
-            photo2_url: "/images/stars/member_star_3.jpg",
+            photo1_url: "/images/posture/posture_front_before.jpg",
+            photo2_url: "/images/posture/posture_front_after.jpg",
             photo1_date: "2025年10月20日 · 入学初评",
             photo2_date: "2026年10月18日 · 进阶定格",
             analysis: "经过 42 节普拉提与大器械精准训练，肋骨外翻已显著收紧归位；骨盆前倾改善约 6°，左右高低肩平衡对称，下颌线与双侧锁骨线条舒展挺拔。"
@@ -267,8 +274,8 @@ Page({
             id: 202,
             photo1_type: "side",
             photo2_type: "side",
-            photo1_url: "/images/stars/member_star_2.jpg",
-            photo2_url: "/images/stars/member_star_4.jpg",
+            photo1_url: "/images/posture/posture_side_before.jpg",
+            photo2_url: "/images/posture/posture_side_after.jpg",
             photo1_date: "2025年10月20日 · 入学初评",
             photo2_date: "2026年10月18日 · 进阶定格",
             analysis: "侧面观颈部前倾纠正明显，耳垂、肩峰与大转子回归标准垂直重力线。腹横肌建立自主内在张力，小腹自然平坦，后背生理弧度优雅自然。"
@@ -277,8 +284,8 @@ Page({
             id: 203,
             photo1_type: "back",
             photo2_type: "back",
-            photo1_url: "/images/stars/star-1.jpg",
-            photo2_url: "/images/stars/star-2.jpg",
+            photo1_url: "/images/posture/posture_back_before.jpg",
+            photo2_url: "/images/posture/posture_back_after.jpg",
             photo1_date: "2025年10月20日 · 入学初评",
             photo2_date: "2026年10月18日 · 进阶定格",
             analysis: "背部翼状肩胛已完全改善，双侧背阔肌与斜方肌中下束恢复均等支撑。脊柱中立无代偿，呈现紧致修长且富有弹性的体态线条。"

@@ -133,8 +133,8 @@ export default function AdminStarsPage() {
           <Link href="/admin" style={{ fontSize: 13, color: "#8B5E3C", textDecoration: "none", display: "inline-block", marginBottom: 8 }}>
             ← 返回管理总览
           </Link>
-          <h1 style={{ fontSize: 26, fontWeight: 600, color: "#1C1415", margin: 0 }}>
-            ✦ 徕舞之星 · 封面画廊管理
+          <h1 style={{ fontSize: 26, fontWeight: 700, color: "#1C1415", margin: 0 }}>
+            🌟 第 1 板块：徕舞之星 · 封面画廊管理
           </h1>
           <p style={{ fontSize: 13, color: "#7A6B69", marginTop: 8, margin: 0, lineHeight: 1.5 }}>
             直接自主修改小程序首屏画报的<b>会员姓名</b>、<b>相伴天数</b>、<b>上课节数</b>、<b>体态心语</b>与<b>写真大片</b>。
@@ -406,10 +406,21 @@ export default function AdminStarsPage() {
                     padding: "10px 16px", background: "#0E0D10", color: "#FFFFFF",
                     borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap"
                   }}>
-                    {uploading ? "上传中..." : "本地上传"}
+                    {uploading ? "正在上传..." : "本地上传"}
                     <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: "none" }} />
                   </label>
                 </div>
+                {editingStar.avatarUrl && (
+                  <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 14, background: "#FAF7F5", padding: "10px 14px", borderRadius: 8, border: "1px solid #EBE4DF" }}>
+                    <div style={{ width: 48, height: 64, borderRadius: 6, overflow: "hidden", background: "#0E0D10", flexShrink: 0 }}>
+                      <img src={editingStar.avatarUrl} alt="预览" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "#2E7D32" }}>✓ 照片格式已识别，已同步至小程序</div>
+                      <div style={{ fontSize: 11, color: "#8C827B", marginTop: 2 }}>{editingStar.avatarUrl}</div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* 自律心语 */}

@@ -12,7 +12,7 @@ page {
 .transformation-container {
   min-height: 100vh;
   box-sizing: border-box;
-  padding: calc(env(safe-area-inset-top) + 36rpx) 40rpx 0;
+  padding: calc(env(safe-area-inset-top) + 80rpx) 40rpx 0;
 }
 
 .trans-loading-box {
@@ -31,11 +31,24 @@ page {
   padding-bottom: 28rpx;
 }
 
-.trans-hero-top {
+.trans-hero-main {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 20rpx;
+}
+
+.member-days-badge {
+  padding: 6rpx 18rpx;
+  background: rgba(13, 12, 15, 0.05);
+  border: 1rpx solid rgba(13, 12, 15, 0.1);
+  border-radius: 20rpx;
+}
+
+.days-badge-txt {
+  font-size: 22rpx;
+  color: #6D645D;
+  font-weight: 500;
 }
 
 .member-badge-pill {

@@ -113,8 +113,8 @@ export default function AdminTeamPage() {
           <Link href="/admin" style={{ fontSize: 13, color: "#8B5E3C", textDecoration: "none", display: "inline-block", marginBottom: 8 }}>
             ← 返回管理总览
           </Link>
-          <h1 style={{ fontSize: 26, fontWeight: 600, color: "#1C1415", margin: 0 }}>
-            ✦ 徕舞团队管理
+          <h1 style={{ fontSize: 26, fontWeight: 700, color: "#1C1415", margin: 0 }}>
+            🧘 第 2 板块：了解徕舞 · 导师阵容管理
           </h1>
           <p style={{ fontSize: 13, color: "#7A6B69", marginTop: 6, margin: 0 }}>
             呈现真实、温润、可信的导师团队形象，不搞花哨证书认证与推销式按钮

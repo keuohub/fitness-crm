@@ -8,19 +8,16 @@
   <block wx:else>
 
     <!-- 顶部会员档案与阶段名牌 (Member Header & Cartier Horizon) -->
+    <!-- 顶部会员档案与阶段名牌 (避开顶部刘海与状态栏，呈现从容留白) -->
     <view class="trans-hero-header">
-      <view class="trans-hero-top">
-        <view class="member-badge-pill">
-          <text class="badge-en">DOSSIER</text>
-          <text class="badge-dot">/</text>
-          <text class="badge-cn">蜕变档案</text>
+      <view class="trans-hero-main">
+        <view class="member-name-block">
+          <text class="member-name-text">{{memberName}}</text>
+          <text class="member-stage-title">{{levelTitle}}</text>
         </view>
-        <text class="member-days-counter">相伴 {{formattedDays}} 天</text>
-      </view>
-
-      <view class="member-name-block">
-        <text class="member-name-text">{{memberName}}</text>
-        <text class="member-stage-title">{{levelTitle}}</text>
+        <view class="member-days-badge">
+          <text class="days-badge-txt">相伴自律 {{formattedDays}} 天</text>
+        </view>
       </view>
 
       <view class="whisper-banner">

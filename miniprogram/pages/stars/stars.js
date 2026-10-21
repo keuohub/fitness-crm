@@ -78,6 +78,9 @@ Page({
     if (!p) return "";
     if (p.indexOf("http") === 0) return p;
     if (p.indexOf("/images/") === 0) return p;
+    if (p.indexOf("/brand/uploads/") === 0) {
+      return p.replace("/brand/uploads/", "/images/uploads/");
+    }
     var base = this.data.baseUrl || api.DEFAULT_BASE_URL;
     if (p.indexOf("/brand/") === 0) {
       // 优先映射到本地高精图，若本地不存在则走网络

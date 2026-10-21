@@ -60,3 +60,24 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+
+export async function PUT(request: NextRequest) {
+  try {
+    const { id, feelingId, xiaoqiaoReply, reply } = await request.json();
+    const targetId = id || feelingId;
+    const finalReply = xiaoqiaoReply !== undefined ? xiaoqiaoReply : reply;
+    if (!targetId || finalReply === undefined) {
+      return NextResponse.json({ error: "缺少 id 或回复内容" }, { status: 400 });
+    }
+
+    await rawSql`
+      UPDATE training_feelings
+         SET xiaoqiao_reply = ${String(finalReply).trim()}
+       WHERE id = ${Number(targetId)}
+    `;
+
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
