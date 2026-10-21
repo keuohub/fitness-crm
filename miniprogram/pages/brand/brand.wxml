@@ -133,10 +133,9 @@
     </view>
   </view>
 
-  <!-- 页尾转化入口：看完品牌，下一步可约课 / 加顾问 -->
-  <view class="brand-cta-row" style="display:flex;gap:20rpx;padding:8rpx 36rpx 28rpx;">
-    <view bindtap="goBooking" style="flex:1;height:88rpx;border-radius:44rpx;background:#0D0C0F;color:#F6E6DA;display:flex;align-items:center;justify-content:center;font-size:26rpx;letter-spacing:1rpx;">预约首次体态评估</view>
-    <view bindtap="copyConciergeWechat" style="flex:1;height:88rpx;border-radius:44rpx;background:rgba(255,255,255,.8);color:#1C1415;display:flex;align-items:center;justify-content:center;font-size:26rpx;letter-spacing:1rpx;">加小桥微信</view>
+  <!-- 页尾入口：目前只保留加顾问，约课功能稳定后再开放 -->
+  <view class="brand-cta-row" style="padding:8rpx 36rpx 28rpx;">
+    <view bindtap="copyConciergeWechat" style="height:88rpx;border-radius:44rpx;background:#0D0C0F;color:#F6E6DA;display:flex;align-items:center;justify-content:center;font-size:26rpx;letter-spacing:1rpx;">加小桥微信</view>
   </view>
 
   <!-- 底部留白，保障悬浮胶囊底栏不遮挡 -->

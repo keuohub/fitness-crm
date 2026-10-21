@@ -37,6 +37,8 @@
     />
   </view>
 
+  <text style="display:block;margin-top:18rpx;font-size:21rpx;line-height:1.7;color:rgba(255,255,255,.72);text-align:center;">有手机号：填尾号后 4 位 · 没有手机号：填小桥给你的 6 位登录 PIN</text>
+
   <!-- 登录按钮 -->
   <button class="login-btn stagger-4" bindtap="handleLogin" loading="{{submitting}}" disabled="{{submitting}}">
     {{submitting ? "正在开启档案..." : "开启专属成长手札"}}

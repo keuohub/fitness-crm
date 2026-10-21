@@ -53,8 +53,8 @@ Page({
 
   onLoad: function() {
     var memberId = wx.getStorageSync("memberId");
-    if (!memberId) {
-      wx.redirectTo({ url: "/pages/login/login" });
+    if (!memberId || !wx.getStorageSync("memberToken")) {
+      wx.reLaunch({ url: "/pages/login/login?force=1" });
       return;
     }
     this.setData({

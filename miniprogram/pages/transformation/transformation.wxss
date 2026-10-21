@@ -61,11 +61,11 @@ page {
 
 .tf-name {
   margin-top: 18rpx;
-  font-size: 58rpx;
+  font-size: 54rpx;
   font-weight: 600;
   color: #FFFFFF;
-  font-family: "Songti SC", serif;
-  letter-spacing: 2rpx;
+  font-family: -apple-system, "PingFang SC", sans-serif;
+  letter-spacing: 1rpx;
 }
 
 .tf-days {
@@ -101,11 +101,11 @@ page {
 }
 
 .tf-total-num {
-  font-size: 96rpx;
+  font-size: 88rpx;
   line-height: 1.1;
   font-weight: 700;
   color: #0D0C0F;
-  font-family: "Songti SC", serif;
+  font-family: -apple-system, "PingFang SC", sans-serif;
 }
 
 .tf-total-unit {
@@ -152,7 +152,7 @@ page {
   font-size: 54rpx;
   font-weight: 700;
   color: #BA2428;
-  font-family: "Songti SC", serif;
+  font-family: -apple-system, "PingFang SC", sans-serif;
   line-height: 1;
 }
 
@@ -186,7 +186,7 @@ page {
   font-weight: 600;
   color: #FFFFFF;
   letter-spacing: 2rpx;
-  font-family: "Songti SC", serif;
+  font-family: -apple-system, "PingFang SC", sans-serif;
 }
 
 /* 角度切换 */

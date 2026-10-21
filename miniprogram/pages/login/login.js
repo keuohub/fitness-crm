@@ -13,10 +13,14 @@ Page({
     var isSwitching = options && (options.switch === "1" || options.force === "1");
     if (!isSwitching) {
       var memberId = wx.getStorageSync("memberId");
-      if (memberId) {
-        // 必须落到 tabBar 页面：switchTab 不接受非 tab 页（原 growth 会静默失败并卡死在此页）
+      var memberToken = wx.getStorageSync("memberToken");
+      if (memberId && memberToken) {
         wx.switchTab({ url: "/pages/stars/stars" });
         return;
+      }
+      if (memberId && !memberToken) {
+        // 旧版本留下的登录态没有 token，必须重新验证
+        api.clearSession();
       }
     } else {
       // 主动切换账号：彻底清除旧会话所有残余

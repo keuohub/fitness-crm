@@ -1,95 +1,135 @@
 // pages/me/me.js
-// 原则：页面不生产任何数字。所有数值来自 /api/portal/me，缺数据就显示「待录入」，绝不兜底成假值。
+// 我的账户：只展示后台真实数据，页面不生产任何数字。
 var api = require("../../utils/api.js");
 var format = require("../../utils/format.js");
 
 Page({
   data: {
+    loading: true,
+    loadError: "",
+    memberId: null,
+    memberName: "",
     initial: "",
     avatarUrl: "",
-    memberName: "",
     memberCode: "",
     mentorName: "",
     status: "",
-    joinDays: null,
-    formattedDays: "",
     joinedAt: "",
+    joinedAtText: "待小桥补录",
+    joinDays: null,
+    joinDaysText: "—",
+    memberCodeText: "卡号待小桥补录",
+    statusText: "会员",
     totalHours: 0,
-    trainingsByType: [],
-    questionnaireCount: 0,
-    photoCount: 0,
-    stageName: "",
-    stageProgress: 0,
-    lastTrainingDate: "",
-    feelings: [],
-    loading: true,
-    baseUrl: "",
-    memberId: null
+    courseCounts: [],
+    latestTrainingDate: "",
+    latestReply: null,
+    updatingAvatar: false
   },
 
   onLoad: function() {
     var memberId = wx.getStorageSync("memberId");
-    if (!memberId) {
-      wx.redirectTo({ url: "/pages/login/login" });
+    if (!memberId || !wx.getStorageSync("memberToken")) {
+      wx.reLaunch({ url: "/pages/login/login?force=1" });
       return;
     }
-    var baseUrl = api.getBaseUrl();
-    var cachedName = wx.getStorageSync("memberName") || "";
-
-    this.setData({
-      baseUrl: baseUrl,
-      memberId: Number(memberId),
-      memberName: cachedName,
-      initial: cachedName ? cachedName.charAt(0) : ""
-    });
-
-    this.loadData();
+    this.setData({ memberId: Number(memberId) });
+    this.loadAll();
   },
 
   onShow: function() {
     if (typeof this.getTabBar === "function" && this.getTabBar()) {
-      this.getTabBar().setData({
-        selected: 3,
-        hidden: false
-      });
+      this.getTabBar().setData({ selected: 3, hidden: false });
     }
-
-    var currentMemberId = Number(wx.getStorageSync("memberId") || 0);
-    if (!currentMemberId) {
-      wx.redirectTo({ url: "/pages/login/login" });
-      return;
-    }
-
-    // 每次切回本页都重取：后台改课时 / 回音 / 档案后无需重启
     var now = Date.now();
-    if (!this._lastLoad || now - this._lastLoad > 3000) {
+    if (this.data.memberId && (!this._lastLoad || now - this._lastLoad > 3000)) {
       this._lastLoad = now;
-      this.loadData();
+      this.loadAll();
     }
   },
 
   onPullDownRefresh: function() {
     var that = this;
-    this.loadData(function() {
-      wx.stopPullDownRefresh();
-    });
-  },
-
-  apiHeaders: function() {
-    return {
-      "Content-Type": "application/json",
-      "X-Portal-Member-Id": String(this.data.memberId)
-    };
+    this.loadAll(function() { wx.stopPullDownRefresh(); });
   },
 
   fullUrl: function(p) {
     if (!p) return "";
     if (p.indexOf("http") === 0) return p;
-    return (this.data.baseUrl || "") + p;
+    return api.getBaseUrl() + p;
+  },
+
+  loadAll: function(done) {
+    var that = this;
+    var finished = typeof done === "function" ? done : function() {};
+    var memberId = that.data.memberId;
+    if (!memberId) { that.setData({ loading: false }); finished(); return; }
+
+    api.request({
+      url: "/api/portal/me",
+      success: function(res) {
+        if (res.statusCode === 200 && res.data) {
+          var m = res.data;
+          var joinDays = (m.joinDays === null || m.joinDays === undefined) ? null : Number(m.joinDays);
+          that.setData({
+            loading: false,
+            loadError: "",
+            memberName: m.memberName || "",
+            initial: (m.memberName || "").charAt(0) || "会",
+            avatarUrl: that.fullUrl(m.avatarUrl || ""),
+            memberCode: m.memberCode || "",
+            memberCodeText: m.memberCode ? ("卡号 " + m.memberCode) : "卡号待小桥补录",
+            mentorName: m.mentorName || "",
+            status: m.status || "",
+            statusText: m.status === "active" ? "在册会员" : "会员",
+            joinedAt: m.joinedAt ? format.formatChineseDate(m.joinedAt) : "",
+            joinedAtText: m.joinedAt ? format.formatChineseDate(m.joinedAt) : "待小桥补录",
+            joinDays: joinDays,
+            joinDaysText: joinDays === null ? "—" : (joinDays + " 天"),
+            totalHours: Number(m.totalHours || 0),
+            courseCounts: Array.isArray(m.courseCounts) ? m.courseCounts : [],
+            latestTrainingDate: m.lastTrainingDate ? format.formatShortDate(m.lastTrainingDate) : ""
+          });
+          if (m.memberName) wx.setStorageSync("memberName", m.memberName);
+        } else if (res.statusCode === 401) {
+          that.setData({ loading: false, loadError: "登录已过期" });
+        } else {
+          that.setData({ loading: false, loadError: "暂时无法加载，请下拉重试" });
+        }
+      },
+      fail: function() {
+        that.setData({ loading: false, loadError: "网络没有连上，请下拉重试" });
+      },
+      complete: function() {
+        that.loadLatestReply(finished);
+      }
+    });
+  },
+
+  loadLatestReply: function(done) {
+    var that = this;
+    var finished = typeof done === "function" ? done : function() {};
+    api.request({
+      url: "/api/portal/training-feelings?memberId=" + that.data.memberId,
+      success: function(res) {
+        if (res.statusCode === 200 && Array.isArray(res.data)) {
+          var replied = res.data.filter(function(f) { return f && f.xiaoqiaoReply; });
+          that.setData({
+            latestReply: replied.length ? {
+              date: replied[0].createdAt ? format.formatShortDate(replied[0].createdAt) : "",
+              reply: format.cleanMarkdown(replied[0].xiaoqiaoReply || "")
+            } : null
+          });
+        }
+        finished();
+      },
+      fail: finished
+    });
   },
 
   handleAvatarTap: function() {
     var that = this;
+    if (that.data.updatingAvatar) return;
     wx.chooseMedia({
       count: 1,
       mediaType: ["image"],
@@ -98,125 +138,44 @@ Page({
       success: function(res) {
         var filePath = res.tempFiles && res.tempFiles[0] && res.tempFiles[0].tempFilePath;
         if (!filePath) return;
-        wx.showLoading({ title: "正在更新写真...", mask: true });
+        that.setData({ updatingAvatar: true });
+        wx.showLoading({ title: "正在更新…", mask: true });
         wx.uploadFile({
-          url: that.data.baseUrl + "/api/portal/avatar",
+          url: api.getBaseUrl() + "/api/portal/avatar",
           filePath: filePath,
           name: "file",
           formData: { memberId: that.data.memberId },
-          header: { "X-Portal-Member-Id": String(that.data.memberId) },
+          header: { Authorization: "Bearer " + (wx.getStorageSync("memberToken") || "") },
           success: function(up) {
             wx.hideLoading();
+            that.setData({ updatingAvatar: false });
             var data = {};
             try { data = JSON.parse(up.data || "{}"); } catch (e) {}
             if (up.statusCode === 200 && data.avatarUrl) {
               that.setData({ avatarUrl: that.fullUrl(data.avatarUrl) });
-              wx.showToast({ title: "写真已更新", icon: "success" });
+              wx.showToast({ title: "已更新", icon: "success" });
             } else {
               wx.showToast({ title: "更新失败，请重试", icon: "none" });
             }
           },
           fail: function() {
             wx.hideLoading();
-            wx.showToast({ title: "网络微忙，请重试", icon: "none" });
+            that.setData({ updatingAvatar: false });
+            wx.showToast({ title: "网络异常，请重试", icon: "none" });
           }
         });
       }
     });
   },
 
-  loadData: function(done) {
-    var that = this;
-    var memberId = that.data.memberId;
-    var finished = typeof done === "function" ? done : function() {};
-
-    api.request({
-      url: "/api/portal/me",
-      header: that.apiHeaders(),
-      success: function(res) {
-        if (res.statusCode === 200 && res.data) {
-          var m = res.data;
-          var joinDays = (m.joinDays === null || m.joinDays === undefined) ? null : Number(m.joinDays);
-          var stage = m.stage || {};
-
-          that.setData({
-            loading: false,
-            memberName: m.memberName || "",
-            initial: (m.memberName || "").charAt(0) || "会",
-            memberCode: m.memberCode || "",
-            joinedAt: m.joinedAt ? format.formatChineseDate(m.joinedAt) : "",
-            mentorName: m.mentorName || "",
-            status: m.status || "",
-            joinDays: joinDays,
-            formattedDays: joinDays === null ? "" : String(joinDays).replace(/\B(?=(\d{3})+(?!\d))/g, ","),
-            totalHours: Number(m.totalHours || 0),
-            trainingsByType: Array.isArray(m.trainingsByType) ? m.trainingsByType : [],
-            questionnaireCount: Number(m.questionnaireCount || 0),
-            photoCount: Number(m.photoCount || 0),
-            stageName: stage.name || "",
-            stageProgress: Number(stage.progress || 0),
-            lastTrainingDate: m.lastTrainingDate ? format.formatShortDate(m.lastTrainingDate) : "",
-            avatarUrl: that.fullUrl(m.avatarUrl)
-          });
-
-          if (m.memberName) wx.setStorageSync("memberName", m.memberName);
-          if (joinDays !== null) wx.setStorageSync("joinDays", joinDays);
-        } else {
-          that.setData({ loading: false });
-        }
-        finished();
-      },
-      fail: function() {
-        that.setData({ loading: false });
-        finished();
-      }
-    });
-
-    // 体感便签与回音：没有就是没有，不再塞示范档案
-    api.request({
-      url: "/api/portal/training-feelings?memberId=" + memberId,
-      header: that.apiHeaders(),
-      success: function(res) {
-        if (res.statusCode === 200 && Array.isArray(res.data)) {
-          var list = res.data.map(function(f) {
-            return {
-              id: f.id,
-              date: format.formatShortDate(f.createdAt),
-              feeling: format.cleanMarkdown(f.feeling || ""),
-              xiaoqiaoReply: format.cleanMarkdown(f.xiaoqiaoReply || ""),
-              pending: !f.xiaoqiaoReply
-            };
-          });
-          that.setData({ feelings: list.slice(0, 5) });
-        } else {
-          that.setData({ feelings: [] });
-        }
-      },
-      fail: function() {
-        that.setData({ feelings: [] });
-      }
-    });
-  },
-
-  goBooking: function() {
-    wx.navigateTo({ url: "/pages/booking/booking" });
-  },
-
-  goLetters: function() {
-    wx.navigateTo({ url: "/pages/feedback/feedback" });
-  },
-
   copyConciergeWechat: function() {
     var account = wx.getStorageSync("conciergeWechat") || "Laiwu0010";
-    try {
-      if (wx.vibrateShort) wx.vibrateShort({ type: "light" });
-    } catch (err) {}
     wx.setClipboardData({
       data: account,
       success: function() {
         wx.showModal({
-          title: "顾问微信已复制",
-          content: "已复制「" + account + "」。回到微信搜索该账号，备注你的姓名，小桥会把你拉进专属沟通。",
+          title: "已复制小桥微信",
+          content: "已复制「" + account + "」。回到微信搜索这个账号，备注你的姓名，小桥会通过你。",
           showCancel: false,
           confirmText: "好"
         });
@@ -224,13 +183,21 @@ Page({
     });
   },
 
+  goLetters: function() {
+    wx.navigateTo({ url: "/pages/feedback/feedback" });
+  },
+
+  goTransform: function() {
+    wx.switchTab({ url: "/pages/transformation/transformation" });
+  },
+
   handleLogout: function() {
     wx.showModal({
-      title: "暂别提示",
-      content: "确定要暂时离开当前专属账户吗？再次进入需重新验证身份口令。",
-      confirmText: "暂时离开",
+      title: "暂时离开",
+      content: "离开后需要重新输入邀请码和验证信息才能进入。",
+      confirmText: "离开",
       confirmColor: "#9E2A2B",
-      cancelText: "继续留在手札",
+      cancelText: "留下",
       success: function(res) {
         if (!res.confirm) return;
         try { wx.request({ url: api.getBaseUrl() + "/api/portal/logout", method: "POST" }); } catch (e) {}
@@ -241,9 +208,6 @@ Page({
   },
 
   onShareAppMessage: function() {
-    return {
-      title: "我的身体手札 · 徕舞",
-      path: "/pages/stars/stars"
-    };
+    return { title: "我的身体手札 · 徕舞", path: "/pages/stars/stars" };
   }
 });

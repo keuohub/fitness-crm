@@ -133,15 +133,9 @@
       />
 
       <button class="tf-submit" bindtap="submitFeeling" loading="{{feelingSubmitting}}" disabled="{{feelingSubmitting}}">
-        {{feelingSubmitting ? "正在送出…" : "交给小桥"}}
+        {{feelingSubmitting ? "正在送出…" : "TO 小桥"}}
       </button>
       <text class="tf-receipt" wx:if="{{feelingReceipt}}">{{feelingReceipt}}</text>
-    </view>
-
-    <!-- 07 下一步 -->
-    <view class="tf-actions">
-      <view class="tf-action-primary" bindtap="goBooking">预约下一节课</view>
-      <view class="tf-action-secondary" bindtap="goFeedback">看小桥写给你的话</view>
     </view>
 
     <view class="tf-bottom-space"></view>
