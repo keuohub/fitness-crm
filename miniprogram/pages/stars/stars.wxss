@@ -21,78 +21,6 @@ page {
   z-index: 1;
 }
 
-/* 顶部品牌与页码标识 */
-.stars-header {
-  position: absolute;
-  top: calc(env(safe-area-inset-top) + 20rpx);
-  left: 44rpx;
-  right: 44rpx;
-  z-index: 40;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  pointer-events: none;
-}
-
-.stars-brand-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 10rpx 24rpx;
-  background: rgba(13, 12, 15, 0.42);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1rpx solid rgba(255, 255, 255, 0.18);
-  border-radius: 40rpx;
-}
-
-.brand-en {
-  font-family: -apple-system, "Helvetica Neue", sans-serif;
-  font-size: 24rpx;
-  font-weight: 700;
-  letter-spacing: 0.22em;
-  color: #FFFFFF;
-}
-
-.brand-dot {
-  margin: 0 12rpx;
-  font-size: 20rpx;
-  color: rgba(255, 255, 255, 0.4);
-}
-
-.brand-cn {
-  font-family: "Songti SC", -apple-system, sans-serif;
-  font-size: 22rpx;
-  letter-spacing: 0.08em;
-  color: rgba(255, 255, 255, 0.88);
-}
-
-.stars-counter {
-  font-family: "Didot", "Playfair Display", -apple-system, sans-serif;
-  font-size: 24rpx;
-  letter-spacing: 0.1em;
-  color: rgba(255, 255, 255, 0.72);
-  padding: 8rpx 20rpx;
-  background: rgba(13, 12, 15, 0.4);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-radius: 30rpx;
-  border: 1rpx solid rgba(255, 255, 255, 0.14);
-}
-
-.counter-curr {
-  font-weight: 700;
-  color: #FFFFFF;
-}
-
-.counter-sep {
-  margin: 0 6rpx;
-  color: rgba(255, 255, 255, 0.35);
-}
-
-.counter-total {
-  color: rgba(255, 255, 255, 0.6);
-}
-
 /* 全屏 Swiper */
 .stars-swiper {
   width: 100vw;
@@ -125,7 +53,7 @@ page {
   left: 0;
   right: 0;
   height: 240rpx;
-  background: linear-gradient(to bottom, rgba(10, 9, 12, 0.6) 0%, rgba(10, 9, 12, 0.2) 60%, rgba(10, 9, 12, 0) 100%);
+  background: linear-gradient(to bottom, rgba(10, 9, 12, 0.5) 0%, rgba(10, 9, 12, 0.15) 60%, rgba(10, 9, 12, 0) 100%);
   pointer-events: none;
 }
 
@@ -154,39 +82,16 @@ page {
 .star-meta-row {
   display: flex;
   align-items: center;
-  gap: 18rpx;
-  margin-bottom: 14rpx;
-}
-
-.star-tag-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 6rpx 16rpx;
-  background: rgba(255, 255, 255, 0.16);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1rpx solid rgba(255, 255, 255, 0.28);
-  border-radius: 20rpx;
-}
-
-.tag-hash {
-  font-size: 20rpx;
-  color: rgba(255, 255, 255, 0.6);
-  margin-right: 4rpx;
-}
-
-.tag-title {
-  font-size: 22rpx;
-  font-weight: 500;
-  color: #FFFFFF;
-  letter-spacing: 0.04em;
+  margin-bottom: 12rpx;
 }
 
 .star-journey-text {
-  font-size: 22rpx;
-  color: rgba(255, 255, 255, 0.72);
-  letter-spacing: 0.03em;
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.88);
+  letter-spacing: 0.05em;
   font-family: -apple-system, "PingFang SC", sans-serif;
+  font-weight: 500;
+  text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.5);
 }
 
 .star-name-row {
@@ -198,7 +103,7 @@ page {
 
 .star-name {
   font-family: "Songti SC", "PingFang SC", serif;
-  font-size: 48rpx;
+  font-size: 52rpx;
   font-weight: 600;
   color: #FFFFFF;
   letter-spacing: 0.08em;
@@ -210,7 +115,7 @@ page {
   font-size: 20rpx;
   font-weight: 500;
   letter-spacing: 0.16em;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .star-quote-text {

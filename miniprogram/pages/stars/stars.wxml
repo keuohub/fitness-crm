@@ -2,20 +2,6 @@
 
 <view class="stars-viewport">
 
-  <!-- 顶部极简品牌标识 (Minimal Luxury Brand Mark) -->
-  <view class="stars-header">
-    <view class="stars-brand-pill">
-      <text class="brand-en">LAIWU</text>
-      <text class="brand-dot">·</text>
-      <text class="brand-cn">徕舞之星</text>
-    </view>
-    <view class="stars-counter">
-      <text class="counter-curr">{{currentIndex + 1}}</text>
-      <text class="counter-sep">/</text>
-      <text class="counter-total">{{starsList.length}}</text>
-    </view>
-  </view>
-
   <!-- 全屏满幅横滑画报 (100vh Full-Bleed Horizontal Swiper) -->
   <swiper
     class="stars-swiper"
@@ -45,20 +31,19 @@
 
   <!-- 浮动信息图层 (Editorial Lower Third - Above Dock) -->
   <view class="stars-floating-overlay">
-    <view class="star-meta-row">
-      <view class="star-tag-badge">
-        <text class="tag-hash">#</text>
-        <text class="tag-title">{{currentStar.tag}}</text>
-      </view>
+    <!-- 伴行历程与上课信息（无标签纯净版） -->
+    <view class="star-meta-row" wx:if="{{currentStar.journey}}">
       <text class="star-journey-text">{{currentStar.journey}}</text>
     </view>
 
+    <!-- 会员姓名行 -->
     <view class="star-name-row">
       <text class="star-name">{{currentStar.name}}</text>
       <text class="star-name-en">MEMBER OF LAIWU</text>
     </view>
 
-    <text class="star-quote-text">{{currentStar.quote}}</text>
+    <!-- 会员自律体态心语 -->
+    <text class="star-quote-text" wx:if="{{currentStar.quote}}">{{currentStar.quote}}</text>
 
     <!-- lululemon 级别细长药丸指示器 (Elongated Pill Indicator) -->
     <view class="pill-indicator-track">
