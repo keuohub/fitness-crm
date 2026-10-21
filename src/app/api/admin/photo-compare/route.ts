@@ -22,11 +22,11 @@ export async function GET(request: NextRequest) {
     const rows = memberId
       ? await rawSql`
           SELECT c.id, c.tenant_id, c.member_id, c.analysis, c.created_at,
-                 COALESCE(c.photo1_url, p1.file_path, '/images/posture/posture_front_before.jpg') AS photo1_url,
-                 COALESCE(c.photo1_date, p1.taken_at, '2025-10-20') AS photo1_date,
+                 COALESCE(c.photo1_url, p1.file_path) AS photo1_url,
+                 COALESCE(c.photo1_date, p1.taken_at) AS photo1_date,
                  COALESCE(c.photo1_type, p1.photo_type, 'front') AS photo1_type,
-                 COALESCE(c.photo2_url, p2.file_path, '/images/posture/posture_front_after.jpg') AS photo2_url,
-                 COALESCE(c.photo2_date, p2.taken_at, '2026-10-18') AS photo2_date,
+                 COALESCE(c.photo2_url, p2.file_path) AS photo2_url,
+                 COALESCE(c.photo2_date, p2.taken_at) AS photo2_date,
                  COALESCE(c.photo2_type, p2.photo_type, 'front') AS photo2_type
             FROM photo_comparisons c
             LEFT JOIN photos p1 ON p1.id = c.photo_id_1

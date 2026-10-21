@@ -576,3 +576,105 @@ page {
 .dock-spacer {
   height: calc(env(safe-area-inset-bottom) + 210rpx);
 }
+
+/* ============================================================
+   2026-10-21 增补：真实数据态的空状态 / 待回音 / 服务入口
+   原则：缺失信息用留白与一句话交代，不用金色装饰填补
+   ============================================================ */
+
+/* 零课时状态：不显示 0 节，改为邀请开始 */
+.total-hours-empty .total-hours-content {
+  padding-bottom: 8rpx;
+}
+
+.hours-empty-title {
+  display: block;
+  margin-top: 20rpx;
+  font-family: "Songti SC", serif;
+  font-size: 36rpx;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #1C1415;
+}
+
+.hours-empty-body {
+  display: block;
+  margin-top: 16rpx;
+  font-size: 24rpx;
+  line-height: 1.85;
+  color: #5C5559;
+}
+
+.hours-empty-cta {
+  display: inline-block;
+  margin-top: 28rpx;
+  padding: 16rpx 34rpx;
+  border-radius: 44rpx;
+  background: #9E2A2B;
+  color: #FDF6F0;
+  font-size: 24rpx;
+  letter-spacing: 0.04em;
+}
+
+.hours-empty-cta:active {
+  opacity: 0.88;
+}
+
+/* 待回音：比"暂无"多一点确定性，但绝不冒充已回复 */
+.reply-pending .reply-seal-tag {
+  background: rgba(158, 42, 43, 0.08);
+  border-color: rgba(158, 42, 43, 0.22);
+  color: #9E2A2B;
+}
+
+.reply-pending .reply-mentor-body {
+  color: #827A7E;
+}
+
+/* 服务入口：极简列表，不用卡片堆叠 */
+.me-entry-list {
+  margin-top: 22rpx;
+  border-top: 1rpx solid rgba(28, 20, 21, 0.08);
+}
+
+.me-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 34rpx 4rpx;
+  border-bottom: 1rpx solid rgba(28, 20, 21, 0.08);
+}
+
+.me-entry:active {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.me-entry-main {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.me-entry-label {
+  font-size: 28rpx;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: #1C1415;
+}
+
+.me-entry-note {
+  font-size: 22rpx;
+  color: #827A7E;
+  letter-spacing: 0.01em;
+}
+
+.me-entry-arrow {
+  font-size: 32rpx;
+  color: #C0B4AE;
+  padding-left: 16rpx;
+}
+
+.me-entry-quiet .me-entry-label {
+  font-weight: 500;
+  color: #827A7E;
+}

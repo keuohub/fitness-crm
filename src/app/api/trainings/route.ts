@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { trainings } from "@/db/schema";
+import { trainings, users } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { verifyMemberAccess } from "@/lib/auth/member-ownership";
 import { getCached, setCache, deleteCache } from "@/lib/api-cache";
@@ -28,17 +28,32 @@ export async function GET(request: NextRequest) {
   const cached = getCached(cacheKey);
   if (cached) return NextResponse.json(cached);
 
+  // 带上导师姓名：之前前端拿不到 coachName，只能兜底成「导师 小桥」，
+  // 导致所有课都挂在同一个人名下。
   const data = await db
-    .select()
+    .select({
+      id: trainings.id,
+      memberId: trainings.memberId,
+      coachId: trainings.coachId,
+      trainingDate: trainings.trainingDate,
+      durationMinutes: trainings.durationMinutes,
+      type: trainings.type,
+      focusArea: trainings.focusArea,
+      notes: trainings.notes,
+      createdAt: trainings.createdAt,
+      coachName: users.name,
+    })
     .from(trainings)
+    .leftJoin(users, eq(users.id, trainings.coachId))
     .where(eq(trainings.memberId, memberId))
     .orderBy(desc(trainings.trainingDate));
 
   setCache(cacheKey, data);
 
   const response = NextResponse.json(data);
-    response.headers.set("Cache-Control", "public, max-age=300, s-maxage=300");
-    return response;
+  // 个人训练数据不进任何共享缓存
+  response.headers.set("Cache-Control", "private, no-store");
+  return response;
 }
 
 export async function POST(request: NextRequest) {

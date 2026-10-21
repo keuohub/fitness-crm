@@ -35,43 +35,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(rows);
     }
 
-    // 默认提供三维标准体态评估网格对比（与封面月度之星彻底隔离）
-    const defaultPosture = [
-      {
-        id: 1001,
-        member_id: memberId,
-        photo1_url: "/images/posture/posture_front_before.jpg",
-        photo2_url: "/images/posture/posture_front_after.jpg",
-        photo1_type: "front",
-        photo2_type: "front",
-        photo1_date: "2025-10-20",
-        photo2_date: "2026-10-18",
-        analysis: "经过普拉提与大器械精准训练，肋骨外翻已显著收紧归位；骨盆前倾改善约 6°，左右高低肩平衡对称，下颌线与双侧锁骨线条舒展挺拔。",
-      },
-      {
-        id: 1002,
-        member_id: memberId,
-        photo1_url: "/images/posture/posture_side_before.jpg",
-        photo2_url: "/images/posture/posture_side_after.jpg",
-        photo1_type: "side",
-        photo2_type: "side",
-        photo1_date: "2025-10-20",
-        photo2_date: "2026-10-18",
-        analysis: "侧面观颈部前倾纠正明显，耳垂、肩峰与大转子回归标准垂直重力线。腹横肌建立自主内在张力，小腹自然平坦，后背生理弧度优雅自然。",
-      },
-      {
-        id: 1003,
-        member_id: memberId,
-        photo1_url: "/images/posture/posture_back_before.jpg",
-        photo2_url: "/images/posture/posture_back_after.jpg",
-        photo1_type: "back",
-        photo2_type: "back",
-        photo1_date: "2025-10-20",
-        photo2_date: "2026-10-18",
-        analysis: "背部翼状肩胛已完全改善，双侧背阔肌与斜方肌中下束恢复均等支撑。脊柱中立无代偿，呈现紧致修长且富有弹性的体态线条。",
-      },
-    ];
-    return NextResponse.json(defaultPosture);
+    // 没有真实对比照就返回空数组。
+    // 绝不返回示范体态照：那会让从未拍过照的新会员看到别人的身体，
+    // 并配上一段「骨盆前倾改善约 6°」的伪造诊断。空状态由前端负责。
+    return NextResponse.json([]);
   } catch (err) {
     console.error("portal/photo-compare error:", err);
     return NextResponse.json([]);

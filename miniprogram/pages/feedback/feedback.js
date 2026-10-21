@@ -180,7 +180,13 @@ Page({
   },
 
   goToFeeling: function() {
-    wx.switchTab({ url: "/pages/growth/growth" });
+    // growth 不是 tabBar 页面，switchTab 到这里会静默失败（点了没反应）
+    var pages = getCurrentPages();
+    if (pages && pages.length > 1) {
+      wx.navigateBack();
+      return;
+    }
+    wx.switchTab({ url: "/pages/stars/stars" });
   },
 
   contactXiaoqiao: function() {
@@ -242,7 +248,7 @@ Page({
   onShareAppMessage: function() {
     return {
       title: "小桥的来信 · 徕舞私享手札",
-      path: "/pages/feedback/feedback"
+      path: "/pages/stars/stars"
     };
   },
 

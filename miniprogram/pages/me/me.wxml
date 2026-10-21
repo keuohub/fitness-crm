@@ -8,41 +8,41 @@
     </view>
   </view>
 
-  <!-- 模块一：黑金高奢会员身份画卷 (Black Obsidian Member Card，严禁展示电话号码) -->
+  <!-- 模块一：黑曜会员身份画卷 (严禁展示电话号码；缺失字段一律「待录入」，不编造) -->
   <view class="member-obsidian-card">
     <view class="card-top-row">
       <view class="card-brand-mark">
         <text class="card-brand-en">LAIWU</text>
         <text class="card-brand-tier">会员档案</text>
       </view>
-      <text class="card-status-pill">活跃会员</text>
+      <text class="card-status-pill">{{status === 'active' ? '在册会员' : '会员'}}</text>
     </view>
 
     <view class="card-profile-row">
       <view class="card-avatar-wrap" bindtap="handleAvatarTap">
         <image wx:if="{{avatarUrl}}" class="card-avatar-img" src="{{avatarUrl}}" mode="aspectFill" />
-        <text wx:else class="card-avatar-placeholder">{{initial}}</text>
+        <text wx:else class="card-avatar-placeholder">{{initial || '会'}}</text>
         <view class="card-avatar-edit-badge">写真</view>
       </view>
 
       <view class="card-profile-info">
-        <text class="card-member-name">{{memberName}}</text>
-        <text class="card-member-code">卡号 · {{memberCode}}</text>
+        <text class="card-member-name">{{memberName || '会员'}}</text>
+        <text class="card-member-code">卡号 · {{memberCode || '待生成'}}</text>
       </view>
     </view>
 
     <view class="card-footer-row">
       <view class="card-footer-item">
         <text class="footer-label">入会日期</text>
-        <text class="footer-val">{{joinedAt}}</text>
+        <text class="footer-val">{{joinedAt || '待录入'}}</text>
       </view>
       <view class="card-footer-item">
         <text class="footer-label">专属导师</text>
-        <text class="footer-val">{{mentorName}}</text>
+        <text class="footer-val">{{mentorName || '待分配'}}</text>
       </view>
       <view class="card-footer-item">
         <text class="footer-label">伴行天数</text>
-        <text class="footer-val">{{joinDays}} 天</text>
+        <text class="footer-val">{{formattedDays ? formattedDays + ' 天' : '—'}}</text>
       </view>
     </view>
   </view>
@@ -50,7 +50,7 @@
   <!-- 极细发丝分隔律动线 -->
   <view class="editorial-hairline"></view>
 
-  <!-- 模块二：身体资产矩阵 (01 ASSET PORTFOLIO - 总课时数在上方突出，各分课时在下方) -->
+  <!-- 模块二：身体资产矩阵 -->
   <view class="me-section">
     <view class="section-title-bar">
       <view class="section-tag-group">
@@ -61,65 +61,55 @@
     </view>
     <text class="section-intro">每一次深层对抗与呼吸，都在沉淀为可被验证的内在力量。</text>
 
-    <!-- 顶部突出大字卡片：总课时数 -->
-    <view class="total-hours-hero-card">
+    <!-- 真实课时（数据来自训练记录，无记录则引导开启第一节课） -->
+    <view class="total-hours-hero-card" wx:if="{{totalHours > 0}}">
       <view class="total-hours-content">
         <view class="total-hours-header">
           <text class="total-hours-badge-label">累计完成训练</text>
-          <text class="total-hours-stage-pill">{{stageName}}</text>
+          <text class="total-hours-stage-pill" wx:if="{{stageName}}">{{stageName}}</text>
         </view>
         <view class="total-hours-num-row">
           <text class="total-hours-big">{{totalHours}}</text>
           <text class="total-hours-unit">节课时</text>
         </view>
-        <text class="total-hours-footnote">包含垫上核心、大器械阻力对抗与专属超模减脂训练</text>
+        <text class="total-hours-footnote" wx:if="{{lastTrainingDate}}">最近一次练习 · {{lastTrainingDate}}</text>
+        <text class="total-hours-footnote" wx:else>记录自你的每次课堂签到</text>
       </view>
     </view>
 
-    <!-- 下方网格：各分课时明细 (后台可实时更改同步) -->
-    <view class="sub-hours-grid">
-      <view class="sub-hour-card">
+    <view class="total-hours-hero-card total-hours-empty" wx:else>
+      <view class="total-hours-content">
+        <view class="total-hours-header">
+          <text class="total-hours-badge-label">尚未开始记录</text>
+        </view>
+        <text class="hours-empty-title">{{memberName || '你'}}，第一节课还没开始</text>
+        <text class="hours-empty-body">上完第一节课，这里会开始沉淀你的身体资产：每一节课时、每一次体态定格，都由小桥亲手录入。</text>
+        <view class="hours-empty-cta" bindtap="goBooking">预约我的第一节课 ›</view>
+      </view>
+    </view>
+
+    <!-- 分项明细：按真实训练类型生成，不虚构分类 -->
+    <view class="sub-hours-grid" wx:if="{{trainingsByType.length > 0}}">
+      <view class="sub-hour-card" wx:for="{{trainingsByType}}" wx:key="key">
         <view class="sub-hour-top">
-          <text class="sub-hour-name">精选普拉提</text>
+          <text class="sub-hour-name">{{item.label}}</text>
           <view class="sub-hour-count-wrap">
-            <text class="sub-hour-count">{{hoursPilates}}</text>
+            <text class="sub-hour-count">{{item.count}}</text>
             <text class="sub-hour-unit">节</text>
           </view>
         </view>
-        <text class="sub-hour-desc">垫上核心与呼吸模式激活</text>
+        <text class="sub-hour-desc">{{item.key === 'private' ? '一对一专注观察与纠偏' : (item.key === 'group' ? '团体课的共同节律' : (item.key === 'assessment' ? '医学级体态评估' : '课堂实录'))}}</text>
       </view>
 
       <view class="sub-hour-card">
         <view class="sub-hour-top">
-          <text class="sub-hour-name">高定大器械</text>
-          <view class="sub-hour-count-wrap">
-            <text class="sub-hour-count">{{hoursEquipment}}</text>
-            <text class="sub-hour-unit">节</text>
-          </view>
-        </view>
-        <text class="sub-hour-desc">核心床与阻力深层雕刻</text>
-      </view>
-
-      <view class="sub-hour-card">
-        <view class="sub-hour-top">
-          <text class="sub-hour-name">超模减脂班</text>
-          <view class="sub-hour-count-wrap">
-            <text class="sub-hour-count">{{hoursFatBurn}}</text>
-            <text class="sub-hour-unit">节</text>
-          </view>
-        </view>
-        <text class="sub-hour-desc">间歇燃脂与直角肩塑形</text>
-      </view>
-
-      <view class="sub-hour-card">
-        <view class="sub-hour-top">
-          <text class="sub-hour-name">体态深度测评</text>
+          <text class="sub-hour-name">体态问卷</text>
           <view class="sub-hour-count-wrap">
             <text class="sub-hour-count">{{questionnaireCount}}</text>
             <text class="sub-hour-unit">次</text>
           </view>
         </view>
-        <text class="sub-hour-desc">医学级临床影像跟踪</text>
+        <text class="sub-hour-desc">入会与阶段复测记录</text>
       </view>
     </view>
   </view>
@@ -127,7 +117,7 @@
   <!-- 极细发丝分隔律动线 -->
   <view class="editorial-hairline"></view>
 
-  <!-- 模块三：我的私享便签与回音 (02 INTIMATE FEEDBACKS - 富有情绪价值，让会员有截图分享欲) -->
+  <!-- 模块三：私享便签与回音（只有真实数据才出现） -->
   <view class="me-section" wx:if="{{feelings.length > 0}}">
     <view class="section-title-bar">
       <view class="section-tag-group">
@@ -136,23 +126,77 @@
       </view>
       <text class="section-en-label">ARCHIVE</text>
     </view>
-    <text class="section-intro">你在手札中记录的每一次体感变化，小桥的温暖回音皆妥善收录于此。</text>
+    <text class="section-intro">你在手札里写下的每一句身体感受，小桥都会读，并留下回音。</text>
 
     <view class="feedback-feed-list">
       <view wx:for="{{feelings}}" wx:key="id" class="feedback-feed-item">
         <view class="feedback-date-row">
           <text class="feedback-date-badge">{{item.date}}</text>
-          <text class="feedback-share-tip">可截图分享</text>
         </view>
         <text class="feedback-user-quote">“{{item.feeling}}”</text>
 
         <view class="mentor-reply-block" wx:if="{{item.xiaoqiaoReply}}">
           <view class="reply-seal-tag">印</view>
           <view class="reply-text-col">
-            <text class="reply-mentor-title">导师小桥 · 亲笔手札回音</text>
+            <text class="reply-mentor-title">小桥 · 回音</text>
             <text class="reply-mentor-body">{{item.xiaoqiaoReply}}</text>
           </view>
         </view>
+
+        <view class="mentor-reply-block reply-pending" wx:else>
+          <view class="reply-seal-tag">待</view>
+          <view class="reply-text-col">
+            <text class="reply-mentor-title">小桥已收到</text>
+            <text class="reply-mentor-body">正在读，通常当天会回你。</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 极细发丝分隔律动线 -->
+  <view class="editorial-hairline" wx:if="{{feelings.length > 0}}"></view>
+
+  <!-- 模块四：服务入口（此前四个方法全是死代码，没有任何入口） -->
+  <view class="me-section">
+    <view class="section-title-bar">
+      <view class="section-tag-group">
+        <text class="section-index">03</text>
+        <text class="section-heading">服务</text>
+      </view>
+      <text class="section-en-label">SERVICE</text>
+    </view>
+
+    <view class="me-entry-list">
+      <view class="me-entry" bindtap="goBooking">
+        <view class="me-entry-main">
+          <text class="me-entry-label">预约课程</text>
+          <text class="me-entry-note">选择课程与时段，提交后小桥确认</text>
+        </view>
+        <text class="me-entry-arrow">›</text>
+      </view>
+
+      <view class="me-entry" bindtap="goLetters">
+        <view class="me-entry-main">
+          <text class="me-entry-label">小桥来信</text>
+          <text class="me-entry-note">阶段手札与阶段性身体复盘</text>
+        </view>
+        <text class="me-entry-arrow">›</text>
+      </view>
+
+      <view class="me-entry" bindtap="copyConciergeWechat">
+        <view class="me-entry-main">
+          <text class="me-entry-label">添加专属顾问</text>
+          <text class="me-entry-note">复制微信号，一对一沟通</text>
+        </view>
+        <text class="me-entry-arrow">›</text>
+      </view>
+
+      <view class="me-entry me-entry-quiet" bindtap="handleLogout">
+        <view class="me-entry-main">
+          <text class="me-entry-label">退出登录</text>
+        </view>
+        <text class="me-entry-arrow">›</text>
       </view>
     </view>
   </view>

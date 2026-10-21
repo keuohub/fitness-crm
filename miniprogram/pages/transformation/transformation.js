@@ -171,18 +171,27 @@ Page({
 
       var payload = { loading: false };
 
-      // 1. 会员信息
-      if (resMe.statusCode === 200 && resMe.data && resMe.data.name) {
+      // 1. 会员信息（字段名以 /api/portal/me 为准：memberName / joinedAt）
+      if (resMe.statusCode === 200 && resMe.data && resMe.data.memberName) {
         var m = resMe.data;
-        payload.memberName = m.name || that.data.memberName;
+        payload.memberName = m.memberName || that.data.memberName;
         payload.avatarUrl = that.fullUrl(m.avatarUrl || "");
-        if (m.joinedDate) {
-          payload.joinDays = calcJoinDays(m.joinedDate);
+        if (m.joinDays !== null && m.joinDays !== undefined) {
+          payload.joinDays = Number(m.joinDays);
           payload.formattedDays = String(payload.joinDays).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+        // 阶段由服务端统一计算，避免各页面自算导致等级名不一致
+        if (m.stage) {
+          payload.stageName = m.stage.name;
+          payload.levelTitle = m.stage.levelTitle;
+          payload.targetGoal = m.stage.target;
+          payload.progressPercent = m.stage.progress;
+          payload.whisperText = m.stage.whisperBody;
+          that._serverStage = true;
         }
       }
 
-      // 2. 训练历程
+      // 2. 训练历程（没有记录就是空；不伪造节数、导师与评语）
       var trainCount = that.data.trainCount;
       if (resTrainings.statusCode === 200 && Array.isArray(resTrainings.data)) {
         trainCount = resTrainings.data.length;
@@ -190,57 +199,27 @@ Page({
         payload.recentTrainings = resTrainings.data.slice(0, 10).map(function(t) {
           return {
             id: t.id,
-            date: format.formatChineseDate(t.date || t.createdAt),
-            courseType: formatCourseType(t.courseType, t.focusArea),
-            duration: t.durationMinutes ? t.durationMinutes + " 分钟" : "60 分钟",
-            coachName: t.coachName || "导师 小桥",
-            note: t.summary || t.feedback || "深层核心发力平稳，胸椎灵活性与下肢力线显著改善。"
+            date: format.formatChineseDate(t.trainingDate || t.createdAt),
+            courseType: formatCourseType(t.type, t.focusArea),
+            duration: t.durationMinutes ? t.durationMinutes + " 分钟" : "",
+            coachName: t.coachName || "",
+            note: t.notes || ""
           };
         });
       } else {
-        // 演示兜底训练历程
-        payload.recentTrainings = [
-          {
-            id: 101,
-            date: "2026年10月18日",
-            courseType: "高定大器械 · 核心重构",
-            duration: "60 分钟",
-            coachName: "导师 小桥",
-            note: "完成核心床滑行台抗伸展，肋骨外翻闭合意识强，骨盆中立位保持稳定。"
-          },
-          {
-            id: 102,
-            date: "2026年10月14日",
-            courseType: "精选普拉提 · 胸椎舒展",
-            duration: "60 分钟",
-            coachName: "导师 嘉敏",
-            note: "配合阻力小球进行呼吸与肩胛骨下沉，久坐引起的右侧斜方肌紧绷明显松解。"
-          },
-          {
-            id: 103,
-            date: "2026年10月10日",
-            courseType: "维密减脂超模班 · 臀腿雕刻",
-            duration: "60 分钟",
-            coachName: "导师 若琳",
-            note: "侧卧蚌式与器械对抗发力精准，假胯宽区域代偿减少，臀中肌酸胀感清晰。"
-          },
-          {
-            id: 104,
-            date: "2026年10月05日",
-            courseType: "高定大器械 · 脊柱逐节分节",
-            duration: "60 分钟",
-            coachName: "导师 小桥",
-            note: "脊柱滚动动作流畅，背部深层竖脊肌与核心肌群协作良好，无腰椎代偿。"
-          }
-        ];
+        payload.trainCount = 0;
+        payload.recentTrainings = [];
       }
 
-      var stageInfo = getStage(trainCount);
-      payload.stageName = stageInfo.stage;
-      payload.levelTitle = stageInfo.levelTitle;
-      var target = trainCount < 20 ? 20 : trainCount < 50 ? 50 : 100;
-      payload.targetGoal = target;
-      payload.progressPercent = Math.min(100, Math.round((trainCount / target) * 100));
+      // 阶段：服务端已给就用服务端的（保证首页 / 蜕变 / 账户三页等级名完全一致）
+      if (!that._serverStage) {
+        var stageInfo = getStage(trainCount);
+        payload.stageName = stageInfo.stage;
+        payload.levelTitle = stageInfo.levelTitle;
+        var target = trainCount < 20 ? 20 : trainCount < 50 ? 50 : 100;
+        payload.targetGoal = target;
+        payload.progressPercent = Math.min(100, Math.round((trainCount / target) * 100));
+      }
 
       // 3. 对比档案
       var photoComparisons = [];
@@ -257,41 +236,9 @@ Page({
             analysis: format.cleanMarkdown(c.analysis || "")
           };
         });
-      } else {
-        // 专业体态对比档案（与首屏“徕舞之星”写真彻底区分开，采用临床评估网格照）
-        photoComparisons = [
-          {
-            id: 201,
-            photo1_type: "front",
-            photo2_type: "front",
-            photo1_url: "/images/posture/posture_front_before.jpg",
-            photo2_url: "/images/posture/posture_front_after.jpg",
-            photo1_date: "2025年10月20日 · 入学初评",
-            photo2_date: "2026年10月18日 · 进阶定格",
-            analysis: "经过 42 节普拉提与大器械精准训练，肋骨外翻已显著收紧归位；骨盆前倾改善约 6°，左右高低肩平衡对称，下颌线与双侧锁骨线条舒展挺拔。"
-          },
-          {
-            id: 202,
-            photo1_type: "side",
-            photo2_type: "side",
-            photo1_url: "/images/posture/posture_side_before.jpg",
-            photo2_url: "/images/posture/posture_side_after.jpg",
-            photo1_date: "2025年10月20日 · 入学初评",
-            photo2_date: "2026年10月18日 · 进阶定格",
-            analysis: "侧面观颈部前倾纠正明显，耳垂、肩峰与大转子回归标准垂直重力线。腹横肌建立自主内在张力，小腹自然平坦，后背生理弧度优雅自然。"
-          },
-          {
-            id: 203,
-            photo1_type: "back",
-            photo2_type: "back",
-            photo1_url: "/images/posture/posture_back_before.jpg",
-            photo2_url: "/images/posture/posture_back_after.jpg",
-            photo1_date: "2025年10月20日 · 入学初评",
-            photo2_date: "2026年10月18日 · 进阶定格",
-            analysis: "背部翼状肩胛已完全改善，双侧背阔肌与斜方肌中下束恢复均等支撑。脊柱中立无代偿，呈现紧致修长且富有弹性的体态线条。"
-          }
-        ];
       }
+      // 无对比照就保持空数组：前端由 diptych-section 的空状态承接，
+      // 绝不用示范体态照冒充会员本人。
       payload.photoComparisons = photoComparisons;
 
       // 4. 计算当前角度的置顶对比与历史对比
@@ -305,11 +252,14 @@ Page({
       } else if (photoComparisons.length > 0) {
         payload.pinnedComparison = photoComparisons[0];
         payload.historyComparisons = photoComparisons.slice(1);
+      } else {
+        payload.pinnedComparison = null;
+        payload.historyComparisons = [];
       }
 
       // 5. 照片总数
       if (resPhotos.statusCode === 200 && Array.isArray(resPhotos.data)) {
-        payload.photoCount = resPhotos.data.length || 8;
+        payload.photoCount = resPhotos.data.length;
       }
 
       that.setData(payload);

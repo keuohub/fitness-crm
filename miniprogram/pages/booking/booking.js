@@ -47,7 +47,8 @@ Page({
     if (pages && pages.length > 1) {
       wx.navigateBack();
     } else {
-      wx.switchTab({ url: "/pages/growth/growth" });
+      // 兜底必须回 tabBar 页面，growth 不是 tab 页
+      wx.switchTab({ url: "/pages/stars/stars" });
     }
   },
 
@@ -113,8 +114,8 @@ Page({
 
   onShareAppMessage: function() {
     return {
-      title: "预约私教课程 · 徕舞健身",
-      path: "/pages/growth/growth"
+      title: "预约私教课程 · 徕舞",
+      path: "/pages/stars/stars"
     };
   }
 });

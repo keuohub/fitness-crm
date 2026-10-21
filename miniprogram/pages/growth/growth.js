@@ -83,14 +83,9 @@ function formatCourseType(type, focusArea) {
   return name;
 }
 
-var LOCAL_STARS = [
-  { id: 1, name: "苏晴", avatarUrl: "/images/stars/star-1.jpg", tag: "从容", quote: "在呼吸的节律里，重新找回身体原本的力量。" },
-  { id: 2, name: "念安", avatarUrl: "/images/stars/star-2.jpg", tag: "深耕", quote: "每一次对抗与拉伸，都是与自己最真实的对话。" },
-  { id: 3, name: "黛萌", avatarUrl: "/images/stars/star-3.jpg", tag: "专注", quote: "心神定下来，身体自会给出优雅的回应。" },
-  { id: 4, name: "语晨", avatarUrl: "/images/stars/star-4.jpg", tag: "觉知", quote: "卸下外界的喧嚣，在这里只专注向内的深邃。" },
-  { id: 5, name: "若薇", avatarUrl: "/images/stars/star-5.jpg", tag: "自在", quote: "不执着于速度，每一步坚持都在沉淀笃定。" },
-  { id: 6, name: "听澜", avatarUrl: "/images/stars/star-6.jpg", tag: "恒温", quote: "舒展的不仅是脊柱线条，更是内在的从容与热爱。" }
-];
+// 月度之星必须来自后台（monthly_stars 表），不再内置虚构会员兜底。
+// 为空时页面自动收起该模块，而不是拿别人的名字和写真顶上。
+var LOCAL_STARS = [];
 
 var LOCAL_VENUES = [
   { id: 1, imageUrl: "/images/venue/venue-1.jpg" },
@@ -163,7 +158,7 @@ Page({
     showStarsModal: false,
     currentStarIndex: 0,
     starsClosing: false,
-    monthlyStarsList: LOCAL_STARS,
+    monthlyStarsList: [],
     venueList: LOCAL_VENUES,
     teamList: LOCAL_TEAM
   },
@@ -273,7 +268,13 @@ Page({
       var trainings = (resTrainings.statusCode === 200 && Array.isArray(resTrainings.data)) ? resTrainings.data : [];
       var trainCount = trainings.length;
       var stageInfo = getStage(trainCount);
-      var whisper = WHISPERS[stageInfo.stage] || WHISPERS["身体觉察者"];
+      var serverStage = (resMe.statusCode === 200 && resMe.data && resMe.data.stage) ? resMe.data.stage : null;
+      if (serverStage) {
+        stageInfo = { name: serverStage.name, stage: serverStage.name, levelTitle: serverStage.levelTitle };
+      }
+      var whisper = serverStage
+        ? { title: serverStage.whisperTitle, body: serverStage.whisperBody }
+        : (WHISPERS[stageInfo.stage] || WHISPERS["觉知启程"]);
 
       // 核心容灾：若会员入会日期未填但已有训练记录，自动从第一次开练日期倒推天数
       if ((!joinDays || joinDays === 0) && trainings.length > 0) {
@@ -557,14 +558,18 @@ Page({
     var newSelected = selected.slice();
     var currentText = this.data.feeling;
 
+    // 标签写成「人话」而不是 # 井号串：
+    // 会员只点标签就提交时，后端拿到的是可读的一句话，而不是 "#肩颈舒展 #核心收紧 #..."
     if (idx >= 0) {
       newSelected.splice(idx, 1);
-      currentText = currentText.replace("#" + tag + " ", "").replace("#" + tag, "").trim();
+      currentText = currentText
+        .split("，")
+        .filter(function(part) { return part && part !== tag; })
+        .join("，");
     } else {
       newSelected.push(tag);
-      var tagPrefix = "#" + tag + " ";
-      if (currentText.indexOf(tagPrefix.trim()) === -1) {
-        currentText = currentText ? (currentText + " " + tagPrefix) : tagPrefix;
+      if (currentText.indexOf(tag) === -1) {
+        currentText = currentText ? (currentText + "，" + tag) : tag;
       }
     }
     this.setData({
@@ -645,6 +650,10 @@ Page({
   },
 
   openStarsModal: function() {
+    if (!this.data.monthlyStarsList || this.data.monthlyStarsList.length === 0) {
+      wx.showToast({ title: "本期之星正在收录", icon: "none" });
+      return;
+    }
     if (wx.vibrateShort) wx.vibrateShort({ type: "light" });
     this.setData({
       showStarsModal: true,

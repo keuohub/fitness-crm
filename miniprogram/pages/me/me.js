@@ -1,35 +1,28 @@
 // pages/me/me.js
+// 原则：页面不生产任何数字。所有数值来自 /api/portal/me，缺数据就显示「待录入」，绝不兜底成假值。
 var api = require("../../utils/api.js");
 var format = require("../../utils/format.js");
 
-function getStageName(trainCount) {
-  if (trainCount >= 51) return "终生优雅";
-  if (trainCount >= 21) return "身体掌权";
-  if (trainCount >= 6)  return "身体掌控";
-  return "自律启程";
-}
-
 Page({
   data: {
-    initial: "陈",
+    initial: "",
     avatarUrl: "",
-    memberName: "陈知意",
-    memberCode: "LW-882049",
-    memberTier: "VIP 尊享会员",
-    mentorName: "导师 小桥",
-    joinDays: 365,
-    formattedDays: "365",
-    totalHours: 42,
-    hoursPilates: 18,
-    hoursEquipment: 16,
-    hoursFatBurn: 8,
-    trainCount: 42,
-    questionnaireCount: 4,
-    photoCount: 8,
-    stageName: "身体掌权",
-    joinedAt: "2025年10月20日",
+    memberName: "",
+    memberCode: "",
+    mentorName: "",
+    status: "",
+    joinDays: null,
+    formattedDays: "",
+    joinedAt: "",
+    totalHours: 0,
+    trainingsByType: [],
+    questionnaireCount: 0,
+    photoCount: 0,
+    stageName: "",
+    stageProgress: 0,
+    lastTrainingDate: "",
     feelings: [],
-    loading: false,
+    loading: true,
     baseUrl: "",
     memberId: null
   },
@@ -41,18 +34,13 @@ Page({
       return;
     }
     var baseUrl = wx.getStorageSync("baseUrl") || api.DEFAULT_BASE_URL;
-    var memberName = wx.getStorageSync("memberName") || "陈知意";
-    var isDemo = wx.getStorageSync("isDemoMode") === true || memberName === "陈知意";
-    var cachedDays = wx.getStorageSync("joinDays") || (isDemo ? 365 : 0);
-    var formattedDays = String(cachedDays).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    var cachedName = wx.getStorageSync("memberName") || "";
 
     this.setData({
       baseUrl: baseUrl,
       memberId: Number(memberId),
-      memberName: memberName,
-      initial: memberName.charAt(0) || "会",
-      joinDays: cachedDays,
-      formattedDays: formattedDays
+      memberName: cachedName,
+      initial: cachedName ? cachedName.charAt(0) : ""
     });
 
     this.loadData();
@@ -72,20 +60,23 @@ Page({
       return;
     }
 
-    if (this.data.memberId !== currentMemberId) {
-      var memberName = wx.getStorageSync("memberName") || "";
-      var isDemo = wx.getStorageSync("isDemoMode") === true || memberName === "陈知意";
-      var cachedDays = wx.getStorageSync("joinDays") || (isDemo ? 365 : 0);
-
+    if (this.data.memberId && this.data.memberId !== currentMemberId) {
       this.setData({
         memberId: currentMemberId,
-        memberName: memberName,
-        initial: memberName ? memberName.charAt(0) : "会",
-        joinDays: cachedDays,
-        formattedDays: String(cachedDays).replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+        feelings: [],
+        totalHours: 0,
+        trainingsByType: [],
+        loading: true
       });
       this.loadData();
     }
+  },
+
+  onPullDownRefresh: function() {
+    var that = this;
+    this.loadData(function() {
+      wx.stopPullDownRefresh();
+    });
   },
 
   apiHeaders: function() {
@@ -98,6 +89,7 @@ Page({
   fullUrl: function(p) {
     if (!p) return "";
     if (p.indexOf("http") === 0) return p;
+    if (p.indexOf("/images/") === 0) return p;
     return (this.data.baseUrl || "") + p;
   },
 
@@ -138,125 +130,100 @@ Page({
     });
   },
 
-  loadData: function() {
+  loadData: function(done) {
     var that = this;
     var memberId = that.data.memberId;
-    var memberName = wx.getStorageSync("memberName") || "陈知意";
+    var finished = typeof done === "function" ? done : function() {};
 
-    // 1. 获取会员基本信息
     api.request({
       url: "/api/portal/me",
       header: that.apiHeaders(),
       success: function(res) {
         if (res.statusCode === 200 && res.data) {
           var m = res.data;
-          var nm = m.memberName || memberName;
-          var isDemo = wx.getStorageSync("isDemoMode") === true || nm === "陈知意";
-          var joinDays = that.data.joinDays;
-          if (isDemo) {
-            joinDays = 365;
-          } else if (m.joinedAt) {
-            var diff = Math.floor((Date.now() - new Date(String(m.joinedAt).replace(/-/g, "/")).getTime()) / 86400000);
-            joinDays = Math.max(1, diff);
-          }
-          var totalHours = m.totalHours !== undefined && m.totalHours !== null ? Number(m.totalHours) : 42;
-          var hoursPilates = m.hoursPilates !== undefined && m.hoursPilates !== null ? Number(m.hoursPilates) : 18;
-          var hoursEquipment = m.hoursEquipment !== undefined && m.hoursEquipment !== null ? Number(m.hoursEquipment) : 16;
-          var hoursFatBurn = m.hoursFatBurn !== undefined && m.hoursFatBurn !== null ? Number(m.hoursFatBurn) : 8;
+          var joinDays = (m.joinDays === null || m.joinDays === undefined) ? null : Number(m.joinDays);
+          var stage = m.stage || {};
 
           that.setData({
-            memberName: nm,
-            initial: nm.charAt(0),
+            loading: false,
+            memberName: m.memberName || "",
+            initial: (m.memberName || "").charAt(0) || "会",
+            memberCode: m.memberCode || "",
+            joinedAt: m.joinedAt ? format.formatChineseDate(m.joinedAt) : "",
+            mentorName: m.mentorName || "",
+            status: m.status || "",
             joinDays: joinDays,
-            formattedDays: String(joinDays).replace(/\B(?=(\d{3})+(?!\d))/g, ","),
-            joinedAt: format.formatChineseDate(m.joinedAt || "2025-10-20"),
-            memberCode: m.memberCode || "LW-882049",
-            mentorName: m.mentorName || "导师 小桥",
-            totalHours: totalHours,
-            hoursPilates: hoursPilates,
-            hoursEquipment: hoursEquipment,
-            hoursFatBurn: hoursFatBurn,
-            stageName: getStageName(totalHours),
+            formattedDays: joinDays === null ? "" : String(joinDays).replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+            totalHours: Number(m.totalHours || 0),
+            trainingsByType: Array.isArray(m.trainingsByType) ? m.trainingsByType : [],
+            questionnaireCount: Number(m.questionnaireCount || 0),
+            photoCount: Number(m.photoCount || 0),
+            stageName: stage.name || "",
+            stageProgress: Number(stage.progress || 0),
+            lastTrainingDate: m.lastTrainingDate ? format.formatShortDate(m.lastTrainingDate) : "",
             avatarUrl: that.fullUrl(m.avatarUrl)
           });
+
+          if (m.memberName) wx.setStorageSync("memberName", m.memberName);
+          if (joinDays !== null) wx.setStorageSync("joinDays", joinDays);
+        } else {
+          that.setData({ loading: false });
         }
+        finished();
+      },
+      fail: function() {
+        that.setData({ loading: false });
+        finished();
       }
     });
 
-    // 2. 训练统计
-    api.request({
-      url: "/api/trainings?memberId=" + memberId,
-      header: that.apiHeaders(),
-      success: function(res) {
-        if (res.statusCode === 200 && Array.isArray(res.data) && res.data.length > 0) {
-          that.setData({
-            trainCount: res.data.length
-          });
-        }
-      }
-    });
-
-    // 3. 历史便签与导师回音记录 (真实可信、富有情绪价值、具有强烈截图分享欲)
+    // 体感便签与回音：没有就是没有，不再塞示范档案
     api.request({
       url: "/api/portal/training-feelings?memberId=" + memberId,
       header: that.apiHeaders(),
       success: function(res) {
-        if (res.statusCode === 200 && Array.isArray(res.data) && res.data.length > 0) {
+        if (res.statusCode === 200 && Array.isArray(res.data)) {
           var list = res.data.map(function(f) {
             return {
               id: f.id,
               date: format.formatShortDate(f.createdAt),
               feeling: format.cleanMarkdown(f.feeling || ""),
-              xiaoqiaoReply: format.cleanMarkdown(f.xiaoqiaoReply || "")
+              xiaoqiaoReply: format.cleanMarkdown(f.xiaoqiaoReply || ""),
+              pending: !f.xiaoqiaoReply
             };
           });
           that.setData({ feelings: list.slice(0, 5) });
         } else {
-          // 兜底高审美、极具情绪价值的手札与回音 (会员有截图发朋友圈/小红书分享欲)
-          that.setData({
-            feelings: [
-              {
-                id: 1,
-                date: "10月18日",
-                feeling: "连续练了两个月普拉提大器械，最神奇的是前两天拍证件照，摄影师突然说我肩膀完全是平的，脖子线条显得特别长。以前我习惯性右肩内扣高低肩，现在坐一天电脑居然不自觉会沉肩呼吸。",
-                xiaoqiaoReply: "知意，看到你分享这个瞬间我由衷为你感动。这不是摄影师的角度巧合，而是你过去几十个小时里，每一次在核心床滑行台对抗弹簧、每一次把肋骨收拢和下斜方肌激活沉淀出来的身体记忆。骨骼回归中立位后，从容感是由内而外散发出来的。身体永远不会辜负专注的练习，继续享受这种舒展。"
-              },
-              {
-                id: 2,
-                date: "10月12日",
-                feeling: "做完胸椎灵活性分节后，夜里睡眠特别沉，早起脖子一点酸痛都没有。原来呼吸通透了，连梦里都在放松。",
-                xiaoqiaoReply: "肋骨外翻闭合后，胸椎恢复生理曲度，膈肌呼吸就能深达腹腔。当神经系统不再处于持续紧绷的代偿状态，踏实的深睡眠就会自然发生。这是你身体最诚实的回馈。"
-              }
-            ]
-          });
+          that.setData({ feelings: [] });
         }
       },
       fail: function() {
-        that.setData({
-          feelings: [
-            {
-              id: 1,
-              date: "10月18日",
-              feeling: "连续练了两个月普拉提大器械，最神奇的是前两天拍证件照，摄影师突然说我肩膀完全是平的，脖子线条显得特别长。以前我习惯性右肩内扣高低肩，现在坐一天电脑居然不自觉会沉肩呼吸。",
-              xiaoqiaoReply: "知意，看到你分享这个瞬间我由衷为你感动。这不是摄影师的角度巧合，而是你过去几十个小时里，每一次在核心床滑行台对抗弹簧、每一次把肋骨收拢和下斜方肌激活沉淀出来的身体记忆。骨骼回归中立位后，从容感是由内而外散发出来的。身体永远不会辜负专注的练习，继续享受这种舒展。"
-            }
-          ]
-        });
+        that.setData({ feelings: [] });
       }
     });
   },
 
+  goBooking: function() {
+    wx.navigateTo({ url: "/pages/booking/booking" });
+  },
+
+  goLetters: function() {
+    wx.navigateTo({ url: "/pages/feedback/feedback" });
+  },
+
   copyConciergeWechat: function() {
+    var account = wx.getStorageSync("conciergeWechat") || "Laiwu0010";
     try {
       if (wx.vibrateShort) wx.vibrateShort({ type: "light" });
     } catch (err) {}
     wx.setClipboardData({
-      data: "Laiwu0010",
+      data: account,
       success: function() {
-        wx.showToast({
-          title: "专属微信号已复制",
-          icon: "success",
-          duration: 2200
+        wx.showModal({
+          title: "顾问微信已复制",
+          content: "已复制「" + account + "」。回到微信搜索该账号，备注你的姓名，小桥会把你拉进专属沟通。",
+          showCancel: false,
+          confirmText: "好"
         });
       }
     });
@@ -282,8 +249,8 @@ Page({
 
   onShareAppMessage: function() {
     return {
-      title: "我的账户 · 徕舞普拉提",
-      path: "/pages/me/me"
+      title: "我的身体手札 · 徕舞",
+      path: "/pages/stars/stars"
     };
   }
 });

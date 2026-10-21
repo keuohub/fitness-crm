@@ -83,6 +83,13 @@
       </view>
       <text class="section-intro">双幅展陈对比：记录刚来时的体态代偿与坚持至今的挺拔蜕变。</text>
 
+      <!-- 无真实对比照时的空状态：不显示示范照，也不留白 -->
+      <view class="diptych-empty" wx:if="{{!pinnedComparison}}">
+        <text class="diptych-empty-eyebrow">FIG. 00 · 待 定 格</text>
+        <text class="diptych-empty-title">你的第一组体态基准照，还没开始</text>
+        <text class="diptych-empty-body">小桥会在首次体态测评时为你拍下正面、侧面、背面三组基准影像。之后的每一次进阶，都会与这一天对照。</text>
+      </view>
+
       <!-- 双幅置顶对比画卷 -->
       <view class="diptych-exhibition-card" wx:if="{{pinnedComparison}}">
         <view class="diptych-frames-row">
@@ -148,7 +155,12 @@
       </view>
       <text class="section-intro">每一节课时的深层对抗与呼吸，都凝聚成不可替代的身体资产。</text>
 
-      <view class="timeline-stream">
+      <view class="timeline-empty" wx:if="{{!recentTrainings || recentTrainings.length === 0}}">
+        <text class="timeline-empty-title">还没有课堂记录</text>
+        <text class="timeline-empty-body">每节课结束后，小桥会把当天的训练重点与你的体感记在这里。第一节之后，这里就会有内容。</text>
+      </view>
+
+      <view class="timeline-stream" wx:else>
         <view
           wx:for="{{recentTrainings}}"
           wx:key="id"
