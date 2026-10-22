@@ -5,13 +5,8 @@ import { eq, desc } from "drizzle-orm";
 import { verifyMemberAccess } from "@/lib/auth/member-ownership";
 import { requireAdmin } from "@/lib/auth/admin-session";
 import { deleteCache } from "@/lib/api-cache";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
+import { uploadFileToStorage } from "@/lib/storage";
 
-// 注意：云托管镜像里的 public/ 是构建期快照，已存在目录对运行用户只读，
-// 运行时新增文件也不会被静态服务命中。统一写到运行时新建的 public/media，
-// 由 /media/[slug] 动态路由实时读盘。
-const UPLOAD_DIR = path.join(process.cwd(), "public", "media");
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -71,17 +66,11 @@ export async function POST(request: NextRequest) {
       if (allowedExt.indexOf(rawExt) < 0) {
         return NextResponse.json({ error: "只支持 jpg/png/webp" }, { status: 400 });
       }
-      const BRAND_DIR = UPLOAD_DIR;
-      await mkdir(BRAND_DIR, { recursive: true });
-
       const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
       const filename = `brand-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-      const filePath = path.join(BRAND_DIR, filename);
-
       const bytes = await file.arrayBuffer();
-      await writeFile(filePath, Buffer.from(bytes));
+      const { url } = await uploadFileToStorage(Buffer.from(bytes), filename, "brand");
 
-      const url = `/media/${filename}`;
       return NextResponse.json({ url, localMiniprogramUrl: url }, { status: 201 });
     }
 
@@ -92,17 +81,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "无权访问" }, { status: 401 });
     }
 
-    await mkdir(UPLOAD_DIR, { recursive: true });
-
     const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
     const timestamp = Date.now();
     const filename = `member-photo-${mid}-${timestamp}.${ext}`;
-    const filePath = path.join(UPLOAD_DIR, filename);
-
     const bytes = await file.arrayBuffer();
-    await writeFile(filePath, Buffer.from(bytes));
-
-    const url = `/media/${filename}`;
+    const { url } = await uploadFileToStorage(Buffer.from(bytes), filename, "member-photos");
 
     const __r_record = await db
       .insert(photos)
