@@ -103,26 +103,40 @@
       <view
         wx:for="{{offeringsList}}"
         wx:key="id"
-        class="offering-card"
+        class="offering-card {{item.imageUrl ? 'has-bg' : ''}}"
       >
-        <view class="offering-top">
-          <view class="offering-badge">
-            <text class="offering-num">{{item.num}}</text>
-          </view>
-          <view class="offering-names">
-            <text class="offering-title">{{item.name}}</text>
-            <text class="offering-en">{{item.enName}}</text>
-          </view>
-        </view>
+        <!-- 课程板块底图（位于文字下面） -->
+        <image
+          wx:if="{{item.imageUrl}}"
+          class="offering-bg-img"
+          src="{{item.imageUrl}}"
+          mode="aspectFill"
+          lazy-load="{{true}}"
+        />
+        <!-- 柔白光晕磨砂遮罩，保证无论底图多丰富，文字对比度均极致清晰 -->
+        <view wx:if="{{item.imageUrl}}" class="offering-bg-scrim"></view>
 
-        <view class="offering-summary-pill">
-          <text class="offering-summary-txt">{{item.summary}}</text>
-        </view>
+        <!-- 文字内容层 -->
+        <view class="offering-content">
+          <view class="offering-top">
+            <view class="offering-badge">
+              <text class="offering-num">{{item.num}}</text>
+            </view>
+            <view class="offering-names">
+              <text class="offering-title">{{item.name}}</text>
+              <text class="offering-en">{{item.enName}}</text>
+            </view>
+          </view>
 
-        <view class="offering-detail-block">
-          <view class="detail-row">
-            <text class="detail-label">核心雕刻</text>
-            <text class="detail-content">{{item.highlight}}</text>
+          <view class="offering-summary-pill">
+            <text class="offering-summary-txt">{{item.summary}}</text>
+          </view>
+
+          <view class="offering-detail-block">
+            <view class="detail-row">
+              <text class="detail-label">核心雕刻</text>
+              <text class="detail-content">{{item.highlight}}</text>
+            </view>
           </view>
         </view>
       </view>

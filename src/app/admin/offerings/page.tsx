@@ -11,6 +11,7 @@ interface CourseOffering {
   summary: string;
   target: string;
   highlight: string;
+  imageUrl?: string | null;
   sortOrder: number;
   isActive: number;
   createdAt: string;
@@ -21,6 +22,7 @@ export default function AdminOfferingsPage() {
   const [loading, setLoading] = useState(true);
   const [editingItem, setEditingItem] = useState<Partial<CourseOffering> | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const fetchOfferings = async () => {
     setLoading(true);
@@ -40,6 +42,30 @@ export default function AdminOfferingsPage() {
   useEffect(() => {
     fetchOfferings();
   }, []);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await fetch("/api/photos", {
+        method: "POST",
+        body: formData,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setEditingItem((prev) => prev ? { ...prev, imageUrl: data.url } : null);
+      } else {
+        alert("上传失败");
+      }
+    } catch (err) {
+      alert("上传出错");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -207,6 +233,17 @@ export default function AdminOfferingsPage() {
                     <span style={{ color: "#4A403E", lineHeight: 1.5 }}>{item.highlight}</span>
                   </div>
                 </div>
+
+                {item.imageUrl && (
+                  <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 10 }}>
+                    <img
+                      src={item.imageUrl}
+                      alt={item.name}
+                      style={{ width: 100, height: 60, objectFit: "cover", borderRadius: 6, border: "1px solid #E0D7D0" }}
+                    />
+                    <span style={{ fontSize: 12, color: "#8C827B" }}>卡片专属背景底图</span>
+                  </div>
+                )}
               </div>
 
               {/* 右侧动作 */}
@@ -359,6 +396,37 @@ export default function AdminOfferingsPage() {
                   onChange={(e) => setEditingItem({ ...editingItem, highlight: e.target.value })}
                   style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 13, boxSizing: "border-box" }}
                 />
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "#4A403E", marginBottom: 6 }}>
+                  卡片背景底图 (小程序端置于文字下方，高雅衬底)
+                </label>
+                <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                  <input
+                    type="text"
+                    placeholder="/images/offerings/offering-pilates.png 或图片地址"
+                    value={editingItem.imageUrl || ""}
+                    onChange={(e) => setEditingItem({ ...editingItem, imageUrl: e.target.value })}
+                    style={{ flex: 1, padding: "10px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 13, boxSizing: "border-box" }}
+                  />
+                  <label style={{
+                    padding: "10px 14px", background: "#F5ECE5", color: "#5E1914",
+                    borderRadius: 6, fontSize: 12, fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap"
+                  }}>
+                    {uploading ? "上传中..." : "本地上传"}
+                    <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: "none" }} />
+                  </label>
+                </div>
+                {editingItem.imageUrl && (
+                  <div style={{ marginTop: 8 }}>
+                    <img
+                      src={editingItem.imageUrl}
+                      alt="底图预览"
+                      style={{ width: 120, height: 70, objectFit: "cover", borderRadius: 6, border: "1px solid #D1C7C1" }}
+                    />
+                  </div>
+                )}
               </div>
 
               <div style={{ display: "flex", gap: 14 }}>

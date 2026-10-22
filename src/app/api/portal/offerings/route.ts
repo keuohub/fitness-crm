@@ -14,11 +14,13 @@ export async function GET() {
         summary TEXT NOT NULL,
         target TEXT NOT NULL,
         highlight TEXT NOT NULL,
+        image_url TEXT,
         sort_order INTEGER DEFAULT 0,
         is_active INTEGER DEFAULT 1,
         created_at TIMESTAMP NOT NULL DEFAULT NOW()
       );
     `;
+    await rawSql`ALTER TABLE course_offerings ADD COLUMN IF NOT EXISTS image_url TEXT;`;
 
     const rows = await db
       .select()

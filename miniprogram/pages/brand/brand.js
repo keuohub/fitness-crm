@@ -111,7 +111,8 @@ Page({
               enName: o.enName,
               summary: o.summary,
               target: o.target,
-              highlight: o.highlight
+              highlight: o.highlight,
+              imageUrl: that.fullUrl(o.imageUrl || o.image_url || "")
             };
           });
           that.setData({ offeringsList: mappedOfferings });

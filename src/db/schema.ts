@@ -372,6 +372,7 @@ export const courseOfferings = pgTable("course_offerings", {
   summary: text("summary").notNull(),
   target: text("target").notNull(),
   highlight: text("highlight").notNull(),
+  imageUrl: text("image_url"),
   sortOrder: integer("sort_order").default(0),
   isActive: integer("is_active").default(1),
   createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),

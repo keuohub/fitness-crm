@@ -68,11 +68,13 @@ async function ensureTableAndSeed() {
       summary TEXT NOT NULL,
       target TEXT NOT NULL,
       highlight TEXT NOT NULL,
+      image_url TEXT,
       sort_order INTEGER DEFAULT 0,
       is_active INTEGER DEFAULT 1,
       created_at TIMESTAMP NOT NULL DEFAULT NOW()
     );
   `;
+  await rawSql`ALTER TABLE course_offerings ADD COLUMN IF NOT EXISTS image_url TEXT;`;
 
   const rows = await db.select().from(courseOfferings);
   if (!rows || rows.length === 0) {
@@ -115,7 +117,7 @@ export async function POST(req: NextRequest) {
   try {
     await ensureTableAndSeed();
     const body = await req.json();
-    const { num, name, enName, summary, target, highlight, sortOrder = 0, isActive = 1 } = body;
+    const { num, name, enName, summary, target, highlight, imageUrl, sortOrder = 0, isActive = 1 } = body;
     if (!name || !summary) {
       return NextResponse.json({ error: "项目名称和核心概要为必填项" }, { status: 400 });
     }
@@ -129,6 +131,7 @@ export async function POST(req: NextRequest) {
         summary,
         target: target || "",
         highlight: highlight || "",
+        imageUrl: imageUrl || null,
         sortOrder: Number(sortOrder) || 0,
         isActive: Number(isActive) || 1,
       })
@@ -147,7 +150,7 @@ export async function PUT(req: NextRequest) {
   }
   try {
     const body = await req.json();
-    const { id, num, name, enName, summary, target, highlight, sortOrder, isActive } = body;
+    const { id, num, name, enName, summary, target, highlight, imageUrl, sortOrder, isActive } = body;
     if (!id) {
       return NextResponse.json({ error: "ID 为必填项" }, { status: 400 });
     }
@@ -159,6 +162,7 @@ export async function PUT(req: NextRequest) {
     if (summary !== undefined) updateData.summary = summary;
     if (target !== undefined) updateData.target = target;
     if (highlight !== undefined) updateData.highlight = highlight;
+    if (imageUrl !== undefined) updateData.imageUrl = imageUrl;
     if (sortOrder !== undefined) updateData.sortOrder = Number(sortOrder);
     if (isActive !== undefined) updateData.isActive = Number(isActive);
 
