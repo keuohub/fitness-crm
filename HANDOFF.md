@@ -410,3 +410,19 @@
 - 用主账号 SecretId/SecretKey 风险大，建议子账号最小权限（仅该桶 PutObject/GetObject）
 - 换图不删旧图，COS 会累积（费用，不影响功能）
 - 未绑定自定义域名前用的是 COS 默认域名
+
+## COS 对象存储打通（2026-10-22 17:19 实测通过）
+
+- 桶：`laiwu-media-1513635286`，地域 `ap-shanghai`，权限「公有读私有写」
+- 配置存在数据库 `studio_settings`（key：`cos_bucket` / `cos_region` / `cos_secret_id` / `cos_secret_key` / `cos_public_domain`），**代码优先读库**，环境变量只作兜底
+- 原因：云托管控制台的环境变量被人工填错（`Access Key Id ... does not exist`），改用库内配置后一次通过
+- 实测：后台传图 → `https://laiwu-media-1513635286.cos.ap-shanghai.myqcloud.com/brand/xxx.jpg`，匿名回读 200 `image/jpeg`
+- 注意：
+  1. 密钥目前在数据库明文（`studio_settings`），**建议尽快轮换密钥**，轮换后只需更新这 4 行
+  2. 云托管环境变量里那 4 个 `COS_*` 是错的，可以清掉，不影响（库优先）
+  3. 上传失败会降级本地 `/media` 并在后台弹提示，不再静默
+
+## 小程序包体修复（2026-10-22）
+
+- `miniprogram/images/poster/` 有 61MB 未被引用的 4K 海报源图，导致上传报「源码包超出最大限制 2MB」
+- 已删除；`project.config.json` 加 `packOptions.ignore`；包体 62MB → **320KB**
