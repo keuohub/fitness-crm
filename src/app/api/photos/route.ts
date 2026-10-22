@@ -8,9 +8,10 @@ import { deleteCache } from "@/lib/api-cache";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 
-// 注意：云托管上 Next 只服务构建期 public 快照，运行时写进 public/member-photos 的文件
-// 不会被静态服务命中。统一落到 public/brand/uploads，由 /brand/uploads/[slug] 动态路由读取。
-const UPLOAD_DIR = path.join(process.cwd(), "public", "brand", "uploads");
+// 注意：云托管镜像里的 public/ 是构建期快照，已存在目录对运行用户只读，
+// 运行时新增文件也不会被静态服务命中。统一写到运行时新建的 public/media，
+// 由 /media/[slug] 动态路由实时读盘。
+const UPLOAD_DIR = path.join(process.cwd(), "public", "media");
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -70,33 +71,18 @@ export async function POST(request: NextRequest) {
       if (allowedExt.indexOf(rawExt) < 0) {
         return NextResponse.json({ error: "只支持 jpg/png/webp" }, { status: 400 });
       }
-      const BRAND_DIR = path.join(process.cwd(), "public", "brand", "uploads");
-      const MINI_DIR = path.join(process.cwd(), "miniprogram", "images", "uploads");
+      const BRAND_DIR = UPLOAD_DIR;
       await mkdir(BRAND_DIR, { recursive: true });
-      // 云托管容器内 /app/miniprogram 只读，这里失败不能阻断上传
-      try {
-        await mkdir(MINI_DIR, { recursive: true });
-      } catch (err) {
-        console.warn("miniprogram dir not writable, skip sync:", err);
-      }
 
-      const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+      const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
       const filename = `brand-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
       const filePath = path.join(BRAND_DIR, filename);
-      const miniPath = path.join(MINI_DIR, filename);
 
       const bytes = await file.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-      await writeFile(filePath, buffer);
-      try {
-        await writeFile(miniPath, buffer);
-      } catch (err) {
-        console.warn("Failed to sync to miniprogram dir:", err);
-      }
+      await writeFile(filePath, Buffer.from(bytes));
 
-      const url = `/brand/uploads/${filename}`;
-      const localMiniprogramUrl = `/images/uploads/${filename}`;
-      return NextResponse.json({ url, localMiniprogramUrl }, { status: 201 });
+      const url = `/media/${filename}`;
+      return NextResponse.json({ url, localMiniprogramUrl: url }, { status: 201 });
     }
 
     const mid = typeof memberIdRaw === "string" ? parseInt(memberIdRaw, 10) : (memberIdRaw as unknown as number);
@@ -116,7 +102,7 @@ export async function POST(request: NextRequest) {
     const bytes = await file.arrayBuffer();
     await writeFile(filePath, Buffer.from(bytes));
 
-    const url = `/brand/uploads/${filename}`;
+    const url = `/media/${filename}`;
 
     const __r_record = await db
       .insert(photos)
