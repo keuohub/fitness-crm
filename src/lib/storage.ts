@@ -1,18 +1,10 @@
 import COS from "cos-nodejs-sdk-v5";
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
+import { rawSql } from "@/db";
 
-// 腾讯云对象存储配置（来自云托管运行时环境变量）
-const COS_SECRET_ID = process.env.COS_SECRET_ID || process.env.TENCENT_SECRET_ID;
-const COS_SECRET_KEY = process.env.COS_SECRET_KEY || process.env.TENCENT_SECRET_KEY;
-const COS_BUCKET = process.env.COS_BUCKET;
-const COS_REGION = process.env.COS_REGION || "ap-shanghai";
-// 可选：绑定到桶上的自定义域名 / CDN 域名（只填域名，不要带 https://）
-const COS_CUSTOM_DOMAIN = process.env.COS_CUSTOM_DOMAIN;
-
-let cosInstance: COS | null = null;
-let bucketFormatChecked = false;
-
+// 对象存储配置：优先读数据库 studio_settings（可随时改，不用重发版改环境变量），
+// 数据库没配再回退环境变量；两者都没有则降级本地存储。
 export type StorageType = "cos" | "local";
 
 export interface StorageResult {
@@ -21,6 +13,18 @@ export interface StorageResult {
   /** 降级或配置可疑时的中文提示，供后台直接展示 */
   warning?: string;
 }
+
+interface CosConfig {
+  bucket: string;
+  region: string;
+  secretId: string;
+  secretKey: string;
+  domain?: string;
+}
+
+let cachedConfig: { cfg: CosConfig | null; at: number } | null = null;
+let cachedClient: { key: string; client: COS } | null = null;
+const CACHE_MS = 60 * 1000;
 
 const MIME_BY_EXT: Record<string, string> = {
   jpg: "image/jpeg",
@@ -37,68 +41,108 @@ function mimeOf(filename: string): string {
   return MIME_BY_EXT[ext] || "application/octet-stream";
 }
 
-function cleanDomain(domain: string): string {
-  return String(domain)
+function cleanDomain(domain?: string): string {
+  return String(domain || "")
     .trim()
     .replace(/^https?:\/\//i, "")
     .replace(/\/+$/, "");
 }
 
-function getCosClient(): COS | null {
-  if (cosInstance) return cosInstance;
-  if (COS_SECRET_ID && COS_SECRET_KEY && COS_BUCKET) {
-    if (!bucketFormatChecked) {
-      bucketFormatChecked = true;
-      // COS 桶名必须是「名称-appid」形式，缺后缀时 putObject 必然失败
-      if (!/-\d{4,}$/.test(COS_BUCKET)) {
-        console.warn("[Storage] COS_BUCKET 疑似缺少 -appid 后缀:", COS_BUCKET);
-      }
-    }
-    cosInstance = new COS({
-      SecretId: COS_SECRET_ID,
-      SecretKey: COS_SECRET_KEY,
-    });
-    return cosInstance;
+function envConfig(): CosConfig | null {
+  const bucket = process.env.COS_BUCKET;
+  const secretId = process.env.COS_SECRET_ID || process.env.TENCENT_SECRET_ID;
+  const secretKey = process.env.COS_SECRET_KEY || process.env.TENCENT_SECRET_KEY;
+  if (bucket && secretId && secretKey) {
+    return {
+      bucket,
+      region: process.env.COS_REGION || "ap-shanghai",
+      secretId,
+      secretKey,
+      domain: process.env.COS_CUSTOM_DOMAIN,
+    };
   }
   return null;
 }
 
-/** 当前是否真正配置了对象存储（用于健康检查/后台提示） */
-export function isObjectStorageConfigured(): boolean {
-  return Boolean(COS_SECRET_ID && COS_SECRET_KEY && COS_BUCKET);
+async function resolveConfig(): Promise<CosConfig | null> {
+  if (cachedConfig && Date.now() - cachedConfig.at < CACHE_MS) return cachedConfig.cfg;
+
+  let dbCfg: CosConfig | null = null;
+  try {
+    const rows = (await rawSql`SELECT key, value FROM studio_settings
+      WHERE key IN ('cos_bucket', 'cos_region', 'cos_secret_id', 'cos_secret_key', 'cos_public_domain')`) as Array<{
+      key: string;
+      value: string | null;
+    }>;
+    const map = new Map<string, string>();
+    for (const r of rows) if (r.value) map.set(r.key, String(r.value).trim());
+    const bucket = map.get("cos_bucket");
+    const secretId = map.get("cos_secret_id");
+    const secretKey = map.get("cos_secret_key");
+    if (bucket && secretId && secretKey) {
+      dbCfg = {
+        bucket,
+        region: map.get("cos_region") || "ap-shanghai",
+        secretId,
+        secretKey,
+        domain: map.get("cos_public_domain"),
+      };
+    }
+  } catch (err) {
+    console.warn("[Storage] 读取数据库对象存储配置失败，回退环境变量:", err);
+  }
+
+  const cfg = dbCfg || envConfig();
+  cachedConfig = { cfg, at: Date.now() };
+  return cfg;
+}
+
+function getClient(cfg: CosConfig): COS {
+  const cacheKey = `${cfg.secretId}:${cfg.secretKey}`;
+  if (cachedClient && cachedClient.key === cacheKey) return cachedClient.client;
+  if (!/-\d{4,}$/.test(cfg.bucket)) {
+    console.warn("[Storage] COS 桶名疑似缺少 -appid 后缀:", cfg.bucket);
+  }
+  const client = new COS({ SecretId: cfg.secretId, SecretKey: cfg.secretKey });
+  cachedClient = { key: cacheKey, client };
+  return client;
+}
+
+/** 当前是否配置了对象存储（数据库或环境变量均可） */
+export async function isObjectStorageConfigured(): Promise<boolean> {
+  return Boolean(await resolveConfig());
 }
 
 /**
  * 上传文件：优先对象存储（永久保存、跨发版不丢图）；
- * 未配置或上传失败时降级到本地 public/media，并且把原因带回给调用方展示。
+ * 未配置或上传失败时降级到本地 public/media，并把原因带回给调用方展示。
  */
 export async function uploadFileToStorage(
   buffer: Buffer,
   filename: string,
   prefix: string = "media"
 ): Promise<StorageResult> {
-  const cos = getCosClient();
+  const cfg = await resolveConfig();
 
-  if (cos && COS_BUCKET) {
+  if (cfg) {
     const key = `${prefix}/${filename}`;
-    const contentType = mimeOf(filename);
     try {
+      const client = getClient(cfg);
       const data = await new Promise<{ Location: string }>((resolve, reject) => {
-        cos.putObject(
+        client.putObject(
           {
-            Bucket: COS_BUCKET,
-            Region: COS_REGION,
+            Bucket: cfg.bucket,
+            Region: cfg.region,
             Key: key,
             Body: buffer,
-            ContentType: contentType,
+            ContentType: mimeOf(filename),
           },
           (err, result) => (err ? reject(err) : resolve(result as { Location: string }))
         );
       });
       // 默认域名下 Location 已含 /key；自定义域名需要自己拼 key
-      const url = COS_CUSTOM_DOMAIN
-        ? `https://${cleanDomain(COS_CUSTOM_DOMAIN)}/${key}`
-        : `https://${data.Location}`;
+      const domain = cleanDomain(cfg.domain);
+      const url = domain ? `https://${domain}/${key}` : `https://${data.Location}`;
       return { url, storageType: "cos" };
     } catch (err) {
       const reason = err instanceof Error ? err.message : String(err);
@@ -114,9 +158,7 @@ export async function uploadFileToStorage(
   const local = await saveToLocal(buffer, filename);
   return {
     ...local,
-    warning: isObjectStorageConfigured()
-      ? undefined
-      : "尚未配置对象存储（COS_BUCKET / COS_SECRET_ID / COS_SECRET_KEY），图片暂存在本地，发版后会丢失。",
+    warning: "尚未配置对象存储，图片暂存在本地，发版后会丢失。",
   };
 }
 
