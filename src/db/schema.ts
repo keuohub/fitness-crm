@@ -376,3 +376,180 @@ export const courseOfferings = pgTable("course_offerings", {
   isActive: integer("is_active").default(1),
   createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
 });
+
+// ====== 约课/会员卡系统（2026-10 新增） ======
+
+export const courseCategories = pgTable("course_categories", {
+  id: serial("id").primaryKey(),
+  tenantId: integer("tenant_id").notNull().default(1),
+  key: text("key").notNull(),
+  name: text("name").notNull(),
+  durationMinutes: integer("duration_minutes").notNull().default(60),
+  defaultCapacity: integer("default_capacity").notNull().default(6),
+  color: text("color"),
+  sortOrder: integer("sort_order").notNull().default(0),
+  isActive: integer("is_active").notNull().default(1),
+  createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
+});
+
+export const rooms = pgTable("rooms", {
+  id: serial("id").primaryKey(),
+  tenantId: integer("tenant_id").notNull().default(1),
+  name: text("name").notNull(),
+  capacity: integer("capacity").notNull().default(10),
+  isActive: integer("is_active").notNull().default(1),
+  createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
+});
+
+export const cardTypes = pgTable("card_types", {
+  id: serial("id").primaryKey(),
+  tenantId: integer("tenant_id").notNull().default(1),
+  name: text("name").notNull(),
+  category: text("category").notNull().default("count"), // period | count
+  priceCents: integer("price_cents").notNull().default(0),
+  validityDays: integer("validity_days"),
+  weeklyLimit: integer("weekly_limit"),
+  totalCount: integer("total_count"),
+  freezeAllowed: integer("freeze_allowed").notNull().default(0),
+  transferAllowed: integer("transfer_allowed").notNull().default(0),
+  isActive: integer("is_active").notNull().default(1),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
+});
+
+export const memberCards = pgTable("member_cards", {
+  id: serial("id").primaryKey(),
+  tenantId: integer("tenant_id").notNull().default(1),
+  memberId: integer("member_id").notNull(),
+  cardTypeId: integer("card_type_id").notNull(),
+  status: text("status").notNull().default("active"),
+  totalCount: integer("total_count"),
+  remainingCount: integer("remaining_count"),
+  validFrom: text("valid_from"),
+  validUntil: text("valid_until"),
+  purchasedAt: text("purchased_at"),
+  priceCents: integer("price_cents").notNull().default(0),
+  idempotencyKey: text("idempotency_key"),
+  createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { mode: "string" }).notNull().defaultNow(),
+});
+
+export const cardTransactions = pgTable("card_transactions", {
+  id: serial("id").primaryKey(),
+  tenantId: integer("tenant_id").notNull().default(1),
+  memberCardId: integer("member_card_id").notNull(),
+  memberId: integer("member_id").notNull(),
+  bookingId: integer("booking_id"),
+  type: text("type").notNull(), // purchase | deduct | refund | expire | adjust
+  amount: integer("amount").notNull().default(0),
+  balanceAfter: integer("balance_after"),
+  note: text("note"),
+  idempotencyKey: text("idempotency_key"),
+  createdBy: integer("created_by"),
+  createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
+});
+
+export const classSessions = pgTable("class_sessions", {
+  id: serial("id").primaryKey(),
+  tenantId: integer("tenant_id").notNull().default(1),
+  templateId: integer("template_id"),
+  courseCategoryId: integer("course_category_id").notNull(),
+  coachId: integer("coach_id").notNull(),
+  roomId: integer("room_id"),
+  title: text("title"),
+  sessionDate: text("session_date").notNull(),
+  startTime: text("start_time").notNull(),
+  endTime: text("end_time").notNull(),
+  capacity: integer("capacity").notNull().default(6),
+  bookedCount: integer("booked_count").notNull().default(0),
+  status: text("status").notNull().default("open"),
+  note: text("note"),
+  createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { mode: "string" }).notNull().defaultNow(),
+});
+
+export const bookings = pgTable("bookings", {
+  id: serial("id").primaryKey(),
+  tenantId: integer("tenant_id").notNull().default(1),
+  sessionId: integer("session_id").notNull(),
+  memberId: integer("member_id").notNull(),
+  status: text("status").notNull().default("booked"),
+  idempotencyKey: text("idempotency_key"),
+  bookedAt: timestamp("booked_at", { mode: "string" }).notNull().defaultNow(),
+  cancelledAt: timestamp("cancelled_at", { mode: "string" }),
+  cancelReason: text("cancel_reason"),
+  createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { mode: "string" }).notNull().defaultNow(),
+});
+
+export const attendance = pgTable("attendance", {
+  id: serial("id").primaryKey(),
+  tenantId: integer("tenant_id").notNull().default(1),
+  sessionId: integer("session_id").notNull(),
+  memberId: integer("member_id").notNull(),
+  bookingId: integer("booking_id"),
+  status: text("status").notNull().default("attended"),
+  markedBy: integer("marked_by"),
+  markedAt: timestamp("marked_at", { mode: "string" }).notNull().defaultNow(),
+  note: text("note"),
+});
+
+export const postClassNotes = pgTable("post_class_notes", {
+  id: serial("id").primaryKey(),
+  tenantId: integer("tenant_id").notNull().default(1),
+  sessionId: integer("session_id"),
+  memberId: integer("member_id").notNull(),
+  coachId: integer("coach_id"),
+  content: text("content").notNull(),
+  imageUrl: text("image_url"),
+  createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
+});
+
+export const followUps = pgTable("follow_ups", {
+  id: serial("id").primaryKey(),
+  tenantId: integer("tenant_id").notNull().default(1),
+  memberId: integer("member_id").notNull(),
+  type: text("type").notNull(), // low_balance | inactive_30d | expiring | birthday
+  status: text("status").notNull().default("pending"),
+  note: text("note"),
+  createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { mode: "string" }).notNull().defaultNow(),
+});
+
+export const studioSettings = pgTable("studio_settings", {
+  id: serial("id").primaryKey(),
+  tenantId: integer("tenant_id").notNull().default(1),
+  key: text("key").notNull(),
+  value: text("value"),
+  updatedAt: timestamp("updated_at", { mode: "string" }).notNull().defaultNow(),
+});
+
+export const auditLogs = pgTable("audit_logs", {
+  id: serial("id").primaryKey(),
+  tenantId: integer("tenant_id").notNull().default(1),
+  actorType: text("actor_type"),
+  actorId: integer("actor_id"),
+  action: text("action").notNull(),
+  entityType: text("entity_type"),
+  entityId: integer("entity_id"),
+  beforeJson: text("before_json"),
+  afterJson: text("after_json"),
+  createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
+});
+
+
+export const scheduleTemplates = pgTable("schedule_templates", {
+  id: serial("id").primaryKey(),
+  tenantId: integer("tenant_id").notNull().default(1),
+  courseId: integer("course_id").notNull(),
+  coachId: integer("coach_id").notNull(),
+  roomId: integer("room_id"),
+  weekday: integer("weekday").notNull(),
+  startTime: text("start_time").notNull(),
+  endTime: text("end_time").notNull(),
+  capacity: integer("capacity").notNull().default(6),
+  effectiveFrom: text("effective_from"),
+  effectiveTo: text("effective_to"),
+  isActive: integer("is_active").notNull().default(1),
+  createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
+});
