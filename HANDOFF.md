@@ -322,3 +322,36 @@
 
 ### D4 待做（真机）
 - 体验版/开发版打开小程序 → 秦卓宇登录 → 我的卡 → 约 10-28 → 后台名单 → 教练签到 → 扣次 → 取消
+
+## 约刻真实数据接入（2026-10-22 下午）
+
+### 已解除的限制
+- 主理人已授权：可登录约刻后台**只读导出**（不修改约刻任何内容、不删减会员信息，只下载头像）。
+- 实现方式：Safari 已登录会话 + AppleScript 执行只读 JS + `token` 请求头调 `/api/**`（GET/POST 均为只读查询，未向约刻写任何数据）。
+
+### 已从约刻导出（本地文件，不入库）
+- `tmp/yk_coaches.json`：9 位老师（id、姓名、position、头像 URL）
+- `tmp/yk_member_details.json`：243 位会员（姓名、手机号、入会日期 intime、头像）
+- 老师头像：`public/images/team/yueke/coach-<约刻id>.jpg`（400×400，带 Referer 才能下载）
+
+### 已写入生产库（已备份）
+- `team_members`：小桥（id=1，保留「创始人 / 教学主理人」）+ 约刻 8 位老师（关关/兰兰/何老师/翠翠/曹湘湘/左左/汪老师/陶子）。
+  - 介绍/资历/寄语全部为空，**不写"资深教练"**；新老师 `is_active=0` 等发版后开启。
+  - 嘉敏、若琳 `is_active=0` 下线（保留数据）。
+- `members.joined_at`：按约刻 `intime` 回填 **160 人**；剩余空值 199→50。
+- 全库占位课时清空：`hours_pilates=18 / equipment=16 / fat_burn=8` 与 `total_hours=42`（**278 人**）。
+- 秦卓宇（id=284）：按**测试会员**处理，课时清空、`joined_at=2026-10-21`、`mentor_name=小桥`、`notes=测试会员（主理人本人）`。
+
+### 约刻数据模型的关键结论（不要再重复踩坑）
+- 约刻**没有"会员累计课时"字段**。会员侧只有：入会日期（intime）、头像、会员卡（卡类型/次数/剩余）、排课与预约。
+- 会员列表页**没有会员详情入口**（行无操作按钮），也没有"上课记录"页面；`/api/member/card` 恒 5000。
+- 因此"每人真实累计课时/四类分布"**无法从约刻直接导出**；当前处理为**清空占位值**，等主理人给口径（按卡次数折算 / 按排课出勤统计 / 人工录入）。
+
+### 代码
+- `miniprogram/pages/brand/brand.wxml`：导师卡空角色/资历/寄语不再渲染。
+- 提交 `ce01e18`，已推送 `release-preparation`，并快进推送 `main`（f70d660→ce01e18）。
+- **尚未发版**：云托管未自动构建（推送后 `/images/team/yueke/*` 仍 404），需在云托管控制台点「发布」；小程序 wxml 改动需开发者工具重新上传审核。
+- 新老师 `is_active=0`，**发版成功后**再执行：`UPDATE team_members SET is_active=1 WHERE sort_order BETWEEN 2 AND 9;`
+
+### 备份
+- `backups/team-testmember-before-*.json`、`backups/yueke-backfill-before-*.json`、`backups/fake-hours-before-*.json`
