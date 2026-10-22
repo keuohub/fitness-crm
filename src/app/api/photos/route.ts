@@ -8,7 +8,9 @@ import { deleteCache } from "@/lib/api-cache";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 
-const UPLOAD_DIR = path.join(process.cwd(), "public", "member-photos");
+// 注意：云托管上 Next 只服务构建期 public 快照，运行时写进 public/member-photos 的文件
+// 不会被静态服务命中。统一落到 public/brand/uploads，由 /brand/uploads/[slug] 动态路由读取。
+const UPLOAD_DIR = path.join(process.cwd(), "public", "brand", "uploads");
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -106,15 +108,15 @@ export async function POST(request: NextRequest) {
 
     await mkdir(UPLOAD_DIR, { recursive: true });
 
-    const ext = file.name.split(".").pop() || "jpg";
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
     const timestamp = Date.now();
-    const filename = `${mid}-${timestamp}.${ext}`;
+    const filename = `member-photo-${mid}-${timestamp}.${ext}`;
     const filePath = path.join(UPLOAD_DIR, filename);
 
     const bytes = await file.arrayBuffer();
     await writeFile(filePath, Buffer.from(bytes));
 
-    const url = `/member-photos/${filename}`;
+    const url = `/brand/uploads/${filename}`;
 
     const __r_record = await db
       .insert(photos)
