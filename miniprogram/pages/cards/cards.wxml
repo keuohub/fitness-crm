@@ -1,0 +1,52 @@
+<view class="cards-page">
+  <view wx:if="{{loading}}" class="cards-loading">
+    <text class="cards-loading-text">正在打开你的卡包…</text>
+  </view>
+
+  <block wx:else>
+    <view class="cards-hero">
+      <text class="cards-eyebrow">MY MEMBERSHIP</text>
+      <text class="cards-title">我的卡</text>
+    </view>
+
+    <view wx:if="{{error}}" class="cards-error">
+      <text class="cards-error-text">{{error}}</text>
+    </view>
+
+    <view wx:if="{{cards.length === 0 && !error}}" class="cards-empty">
+      <text class="cards-empty-title">还没有会员卡</text>
+      <text class="cards-empty-body">开卡后，这里会显示剩余次数和有效期。需要开卡请联系小桥。</text>
+    </view>
+
+    <view wx:for="{{cards}}" wx:key="id" class="card-item">
+      <view class="card-top">
+        <view class="card-main">
+          <text class="card-name">{{item.name}}</text>
+          <text class="card-type">{{item.categoryText}}</text>
+        </view>
+        <text class="card-status card-status-{{item.status}}">{{item.statusText}}</text>
+      </view>
+
+      <view class="card-balance-row">
+        <view class="card-balance">
+          <text class="card-balance-num">{{item.remainingText}}</text>
+          <text class="card-balance-label">剩余</text>
+        </view>
+        <view class="card-valid">
+          <text class="card-valid-text">{{item.validText}}</text>
+          <text class="card-valid-label" wx:if="{{item.purchasedText}}">购于 {{item.purchasedText}}</text>
+        </view>
+      </view>
+
+      <view class="card-tx" wx:if="{{item.transactions.length > 0}}">
+        <view class="card-tx-row" wx:for="{{item.transactions}}" wx:for-item="tx" wx:key="id">
+          <text class="card-tx-label">{{tx.label}}</text>
+          <text class="card-tx-amount">{{tx.amount}}</text>
+          <text class="card-tx-date">{{tx.date}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="cards-bottom-space"></view>
+  </block>
+</view>
