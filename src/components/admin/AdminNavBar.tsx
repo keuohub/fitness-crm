@@ -56,6 +56,41 @@ export default function AdminNavBar() {
       icon: "💬",
     },
     {
+      title: "会员卡",
+      subtitle: "卡类型 · 开卡 · 续卡",
+      href: "/admin/cards",
+      active: pathname.startsWith("/admin/cards"),
+      icon: "💳",
+    },
+    {
+      title: "课程与教室",
+      subtitle: "类目、时长、容量",
+      href: "/admin/courses",
+      active: pathname.startsWith("/admin/courses"),
+      icon: "📚",
+    },
+    {
+      title: "排课",
+      subtitle: "周模板 · 手动调整",
+      href: "/admin/schedule",
+      active: pathname.startsWith("/admin/schedule"),
+      icon: "🗓️",
+    },
+    {
+      title: "教练课表",
+      subtitle: "今日课程 · 名单",
+      href: "/admin/coach",
+      active: pathname.startsWith("/admin/coach"),
+      icon: "🧑‍🏫",
+    },
+    {
+      title: "跟进名单",
+      subtitle: "余次 · 未到 · 到期 · 生日",
+      href: "/admin/followups",
+      active: pathname.startsWith("/admin/followups"),
+      icon: "📋",
+    },
+    {
       title: "待回便签",
       subtitle: "课后留言 · 真人回",
       href: "/admin/feelings",
@@ -105,7 +140,11 @@ export default function AdminNavBar() {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          height: 68,
+          flexWrap: "wrap",
+          gap: 8,
+          minHeight: 68,
+          paddingTop: 8,
+          paddingBottom: 8,
         }}
       >
         {/* Brand Logo & Studio title */}
@@ -147,7 +186,7 @@ export default function AdminNavBar() {
         </Link>
 
         {/* 4 Main Tabs corresponding to 4 Mini-program tabs */}
-        <nav style={{ display: "flex", alignItems: "center", gap: 3 }}>
+        <nav style={{ display: "flex", alignItems: "center", gap: 3, flexWrap: "wrap", justifyContent: "flex-end", rowGap: 4 }}>
           {navItems.map((item) => {
             const isActive = item.active;
             return (
