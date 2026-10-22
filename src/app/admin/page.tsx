@@ -105,7 +105,7 @@ export default async function AdminPage() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: "#1A1A1A", margin: 0 }}>CRM 管理中心</h1>
           <Link href="/members" style={{ fontSize: 14, color: "#8B5E3C", fontWeight: 600, textDecoration: "none" }}>
-            会员列表 (全部 278 人) →
+            会员列表 (全部 {allMembers.length} 人) →
           </Link>
         </div>
 

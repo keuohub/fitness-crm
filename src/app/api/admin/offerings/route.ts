@@ -5,6 +5,13 @@ import { courseOfferings } from "@/db/schema";
 import { eq, asc } from "drizzle-orm";
 import { invalidateCache } from "@/lib/api-cache";
 
+/** 底图地址清洗：非字符串不让接口 500，空串落 null，超长截断。 */
+function cleanImageUrl(v: unknown): string | null {
+  const str = String(v ?? "").trim();
+  if (!str) return null;
+  return str.slice(0, 500);
+}
+
 const DEFAULT_OFFERINGS = [
   {
     num: "01",
@@ -13,6 +20,7 @@ const DEFAULT_OFFERINGS = [
     summary: "深层核心唤醒 · 脊柱逐节舒展 · 呼吸优雅重构",
     target: "",
     highlight: "沉浸于轻柔专注的呼吸律动中，由内而外唤醒深层盆底肌与腹横肌，释放肩颈与背部日常紧绷，重塑轻盈挺拔的女性仪态与柔韧力量。",
+    imageUrl: "/images/offerings/offering-pilates.png",
     sortOrder: 1,
     isActive: 1,
   },
@@ -23,6 +31,7 @@ const DEFAULT_OFFERINGS = [
     summary: "德国原木核心床 · 弹簧离心雕刻 · 关节零负担延展",
     target: "",
     highlight: "在高精度弹簧阻力的精妙对抗中，精准激活日常难以触及的深层细小肌群，重塑纤细修长线条，重获骨盆中立与挺拔流畅的力学美感。",
+    imageUrl: "/images/offerings/offering-equipment.png",
     sortOrder: 2,
     isActive: 1,
   },
@@ -33,6 +42,7 @@ const DEFAULT_OFFERINGS = [
     summary: "间歇心率节律 · 天鹅颈直角肩雕刻 · 臀腿比例重塑",
     target: "",
     highlight: "结合普拉提精细控制与轻盈燃脂节律，集中雕琢锁骨线条、天鹅颈与紧致腰腹弧度，提拉紧致下半身线条，收获如超模般舒展挺拔的从容气场。",
+    imageUrl: "/images/offerings/offering-fatburn.png",
     sortOrder: 3,
     isActive: 1,
   },
@@ -53,6 +63,7 @@ const DEFAULT_OFFERINGS = [
     summary: "主理团队全维度定制 · 专属体态档案 · 一对一私享雕琢",
     target: "",
     highlight: "专注你的每一次呼吸节律与发力细节，根据个人身体状态与周期节奏量身定制专属方案，用细腻手感与专业口令，陪伴你见证身体的每一次从容蜕变。",
+    imageUrl: "/images/offerings/offering-private.png",
     sortOrder: 5,
     isActive: 1,
   },
@@ -86,6 +97,7 @@ async function ensureTableAndSeed() {
         summary: off.summary,
         target: off.target,
         highlight: off.highlight,
+        imageUrl: cleanImageUrl((off as any).imageUrl),
         sortOrder: off.sortOrder,
         isActive: off.isActive,
       });
@@ -131,7 +143,7 @@ export async function POST(req: NextRequest) {
         summary,
         target: target || "",
         highlight: highlight || "",
-        imageUrl: imageUrl || null,
+        imageUrl: cleanImageUrl(imageUrl),
         sortOrder: Number(sortOrder) || 0,
         isActive: Number(isActive) || 1,
       })
@@ -149,6 +161,7 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
   }
   try {
+    await ensureTableAndSeed();
     const body = await req.json();
     const { id, num, name, enName, summary, target, highlight, imageUrl, sortOrder, isActive } = body;
     if (!id) {
@@ -162,7 +175,7 @@ export async function PUT(req: NextRequest) {
     if (summary !== undefined) updateData.summary = summary;
     if (target !== undefined) updateData.target = target;
     if (highlight !== undefined) updateData.highlight = highlight;
-    if (imageUrl !== undefined) updateData.imageUrl = imageUrl;
+    if (imageUrl !== undefined) updateData.imageUrl = cleanImageUrl(imageUrl);
     if (sortOrder !== undefined) updateData.sortOrder = Number(sortOrder);
     if (isActive !== undefined) updateData.isActive = Number(isActive);
 

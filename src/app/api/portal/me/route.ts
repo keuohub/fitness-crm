@@ -3,7 +3,7 @@ import { db, rawSql } from "@/db";
 import { members, trainings, questionnaireSubmissions, photos, courseOfferings } from "@/db/schema";
 import { eq, sql, asc } from "drizzle-orm";
 import { getPortalMemberId } from "@/lib/auth/member-session";
-import { getMemberStage, labelOfTrainingType } from "@/lib/member-stage";
+import { getMemberStage } from "@/lib/member-stage";
 
 function inferCategoryKey(name: string, enName?: string): string {
   const n = ((name || "") + " " + (enName || "")).toLowerCase();
@@ -64,7 +64,10 @@ export async function GET(request: NextRequest) {
       LEFT JOIN attendance a ON a.booking_id = b.id
       WHERE b.tenant_id = 1 
         AND b.member_id = ${memberId}
-        AND b.status IN ('booked', 'completed')
+        -- attended 必须在内：教练签到会把 bookings.status 改成 attended，
+        -- 旧条件只认 booked/completed，导致真实到课后课时反而掉 1。
+        -- 取消(cancelled)、未到(no_show) 不在其列，天然排除。
+        AND b.status IN ('booked', 'completed', 'attended')
         AND (a.status IS NULL OR a.status = 'attended')
       GROUP BY c.key
     `;
@@ -95,6 +98,9 @@ export async function GET(request: NextRequest) {
   if (activeOfferings && activeOfferings.length > 0) {
     for (const off of activeOfferings) {
       const key = inferCategoryKey(off.name, off.enName);
+      // 同一个 key 可能被多个后台类目命中（如「维密减脂超模班」+「维密减脂小班」都归 fat_burn）。
+      // 课时是按 key 汇总的整份数字，重复 push 会让 totalHours 翻倍，因此同 key 只取第一条。
+      if (seenKeys.has(key)) continue;
       seenKeys.add(key);
       const baselineCount = getMemberBaseline(member, key);
       const dynamicBooking = bookingCountsMap.get(key) || 0;
@@ -162,7 +168,7 @@ export async function GET(request: NextRequest) {
   if (member.joinedAt) {
     const t = new Date(String(member.joinedAt).replace(/[-/.]/g, "/")).getTime();
     if (!Number.isNaN(t)) {
-      joinDays = Math.max(1, Math.floor((Date.now() - t) / 86400000));
+      joinDays = Math.max(1, Math.floor((Date.now() - t) / 86400000) + 1);
     }
   }
 
@@ -177,6 +183,7 @@ export async function GET(request: NextRequest) {
     portalEnabled: member.portalEnabled,
     mentorName: member.mentorName || null,
     status: member.status || null,
+    gender: member.gender || null,
 
     joinDays,
     totalHours,
