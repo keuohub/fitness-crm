@@ -104,6 +104,30 @@
       </view>
 
       <view class="me-service-card">
+        <view class="me-service-row" bindtap="goBooking">
+          <view class="me-service-texts">
+            <text class="me-service-title">预约课程</text>
+            <text class="me-service-note">看本周课表、余位、预约与取消</text>
+          </view>
+          <text class="me-service-arrow">›</text>
+        </view>
+
+        <view class="me-service-row" bindtap="goNotes">
+          <view class="me-service-texts">
+            <text class="me-service-title">课后记录</text>
+            <text class="me-service-note">教练今天留了什么话</text>
+          </view>
+          <text class="me-service-arrow">›</text>
+        </view>
+
+        <view class="me-service-row" bindtap="goCards">
+          <view class="me-service-texts">
+            <text class="me-service-title">我的卡</text>
+            <text class="me-service-note">剩余次数、有效期、消课记录</text>
+          </view>
+          <text class="me-service-arrow">›</text>
+        </view>
+
         <view class="me-service-row" bindtap="goLetters">
           <view class="me-service-texts">
             <text class="me-service-title">小桥写给你的话</text>

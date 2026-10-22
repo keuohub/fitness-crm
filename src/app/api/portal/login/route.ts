@@ -22,7 +22,7 @@ const MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 // 单实例有效；云托管多实例时仍能挡住绝大部分脚本爆破。
 const LOGIN_ATTEMPTS = new Map<string, { count: number; resetAt: number }>();
 const RATE_WINDOW = 15 * 60 * 1000;
-const RATE_MAX = 5;
+const RATE_MAX = 8;
 
 function rateLimited(key: string): boolean {
   const now = Date.now();
@@ -85,6 +85,8 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: genericError }, { status: 401 });
       }
     }
+
+    LOGIN_ATTEMPTS.delete(ip + ":" + rawCode);
 
     const response = NextResponse.json({
       memberId: member.id,

@@ -1,0 +1,17 @@
+<view class="nt-page">
+  <view wx:if="{{loading}}" class="nt-loading"><text>正在翻你的课后记录…</text></view>
+  <block wx:else>
+    <view class="nt-hero"><text class="nt-eyebrow">AFTER CLASS</text><text class="nt-title">课后记录</text></view>
+    <view wx:if="{{error}}" class="nt-error">{{error}}</view>
+    <view wx:if="{{notes.length===0&&!error}}" class="nt-empty">
+      <text class="nt-empty-title">还没有课后记录</text>
+      <text class="nt-empty-body">上完课，小桥或教练会在这里留一句。</text>
+    </view>
+    <view wx:for="{{notes}}" wx:key="id" class="nt-item">
+      <view class="nt-item-head"><text class="nt-date">{{item.date}}</text><text class="nt-course">{{item.course}}</text></view>
+      <text class="nt-content">{{item.content}}</text>
+      <text class="nt-meta">{{item.time}} · {{item.coach}}</text>
+    </view>
+    <view class="nt-bottom"></view>
+  </block>
+</view>

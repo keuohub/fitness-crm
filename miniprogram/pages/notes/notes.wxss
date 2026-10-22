@@ -1,0 +1,17 @@
+page { background:#F6E6DA; color:#1C1415; font-family:-apple-system,"PingFang SC",sans-serif; }
+.nt-page { min-height:100vh; padding:calc(env(safe-area-inset-top) + 110rpx) 32rpx 0; box-sizing:border-box; }
+.nt-loading { min-height:70vh; display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,.86); font-size:26rpx; }
+.nt-hero { padding:4rpx 8rpx 24rpx; }
+.nt-eyebrow { display:block; font-size:20rpx; letter-spacing:4rpx; color:rgba(255,255,255,.68); }
+.nt-title { display:block; margin-top:14rpx; font-size:52rpx; font-weight:600; color:#fff; }
+.nt-error { background:rgba(255,255,255,.92); border-radius:16rpx; padding:18rpx 22rpx; color:#9E2A2B; font-size:24rpx; }
+.nt-empty { background:rgba(255,255,255,.62); border:1rpx dashed rgba(255,255,255,.9); border-radius:20rpx; padding:30rpx 26rpx; }
+.nt-empty-title { display:block; font-size:26rpx; font-weight:600; color:#fff; }
+.nt-empty-body { display:block; margin-top:10rpx; font-size:22rpx; color:rgba(255,255,255,.84); }
+.nt-item { background:rgba(255,255,255,.92); border-radius:22rpx; padding:24rpx; margin-bottom:14rpx; }
+.nt-item-head { display:flex; justify-content:space-between; align-items:baseline; }
+.nt-date { font-size:20rpx; color:#8C827B; }
+.nt-course { font-size:22rpx; color:#5E1914; }
+.nt-content { display:block; margin-top:12rpx; font-size:26rpx; line-height:1.8; color:#1C1415; }
+.nt-meta { display:block; margin-top:12rpx; font-size:20rpx; color:#A79E9A; }
+.nt-bottom { height:calc(env(safe-area-inset-bottom) + 120rpx); }

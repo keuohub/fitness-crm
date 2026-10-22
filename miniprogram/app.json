@@ -4,6 +4,8 @@
     "pages/brand/brand",
     "pages/transformation/transformation",
     "pages/me/me",
+    "pages/cards/cards",
+    "pages/notes/notes",
     "pages/feedback/feedback",
     "pages/booking/booking",
     "pages/login/login"

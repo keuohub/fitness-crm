@@ -183,6 +183,18 @@ Page({
     });
   },
 
+  goBooking: function() {
+    wx.navigateTo({ url: "/pages/booking/booking" });
+  },
+
+  goNotes: function() {
+    wx.navigateTo({ url: "/pages/notes/notes" });
+  },
+
+  goCards: function() {
+    wx.navigateTo({ url: "/pages/cards/cards" });
+  },
+
   goLetters: function() {
     wx.navigateTo({ url: "/pages/feedback/feedback" });
   },
