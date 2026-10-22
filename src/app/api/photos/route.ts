@@ -71,7 +71,12 @@ export async function POST(request: NextRequest) {
       const BRAND_DIR = path.join(process.cwd(), "public", "brand", "uploads");
       const MINI_DIR = path.join(process.cwd(), "miniprogram", "images", "uploads");
       await mkdir(BRAND_DIR, { recursive: true });
-      await mkdir(MINI_DIR, { recursive: true });
+      // 云托管容器内 /app/miniprogram 只读，这里失败不能阻断上传
+      try {
+        await mkdir(MINI_DIR, { recursive: true });
+      } catch (err) {
+        console.warn("miniprogram dir not writable, skip sync:", err);
+      }
 
       const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
       const filename = `brand-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
