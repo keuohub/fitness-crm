@@ -1,16 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/db";
-import { members, trainings, questionnaireSubmissions, photos } from "@/db/schema";
-import { eq, sql } from "drizzle-orm";
+import { db, rawSql } from "@/db";
+import { members, trainings, questionnaireSubmissions, photos, courseOfferings } from "@/db/schema";
+import { eq, sql, asc } from "drizzle-orm";
 import { getPortalMemberId } from "@/lib/auth/member-session";
 import { getMemberStage, labelOfTrainingType } from "@/lib/member-stage";
+
+function inferCategoryKey(name: string, enName?: string): string {
+  const n = ((name || "") + " " + (enName || "")).toLowerCase();
+  if (n.includes("普拉提") || n.includes("pilates")) return "pilates";
+  if (n.includes("器械") || n.includes("equipment")) return "equipment";
+  if (n.includes("维密") || n.includes("超模") || n.includes("减脂") || n.includes("sculpt") || n.includes("fat_burn")) return "fat_burn";
+  if (n.includes("私教") || n.includes("private")) return "private";
+  if (n.includes("瑜伽") || n.includes("yoga")) return "yoga";
+  return name.trim();
+}
+
+function getMemberBaseline(member: any, key: string): number {
+  if (key === "pilates") return Number(member.hoursPilates || 0);
+  if (key === "equipment") return Number(member.hoursEquipment || 0);
+  if (key === "fat_burn") return Number(member.hoursFatBurn || 0);
+  if (key === "private") return Number(member.hoursPrivate || 0);
+  return 0;
+}
 
 /**
  * 会员本人档案 · 唯一真实数据源
  *
- * 原则：任何一项没有真实数据就返回 null / 0，绝不用固定值兜底。
- * 之前的 totalHours ?? 42 / joinedAt || "2025-10-20" / mentorName || "导师 小桥"
- * 会让 87 位会员看到同一份假档案，已全部移除。
+ * 核心逻辑：
+ * 1) 课时基线：以主理人在后台维护的历史课时基准（hoursPilates / hoursEquipment / hoursFatBurn / hoursPrivate）为底座。
+ * 2) 动态约课/出勤累加：每次约课（booked/completed）并在到课或未取消时，自动按所属课程分类增加 1 节课时。
+ * 3) 累计总课时：普拉提 + 高定大器械 + 维密超模班 + 私教课等各项单项课时的总和，自动联动提升。
+ * 4) 各单项课时明确分开，顺序与后台课程项目类目（course_offerings）排序保持一致。
  */
 export async function GET(request: NextRequest) {
   const memberId = await getPortalMemberId(request);
@@ -19,42 +39,98 @@ export async function GET(request: NextRequest) {
   const [member] = await db.select().from(members).where(eq(members.id, memberId));
   if (!member) return NextResponse.json({ error: "会员不存在" }, { status: 404 });
 
-  // 真实训练记录（用于总节数、分类型节数、阶段进度）
+  // 1. 真实训练记录（用于逐条训练日志与最近一次训练时间）
   const trainingRows = await db
     .select({ type: trainings.type, trainingDate: trainings.trainingDate })
     .from(trainings)
     .where(eq(trainings.memberId, memberId));
 
-  // 四类课时：以后台人工维护的四个数字为准（主理人可直接改），
-  // 没有人工数字时才回退到逐条训练记录计数。
-  const manualCounts = {
-    pilates: Number(member.hoursPilates || 0),
-    equipment: Number(member.hoursEquipment || 0),
-    fatBurn: Number(member.hoursFatBurn || 0),
-    private: Number(member.hoursPrivate || 0),
-  };
-  const hasManual =
-    member.hoursPilates != null ||
-    member.hoursEquipment != null ||
-    member.hoursFatBurn != null ||
-    member.hoursPrivate != null;
-
-  const byTypeMap = new Map<string, number>();
+  const trainingCountsMap = new Map<string, number>();
   for (const row of trainingRows) {
-    const key = String(row.type || "training");
-    byTypeMap.set(key, (byTypeMap.get(key) || 0) + 1);
+    const key = String(row.type || "pilates");
+    trainingCountsMap.set(key, (trainingCountsMap.get(key) || 0) + 1);
   }
 
-  const courseCounts = [
-    { key: "pilates", label: "精品普拉提", count: hasManual ? manualCounts.pilates : Number(byTypeMap.get("pilates") || 0) },
-    { key: "equipment", label: "高定大器械", count: hasManual ? manualCounts.equipment : Number(byTypeMap.get("equipment") || 0) },
-    { key: "fat_burn", label: "维密超模班", count: hasManual ? manualCounts.fatBurn : Number(byTypeMap.get("fat_burn") || 0) },
-    { key: "private", label: "私教课", count: hasManual ? manualCounts.private : Number(byTypeMap.get("private") || 0) },
-  ];
+  // 2. 动态约课与出勤记录：每次预约并在到课（attended）或预约中（booked，且无未到课标记）
+  const bookingCountsMap = new Map<string, number>();
+  try {
+    const dynamicBookings = await rawSql`
+      SELECT 
+        c.key AS category_key,
+        COUNT(DISTINCT b.id)::int AS count
+      FROM bookings b
+      JOIN class_sessions s ON s.id = b.session_id
+      JOIN course_categories c ON c.id = s.course_category_id
+      LEFT JOIN attendance a ON a.booking_id = b.id
+      WHERE b.tenant_id = 1 
+        AND b.member_id = ${memberId}
+        AND b.status IN ('booked', 'completed')
+        AND (a.status IS NULL OR a.status = 'attended')
+      GROUP BY c.key
+    `;
+    for (const row of dynamicBookings) {
+      if (row.category_key) {
+        bookingCountsMap.set(String(row.category_key), Number(row.count || 0));
+      }
+    }
+  } catch (err) {
+    console.error("Query dynamic bookings error:", err);
+  }
 
-  const totalHours = hasManual
-    ? courseCounts.reduce((sum, item) => sum + item.count, 0)
-    : trainingRows.length;
+  // 3. 读取后台配置的项目介绍/类目，按后台自由排序展示
+  let activeOfferings: any[] = [];
+  try {
+    activeOfferings = await db
+      .select()
+      .from(courseOfferings)
+      .where(eq(courseOfferings.isActive, 1))
+      .orderBy(asc(courseOfferings.sortOrder));
+  } catch (err) {
+    console.error("Query course offerings error:", err);
+  }
+
+  const seenKeys = new Set<string>();
+  const courseCounts: Array<{ key: string; label: string; count: number }> = [];
+
+  if (activeOfferings && activeOfferings.length > 0) {
+    for (const off of activeOfferings) {
+      const key = inferCategoryKey(off.name, off.enName);
+      seenKeys.add(key);
+      const baselineCount = getMemberBaseline(member, key);
+      const dynamicBooking = bookingCountsMap.get(key) || 0;
+      const dynamicTraining = trainingCountsMap.get(key) || 0;
+      const count = baselineCount + dynamicBooking + dynamicTraining;
+
+      courseCounts.push({
+        key,
+        label: off.name,
+        count,
+      });
+    }
+  }
+
+  // 兜底保障：四大核心课程即使后台未显式配置，也确保展示
+  const standardCategories = [
+    { key: "pilates", label: "精品普拉提" },
+    { key: "equipment", label: "高定大器械" },
+    { key: "fat_burn", label: "维密超模班" },
+    { key: "private", label: "私教课" },
+  ];
+  for (const sc of standardCategories) {
+    if (!seenKeys.has(sc.key)) {
+      const baselineCount = getMemberBaseline(member, sc.key);
+      const dynamicBooking = bookingCountsMap.get(sc.key) || 0;
+      const dynamicTraining = trainingCountsMap.get(sc.key) || 0;
+      courseCounts.push({
+        key: sc.key,
+        label: sc.label,
+        count: baselineCount + dynamicBooking + dynamicTraining,
+      });
+    }
+  }
+
+  // 累计课时 = 所有分类课时的总和（自动联动提升）
+  const totalHours = courseCounts.reduce((sum, item) => sum + item.count, 0);
 
   const trainingsByType = courseCounts
     .filter((item) => item.count > 0)
@@ -95,7 +171,6 @@ export async function GET(request: NextRequest) {
   const response = NextResponse.json({
     memberId: member.id,
     memberName: member.name,
-    // 以下字段缺省一律为 null，由前端显示「待录入」，不再编造
     memberCode: member.memberCode || null,
     joinedAt: member.joinedAt || null,
     avatarUrl: member.avatarUrl || null,

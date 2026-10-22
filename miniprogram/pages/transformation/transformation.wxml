@@ -10,12 +10,15 @@
       <text class="tf-error-text">{{loadError}}</text>
     </view>
 
-    <!-- 01 开头：姓名 + 来了多少天 -->
+    <!-- 01 开头：姓名 + 尊称 + 陪伴天数 -->
     <view class="tf-hero">
       <text class="tf-eyebrow">MY JOURNEY AT LAIWU</text>
-      <text class="tf-name">{{memberName || '你'}}</text>
-      <text class="tf-days" wx:if="{{joinDays !== null}}">来到徕舞的第 {{joinDays}} 天</text>
-      <text class="tf-days tf-days-muted" wx:else>入会日期待小桥补录</text>
+      <view class="tf-name-row">
+        <text class="tf-name">{{memberName || '你'}}</text>
+        <text class="tf-honorific">女士</text>
+      </view>
+      <text class="tf-days" wx:if="{{joinDays !== null}}">这是徕舞陪伴你的第 {{joinDays}} 天。</text>
+      <text class="tf-days tf-days-muted" wx:else>这是徕舞与你相遇的序章。</text>
     </view>
 
     <!-- 02 核心数字：一共上了多少节 -->
