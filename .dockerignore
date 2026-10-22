@@ -1,16 +1,48 @@
+# ── Docker 构建上下文忽略规则 ───────────────────────────────
+# 目标：构建机、构建缓存与镜像里不出现会员资料、凭据、本地日志。
+# 说明：这里只影响 docker build 的上下文传输，不影响运行镜像里已有的目录。
+
+# 构建自身
 Dockerfile
 .dockerignore
+
+# 依赖与构建产物（在各自 stage 重新生成）
 node_modules
+.next
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.next
+
+# 版本库与本地工具
 .git
 .gitignore
-.env*.local
+.vercel
+
+# 环境变量：全部排除，只放行不含真实值的模板
+# .env.local / .env.production 都含数据库连接串与密钥，绝不能进构建上下文
+.env*
+!.env.example
+
+# 小程序源码（不在本项目构建范围内）
 miniprogram
 miniprogram_backup_*
+
+# 本地数据与导出（含会员姓名、手机号、登录 PIN）
+backups/
+imports/
+sqlite-dump.sql
+data/
+cookies.txt
+CONVERSION_PATH_REPORT.md
+
+# 会员体态照片：运行时由上传接口写入 public/member-photos，不随代码打包
+public/member-photos/
+
+# 文档与截图（构建不需要；docs/ 含竞品截图与会员信息）
+docs
+*.md
+screenshot-*
+
+# 压缩包与本地数据库
 *.tar.gz
 *.db*
-docs
-screenshot-*

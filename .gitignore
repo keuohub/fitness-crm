@@ -17,3 +17,13 @@ data/
 *.tsbuildinfo
 
 backups/
+
+# ── 本地数据与竞品资料（禁止入库）─────────────────────
+# imports/：约刻会员导入的会员姓名/手机号、登录 PIN、比对明细
+# docs/yueke/：竞品系统截图，其中含真实会员姓名与手机号
+# 这两个目录只存在于本机，由 scripts/ 下的本地脚本读写，不参与构建与部署
+imports/
+docs/yueke/
+
+# 早期 SQLite→Postgres 迁移导出，含真实会员行与手机号，禁止入库
+sqlite-dump.sql
