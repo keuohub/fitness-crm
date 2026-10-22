@@ -44,9 +44,9 @@
 
 ### 修改前
 ```typescript
-const ADMIN_SECRET = process.env.ADMIN_PASSWORD || "laiwu2025";
+const ADMIN_SECRET = process.env.ADMIN_PASSWORD || "<已移除默认值>";
 ```
-- 硬编码默认密码 `laiwu2025` 在源代码中
+- 硬编码默认密码 `<已移除>` 在源代码中
 - 如果忘记设置环境变量，管理员密码退化为弱密码
 
 ### 修改后
@@ -56,16 +56,16 @@ const ADMIN_SECRET = process.env.ADMIN_PASSWORD || (() => {
 })();
 ```
 - 无环境变量则启动时立即抛出异常，不会静默降级
-- `.env.local` 新增 `ADMIN_PASSWORD=laiwu2025`（本地开发用）
+- `.env.local` 新增 `ADMIN_PASSWORD=<本地随机值>`（本地开发用）
 - 新增 `.env.example` 文件，文档化所有环境变量
 
 ### 修改/新增文件
-- `src/lib/auth/admin-session.ts` — 移除 `|| "laiwu2025"` 回退
+- `src/lib/auth/admin-session.ts` — 移除 `|| "<默认值>"` 回退
 - `.env.local` — 新增 `ADMIN_PASSWORD` 行
 - `.env.example` — 新建文件
 
 ### 硬编码密码审计
-- 全项目源码搜索 `laiwu2025`：**0 处残留**
+- 全项目源码搜索默认口令：**0 处残留**
 - 仅在 `.env.local`（本地配置文件）中存在
 
 ---
@@ -170,7 +170,7 @@ const ADMIN_SECRET = process.env.ADMIN_PASSWORD || (() => {
 | `src/lib/auth/admin-session.ts` | 修改 | 新增 HMAC-SHA256 签名、移除硬编码密码回退 |
 | `src/app/api/portal/login/route.ts` | 修改 | 登录时设置签名 cookie |
 | `src/app/api/portal/me/route.ts` | 修改 | 读取 cookie 时验证签名 |
-| `.env.local` | 追加 | 新增 `ADMIN_PASSWORD=laiwu2025` 行 |
+| `.env.local` | 追加 | 新增 `ADMIN_PASSWORD=<本地随机值>` 行 |
 | `.env.example` | 新增 | 环境变量配置文档 |
 
 ---
@@ -193,7 +193,7 @@ const ADMIN_SECRET = process.env.ADMIN_PASSWORD || (() => {
 - 全项目无 AI 词汇残留（Sprint 22A 审计）
 
 ### 上线前建议
-1. 将 `.env.local` 中的 `ADMIN_PASSWORD` 改为强密码（当前为 `laiwu2025`）
+1. 将 `.env.local` 中的 `ADMIN_PASSWORD` 改为强密码（当前仍为默认弱口令，值不写入文档）
 2. 生产环境设置 `COOKIE_SIGN_KEY` 独立于 `ADMIN_PASSWORD`
 3. 补充会员登出 API（删除 `portal_member_id` + `portal_member_sig` cookie）
 4. `public/screenshots/` 目录放入真实产品截图

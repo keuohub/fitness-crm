@@ -105,7 +105,7 @@
 
 ### 3.1 Admin 登录
 - 路由: `/admin/login` → POST `/api/admin/login`
-- 密码硬编码默认值: `laiwu2025`（可通过 `ADMIN_PASSWORD` 环境变量覆盖）
+- 密码硬编码默认值: `<已移除>`（可通过 `ADMIN_PASSWORD` 环境变量覆盖）
 - Cookie: `admin_session` — httpOnly, lax, 12小时
 - **风险：cookie 内容是 `JSON.stringify({userId, email})` 明文，未签名/HMAC。** 需要 `ADMIN_SECRET` 签名才能防篡改。
 
@@ -239,7 +239,7 @@
 
 ### 中风险
 2. **`admin_session` cookie 未签名** — 可被篡改 `userId` 来冒充其他管理员。需 HMAC 签名。
-3. **管理员密码默认 `laiwu2025`** — 若未设环境变量则使用此弱密码。
+3. **管理员密码默认值为弱口令 `<已移除>`** — 若未设环境变量则使用此弱密码。
 4. **`public/screenshots/` 为空目录** — 品牌官网多处引用 `next/image` 但无真实图片资源，运行时可能有 404 或占位图缺失。
 5. **Stories 数据硬编码** — `/stories` 页面不使用数据库，6条案例写死在前端代码中。
 6. **ai/batch-* 和 birthday-blessing API 认证状态未确认** — 批量和生日祝福端点可能存在未保护的批量数据泄漏。

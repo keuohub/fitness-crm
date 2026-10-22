@@ -5,12 +5,12 @@
 | Variable | Value | Required |
 |----------|-------|----------|
 | DEEPSEEK_API_KEY | sk-... | Yes (AI feedback) |
-| FEISHU_APP_ID | cli_aa9f954ccd79dbc8 | Yes (sync) |
-| FEISHU_APP_SECRET | lmJG16xBayLglDXmrQH2mg7joYwlZ3vK | Yes (sync) |
+| FEISHU_APP_ID | 由部署环境注入（不写入文档） | Yes (sync) |
+| FEISHU_APP_SECRET | 由部署环境注入（不写入文档） | Yes (sync) |
 | FEISHU_BASE_TOKEN | RnlqbnTcBaGIW0skLLWclgHbnzb | Yes (sync) |
 | FEISHU_TABLE_ID | tblg1rCqMOOjksj5 | Yes (sync) |
 | ADMIN_EMAIL | admin@laiwu.fitness | Yes (CRM login) |
-| ADMIN_PASSWORD | laiwu2025 | Yes (CRM login) |
+| ADMIN_PASSWORD | 由部署环境注入（不写入文档） | Yes (CRM login) |
 
 ## Database
 
@@ -22,7 +22,7 @@
 
 - URL: `/admin/login`
 - Email: `admin@laiwu.fitness`
-- Password: `laiwu2025` (change on first deploy)
+- Password: 由部署环境注入，首次部署必须更换（不写入文档）
 
 ## Portal Access
 

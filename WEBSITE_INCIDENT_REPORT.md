@@ -118,7 +118,7 @@
 | 优先级 | 操作 | 预计时间 |
 |:------:|------|:--------:|
 | 1 | 清除浏览器缓存（Cmd+Shift+Delete） | 30 秒 |
-| 2 | 使用 `admin@laiwu.fitness` / `laiwu2025` 登录 CRM | 10 秒 |
+| 2 | 使用 `admin@laiwu.fitness` + 管理员密码登录 CRM | 10 秒 |
 | 3 | 确认所有 CRM 页面可正常访问 | 2 分钟 |
 
 **预计总修复时间：3 分钟。**
@@ -134,4 +134,4 @@
 | 会员 Portal 登录 | http://localhost:3001/portal/login |
 
 **账号：** `admin@laiwu.fitness`
-**密码：** `laiwu2025`
+**密码：** 由部署环境注入（不写入文档）

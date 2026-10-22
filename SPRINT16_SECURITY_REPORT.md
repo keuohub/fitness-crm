@@ -81,7 +81,7 @@ Public (Brand):
 
 | Risk | Severity | Note |
 |------|----------|------|
-| Admin password hardcoded in source | Medium | Reads from `ADMIN_PASSWORD` env var, falls back to `laiwu2025` |
+| Admin password hardcoded in source | Medium | Reads from `ADMIN_PASSWORD` env var, falls back to `<已移除默认值>` |
 | `admin_session` cookie not signed | Low | JSON payload — could be tampered if user gains access to cookie |
 | No CSRF protection | Low | Read-only Portal + admin POST-only APIs |
 | `better-sqlite3` Node.js compatibility | Medium | `npm rebuild` still needed for `npm run build` to complete runtime page collection |

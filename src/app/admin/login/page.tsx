@@ -96,7 +96,7 @@ export default function AdminLoginPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="默认密码 laiwu2025"
+              placeholder="请输入密码"
               className="w-full h-12 px-4 rounded-xl bg-white text-sm text-[#1A1A1A] placeholder-[#9E9E9E] outline-none transition-all focus:ring-2 focus:ring-[#1A1A1A]/20"
               style={{ border: `1px solid ${COLORS.border}` }}
             />
@@ -130,7 +130,7 @@ export default function AdminLoginPage() {
             默认账号：<code className="text-[#1C1415] font-semibold">admin</code> 或 <code className="text-[#1C1415] font-semibold">admin@laiwu.fitness</code>
           </p>
           <p className="text-xs text-[#8C827B] mt-1">
-            初始口令：<code className="text-[#1C1415] font-semibold">laiwu2025</code>
+            忘记密码请联系店主在后台重置
           </p>
         </div>
       </motion.div>
