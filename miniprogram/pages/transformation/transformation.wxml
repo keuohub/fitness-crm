@@ -15,7 +15,7 @@
       <text class="tf-eyebrow">MY JOURNEY AT LAIWU</text>
       <view class="tf-name-row">
         <text class="tf-name">{{memberName || '你'}}</text>
-        <text class="tf-honorific">女士</text>
+        <text class="tf-honorific" wx:if="{{memberName}}">{{honorific || '女士'}}</text>
       </view>
       <text class="tf-days" wx:if="{{joinDays !== null}}">这是徕舞陪伴你的第 {{joinDays}} 天。</text>
       <text class="tf-days tf-days-muted" wx:else>这是徕舞与你相遇的序章。</text>

@@ -17,7 +17,7 @@ Page({
     sec2Num: "02",
     sec2Title: "同行导师",
     sec2En: "MENTORS",
-    sec2Intro: "深耕人体解剖与体态矫正，用细腻口令与精准触觉纠正，守护每次发力安全。",
+    sec2Intro: "深耕女子塑形与体态矫正，用细腻口令与精准触觉纠正，守护每次发力安全。",
     sec3Num: "03",
     sec3Title: "项目介绍",
     sec3En: "OFFERINGS",
@@ -40,33 +40,17 @@ Page({
         hidden: false
       });
     }
-    // 每次进入页面实时同步后台最新数据
-    this.fetchAllBrandData();
+    // 首次进入由 onLoad 拉取，避免同一个页面连发两轮请求；之后每次回到页面再实时刷新
+    if (this._shownBefore) {
+      this.fetchAllBrandData();
+    }
+    this._shownBefore = true;
   },
 
   fullUrl: function(p) {
     if (!p) return "";
     if (p.indexOf("http") === 0) return p;
     return api.getBaseUrl() + p;
-  },
-
-  goBooking: function() {
-    wx.navigateTo({ url: "/pages/booking/booking" });
-  },
-
-  copyConciergeWechat: function() {
-    var account = wx.getStorageSync("conciergeWechat") || "Laiwu0010";
-    wx.setClipboardData({
-      data: account,
-      success: function() {
-        wx.showModal({
-          title: "顾问微信已复制",
-          content: "已复制「" + account + "」。回到微信搜索该账号，备注你的姓名，小桥会把你拉进专属沟通。",
-          showCancel: false,
-          confirmText: "好"
-        });
-      }
-    });
   },
 
   fetchAllBrandData: function() {

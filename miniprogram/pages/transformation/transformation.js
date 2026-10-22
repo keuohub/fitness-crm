@@ -19,6 +19,7 @@ Page({
     loadError: "",
     memberId: null,
     memberName: "",
+    honorific: "女士",
     avatarUrl: "",
     joinedAt: "",
     joinDays: null,
@@ -107,6 +108,9 @@ Page({
       if (resMe.statusCode === 200 && resMe.data) {
         var m = resMe.data;
         payload.memberName = m.memberName || that.data.memberName;
+        // 尊称按性别渲染：只有明确是男性才叫「先生」，其余（含未填）沿用「女士」。
+        var g = String(m.gender || "").toLowerCase();
+        payload.honorific = (g === "male" || g === "m" || g === "男") ? "先生" : "女士";
         payload.avatarUrl = that.fullUrl(m.avatarUrl || "");
         payload.joinedAt = m.joinedAt ? format.formatChineseDate(m.joinedAt) : "";
         payload.joinDays = (m.joinDays === null || m.joinDays === undefined) ? null : Number(m.joinDays);
