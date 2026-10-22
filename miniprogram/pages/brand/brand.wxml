@@ -72,13 +72,13 @@
           <view class="mentor-info">
             <view class="mentor-name-row">
               <text class="mentor-name">{{item.name}}</text>
-              <text class="mentor-role-badge">{{item.roleTitle}}</text>
+              <text class="mentor-role-badge" wx:if="{{item.roleTitle}}">{{item.roleTitle}}</text>
             </view>
-            <text class="mentor-exp">{{item.experience}}</text>
-            <text class="mentor-creds">{{item.creds}}</text>
+            <text class="mentor-exp" wx:if="{{item.experience}}">{{item.experience}}</text>
+            <text class="mentor-creds" wx:if="{{item.creds}}">{{item.creds}}</text>
           </view>
         </view>
-        <view class="mentor-quote-box">
+        <view class="mentor-quote-box" wx:if="{{item.quote}}">
           <text class="mentor-quote">{{item.quote}}</text>
         </view>
       </view>
