@@ -1,346 +1,129 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
-/**
- * 预约管理
- *
- * 会员在小程序里约了课，落库时是 pending。
- * 这一页是唯一能把它变成 confirmed 的地方 ——
- * 在此之前，"已确认"这个状态在系统里从来没有出现过一次。
- */
-
+type Session = {
+  id: number; session_date: string; start_time: string; end_time: string;
+  capacity: number; booked_count: number; status: string;
+  course_name: string; coach_name: string; room_name: string | null;
+};
 type Booking = {
-  id: number;
-  memberId: number;
-  memberName: string | null;
-  courseType: string;
-  bookingDate: string;
-  bookingTime: string;
-  coachId: number | null;
-  status: string;
-  notes: string | null;
-  createdAt: string;
+  id: number; session_id: number; member_id: number; member_name: string;
+  member_phone: string | null; status: string; booked_at: string;
+  cancelled_at: string | null; cancel_reason: string | null;
 };
 
-const STATUS_STYLE: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  pending: { label: "待确认", color: "#8A4B3A", bg: "#FBEDE7", border: "#F0D8CE" },
-  confirmed: { label: "已确认", color: "#2E7D32", bg: "#F3F7F3", border: "#D9E6D9" },
-  cancelled: { label: "已取消", color: "#9E948E", bg: "#F7F5F3", border: "#E8E1DB" },
-};
-
-function ymd(d: Date) {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
+async function jf(url: string, init?: RequestInit) {
+  const r = await fetch(url, init);
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || "请求失败");
+  return d;
 }
+const today = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+const statusMap: Record<string, string> = {
+  booked: "已预约", attended: "已到课", cancelled: "已取消", no_show: "未到",
+};
 
-const WEEK_CN = ["日", "一", "二", "三", "四", "五", "六"];
+export default function AdminReservationsPage() {
+  const [date, setDate] = useState(today());
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [msg, setMsg] = useState("");
 
-export default function AdminBookingsPage() {
-  const today = useMemo(() => new Date(), []);
-  const [selected, setSelected] = useState<string>(ymd(today));
-  const [items, setItems] = useState<Booking[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [busy, setBusy] = useState<number | null>(null);
-  const [hint, setHint] = useState("");
-
-  // 前后各三天的一条时间带：工作室就是这么看日子的
-  const days = useMemo(() => {
-    const arr: { key: string; date: Date; label: string; sub: string }[] = [];
-    for (let i = -3; i <= 3; i++) {
-      const d = new Date(today);
-      d.setDate(today.getDate() + i);
-      const key = ymd(d);
-      arr.push({
-        key,
-        date: d,
-        label: i === 0 ? "今天" : i === 1 ? "明天" : i === -1 ? "昨天" : `周${WEEK_CN[d.getDay()]}`,
-        sub: `${d.getMonth() + 1}/${d.getDate()}`,
-      });
-    }
-    return arr;
-  }, [today]);
-
-  const load = async (date: string) => {
-    setLoading(true);
-    setError("");
+  const load = async () => {
     try {
-      const res = await fetch(`/api/admin/course-bookings?date=${date}`);
-      if (res.status === 401) {
-        setError("登录已过期，请重新登录管理后台。");
-        setItems([]);
-        return;
-      }
-      const data = await res.json();
-      setItems(Array.isArray(data) ? data : []);
-    } catch (e: any) {
-      setError(e?.message || "读取失败");
-      setItems([]);
-    } finally {
-      setLoading(false);
-    }
+      const d = await jf(`/api/admin/reservations?date=${date}`);
+      setSessions(d.sessions || []);
+      setBookings(d.bookings || []);
+      setMsg("");
+    } catch (e: any) { setMsg(e.message); }
   };
+  useEffect(() => { load(); }, [date]);
 
-  useEffect(() => {
-    load(selected);
-  }, [selected]);
-
-  const changeStatus = async (b: Booking, status: "confirmed" | "cancelled") => {
-    setBusy(b.id);
+  const cancel = async (b: Booking) => {
+    if (!confirm(`取消 ${b.member_name} 的预约？`)) return;
     try {
-      const res = await fetch("/api/admin/course-bookings", {
-        method: "PUT",
+      await jf("/api/admin/reservations", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: b.id, status }),
+        body: JSON.stringify({ bookingId: b.id, reason: "后台取消" }),
       });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error || "操作失败");
-      setHint(status === "confirmed" ? `已确认 ${b.memberName || "她"} 的课` : "已取消这一节");
-      setTimeout(() => setHint(""), 2600);
-      await load(selected);
-    } catch (e: any) {
-      setHint(e?.message || "操作失败");
-      setTimeout(() => setHint(""), 3000);
-    } finally {
-      setBusy(null);
-    }
+      await load();
+      setMsg("已取消并释放名额");
+    } catch (e: any) { setMsg(e.message); }
   };
-
-  const pendingCount = items.filter((i) => i.status === "pending").length;
 
   return (
-    <div style={{ maxWidth: 980, margin: "0 auto", padding: "28px 20px 80px" }}>
-      <div style={{ marginBottom: 6, display: "flex", alignItems: "baseline", gap: 10 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: "#1C1415", margin: 0, letterSpacing: 0.3 }}>
-          预约管理
-        </h1>
-        {pendingCount > 0 && (
-          <span
-            style={{
-              fontSize: 12,
-              fontWeight: 600,
-              color: "#8A4B3A",
-              background: "#FBEDE7",
-              border: "1px solid #F0D8CE",
-              padding: "2px 9px",
-              borderRadius: 999,
-            }}
-          >
-            这天有 {pendingCount} 节待确认
-          </span>
+    <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 20px", fontFamily: "-apple-system, sans-serif" }}>
+      <div style={{ fontSize: 13, color: "#8B5E3C", marginBottom: 6 }}>后台 / 预约名单</div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+        <div>
+          <h1 style={{ fontSize: 26, fontWeight: 700, color: "#1C1415", margin: 0 }}>预约名单</h1>
+          <p style={{ fontSize: 13, color: "#7A6B69", marginTop: 8 }}>
+            按课次看预约会员；取消后自动释放名额。预约由会员端发起，后台只做名单与异常取消。
+          </p>
+        </div>
+        <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
+          style={{ padding: "9px 12px", borderRadius: 8, border: "1px solid #D1C7C1", fontSize: 14 }} />
+      </div>
+
+      {msg && <div style={{ background: "#FFF8E1", border: "1px solid #F0D9A8", color: "#6B4E16", padding: "10px 14px", borderRadius: 8, margin: "16px 0", fontSize: 13 }}>{msg}</div>}
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 22 }}>
+        {sessions.length === 0 && (
+          <div style={{ background: "#fff", border: "1px dashed #D1C7C1", borderRadius: 12, padding: "30px", textAlign: "center", color: "#8C827B", fontSize: 13 }}>
+            这一天没有排课
+          </div>
         )}
-      </div>
-      <p style={{ fontSize: 13, color: "#8C827B", margin: "0 0 20px", lineHeight: 1.7 }}>
-        会员在小程序里约课后，这里会立刻出现。确认之后她才会收到确定的消息；
-        一直不确认，她只会看到"已提交"。
-      </p>
-
-      {/* 日期带 */}
-      <div style={{ display: "flex", gap: 8, marginBottom: 22, flexWrap: "wrap" }}>
-        {days.map((d) => {
-          const isOn = d.key === selected;
+        {sessions.map((s) => {
+          const list = bookings.filter((b) => b.session_id === s.id);
           return (
-            <button
-              key={d.key}
-              onClick={() => setSelected(d.key)}
-              style={{
-                minWidth: 68,
-                padding: "8px 10px",
-                borderRadius: 10,
-                cursor: "pointer",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: 2,
-                border: isOn ? "1px solid #0E0D10" : "1px solid #E2D9D2",
-                background: isOn ? "#0E0D10" : "#fff",
-                transition: "all .15s ease",
-              }}
-            >
-              <span style={{ fontSize: 12.5, fontWeight: 600, color: isOn ? "#F6E6DA" : "#4A403E" }}>
-                {d.label}
-              </span>
-              <span style={{ fontSize: 10.5, color: isOn ? "rgba(246,230,218,.65)" : "#A89E97" }}>
-                {d.sub}
-              </span>
-            </button>
-          );
-        })}
-        <input
-          type="date"
-          value={selected}
-          onChange={(e) => setSelected(e.target.value)}
-          style={{
-            marginLeft: "auto",
-            padding: "8px 12px",
-            borderRadius: 10,
-            border: "1px solid #E2D9D2",
-            fontSize: 12.5,
-            color: "#4A403E",
-            background: "#fff",
-          }}
-        />
-      </div>
-
-      {hint && (
-        <div
-          style={{
-            marginBottom: 14,
-            padding: "9px 14px",
-            borderRadius: 8,
-            background: "#F3F7F3",
-            border: "1px solid #D9E6D9",
-            color: "#2E7D32",
-            fontSize: 13,
-          }}
-        >
-          {hint}
-        </div>
-      )}
-
-      {error && (
-        <div
-          style={{
-            padding: "14px 16px",
-            borderRadius: 10,
-            background: "#FDF3F0",
-            border: "1px solid #F0D8CE",
-            color: "#8A4B3A",
-            fontSize: 13,
-          }}
-        >
-          {error}
-        </div>
-      )}
-
-      {loading && !error && (
-        <div style={{ padding: "56px 0", textAlign: "center", color: "#A89E97", fontSize: 13 }}>
-          正在查这一天的课…
-        </div>
-      )}
-
-      {!loading && !error && items.length === 0 && (
-        <div
-          style={{
-            padding: "56px 24px",
-            textAlign: "center",
-            background: "#fff",
-            border: "1px dashed #E2D9D2",
-            borderRadius: 14,
-          }}
-        >
-          <div style={{ fontSize: 15, color: "#4A403E", fontWeight: 600, marginBottom: 8 }}>
-            {selected} 还没有人约
-          </div>
-          <div style={{ fontSize: 13, color: "#9E948E", lineHeight: 1.8 }}>
-            会员在小程序「课程」页提交预约后，这里会立刻出现。
-            <br />
-            如果长期为空，先确认会员端那个「立即预约」按钮是否真的提交成功了。
-          </div>
-        </div>
-      )}
-
-      {/* 预约卡片 */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        {items.map((b) => {
-          const st = STATUS_STYLE[b.status] || STATUS_STYLE.pending;
-          return (
-            <div
-              key={b.id}
-              style={{
-                background: "#fff",
-                border: "1px solid #EBE4DF",
-                borderRadius: 14,
-                padding: "16px 18px",
-                display: "flex",
-                alignItems: "center",
-                gap: 16,
-                boxShadow: "0 2px 10px rgba(14,13,16,0.03)",
-              }}
-            >
-              {/* 时间 */}
-              <div
-                style={{
-                  flex: "0 0 76px",
-                  textAlign: "center",
-                  borderRight: "1px solid #F4EEE9",
-                  paddingRight: 14,
-                }}
-              >
-                <div style={{ fontSize: 19, fontWeight: 700, color: "#1C1415", letterSpacing: 0.5 }}>
-                  {b.bookingTime || "--:--"}
+            <div key={s.id} style={{ background: "#fff", border: "1px solid #EBE4DF", borderRadius: 12, overflow: "hidden" }}>
+              <div style={{ padding: "16px 20px", borderBottom: "1px solid #EBE4DF", display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                <div>
+                  <span style={{ fontSize: 16, fontWeight: 600, color: "#1C1415" }}>{s.start_time}-{s.end_time} · {s.course_name}</span>
+                  <span style={{ fontSize: 12, color: "#8C827B", marginLeft: 12 }}>{s.coach_name} · {s.room_name || "未分配教室"}</span>
                 </div>
-                <div style={{ fontSize: 10.5, color: "#A89E97", marginTop: 2 }}>{b.bookingDate}</div>
-              </div>
-
-              {/* 主体 */}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 14.5, fontWeight: 600, color: "#1C1415" }}>
-                    {b.memberName || `会员 #${b.memberId}`}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: 11,
-                      color: st.color,
-                      background: st.bg,
-                      border: `1px solid ${st.border}`,
-                      padding: "2px 8px",
-                      borderRadius: 999,
-                      fontWeight: 600,
-                    }}
-                  >
-                    {st.label}
-                  </span>
-                </div>
-                <div style={{ fontSize: 12.5, color: "#6D645D", marginTop: 4 }}>
-                  {b.courseType}
-                  {b.notes ? <span style={{ color: "#9E948E" }}> · {b.notes}</span> : null}
+                <div style={{ fontSize: 12, color: s.booked_count >= s.capacity ? "#9E2A2B" : "#2E7D4F" }}>
+                  {s.booked_count}/{s.capacity} 已约
                 </div>
               </div>
-
-              {/* 操作 */}
-              <div style={{ display: "flex", gap: 8, flex: "0 0 auto" }}>
-                {b.status !== "confirmed" && (
-                  <button
-                    onClick={() => changeStatus(b, "confirmed")}
-                    disabled={busy === b.id}
-                    style={{
-                      padding: "8px 18px",
-                      borderRadius: 8,
-                      fontSize: 12.5,
-                      fontWeight: 600,
-                      cursor: busy === b.id ? "wait" : "pointer",
-                      background: "#0E0D10",
-                      color: "#F6E6DA",
-                      border: "none",
-                      opacity: busy === b.id ? 0.6 : 1,
-                    }}
-                  >
-                    确认
-                  </button>
-                )}
-                {b.status !== "cancelled" && (
-                  <button
-                    onClick={() => changeStatus(b, "cancelled")}
-                    disabled={busy === b.id}
-                    style={{
-                      padding: "8px 14px",
-                      borderRadius: 8,
-                      fontSize: 12.5,
-                      cursor: "pointer",
-                      background: "#fff",
-                      color: "#9E948E",
-                      border: "1px solid #E2D9D2",
-                    }}
-                  >
-                    取消
-                  </button>
-                )}
-              </div>
+              {list.length === 0 ? (
+                <div style={{ padding: "18px 20px", fontSize: 13, color: "#8C827B" }}>还没有会员预约</div>
+              ) : (
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                  <thead>
+                    <tr style={{ background: "#FAF7F5", color: "#6D645D" }}>
+                      <th style={{ textAlign: "left", padding: "10px 20px" }}>会员</th>
+                      <th style={{ textAlign: "left", padding: "10px 20px" }}>状态</th>
+                      <th style={{ textAlign: "left", padding: "10px 20px" }}>预约时间</th>
+                      <th style={{ textAlign: "right", padding: "10px 20px" }}>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {list.map((b) => (
+                      <tr key={b.id} style={{ borderTop: "1px solid #F0EAE6" }}>
+                        <td style={{ padding: "11px 20px" }}>
+                          #{b.member_id} {b.member_name}
+                          <span style={{ fontSize: 11, color: "#8C827B", marginLeft: 8 }}>{b.member_phone || ""}</span>
+                        </td>
+                        <td style={{ padding: "11px 20px" }}>{statusMap[b.status] || b.status}</td>
+                        <td style={{ padding: "11px 20px", color: "#8C827B" }}>{String(b.booked_at).slice(0, 16)}</td>
+                        <td style={{ padding: "11px 20px", textAlign: "right" }}>
+                          {b.status === "booked" && (
+                            <button onClick={() => cancel(b)} style={{ padding: "5px 12px", borderRadius: 6, border: "1px solid #E0C9C5", background: "#FDF2F1", color: "#8A1F17", fontSize: 12 }}>
+                              取消
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           );
         })}
