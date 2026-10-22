@@ -4,7 +4,10 @@ WORKDIR /app
 
 # 安装依赖
 FROM base AS deps
-RUN apk add --no-cache libc6-compat python3 make g++
+# better-sqlite3 需要编译工具；云托管构建机偶发拉不到 apk 索引（exit 4），加重试与索引更新
+RUN (apk update || true) \
+ && (apk add --no-cache libc6-compat python3 make g++ \
+     || (sleep 10 && (apk update || true) && apk add --no-cache libc6-compat python3 make g++))
 COPY package.json package-lock.json ./
 RUN npm ci
 
@@ -31,6 +34,10 @@ COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next ./.next
+
+# COPY 会把 public 里的子目录变成 root 所有，必须在 COPY 之后再放开写权限，
+# 否则运行时上传会 EACCES（public/media 需要能新建目录和写文件）
+RUN mkdir -p /app/public/media && chown -R nextjs:nodejs /app/public
 
 USER nextjs
 
