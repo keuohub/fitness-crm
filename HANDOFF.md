@@ -347,11 +347,14 @@
 - 会员列表页**没有会员详情入口**（行无操作按钮），也没有"上课记录"页面；`/api/member/card` 恒 5000。
 - 因此"每人真实累计课时/四类分布"**无法从约刻直接导出**；当前处理为**清空占位值**，等主理人给口径（按卡次数折算 / 按排课出勤统计 / 人工录入）。
 
-### 代码
+### 代码与发版（2026-10-22 13:25 完成）
 - `miniprogram/pages/brand/brand.wxml`：导师卡空角色/资历/寄语不再渲染。
-- 提交 `ce01e18`，已推送 `release-preparation`，并快进推送 `main`（f70d660→ce01e18）。
-- **尚未发版**：云托管未自动构建（推送后 `/images/team/yueke/*` 仍 404），需在云托管控制台点「发布」；小程序 wxml 改动需开发者工具重新上传审核。
-- 新老师 `is_active=0`，**发版成功后**再执行：`UPDATE team_members SET is_active=1 WHERE sort_order BETWEEN 2 AND 9;`
+- **云托管已发版**：`/images/team/yueke/coach-*.jpg` 全部 200，9 位老师已全部上线（is_active=1）。
+- 小桥头像已换成约刻真实照片；小桥头衔保留「创始人 / 教学主理人」。
+- 后台直传通道的两个坑（已记录，待下次发版生效）：
+  1. `/api/photos` 在云上因 `/app/miniprogram` 只读而 500 → 已改为容错（提交 `d7efc50`，需下次发版生效）。
+  2. 运行时写入 `public/member-avatars|member-photos` 的文件**不会被静态服务**（Next standalone 只服务构建期 public），所以「后台直传图片」这条路当前不可用，除非改走 `/brand/uploads` 动态路由（`/api/photos` 修好后可用）。
+- 小程序 wxml 改动需在开发者工具重新上传一版；当前线上小程序版本已能看到 9 位老师真实照片（走 `/images/team/yueke/*`）。
 
 ### 备份
 - `backups/team-testmember-before-*.json`、`backups/yueke-backfill-before-*.json`、`backups/fake-hours-before-*.json`
