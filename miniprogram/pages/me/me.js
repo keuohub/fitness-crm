@@ -39,7 +39,7 @@ Page({
 
   onShow: function() {
     if (typeof this.getTabBar === "function" && this.getTabBar()) {
-      this.getTabBar().setData({ selected: 3, hidden: false });
+      this.getTabBar().setData({ selected: 4, hidden: false });
     }
     var now = Date.now();
     if (this.data.memberId && (!this._lastLoad || now - this._lastLoad > 3000)) {

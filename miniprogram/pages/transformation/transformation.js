@@ -66,7 +66,7 @@ Page({
 
   onShow: function() {
     if (typeof this.getTabBar === "function" && this.getTabBar()) {
-      this.getTabBar().setData({ selected: 2, hidden: false });
+      this.getTabBar().setData({ selected: 3, hidden: false });
     }
     var now = Date.now();
     if (this.data.memberId && (!this._lastLoad || now - this._lastLoad > 3000)) {
@@ -171,7 +171,12 @@ Page({
   },
 
   switchAngle: function(e) {
-    this.setData({ selectedAngle: e.currentTarget.dataset.angle }, this.applyAngle);
+    var angle = e.currentTarget.dataset.angle;
+    var labels = { all: "全角度", front: "正面", side: "侧面", back: "背面" };
+    this.setData({
+      selectedAngle: angle,
+      selectedAngleLabel: labels[angle] || "正面"
+    }, this.applyAngle);
   },
 
   applyAngle: function() {

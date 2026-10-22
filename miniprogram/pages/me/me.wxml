@@ -104,13 +104,6 @@
       </view>
 
       <view class="me-service-card">
-        <view class="me-service-row" bindtap="goBooking">
-          <view class="me-service-texts">
-            <text class="me-service-title">预约课程</text>
-            <text class="me-service-note">看本周课表、余位、预约与取消</text>
-          </view>
-          <text class="me-service-arrow">›</text>
-        </view>
 
         <view class="me-service-row" bindtap="goNotes">
           <view class="me-service-texts">

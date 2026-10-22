@@ -47,7 +47,7 @@
         <text class="tf-section-title">身体变化</text>
       </view>
 
-      <view class="tf-angle-tabs" wx:if="{{comparisons.length > 0}}">
+      <view class="tf-angle-tabs">
         <view
           wx:for="{{angleTabs}}"
           wx:key="key"
@@ -75,9 +75,46 @@
         </view>
       </view>
 
-      <view wx:else class="tf-empty">
-        <text class="tf-empty-title">第一组体态照，还没开始</text>
-        <text class="tf-empty-body">小桥会在体态评估时为你拍下正面、侧面、背面。之后的变化会和这一天对照。</text>
+      <view wx:else class="tf-compare-card tf-compare-frame-card">
+        <view class="tf-frame-badge">
+          <text class="tf-frame-badge-dot"></text>
+          <text class="tf-frame-badge-txt">{{selectedAngleLabel || '全角度'}}对照框架 · 等待初测拍摄</text>
+        </view>
+        <view class="tf-compare-row">
+          <view class="tf-compare-pane tf-compare-pane-empty">
+            <view class="tf-pane-skeleton">
+              <view class="tf-silhouette-ring"></view>
+              <text class="tf-pane-title">初始体态照</text>
+              <text class="tf-pane-desc">入会基准采集</text>
+            </view>
+            <text class="tf-compare-tag">BEFORE 初始</text>
+            <text class="tf-compare-date">待拍摄</text>
+          </view>
+          <view class="tf-compare-pane tf-compare-pane-empty tf-pane-after">
+            <view class="tf-pane-skeleton">
+              <view class="tf-silhouette-ring tf-silhouette-glow"></view>
+              <text class="tf-pane-title">阶段蜕变照</text>
+              <text class="tf-pane-desc">定期复测比对</text>
+            </view>
+            <text class="tf-compare-tag">AFTER 蜕变</text>
+            <text class="tf-compare-date">阶段生成</text>
+          </view>
+        </view>
+        <view class="tf-frame-indicators">
+          <text class="tf-frame-ind-title">本角度重点追踪维度：</text>
+          <view class="tf-frame-tags">
+            <text class="tf-frame-tag" wx:if="{{selectedAngle === 'front' || selectedAngle === 'all'}}">双肩水平线</text>
+            <text class="tf-frame-tag" wx:if="{{selectedAngle === 'front' || selectedAngle === 'all'}}">肋骨外翻微调</text>
+            <text class="tf-frame-tag" wx:if="{{selectedAngle === 'front' || selectedAngle === 'all'}}">骨盆正位中立</text>
+            <text class="tf-frame-tag" wx:if="{{selectedAngle === 'side' || selectedAngle === 'all'}}">颈椎前倾矫正</text>
+            <text class="tf-frame-tag" wx:if="{{selectedAngle === 'side' || selectedAngle === 'all'}}">圆肩背部舒展</text>
+            <text class="tf-frame-tag" wx:if="{{selectedAngle === 'side' || selectedAngle === 'all'}}">骨盆前倾纠偏</text>
+            <text class="tf-frame-tag" wx:if="{{selectedAngle === 'back' || selectedAngle === 'all'}}">脊柱中轴延展</text>
+            <text class="tf-frame-tag" wx:if="{{selectedAngle === 'back' || selectedAngle === 'all'}}">肩胛骨平整贴合</text>
+            <text class="tf-frame-tag" wx:if="{{selectedAngle === 'back' || selectedAngle === 'all'}}">臀腿力线重塑</text>
+          </view>
+          <text class="tf-frame-note">💡 到店时小桥会在测评室为你拍摄正面、侧面、背面体态照。上传后系统将自动生成高清对照卡与专属复盘手札。</text>
+        </view>
       </view>
     </view>
 

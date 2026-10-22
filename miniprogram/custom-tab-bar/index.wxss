@@ -6,10 +6,10 @@
 .tab-bar-capsule {
   position: fixed;
   bottom: calc(env(safe-area-inset-bottom) + 24rpx);
-  left: 36rpx;
-  right: 36rpx;
+  left: 20rpx;
+  right: 20rpx;
   z-index: 999;
-  height: 106rpx;
+  height: 104rpx;
   box-sizing: border-box;
   display: flex;
   align-items: center;
@@ -62,10 +62,10 @@
 }
 
 .tab-text {
-  font-size: 23rpx;
+  font-size: 21rpx;
   font-weight: 500;
   color: #2D2727;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.01em;
   white-space: nowrap;
   font-family: "Songti SC", -apple-system, "PingFang SC", sans-serif;
   transition: color 200ms ease, font-weight 200ms ease, letter-spacing 200ms ease;

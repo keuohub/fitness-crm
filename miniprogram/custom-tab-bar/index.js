@@ -12,6 +12,10 @@ Component({
         text: "了解徕舞"
       },
       {
+        pagePath: "/pages/booking/booking",
+        text: "开始约课"
+      },
+      {
         pagePath: "/pages/transformation/transformation",
         text: "我的蜕变"
       },

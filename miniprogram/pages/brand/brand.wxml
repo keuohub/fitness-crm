@@ -121,11 +121,7 @@
 
         <view class="offering-detail-block">
           <view class="detail-row">
-            <text class="detail-label">适合人群</text>
-            <text class="detail-content">{{item.target}}</text>
-          </view>
-          <view class="detail-row">
-            <text class="detail-label">训练重点</text>
+            <text class="detail-label">核心雕刻</text>
             <text class="detail-content">{{item.highlight}}</text>
           </view>
         </view>

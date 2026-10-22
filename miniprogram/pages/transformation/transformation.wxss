@@ -263,6 +263,139 @@ page {
   color: #3A3234;
 }
 
+/* 空状态体态框架卡片 */
+.tf-compare-frame-card {
+  border: 1.5rpx solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 16rpx 40rpx rgba(120, 24, 26, 0.08);
+}
+
+.tf-frame-badge {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 16rpx;
+  padding: 6rpx 16rpx;
+  background: rgba(158, 42, 43, 0.08);
+  border-radius: 12rpx;
+  width: fit-content;
+}
+
+.tf-frame-badge-dot {
+  width: 10rpx;
+  height: 10rpx;
+  border-radius: 50%;
+  background: #9E2A2B;
+}
+
+.tf-frame-badge-txt {
+  font-size: 20rpx;
+  font-weight: 600;
+  color: #9E2A2B;
+  letter-spacing: 1rpx;
+}
+
+.tf-compare-pane-empty {
+  border: 2rpx dashed rgba(158, 42, 43, 0.28);
+  background: linear-gradient(180deg, #F9F5F1 0%, #EFE8E1 100%);
+  height: 380rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tf-pane-after {
+  background: linear-gradient(180deg, #FAF7F4 0%, #F3ECE6 100%);
+  border-color: rgba(13, 12, 15, 0.22);
+}
+
+.tf-pane-skeleton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20rpx;
+  text-align: center;
+}
+
+.tf-silhouette-ring {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  border: 2rpx solid rgba(158, 42, 43, 0.35);
+  background: rgba(255, 255, 255, 0.6);
+  margin-bottom: 16rpx;
+  position: relative;
+}
+
+.tf-silhouette-ring::after {
+  content: "";
+  position: absolute;
+  top: 14rpx;
+  left: 24rpx;
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+  background: rgba(158, 42, 43, 0.45);
+}
+
+.tf-silhouette-glow {
+  border-color: rgba(13, 12, 15, 0.35);
+}
+
+.tf-silhouette-glow::after {
+  background: rgba(13, 12, 15, 0.45);
+}
+
+.tf-pane-title {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #2D2727;
+  letter-spacing: 1rpx;
+  margin-bottom: 6rpx;
+}
+
+.tf-pane-desc {
+  font-size: 19rpx;
+  color: #8C827B;
+}
+
+.tf-frame-indicators {
+  margin-top: 22rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid rgba(0, 0, 0, 0.06);
+}
+
+.tf-frame-ind-title {
+  font-size: 22rpx;
+  font-weight: 600;
+  color: #2D2727;
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+.tf-frame-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+  margin-bottom: 16rpx;
+}
+
+.tf-frame-tag {
+  font-size: 20rpx;
+  color: #5C5559;
+  background: rgba(246, 228, 221, 0.6);
+  border: 1rpx solid rgba(255, 255, 255, 0.8);
+  padding: 6rpx 18rpx;
+  border-radius: 20rpx;
+}
+
+.tf-frame-note {
+  font-size: 20rpx;
+  line-height: 1.6;
+  color: #8C827B;
+  display: block;
+}
+
 /* 记录 */
 .tf-note-card {
   background: rgba(255, 255, 255, 0.84);
