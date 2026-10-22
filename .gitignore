@@ -34,3 +34,6 @@ public/media/
 # 小程序包体：海报源图/上传缓存不允许进包
 miniprogram/images/poster/
 miniprogram/images/uploads/
+
+# 预览二维码
+preview_qr.png
