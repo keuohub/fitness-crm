@@ -3,24 +3,24 @@
   <!-- 顶部标题区 (避开顶部刘海与状态栏，呈现从容留白) -->
   <view class="brand-hero-header">
     <view class="brand-title-wrap">
-      <text class="brand-hero-title">了解徕舞</text>
-      <text class="brand-hero-subtitle">以克制之道，唤醒身体内在的秩序与平衡</text>
+      <text class="brand-hero-title">{{heroTitle || '了解徕舞'}}</text>
+      <text class="brand-hero-subtitle">{{heroSubtitle || '以克制之道，唤醒身体内在的秩序与平衡'}}</text>
     </view>
   </view>
 
   <!-- 极细发丝线 -->
   <view class="editorial-hairline"></view>
 
-  <!-- 板块一：场馆空间 (01 SANCTUARY SPACES) -->
+  <!-- 板块一：场馆空间 -->
   <view class="brand-section">
     <view class="section-title-bar">
       <view class="section-tag-group">
-        <text class="section-index">01</text>
-        <text class="section-heading">场馆空间</text>
+        <text class="section-index">{{sec1Num || '01'}}</text>
+        <text class="section-heading">{{sec1Title || '场馆空间'}}</text>
       </view>
-      <text class="section-en-label">SPACES</text>
+      <text class="section-en-label">{{sec1En || 'SPACES'}}</text>
     </view>
-    <text class="section-intro">柔和漫射日光、天然实木大器械与私密更衣室，营造沉静专注的练习氛围。</text>
+    <text class="section-intro">{{sec1Intro || '柔和漫射日光、天然实木大器械与私密更衣室，营造沉静专注的练习氛围。'}}</text>
 
     <!-- 横向滑动画廊 (Horizontal Gallery) -->
     <scroll-view class="venue-gallery-scroll" scroll-x="{{true}}" enable-flex="{{true}}" enhanced="{{true}}" show-scrollbar="{{false}}">
@@ -48,16 +48,16 @@
   <!-- 极细发丝线 -->
   <view class="editorial-hairline"></view>
 
-  <!-- 板块二：同行导师 (02 MENTORS) -->
+  <!-- 板块二：同行导师 -->
   <view class="brand-section">
     <view class="section-title-bar">
       <view class="section-tag-group">
-        <text class="section-index">02</text>
-        <text class="section-heading">同行导师</text>
+        <text class="section-index">{{sec2Num || '02'}}</text>
+        <text class="section-heading">{{sec2Title || '同行导师'}}</text>
       </view>
-      <text class="section-en-label">MENTORS</text>
+      <text class="section-en-label">{{sec2En || 'MENTORS'}}</text>
     </view>
-    <text class="section-intro">深耕人体解剖与体态矫正，用细腻口令与精准触觉纠正，守护每次发力安全。</text>
+    <text class="section-intro">{{sec2Intro || '深耕人体解剖与体态矫正，用细腻口令与精准触觉纠正，守护每次发力安全。'}}</text>
 
     <view class="team-cards-stack">
       <view
@@ -88,16 +88,16 @@
   <!-- 极细发丝线 -->
   <view class="editorial-hairline"></view>
 
-  <!-- 板块三：项目介绍 (03 CURATED OFFERINGS - 严格5种类目，无预约入口) -->
+  <!-- 板块三：项目介绍 -->
   <view class="brand-section offerings-section">
     <view class="section-title-bar">
       <view class="section-tag-group">
-        <text class="section-index">03</text>
-        <text class="section-heading">项目介绍</text>
+        <text class="section-index">{{sec3Num || '03'}}</text>
+        <text class="section-heading">{{sec3Title || '项目介绍'}}</text>
       </view>
-      <text class="section-en-label">OFFERINGS</text>
+      <text class="section-en-label">{{sec3En || 'OFFERINGS'}}</text>
     </view>
-    <text class="section-intro">针对不同阶段与体态目标，由主理团队精心研发的核心训练体系。</text>
+    <text class="section-intro">{{sec3Intro || '针对不同阶段与体态目标，由主理团队精心研发的核心训练体系。'}}</text>
 
     <view class="offerings-list">
       <view

@@ -102,10 +102,55 @@ export default async function AdminPage() {
   return (
     <main style={{ background: "#FAFAFA", minHeight: "100vh", padding: "40px 24px" }}>
       <div style={{ maxWidth: 960, margin: "0 auto" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: "#1A1A1A" }}>CRM 首页</h1>
-          <Link href="/members" style={{ fontSize: 14, color: "#1A1A1A", fontWeight: 500, textDecoration: "none" }}>
-            会员列表 →
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: "#1A1A1A", margin: 0 }}>CRM 管理中心</h1>
+          <Link href="/members" style={{ fontSize: 14, color: "#8B5E3C", fontWeight: 600, textDecoration: "none" }}>
+            会员列表 (全部 278 人) →
+          </Link>
+        </div>
+
+        {/* 了解徕舞 · 全能控制中心入口（醒目置顶） */}
+        <div style={{
+          background: "linear-gradient(135deg, #1C0A09 0%, #5E1914 100%)",
+          borderRadius: 16,
+          padding: "24px 28px",
+          color: "#FFFFFF",
+          marginBottom: 32,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: 16,
+          boxShadow: "0 8px 24px rgba(94, 25, 20, 0.25)"
+        }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+              <span style={{ background: "rgba(255,255,255,0.2)", fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 4, letterSpacing: 1 }}>
+                小程序第 2 板块
+              </span>
+              <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#FFFFFF" }}>
+                🏛️ 「了解徕舞」全能控制中心
+              </h2>
+            </div>
+            <p style={{ margin: 0, fontSize: 13.5, color: "rgba(255, 255, 255, 0.88)", lineHeight: 1.6 }}>
+              集中配置：三大板块主副标题与文案 · 空间相册实拍 · 导师阵容头像 · 课程体系与实拍底图（无限增删、自由排序）
+            </p>
+          </div>
+          <Link
+            href="/admin/brand"
+            style={{
+              background: "#F6E6DA",
+              color: "#1C1415",
+              padding: "12px 26px",
+              borderRadius: 8,
+              fontSize: 14,
+              fontWeight: 700,
+              textDecoration: "none",
+              whiteSpace: "nowrap",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.18)"
+            }}
+          >
+            进入「了解徕舞」控制台 →
           </Link>
         </div>
 
