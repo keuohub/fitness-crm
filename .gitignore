@@ -30,3 +30,7 @@ sqlite-dump.sql
 
 # 运行时上传文件（不入库）
 public/media/
+
+# 小程序包体：海报源图/上传缓存不允许进包
+miniprogram/images/poster/
+miniprogram/images/uploads/
