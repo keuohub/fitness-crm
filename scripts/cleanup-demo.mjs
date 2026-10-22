@@ -1,12 +1,14 @@
 // 清理测试/演示数据：默认 dry-run，加 --apply 才写库。
 // 会先把将要修改的整行备份到 backups/。
 import { neon } from "@neondatabase/serverless";
+import { requireDbWriteGuard } from "./_db-write-guard.mjs";
 import fs from "node:fs";
 
 const env = fs.readFileSync(".env.local", "utf8");
 const url = (env.match(/^DATABASE_URL=(.*)$/m) || [])[1].trim();
 const sql = neon(url);
 const apply = process.argv.includes("--apply");
+if (apply) requireDbWriteGuard("cleanup-demo", url);
 
 const DEMO_NAME = /^(会员\d+|陈知意|测试用户_CRM写入验证|同步测试_)/;
 

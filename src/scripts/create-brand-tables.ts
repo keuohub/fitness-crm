@@ -1,4 +1,7 @@
 import { db, rawSql } from "@/db";
+import { requireDbWriteGuard } from "./_db-write-guard";
+
+requireDbWriteGuard("create-brand-tables", process.env.DATABASE_URL);
 
 async function main() {
   console.log("Creating tables: monthly_stars, venue_items, team_members...");

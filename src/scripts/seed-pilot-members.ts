@@ -5,6 +5,12 @@ import { members } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import crypto from "crypto";
 
+import { requireDbWriteGuard } from "./_db-write-guard";
+
+// 默认拒绝：写库前先过闸门（ALLOW_DB_WRITE / ALLOW_REMOTE_DB_WRITE）
+requireDbWriteGuard("seed-pilot-members", process.env.DATABASE_URL);
+
+
 function generateCode(): string {
   return crypto.randomBytes(4).toString("hex").toUpperCase().slice(0, 8);
 }

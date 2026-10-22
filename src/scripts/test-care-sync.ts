@@ -12,6 +12,9 @@ import { db } from "@/db";
 import { members, dailyHealthLogs, memberMemories } from "@/db/schema";
 import { extractFields, HEALTH_LOG_MAPPING, SELF_REPORT_MAPPING } from "@/lib/feishu-field-map";
 import { eq, desc } from "drizzle-orm";
+import { requireDbWriteGuard } from "./_db-write-guard";
+
+requireDbWriteGuard("test-care-sync", process.env.DATABASE_URL);
 
 // ── 模拟飞书原始数据 ──
 

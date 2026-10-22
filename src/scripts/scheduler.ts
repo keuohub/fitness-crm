@@ -6,6 +6,10 @@
 import cron from "node-cron";
 import { manualRun } from "@/scripts/daily-feedback-cron";
 
+// 定时任务上下文标记：daily-feedback-cron 的写库闸门据此放行。
+// 这是生产定时任务的唯一合法写入路径；手工跑 cron 脚本仍需 ALLOW_DB_WRITE。
+process.env.LAIWU_CRON_CONTEXT = "1";
+
 console.log("定时任务已启动 · 每日 8:00 自动生成反馈");
 
 // 每天 8:00 执行

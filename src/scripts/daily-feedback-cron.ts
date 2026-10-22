@@ -7,6 +7,7 @@ import { db } from "@/db";
 import { members as membersTable, questionnaireSubmissions, aiFeedbackReports } from "@/db/schema";
 import { eq, and, like } from "drizzle-orm";
 import { generateDailyFeedback } from "@/lib/ai";
+import { assertDbWriteAllowed } from "./_db-write-guard";
 
 interface ProcessResult {
   memberId: number;
@@ -25,6 +26,14 @@ export async function manualRun(): Promise<{
   failed: number;
   results: ProcessResult[];
 }> {
+  // 合法写入路径：scheduler 定时任务（LAIWU_CRON_CONTEXT=1）与站内后台（Next 运行时）。
+  // 其余场景（手工 CLI 直跑）默认拒绝，必须显式 ALLOW_DB_WRITE。
+  const viaScheduler = process.env.LAIWU_CRON_CONTEXT === "1";
+  const viaAppServer = Boolean(process.env.NEXT_RUNTIME);
+  if (!viaScheduler && !viaAppServer) {
+    assertDbWriteAllowed("daily-feedback-cron", process.env.DATABASE_URL);
+  }
+
   const results: ProcessResult[] = [];
   let succeeded = 0;
   let failed = 0;

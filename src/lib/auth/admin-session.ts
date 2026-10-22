@@ -6,17 +6,41 @@ import { users, adminSessions } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import crypto from "crypto";
 
-const ADMIN_PASSWORD_RAW = process.env.ADMIN_PASSWORD;
-if (!ADMIN_PASSWORD_RAW) throw new Error("ADMIN_PASSWORD 环境变量未设置");
-const ADMIN_SECRET = ADMIN_PASSWORD_RAW;
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@laiwu.fitness";
+const DEFAULT_ADMIN_EMAIL = "admin@laiwu.fitness";
 const LEGACY_COOKIE = "admin_session";
 const PORTAL_COOKIE_NAME = "portal_member_id";
 const PORTAL_SIGN_COOKIE = "portal_member_sig";
 const TOKEN_COOKIE = "admin_token";
 
+// ── 懒校验（Lazy Init）──────────────────────────────────────
+// 目的：Docker / 云托管构建阶段不读管理员口令，`next build` 不会因缺少
+// ADMIN_PASSWORD 而中断；真正缺失时在**首次使用口令**的那一刻报错（fail-fast）。
+function getAdminSecret(): string {
+  const raw = process.env.ADMIN_PASSWORD;
+  if (!raw) {
+    throw new Error(
+      "ADMIN_PASSWORD 环境变量未设置：管理员登录口令缺失。\n" +
+        "本地请写入 .env.local；云端请在「微信云托管 → 服务设置 → 环境变量」配置后重新发布。"
+    );
+  }
+  return raw;
+}
+
+/** 口令缺失时返回 null，供“能走 DB 校验就不必阻断登录”的场景使用 */
+function tryGetAdminSecret(): string | null {
+  try {
+    return getAdminSecret();
+  } catch {
+    return null;
+  }
+}
+
+function getAdminEmail(): string {
+  return process.env.ADMIN_EMAIL || DEFAULT_ADMIN_EMAIL;
+}
+
 function getSignKey(): string {
-  return process.env.COOKIE_SIGN_KEY || ADMIN_SECRET;
+  return process.env.COOKIE_SIGN_KEY || getAdminSecret();
 }
 
 function sign(payload: string): string {
@@ -48,7 +72,9 @@ export async function verifyAdminLogin(
 ): Promise<AdminSession | null> {
   const cleanEmail = (emailInput || "").trim().toLowerCase();
   const cleanPass = (passwordInput || "").trim();
-  const lookupEmail = cleanEmail === "admin" ? ADMIN_EMAIL : cleanEmail;
+  const lookupEmail = cleanEmail === "admin" ? getAdminEmail() : cleanEmail;
+  // 口令仅在本次登录校验时读取；环境变量缺失时降级为“只走 DB 校验”，不会让请求崩溃
+  const envSecret = tryGetAdminSecret();
 
   // 从 users 表验证（支持多管理员与别名 admin）
   try {
@@ -60,7 +86,7 @@ export async function verifyAdminLogin(
     if (user) {
       const isValid =
         user.passwordHash === cleanPass ||
-        cleanPass === ADMIN_SECRET ||
+        cleanPass === envSecret ||
         verifySignature(cleanPass, user.passwordHash);
       if (isValid) {
         if (user.status === "inactive") return null;
@@ -72,8 +98,8 @@ export async function verifyAdminLogin(
   }
 
   // Fallback: 环境变量硬编码管理员（支持输入 admin 或 admin@laiwu.fitness）
-  if ((lookupEmail === ADMIN_EMAIL || cleanEmail === "admin") && cleanPass === ADMIN_SECRET) {
-    return { userId: 1, email: ADMIN_EMAIL, role: "owner" };
+  if ((lookupEmail === getAdminEmail() || cleanEmail === "admin") && envSecret && cleanPass === envSecret) {
+    return { userId: 1, email: getAdminEmail(), role: "owner" };
   }
 
   return null;
