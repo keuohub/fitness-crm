@@ -481,3 +481,36 @@
 ## 六、新对话开场建议
 先读本文件；需要动手时优先只读核对，不要重复导入约刻数据（会覆盖后台手改内容）。
 约刻只读约束已解除过（可登录导出），但**不修改约刻任何数据**。
+
+---
+
+# D5 代码排查与修复（2026-10-22 晚）
+
+> 详细发布与验收步骤见 `docs/D5_发布与验收_20261022.md`。
+> 代码已推送 `origin/release-preparation`，HEAD `a23cb3c`；**线上仍是旧包，未发版**。
+
+## 排查结论（对照 5113cd1）
+
+- **阻断已修**：`/api/portal/me` 课时统计只认 `booked/completed`，而签到会把 `bookings.status` 写成 `attended` → 到课后课时反掉 1 节。已把 `attended` 纳入；实测 42→43（约课），签到到课后仍 43，取消回落 43→42。
+- 同类目映射同一 key 会重复累加课时 → 改为同 key 只取首条。
+- `portal/brand-settings`、`portal/offerings` 补 `Cache-Control: private, no-store`。
+- brand-settings 抽 `src/lib/brand-settings.ts` 统一白名单；PUT 只收 14 个白名单字段并截断，未知 key 不落库。
+- `portal/offerings` 去掉每次 GET 的 `CREATE/ALTER TABLE`（原来会员每次打开页面都给表加 ACCESS EXCLUSIVE 锁）。
+- `admin/offerings` 的 imageUrl 统一清洗；PUT 补 `ensureTableAndSeed`；种子补内置底图。
+- 小程序：删掉 brand 页残留的 `goBooking`/`copyConciergeWechat`；`inset:0` 改显式四边（iOS<14.1 遮罩会塌）；`backdrop-filter` 的 rpx 改 px；`.detail-label`/`.mentor-creds` 加深到 `#6D645D`；尊称按 `gender` 渲染（male/男 → 先生，其余与未填 → 女士）。
+- `/admin` 首页「全部 278 人」改动态取数。
+
+## 两条必须记住的坑
+
+1. **现网会员 token 是用 `ADMIN_PASSWORD` 签的**（云托管没配 `MEMBER_TOKEN_SECRET`）。所以「轮换弱口令」这条安全待办一旦执行，271 个会员会全部掉线。发版时先把 `MEMBER_TOKEN_SECRET` 配上，掉线一次换长期可轮换。
+2. **课程类目编号与顺序不一致**：线上展示 01,02,03,05,04（私教 num=05 但 sort_order=4）。属数据问题，改法有两种（改 num 或改 sort_order），等主理人选。
+
+## 待主理人拍板（不阻塞发版）
+
+课时口径三块可能重复加（基线 + 约课/出勤 + trainings 手工登记）；`trainings` 的 `group`/`assessment` 课时被丢掉；`no_show_deduct` 设置未被代码读取；未到/2 小时内取消的扣次政策。
+
+## 验收工具
+
+`scripts/d5-acceptance.mjs`（只读，`--write` 才写库且自动取消）：
+`D5_PORTAL_CODE=... D5_MEMBER_PIN=... node scripts/d5-acceptance.mjs`
+另一个只读诊断脚本 `scripts/audit-live-state.mjs`，打印线上库各表计数、卡种、课次、课时基线。
