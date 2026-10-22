@@ -69,9 +69,12 @@ export async function POST(request: NextRequest) {
       const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
       const filename = `brand-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
       const bytes = await file.arrayBuffer();
-      const { url } = await uploadFileToStorage(Buffer.from(bytes), filename, "brand");
+      const { url, storageType, warning } = await uploadFileToStorage(Buffer.from(bytes), filename, "brand");
 
-      return NextResponse.json({ url, localMiniprogramUrl: url }, { status: 201 });
+      return NextResponse.json(
+        { url, localMiniprogramUrl: url, storage: storageType, warning },
+        { status: 201 }
+      );
     }
 
     const mid = typeof memberIdRaw === "string" ? parseInt(memberIdRaw, 10) : (memberIdRaw as unknown as number);
@@ -85,7 +88,7 @@ export async function POST(request: NextRequest) {
     const timestamp = Date.now();
     const filename = `member-photo-${mid}-${timestamp}.${ext}`;
     const bytes = await file.arrayBuffer();
-    const { url } = await uploadFileToStorage(Buffer.from(bytes), filename, "member-photos");
+    const { url, storageType, warning } = await uploadFileToStorage(Buffer.from(bytes), filename, "member-photos");
 
     const __r_record = await db
       .insert(photos)
@@ -103,7 +106,7 @@ export async function POST(request: NextRequest) {
     deleteCache(`photos:${mid}`);
 
     return NextResponse.json(
-      { id: record.id, url, photoType: record.photoType, takenAt: record.takenAt },
+      { id: record.id, url, photoType: record.photoType, takenAt: record.takenAt, storage: storageType, warning },
       { status: 201 }
     );
   } catch (error) {

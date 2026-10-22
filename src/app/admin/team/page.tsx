@@ -99,6 +99,7 @@ export default function AdminTeamPage() {
       const data = await res.json();
       if (data.url) {
         setEditingMember((prev) => ({ ...prev, avatarUrl: data.url }));
+        if (data.warning) alert(data.warning);
       } else {
         alert(data.error || "图片上传失败");
       }

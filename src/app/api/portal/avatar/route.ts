@@ -28,14 +28,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "无权访问" }, { status: 401 });
     }
 
+    if (file.size > 5 * 1024 * 1024) {
+      return NextResponse.json({ error: "图片不能超过 5MB" }, { status: 400 });
+    }
     const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+    if (!["jpg", "jpeg", "png", "webp", "heic"].includes(ext)) {
+      return NextResponse.json({ error: "只支持 jpg/png/webp/heic" }, { status: 400 });
+    }
     const filename = `member-avatar-${memberId}-${Date.now()}.${ext}`;
     const bytes = await file.arrayBuffer();
-    const { url: avatarUrl } = await uploadFileToStorage(Buffer.from(bytes), filename, "avatars");
+    const { url: avatarUrl, storageType, warning } = await uploadFileToStorage(
+      Buffer.from(bytes),
+      filename,
+      "avatars"
+    );
 
     await db.update(members).set({ avatarUrl }).where(eq(members.id, memberId));
 
-    return NextResponse.json({ avatarUrl });
+    return NextResponse.json({ avatarUrl, storage: storageType, warning });
   } catch (err) {
     console.error("avatar upload error:", err);
     return NextResponse.json({ error: "服务器错误" }, { status: 500 });

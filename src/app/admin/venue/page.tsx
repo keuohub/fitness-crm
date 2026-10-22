@@ -97,6 +97,7 @@ export default function AdminVenuePage() {
       const data = await res.json();
       if (data.url) {
         setEditingItem((prev) => ({ ...prev, imageUrl: data.url }));
+        if (data.warning) alert(data.warning);
       } else {
         alert(data.error || "图片上传失败");
       }

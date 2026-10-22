@@ -358,3 +358,35 @@
 
 ### 备份
 - `backups/team-testmember-before-*.json`、`backups/yueke-backfill-before-*.json`、`backups/fake-hours-before-*.json`
+
+## 数据权威规则（2026-10-22 主理人确认）
+
+**导入一次之后，一切以后台手动更新的数据为准。**
+
+- 约刻导入只作为**初始基线**，不做二次覆盖：任何导入/同步脚本都不得覆盖主理人在后台手改过的字段。
+- 已导入内容（老师、入会日期、会员卡等）如需再同步，必须先比对差异、只补空缺，不覆盖非空值。
+- 主理人在后台改的：老师姓名/头像/头衔/上下线/排序、会员档案、卡、课表、价格、徕舞之星、场馆、课程文案 —— 都是最终值。
+- 后台改动 → 前端即时生效（已实测：`/api/admin/team` 改完 `/api/portal/team` 立刻返回新值）。
+
+## 对象存储（COS）接入状态（2026-10-22 晚）
+
+### 代码侧（已加固，提交见下方）
+- `src/lib/storage.ts`：双模上传。配置了 `COS_BUCKET/COS_REGION/COS_SECRET_ID/COS_SECRET_KEY` 就走 COS，否则/失败走本地 `public/media`。
+- 已补的 5 处加固：
+  1. 上传显式设置 `ContentType`（不再落成 application/octet-stream）
+  2. 接口返回 `storage`（cos/local）和 `warning`，后台 upsert 弹窗会直接提示降级原因
+  3. COS 失败不再静默：真实错误进 warning / 服务端日志
+  4. `COS_BUCKET` 缺 `-appid` 后缀会告警；`COS_CUSTOM_DOMAIN` 自动去 `https://`
+  5. 会员头像上传补 5MB 限制 + 扩展名白名单；`.env.example` 补 COS 变量说明
+- 三条链路都走同一个 uploadFileToStorage：`/api/photos`（后台图片、会员体态照）、`/api/portal/avatar`（会员头像）
+
+### 控制台仍需完成（不配 = 图片仍存本地、发版会丢）
+1. 云托管 → 对象存储 → 记下 **Bucket 全名（必须带 -appid）** 和 **Region**
+2. COS 控制台 → 该桶 → 权限管理 → **公有读私有写**（否则图片 URL 403）
+3. 云托管 → 服务设置 → 环境变量补 4 项（见 `.env.example`）
+4. 发布新版本 → 后台上传一张图验证 URL 是 `https://<bucket>...` 且能打开
+
+### 已知限制
+- 用主账号 SecretId/SecretKey 风险大，建议子账号最小权限（仅该桶 PutObject/GetObject）
+- 换图不删旧图，COS 会累积（费用，不影响功能）
+- 未绑定自定义域名前用的是 COS 默认域名

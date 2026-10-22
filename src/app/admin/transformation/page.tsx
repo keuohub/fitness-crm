@@ -138,6 +138,7 @@ export default function AdminTransformationPage() {
       const data = await res.json();
       if (data.url) {
         setEditingItem((prev) => ({ ...prev, [field]: data.url }));
+        if (data.warning) alert(data.warning);
       } else {
         alert(data.error || "上传失败");
       }

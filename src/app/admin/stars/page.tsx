@@ -115,6 +115,7 @@ export default function AdminStarsPage() {
       const data = await res.json();
       if (data.url) {
         setEditingStar((prev) => ({ ...prev, avatarUrl: data.url }));
+        if (data.warning) alert(data.warning);
       } else {
         alert(data.error || "图片上传失败");
       }
