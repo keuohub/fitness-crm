@@ -565,3 +565,16 @@
 2. mp 后台：确认 1.3.1 → 提交审核 → 发布（可选先设体验版）
 3. 类目编号改 num（推荐 A：私教 05→04、瑜伽 04→05）还是改 sort_order
 4. 真实卡种价格 / 真实课表（10-30 之后课表就空了）/ 课时口径
+
+## 八、D6 收尾（2026-10-23 14:55）
+
+- **D5 验收 15/15 全 PASS**：类目编号按 A 方案修正（私教 05→04、瑜伽 04→05），线上已生效。
+- **写库验证已做**（授权 + 三重守卫 + 行备份）：排课新建 201 → 删除 200；预约 201（totalHours 42→43，booked_count 1）→ 取消 200（回落 42，booked_count 0）→ 写测 booking 行已删。
+  收尾计数 member_cards 5 / class_sessions 5 / bookings 0 / attendance 0 / card_transactions 5。
+  备份与日志：`backups/d6-write-test-*`。
+- **手机端顶栏修复已提交并推送**（`34fe170`）：390 下 scrollWidth 482→390、退出按钮 right 481.75→378、品牌文字不再竖排；1024/1440 不变。
+- **安全清理已提交并推送**（`fb24ae7`）：文档/脚本里的明文凭据已移除（飞书密钥改为读环境变量）。
+- **待主人操作**：仓库可见性设为私有 + 轮换口令（后台口令、飞书 App Secret、GitHub PAT）+
+  云托管控制台配置 `MEMBER_TOKEN_SECRET` 和新的 `ADMIN_PASSWORD` + 控制台部署 `release-preparation`（最新 commit `34fe170`）。
+  **实测推送不会自动发版**，仍需控制台点部署；这一步发完顶栏修复才上线。
+- 上线后复验顺序：`node scripts/d5-acceptance.mjs`（应 15/15）→ 会员 token 反推签名密钥应命中 `MEMBER_TOKEN_SECRET` → 手机浏览器看后台顶栏 → 点退出确认二次进入需登录。
