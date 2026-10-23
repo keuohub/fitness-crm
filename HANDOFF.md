@@ -637,3 +637,24 @@ API：`PATCH /api/admin/member-cards` 现在支持 `freeze / unfreeze / adjust /
 小程序会员端真机页面（需要你手机）。
 
 **新增运营文档**：`docs/门店SOP_排课与开卡_20261023.md`（排课/开卡/调次/延期/上线检查清单，可直接照着点）。
+
+## 十二、批量开卡导入脚本（2026-10-23 16:35）
+
+`scripts/import-member-cards.mjs`（可入库，工具脚本）：
+
+- 默认 **dry-run**，只出清单不写库；`--commit` 才写，且强制 `ALLOW_DB_WRITE=1 ALLOW_REMOTE_DB_WRITE=1`
+- 写前自动备份 `member_cards` / `card_transactions` / `card_types` 到 `backups/cards-import-before-*.json`
+- 会员匹配优先级：会员ID → LW编号 → member_code → 登录编号 → 手机号 → 姓名（重名直接报错不猜）
+- 卡种按名称匹配；缺失时 `--create-types` 可自动建（也可先在后台建好）
+- 幂等键 `import-<会员>-<卡种>-<生效>-<到期>-<剩余>` → 同一张卡重复导入会跳过
+- 结束输出对账表 `backups/cards-import-report-*.csv`（行号/结果/会员/卡名/说明）
+
+实测（本地 3001 + 生产库，已回滚）：4 行 CSV → 成功 2（秦卓宇余 7/10、王莉余 3/10）、
+失败 2（不存在会员 / 余次大于总数），重复跑 2 行全部「跳过」；回滚后 member_cards 5、tx 5。
+模板：`imports/会员卡导入_模板.csv`（imports/ 不入库，只在本机）。
+
+## 十三、AI 与同步（2026-10-23 16:36）
+
+- **周报 AI 生成已实测**：线上 `POST /api/admin/weekly-report` → 200，3.2 秒，237 字，署名小桥；测试报告 id=203 已删。
+- **飞书同步暂不跑**：`src/lib/feishu-sync-engine.ts` 里是 `UPDATE members SET name/gender/phone/stage/tags/status`——
+  会**覆盖后台手改的会员档案**，违反「导入只做基线」规则。要跑必须先改成「只补空缺、不覆盖非空值」。
