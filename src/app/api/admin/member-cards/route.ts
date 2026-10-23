@@ -20,7 +20,7 @@ function maxDate(a: string | null, b: string) {
 
 export async function GET(request: NextRequest) {
   const admin = await getAdminUser(request);
-  if (!admin && !requireAdmin(request)) return bad("需要管理员登录", 401);
+  if (!admin) return bad("需要管理员登录", 401);
   const memberId = new URL(request.url).searchParams.get("memberId");
   const rows = memberId
     ? await rawSql`
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const admin = await requireRole(request, "manager");
-  if (!admin && !requireAdmin(request)) return bad("权限不足，仅店长或店主可开卡", 403);
+  if (!admin) return bad("权限不足，仅店长或店主可开卡", 403);
   const body = await request.json();
   const memberId = Number(body.memberId);
   const cardTypeId = Number(body.cardTypeId);
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   const admin = await requireRole(request, "manager");
-  if (!admin && !requireAdmin(request)) return bad("权限不足，仅店长或店主可续卡加课", 403);
+  if (!admin) return bad("权限不足，仅店长或店主可续卡加课", 403);
   const body = await request.json();
   const memberCardId = Number(body.memberCardId);
   if (!memberCardId) return bad("缺少 memberCardId");
@@ -182,7 +182,7 @@ export async function PUT(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   const admin = await requireRole(request, "manager");
-  if (!admin && !requireAdmin(request)) return bad("权限不足，仅店长或店主可冻结或解冻卡", 403);
+  if (!admin) return bad("权限不足，仅店长或店主可冻结或解冻卡", 403);
   const body = await request.json();
   const id = Number(body.memberCardId);
   const action = String(body.action || "");

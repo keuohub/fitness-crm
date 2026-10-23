@@ -25,7 +25,7 @@ async function conflicts(date: string, start: string, end: string, coachId: numb
 }
 
 export async function POST(request: NextRequest) {
-  if (!requireAdmin(request)) return bad("需要管理员登录", 401);
+  if (!(await requireAdmin(request))) return bad("需要管理员登录", 401);
   const b = await request.json();
   const weekStart = String(b.weekStart || "");
   if (!isDate(weekStart)) return bad("weekStart 格式应为 YYYY-MM-DD");

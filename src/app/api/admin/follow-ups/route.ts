@@ -11,7 +11,7 @@ function addDays(date: string, days: number) {
 const today = () => new Date().toISOString().slice(0, 10);
 
 export async function GET(request: NextRequest) {
-  if (!requireAdmin(request)) return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
+  if (!(await requireAdmin(request))) return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
   const t = today();
   const in30 = addDays(t, 30);
 

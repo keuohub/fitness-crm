@@ -9,13 +9,13 @@ function bad(msg: string, status = 400) {
 }
 
 export async function GET(request: NextRequest) {
-  if (!requireAdmin(request)) return bad("需要管理员登录", 401);
+  if (!(await requireAdmin(request))) return bad("需要管理员登录", 401);
   const rows = await db.select().from(cardTypes).orderBy(asc(cardTypes.sortOrder), asc(cardTypes.id));
   return NextResponse.json(rows);
 }
 
 export async function POST(request: NextRequest) {
-  if (!requireAdmin(request)) return bad("需要管理员登录", 401);
+  if (!(await requireAdmin(request))) return bad("需要管理员登录", 401);
   const body = await request.json();
   const name = String(body.name || "").trim();
   const category = String(body.category || "").trim();
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  if (!requireAdmin(request)) return bad("需要管理员登录", 401);
+  if (!(await requireAdmin(request))) return bad("需要管理员登录", 401);
   const body = await request.json();
   const id = Number(body.id);
   if (!id) return bad("缺少 id");

@@ -6,7 +6,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 const isDate = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s);
 
 export async function GET(request: NextRequest) {
-  if (!requireAdmin(request)) return bad("需要管理员登录", 401);
+  if (!(await requireAdmin(request))) return bad("需要管理员登录", 401);
   const u = new URL(request.url);
   const date = u.searchParams.get("date") || today();
   const sessionId = Number(u.searchParams.get("sessionId") || 0);
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  if (!requireAdmin(request)) return bad("需要管理员登录", 401);
+  if (!(await requireAdmin(request))) return bad("需要管理员登录", 401);
   const body = await request.json();
   const bookingId = Number(body.bookingId);
   if (!bookingId) return bad("缺少 bookingId");

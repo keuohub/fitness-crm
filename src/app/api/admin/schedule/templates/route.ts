@@ -10,7 +10,7 @@ function addMinutes(time: string, minutes: number) {
 }
 
 export async function GET(request: NextRequest) {
-  if (!requireAdmin(request)) return bad("需要管理员登录", 401);
+  if (!(await requireAdmin(request))) return bad("需要管理员登录", 401);
   const rows = await rawSql`
     SELECT t.*, c.name AS course_name, u.name AS coach_name, r.name AS room_name
     FROM schedule_templates t
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  if (!requireAdmin(request)) return bad("需要管理员登录", 401);
+  if (!(await requireAdmin(request))) return bad("需要管理员登录", 401);
   const b = await request.json();
   const courseId = Number(b.courseId), coachId = Number(b.coachId);
   const roomId = b.roomId ? Number(b.roomId) : null;
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  if (!requireAdmin(request)) return bad("需要管理员登录", 401);
+  if (!(await requireAdmin(request))) return bad("需要管理员登录", 401);
   const b = await request.json();
   const id = Number(b.id);
   if (!id) return bad("缺少 id");
@@ -74,7 +74,7 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  if (!requireAdmin(request)) return bad("需要管理员登录", 401);
+  if (!(await requireAdmin(request))) return bad("需要管理员登录", 401);
   const id = Number(new URL(request.url).searchParams.get("id"));
   if (!id) return bad("缺少 id");
   const [row] = await rawSql`DELETE FROM schedule_templates WHERE id = ${id} AND tenant_id = 1 RETURNING *`;

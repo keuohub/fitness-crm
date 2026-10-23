@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     // 若无 memberId，支持管理后台通用品牌大片上传（月度之星、场馆相册、团队肖像、体态对比等）
     if (!memberIdRaw) {
       // 品牌素材上传只允许已登录管理员
-      if (!requireAdmin(request)) {
+      if (!(await requireAdmin(request))) {
         return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
       }
       if (file.size > 5 * 1024 * 1024) {

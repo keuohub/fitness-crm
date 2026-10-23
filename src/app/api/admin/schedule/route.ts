@@ -33,7 +33,7 @@ async function conflicts(date: string, start: string, end: string, coachId: numb
 }
 
 export async function GET(request: NextRequest) {
-  if (!requireAdmin(request)) return bad("需要管理员登录", 401);
+  if (!(await requireAdmin(request))) return bad("需要管理员登录", 401);
   const u = new URL(request.url);
   const from = u.searchParams.get("from") || u.searchParams.get("date") || new Date().toISOString().slice(0, 10);
   const to = u.searchParams.get("to") || from;
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  if (!requireAdmin(request)) return bad("需要管理员登录", 401);
+  if (!(await requireAdmin(request))) return bad("需要管理员登录", 401);
   const b = await request.json();
   const courseId = Number(b.courseCategoryId), coachId = Number(b.coachId);
   const roomId = b.roomId ? Number(b.roomId) : null;
@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   const admin = await requireRole(request, "manager");
-  if (!admin && !requireAdmin(request)) return bad("权限不足，仅店长或店主可修改课次", 403);
+  if (!admin) return bad("权限不足，仅店长或店主可修改课次", 403);
   const b = await request.json();
   const id = Number(b.id);
   if (!id) return bad("缺少 id");
@@ -119,7 +119,7 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   const admin = await requireRole(request, "manager");
-  if (!admin && !requireAdmin(request)) return bad("权限不足，仅店长或店主可取消或删除课次", 403);
+  if (!admin) return bad("权限不足，仅店长或店主可取消或删除课次", 403);
   const id = Number(new URL(request.url).searchParams.get("id"));
   if (!id) return bad("缺少 id");
   const [used] = await rawSql`SELECT id FROM bookings WHERE session_id = ${id} AND status = 'booked' LIMIT 1`;

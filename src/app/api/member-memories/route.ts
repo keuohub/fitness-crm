@@ -5,7 +5,7 @@ import { eq, desc } from "drizzle-orm";
 import { requireAdmin } from "@/lib/auth/admin-session";
 
 export async function GET(request: NextRequest) {
-  if (!requireAdmin(request)) {
+  if (!(await requireAdmin(request))) {
     return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
   }
 
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  if (!requireAdmin(request)) {
+  if (!(await requireAdmin(request))) {
     return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
   }
 

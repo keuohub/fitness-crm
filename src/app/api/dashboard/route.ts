@@ -5,7 +5,7 @@ import { members } from "@/db/schema";
 import { count } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
-  if (!requireAdmin(request)) {
+  if (!(await requireAdmin(request))) {
     return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
   }
 

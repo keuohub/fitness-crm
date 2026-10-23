@@ -6,7 +6,7 @@ import { rawSql } from "@/db";
 const bad = (msg: string, status = 400) => NextResponse.json({ error: msg }, { status });
 
 export async function GET(request: NextRequest) {
-  if (!requireAdmin(request)) return bad("需要管理员登录", 401);
+  if (!(await requireAdmin(request))) return bad("需要管理员登录", 401);
   const rows = await rawSql`
     SELECT id, name, email, role, status, avatar_url
     FROM users WHERE tenant_id = 1 AND role = 'coach' AND status = 'active'
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  if (!requireAdmin(request)) return bad("需要管理员登录", 401);
+  if (!(await requireAdmin(request))) return bad("需要管理员登录", 401);
   const b = await request.json();
   const name = String(b.name || "").trim();
   if (!name) return bad("教练姓名必填");

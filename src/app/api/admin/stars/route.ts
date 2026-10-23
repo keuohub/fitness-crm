@@ -6,7 +6,7 @@ import { eq, desc, asc } from "drizzle-orm";
 import { invalidateCache } from "@/lib/api-cache";
 
 export async function GET(request: NextRequest) {
-  if (!requireAdmin(request)) {
+  if (!(await requireAdmin(request))) {
     return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
   }
   try {
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  if (!requireAdmin(req)) {
+  if (!(await requireAdmin(req))) {
     return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
   }
   try {
@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
-  if (!requireAdmin(req)) {
+  if (!(await requireAdmin(req))) {
     return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
   }
   try {
@@ -149,7 +149,7 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  if (!requireAdmin(req)) {
+  if (!(await requireAdmin(req))) {
     return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
   }
   try {

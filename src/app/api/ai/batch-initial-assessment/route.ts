@@ -14,7 +14,7 @@ interface ProcessResult {
 
 // GET: 查询已有初始评估报告的会员
 export async function GET(request: NextRequest) {
-  if (!requireAdmin(request)) {
+  if (!(await requireAdmin(request))) {
     return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
   }
 
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
 
 // POST: 批量生成初始评估报告
 export async function POST(request: NextRequest) {
-  if (!requireAdmin(request)) {
+  if (!(await requireAdmin(request))) {
     return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
   }
 

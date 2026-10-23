@@ -14,7 +14,7 @@ import { requireAdmin } from "@/lib/auth/admin-session";
  * 3. ai_draft 只在后台出现，是给人改的草稿，不是给会员看的回音。
  */
 export async function GET(request: NextRequest) {
-  if (!requireAdmin(request)) {
+  if (!(await requireAdmin(request))) {
     return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
   }
 
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
  * 小桥按下「发送」：这一刻之前，会员看到的只有"小桥正在看"。
  */
 export async function PUT(request: NextRequest) {
-  if (!requireAdmin(request)) {
+  if (!(await requireAdmin(request))) {
     return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
   }
 
@@ -123,7 +123,7 @@ export async function PUT(request: NextRequest) {
  * 小桥主动补记一条（当面聊过、电话里说过的话，事后补录）
  */
 export async function POST(request: NextRequest) {
-  if (!requireAdmin(request)) {
+  if (!(await requireAdmin(request))) {
     return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
   }
 

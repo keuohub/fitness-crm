@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, rawSql } from "@/db";
 import { members } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { getAdminSession } from "@/lib/auth/admin-session";
+import { getValidAdminSession } from "@/lib/auth/admin-session";
 
 export async function GET(request: NextRequest) {
-  const admin = getAdminSession(request);
+  const admin = await getValidAdminSession(request);
   if (!admin) return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
 
   try {
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const admin = getAdminSession(request);
+  const admin = await getValidAdminSession(request);
   if (!admin) return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
 
   try {
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  const admin = getAdminSession(request);
+  const admin = await getValidAdminSession(request);
   if (!admin) return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
 
   try {
@@ -122,7 +122,7 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const admin = getAdminSession(request);
+  const admin = await getValidAdminSession(request);
   if (!admin) return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
 
   try {

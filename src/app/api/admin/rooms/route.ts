@@ -4,12 +4,12 @@ import { rawSql } from "@/db";
 const bad = (msg: string, status = 400) => NextResponse.json({ error: msg }, { status });
 
 export async function GET(request: NextRequest) {
-  if (!requireAdmin(request)) return bad("需要管理员登录", 401);
+  if (!(await requireAdmin(request))) return bad("需要管理员登录", 401);
   const rows = await rawSql`SELECT * FROM rooms WHERE tenant_id = 1 ORDER BY id`;
   return NextResponse.json(rows);
 }
 export async function POST(request: NextRequest) {
-  if (!requireAdmin(request)) return bad("需要管理员登录", 401);
+  if (!(await requireAdmin(request))) return bad("需要管理员登录", 401);
   const b = await request.json();
   const name = String(b.name || "").trim();
   if (!name) return bad("教室名称必填");
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json(row, { status: 201 });
 }
 export async function PUT(request: NextRequest) {
-  if (!requireAdmin(request)) return bad("需要管理员登录", 401);
+  if (!(await requireAdmin(request))) return bad("需要管理员登录", 401);
   const b = await request.json();
   const id = Number(b.id);
   if (!id) return bad("缺少 id");
@@ -37,7 +37,7 @@ export async function PUT(request: NextRequest) {
   return NextResponse.json(row);
 }
 export async function DELETE(request: NextRequest) {
-  if (!requireAdmin(request)) return bad("需要管理员登录", 401);
+  if (!(await requireAdmin(request))) return bad("需要管理员登录", 401);
   const id = Number(new URL(request.url).searchParams.get("id"));
   if (!id) return bad("缺少 id");
   const [used] = await rawSql`SELECT id FROM class_sessions WHERE room_id = ${id} LIMIT 1`;

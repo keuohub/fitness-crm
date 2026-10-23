@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { coachNotes, members, trainings, questionnaireSubmissions } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
-import { getAdminSession } from "@/lib/auth/admin-session";
+import { getValidAdminSession } from "@/lib/auth/admin-session";
 
 const DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions";
 
@@ -56,7 +56,7 @@ async function generateCoachMessage(
 }
 
 export async function POST(request: NextRequest) {
-  const admin = getAdminSession(request);
+  const admin = await getValidAdminSession(request);
   if (!admin) {
     return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
   }
@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  const admin = getAdminSession(request);
+  const admin = await getValidAdminSession(request);
   if (!admin) {
     return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
   }

@@ -1,7 +1,7 @@
 // Member Ownership Verification — unified guard for data APIs
 
 import { NextRequest } from "next/server";
-import { getAdminSession } from "./admin-session";
+import { getValidAdminSession } from "./admin-session";
 import { getPortalMemberId } from "./member-session";
 
 export async function verifyMemberAccess(
@@ -9,7 +9,7 @@ export async function verifyMemberAccess(
   requestedMemberId: number
 ): Promise<{ allowed: boolean; reason?: string }> {
   // Admin can access anything
-  const admin = getAdminSession(request);
+  const admin = await getValidAdminSession(request);
   if (admin) return { allowed: true };
 
   // Portal member can only access their own data

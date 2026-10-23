@@ -3,7 +3,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { users, adminSessions } from "@/db/schema";
-import { eq, and, gte } from "drizzle-orm";
+import { eq, and, gte, lt } from "drizzle-orm";
 import crypto from "crypto";
 import { hashSync, compareSync } from "bcryptjs";
 
@@ -160,20 +160,12 @@ export async function getValidAdminSession(request: NextRequest): Promise<AdminS
     }
   }
 
-  // Fallback to signature check ONLY if no token cookie was passed (e.g. edge proxy)
-  const raw = request.cookies.get(LEGACY_COOKIE)?.value;
-  const sig = request.cookies.get(`${LEGACY_COOKIE}_sig`)?.value;
-  if (!token && raw && sig && verifySignature(raw, sig)) {
-    try {
-      return JSON.parse(raw) as AdminSession;
-    } catch {
-      // Fall through
-    }
-  }
+  // 不再回退到 legacy 签名 cookie：签名 7 天恒定、退出无法吊销，
+  // 会让「退出登录」失效（重放旧 cookie 仍可读全部会员数据）。只认 DB 会话。
   return null;
 }
 
-// Get admin session — legacy synchronous helper
+// 已弃用：只验签名、不查 DB，退出/停用都不生效。新代码用 getValidAdminSession / requireAdmin。
 export function getAdminSession(request: NextRequest): AdminSession | null {
   // Legacy signed cookie
   const raw = request.cookies.get(LEGACY_COOKIE)?.value;
@@ -203,6 +195,8 @@ export async function setAdminCookie(
       token,
       expiresAt,
     });
+    // 顺手清掉已过期的会话行，避免表无限增长（每次登录都会新增一行）
+    await db.delete(adminSessions).where(lt(adminSessions.expiresAt, new Date().toISOString()));
   } catch (err) {
     console.warn("Failed to insert adminSessions record, continuing with cookie:", err);
   }
@@ -219,11 +213,8 @@ export async function setAdminCookie(
   // Token cookie (primary)
   response.cookies.set(TOKEN_COOKIE, token, cookieOpts);
 
-  // Legacy signed cookie (fallback for middleware)
-  const payload = JSON.stringify(session);
-  const signature = sign(payload);
-  response.cookies.set(LEGACY_COOKIE, payload, cookieOpts);
-  response.cookies.set(`${LEGACY_COOKIE}_sig`, signature, cookieOpts);
+  // 注意：不再下发 legacy 签名 cookie。它签名后 7 天有效且无法吊销，
+  // 是「点退出后旧 cookie 仍能访问后台」的根因；现在只认 DB 会话 admin_token。
 }
 
 // Clear admin cookie
@@ -246,7 +237,7 @@ export async function revokeAdminSession(request: NextRequest, response: NextRes
   clearAdminCookie(response);
 }
 
-// Require admin — returns session or null
-export function requireAdmin(request: NextRequest): AdminSession | null {
-  return getAdminSession(request);
+// Require admin — 服务端会话校验（查 admin_sessions，退出/停用立即失效）
+export async function requireAdmin(request: NextRequest): Promise<AdminSession | null> {
+  return getValidAdminSession(request);
 }

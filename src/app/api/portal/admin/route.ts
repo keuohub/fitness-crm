@@ -11,7 +11,7 @@ function generatePortalCode(): string {
 
 export async function POST(request: NextRequest) {
   // Require admin authentication
-  const admin = requireAdmin(request);
+  const admin = await requireAdmin(request);
   if (!admin) {
     return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
   }

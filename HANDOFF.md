@@ -578,3 +578,22 @@
   云托管控制台配置 `MEMBER_TOKEN_SECRET` 和新的 `ADMIN_PASSWORD` + 控制台部署 `release-preparation`（最新 commit `34fe170`）。
   **实测推送不会自动发版**，仍需控制台点部署；这一步发完顶栏修复才上线。
 - 上线后复验顺序：`node scripts/d5-acceptance.mjs`（应 15/15）→ 会员 token 反推签名密钥应命中 `MEMBER_TOKEN_SECRET` → 手机浏览器看后台顶栏 → 点退出确认二次进入需登录。
+
+## 九、认证加固已落地（2026-10-23 15:35）
+
+**退出登录/停用/被吊销现在真的立即生效**（HANDOFF 里「requireAdmin 只验签名」这条已修）：
+
+- `requireAdmin` 改为**异步 + 查 `admin_sessions`**（`getValidAdminSession`），37 个文件 74 处调用全部加 `await`，tsc 0 错误。
+- 登录**不再下发 legacy 签名 cookie**（`admin_session`/`_sig`）；`getValidAdminSession` 也去掉签名兜底，
+  legacy 签名 cookie 彻底失去通行能力。`proxy.ts` 后台页面守卫改看 `admin_token`。
+- 角色收严：`member-cards`（开卡/续卡/冻结）、`schedule`（改课/删课）去掉 `|| requireAdmin` 兜底，
+  `sync/feishu` 全量同步改为仅 owner；`/api/admin/users` 本来就是严格 owner。
+- 新增 `GET /api/admin/session` + `AdminShell` 挂载时校验：旧 cookie 打开页面外壳会被立刻踢回登录页。
+- 登录时顺手清理已过期的 `admin_sessions` 行（之前每次登录新增一行，只增不减）。
+
+本地实测（新构建，生产库）：
+- 登录 → `Set-Cookie` 只有 `admin_token`（无 legacy）；
+- 有效会话：/admin 200、`/api/admin/session` 200、`/api/members` 200、20 个后台 GET 接口全 200；
+- 退出 → /admin 307、`/api/members` 401；**重放退出前的 cookie → API 401、浏览器最终落到 `/admin/login`**；
+- 写路径回归：排课新建 201 → 删除 200（session 59），计数回到 5；
+- 会员端 6 个接口不受影响；D5 验收 15/15。

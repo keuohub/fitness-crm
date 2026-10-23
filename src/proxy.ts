@@ -19,17 +19,16 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const adminSession = request.cookies.get("admin_session")?.value;
   const adminToken = request.cookies.get("admin_token")?.value;
   const portalSession = request.cookies.get("portal_member_id")?.value;
   const memberSession = request.cookies.get("member_session")?.value;
 
-  // Admin routes — require admin_session or admin_token cookie (except login)
+  // Admin routes — require admin_token (DB 会话；legacy 签名 cookie 已停发，不再作为通行证)
   if (ADMIN_ROUTES.some((r) => pathname.startsWith(r))) {
     if (PUBLIC_ADMIN.some((pp) => pathname.startsWith(pp))) {
       return NextResponse.next();
     }
-    if (!adminSession && !adminToken) {
+    if (!adminToken) {
       const redirectUrl = new URL("/admin/login", request.url);
       redirectUrl.searchParams.set("redirect", pathname);
       return NextResponse.redirect(redirectUrl);
