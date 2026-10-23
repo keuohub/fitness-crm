@@ -174,7 +174,7 @@ Component({
 
             ctx.fillStyle = "#8C6A6B";
             ctx.font = "18px sans-serif";
-            ctx.fillText("徕 舞 · 私 人 体 态 美 学 档 案", W / 2, cardY + 102);
+            ctx.fillText("徕 舞 · 女 子 体 态 美 学 档 案", W / 2, cardY + 102);
 
             // 细横线
             ctx.strokeStyle = "rgba(28, 20, 21, 0.08)";
