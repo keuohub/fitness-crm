@@ -1,14 +1,22 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-
-/**
- * 待回便签
- *
- * 这一页存在的唯一理由：
- * 会员在课后写下一句话，小桥真的看见、真的回一句。
- * 机器只负责起草，不负责签名。
- */
+import { useToast } from "@/components/admin/Toast";
+import {
+  MessageSquare,
+  Sparkles,
+  Send,
+  CheckCheck,
+  RotateCcw,
+  Eraser,
+  Clock,
+  User,
+  HeartHandshake,
+  Tag,
+  Check,
+  RefreshCw,
+  Quote,
+} from "lucide-react";
 
 type FeelingItem = {
   id: number;
@@ -27,7 +35,6 @@ type FeelingItem = {
   created_at: string;
 };
 
-/** 把 "#肩颈舒展 今天练完很舒服" 拆成 标签 + 正文 */
 function splitFeeling(raw: string) {
   const text = String(raw || "").trim();
   const tags: string[] = [];
@@ -38,7 +45,6 @@ function splitFeeling(raw: string) {
     tags.push(m[1]);
     rest = rest.slice(m[0].length).trim();
   }
-  // 中间夹杂的标签也提出来
   const inlineTags = rest.match(/#\S+/g) || [];
   inlineTags.forEach((t) => tags.push(t.replace(/^#/, "")));
   rest = rest.replace(/#\S+/g, "").replace(/\s{2,}/g, " ").trim();
@@ -51,10 +57,10 @@ function waitedText(createdAt: string) {
   const d = Math.floor((Date.now() - t) / 86400000);
   if (d <= 0) {
     const h = Math.max(1, Math.floor((Date.now() - t) / 3600000));
-    return `今天 · 已等 ${h} 小时`;
+    return `今日 · 等候 ${h} 小时`;
   }
-  if (d === 1) return "昨天 · 已等 1 天";
-  return `已等 ${d} 天`;
+  if (d === 1) return "昨日 · 等候 1 天";
+  return `已等候 ${d} 天`;
 }
 
 function fmtDate(v: string | null) {
@@ -63,29 +69,27 @@ function fmtDate(v: string | null) {
   return s || "待录入";
 }
 
-const STATUS_LABEL: Record<string, string> = {
-  pending: "待回",
-  replied: "已回",
-  dismissed: "已划掉",
-  auto_legacy: "改造前自动回复",
+const statusBadge: Record<string, { label: string; bg: string; text: string; border: string }> = {
+  pending: { label: "待回复", bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200" },
+  replied: { label: "已回复", bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200" },
+  dismissed: { label: "已面聊划掉", bg: "bg-gray-100", text: "text-gray-500", border: "border-gray-200" },
+  auto_legacy: { label: "系统旧回复", bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200" },
 };
 
 export default function AdminFeelingsPage() {
+  const { showToast } = useToast();
   const [items, setItems] = useState<FeelingItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"pending" | "replied" | "all">("pending");
-  const [error, setError] = useState("");
   const [drafts, setDrafts] = useState<Record<number, string>>({});
   const [saving, setSaving] = useState<number | null>(null);
-  const [hint, setHint] = useState("");
 
   const load = async () => {
     setLoading(true);
-    setError("");
     try {
       const res = await fetch(`/api/admin/training-feelings?status=${filter}`);
       if (res.status === 401) {
-        setError("登录已过期，请重新登录管理后台。");
+        showToast("登录已失效，请重新登录管理后台", "error");
         setItems([]);
         return;
       }
@@ -96,14 +100,13 @@ export default function AdminFeelingsPage() {
         const next = { ...prev };
         list.forEach((it) => {
           if (next[it.id] === undefined) {
-            // 默认把草稿填进输入框，但一眼能看出这是机器写的
             next[it.id] = it.reply_status === "pending" ? it.ai_draft || "" : it.xiaoqiao_reply || "";
           }
         });
         return next;
       });
     } catch (e: any) {
-      setError(e?.message || "读取失败");
+      showToast(e?.message || "读取便签列表失败", "error");
     } finally {
       setLoading(false);
     }
@@ -111,7 +114,6 @@ export default function AdminFeelingsPage() {
 
   useEffect(() => {
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
 
   const pendingCount = useMemo(
@@ -122,8 +124,7 @@ export default function AdminFeelingsPage() {
   const send = async (item: FeelingItem) => {
     const text = (drafts[item.id] || "").trim();
     if (!text) {
-      setHint("还没写内容 —— 空的便签不能发出去。");
-      setTimeout(() => setHint(""), 2600);
+      showToast("回复内容不能为空，请输入手札便签", "error");
       return;
     }
     setSaving(item.id);
@@ -135,12 +136,10 @@ export default function AdminFeelingsPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "发送失败");
-      setHint(`已经回了 ${item.member_name || "她"} 一句。`);
-      setTimeout(() => setHint(""), 2600);
+      showToast(`已成功向 ${item.member_name || "学员"} 推送手札回复`, "success");
       await load();
     } catch (e: any) {
-      setHint(e?.message || "发送失败");
-      setTimeout(() => setHint(""), 3200);
+      showToast(e?.message || "发送失败", "error");
     } finally {
       setSaving(null);
     }
@@ -155,429 +154,282 @@ export default function AdminFeelingsPage() {
         body: JSON.stringify({ id: item.id, action: "dismiss" }),
       });
       if (!res.ok) throw new Error("操作失败");
+      showToast("已标记为当面沟通完结", "success");
       await load();
     } catch (e: any) {
-      setHint(e?.message || "操作失败");
-      setTimeout(() => setHint(""), 3000);
+      showToast(e?.message || "操作失败", "error");
     } finally {
       setSaving(null);
     }
   };
 
   return (
-    <div style={{ maxWidth: 980, margin: "0 auto", padding: "28px 20px 80px" }}>
-      {/* 标题 */}
-      <div style={{ marginBottom: 6, display: "flex", alignItems: "baseline", gap: 10 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: "#1C1415", margin: 0, letterSpacing: 0.3 }}>
-          待回便签
-        </h1>
-        {pendingCount > 0 && (
-          <span
-            style={{
-              fontSize: 12,
-              fontWeight: 600,
-              color: "#8A4B3A",
-              background: "#FBEDE7",
-              border: "1px solid #F0D8CE",
-              padding: "2px 9px",
-              borderRadius: 999,
-            }}
-          >
-            {pendingCount} 条等你
-          </span>
-        )}
-      </div>
-      <p style={{ fontSize: 13, color: "#8C827B", margin: "0 0 22px", lineHeight: 1.7 }}>
-        她们在课后写下的话，只有你回过，才算真的被听见。
-        下面的灰色字是机器起草的参考稿，可以直接改，也可以整段删掉重写。
-      </p>
+    <div className="max-w-4xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <div className="text-xs font-semibold text-[#2563EB] tracking-wide uppercase">
+            MEMBER NOTES · 课后手札与便签
+          </div>
+          <div className="flex items-center gap-3 mt-1">
+            <h1 className="text-2xl font-semibold text-[#292D35] tracking-tight">课后体感便签</h1>
+            {pendingCount > 0 && (
+              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                {pendingCount} 条待小桥亲回
+              </span>
+            )}
+          </div>
+          <p className="text-sm text-[#697180] mt-1">
+            学员在小程序端记录的课后身心体感。AI 提供专业参考起草，导师亲自审阅并用心回复。
+          </p>
+        </div>
 
-      {/* 筛选 */}
-      <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
-        {(
-          [
-            ["pending", "待回"],
-            ["replied", "已回"],
-            ["all", "全部"],
-          ] as const
-        ).map(([k, label]) => (
-          <button
-            key={k}
-            onClick={() => setFilter(k)}
-            style={{
-              padding: "6px 16px",
-              borderRadius: 999,
-              fontSize: 13,
-              cursor: "pointer",
-              border: filter === k ? "1px solid #0E0D10" : "1px solid #E2D9D2",
-              background: filter === k ? "#0E0D10" : "#fff",
-              color: filter === k ? "#fff" : "#6D645D",
-              transition: "all .15s ease",
-            }}
-          >
-            {label}
-          </button>
-        ))}
         <button
           onClick={load}
-          style={{
-            marginLeft: "auto",
-            padding: "6px 14px",
-            borderRadius: 999,
-            fontSize: 12,
-            cursor: "pointer",
-            border: "1px solid #E2D9D2",
-            background: "#fff",
-            color: "#8C827B",
-          }}
+          className="p-2 text-sm text-[#697180] bg-white border border-[#E1E5EB] rounded-lg hover:text-[#292D35] hover:bg-[#F5F7FA] transition-colors flex items-center gap-1.5 self-start shadow-sm"
+          title="刷新便签"
         >
-          刷新
+          <RefreshCw className="w-4 h-4" />
+          <span className="text-xs font-medium">刷新</span>
         </button>
       </div>
 
-      {hint && (
-        <div
-          style={{
-            marginBottom: 14,
-            padding: "9px 14px",
-            borderRadius: 8,
-            background: "#F3F7F3",
-            border: "1px solid #D9E6D9",
-            color: "#2E7D32",
-            fontSize: 13,
-          }}
-        >
-          {hint}
-        </div>
-      )}
+      {/* Segmented Filter */}
+      <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-[#E1E5EB] shadow-xs w-fit">
+        {[
+          { id: "pending", label: "待回复" },
+          { id: "replied", label: "已回复" },
+          { id: "all", label: "全部手札" },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setFilter(tab.id as any)}
+            className={`px-4 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+              filter === tab.id
+                ? "bg-[#2563EB] text-white shadow-xs"
+                : "text-[#697180] hover:text-[#292D35] hover:bg-[#F5F7FA]"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
 
-      {error && (
-        <div
-          style={{
-            padding: "14px 16px",
-            borderRadius: 10,
-            background: "#FDF3F0",
-            border: "1px solid #F0D8CE",
-            color: "#8A4B3A",
-            fontSize: 13,
-          }}
-        >
-          {error}
-        </div>
-      )}
-
-      {loading && !error && (
-        <div style={{ padding: "60px 0", textAlign: "center", color: "#A89E97", fontSize: 13 }}>
-          正在翻便签本…
-        </div>
-      )}
-
-      {!loading && !error && items.length === 0 && (
-        <div
-          style={{
-            padding: "56px 24px",
-            textAlign: "center",
-            background: "#fff",
-            border: "1px dashed #E2D9D2",
-            borderRadius: 14,
-          }}
-        >
-          <div style={{ fontSize: 15, color: "#4A403E", fontWeight: 600, marginBottom: 8 }}>
-            {filter === "pending" ? "便签本翻完了，没有谁在等" : "这里还是空的"}
+      {/* List Container */}
+      <div className="space-y-4">
+        {loading ? (
+          <div className="bg-white border border-[#E1E5EB] rounded-xl p-12 text-center text-[#697180] text-sm shadow-sm">
+            正在翻阅手札便签...
           </div>
-          <div style={{ fontSize: 13, color: "#9E948E", lineHeight: 1.8 }}>
-            会员在小程序「我的」里写完体感，就会落到这里。
-            <br />
-            如果一直空着，说明她们还没开始写 —— 也可能是你没在课后提醒她们写。
+        ) : items.length === 0 ? (
+          <div className="bg-white border border-[#E1E5EB] rounded-xl p-12 text-center text-[#697180] text-sm shadow-sm flex flex-col items-center justify-center">
+            <MessageSquare className="w-10 h-10 text-gray-300 mb-2" />
+            <span className="font-semibold text-[#292D35]">
+              {filter === "pending" ? "便签已全部回复完毕，没有学员在等待" : "暂无相关便签记录"}
+            </span>
+            <span className="text-xs text-[#697180] mt-1">
+              学员在课后打卡提交体感后，便签会自动流转至此处。
+            </span>
           </div>
-        </div>
-      )}
+        ) : (
+          items.map((item) => {
+            const { tags, body } = splitFeeling(item.feeling);
+            const isPending = item.reply_status === "pending";
+            const val = drafts[item.id] ?? "";
+            const untouched = isPending && item.ai_draft && val === item.ai_draft;
+            const count = Number(item.training_count || 0);
+            const badge = statusBadge[item.reply_status] || {
+              label: item.reply_status,
+              bg: "bg-gray-100",
+              text: "text-gray-600",
+              border: "border-gray-200",
+            };
 
-      {/* 便签列表 */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        {items.map((item) => {
-          const { tags, body } = splitFeeling(item.feeling);
-          const isPending = item.reply_status === "pending";
-          const val = drafts[item.id] ?? "";
-          const untouched = isPending && item.ai_draft && val === item.ai_draft;
-          const count = Number(item.training_count || 0);
-
-          return (
-            <div
-              key={item.id}
-              style={{
-                background: "#fff",
-                border: "1px solid #EBE4DF",
-                borderRadius: 14,
-                overflow: "hidden",
-                boxShadow: "0 2px 10px rgba(14,13,16,0.03)",
-              }}
-            >
-              {/* 便签头 */}
+            return (
               <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 12,
-                  padding: "14px 18px",
-                  borderBottom: "1px solid #F4EEE9",
-                  background: isPending ? "#FFFDFB" : "#FAFAF9",
-                }}
+                key={item.id}
+                className={`bg-white border rounded-xl shadow-sm overflow-hidden transition-all ${
+                  isPending ? "border-[#2563EB]/40 ring-1 ring-[#2563EB]/10" : "border-[#E1E5EB]"
+                }`}
               >
-                <div
-                  style={{
-                    width: 34,
-                    height: 34,
-                    borderRadius: "50%",
-                    background: "#0E0D10",
-                    color: "#F6E6DA",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 13,
-                    fontWeight: 600,
-                    flex: "0 0 auto",
-                    overflow: "hidden",
-                  }}
-                >
-                  {item.avatar_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={item.avatar_url}
-                      alt=""
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                    />
-                  ) : (
-                    (item.member_name || "?").slice(0, 1)
-                  )}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: "#1C1415" }}>
-                    {item.member_name || `会员 #${item.member_id}`}
-                    <span style={{ fontSize: 11, color: "#B0A69F", fontWeight: 400, marginLeft: 8 }}>
-                      {item.member_code || "无编号"}
-                    </span>
-                  </div>
-                  <div style={{ fontSize: 11, color: "#9E948E", marginTop: 2 }}>
-                    入会 {fmtDate(item.joined_at)} · 累计 {count} 节
-                    {item.last_training_date ? ` · 上次 ${fmtDate(item.last_training_date)}` : " · 还没有训练记录"}
-                  </div>
-                </div>
-                <div style={{ textAlign: "right", flex: "0 0 auto" }}>
-                  <div
-                    style={{
-                      fontSize: 11,
-                      fontWeight: 600,
-                      color:
-                        item.reply_status === "pending"
-                          ? "#8A4B3A"
-                          : item.reply_status === "replied"
-                          ? "#2E7D32"
-                          : "#9E948E",
-                    }}
-                  >
-                    {STATUS_LABEL[item.reply_status] || item.reply_status}
-                  </div>
-                  <div style={{ fontSize: 10, color: "#B0A69F", marginTop: 2 }}>
-                    {isPending ? waitedText(item.created_at) : String(item.created_at).slice(0, 10)}
-                  </div>
-                </div>
-              </div>
-
-              {/* 她写的话 */}
-              <div style={{ padding: "16px 18px 0" }}>
-                {tags.length > 0 && (
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: body ? 10 : 0 }}>
-                    {tags.map((t, i) => (
-                      <span
-                        key={i}
-                        style={{
-                          fontSize: 11,
-                          color: "#6D645D",
-                          background: "#F6F1ED",
-                          border: "1px solid #EDE4DE",
-                          padding: "3px 9px",
-                          borderRadius: 999,
-                        }}
-                      >
-                        {t}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                {body ? (
-                  <div
-                    style={{
-                      fontSize: 14,
-                      color: "#2A2224",
-                      lineHeight: 1.85,
-                      whiteSpace: "pre-wrap",
-                    }}
-                  >
-                    {body}
-                  </div>
-                ) : (
-                  <div style={{ fontSize: 12.5, color: "#A89E97", fontStyle: "italic", lineHeight: 1.7 }}>
-                    她只点了标签，没有写句子。（那就别提"你说过"，说说你看见的。）
-                  </div>
-                )}
-              </div>
-
-              {/* 回复区 */}
-              <div style={{ padding: "16px 18px 18px" }}>
-                {item.reply_status === "auto_legacy" && (
-                  <div
-                    style={{
-                      fontSize: 11.5,
-                      color: "#8A4B3A",
-                      background: "#FBEDE7",
-                      border: "1px solid #F0D8CE",
-                      padding: "7px 11px",
-                      borderRadius: 8,
-                      marginBottom: 10,
-                      lineHeight: 1.6,
-                    }}
-                  >
-                    这条是改造前系统自动回的，不是你说的。要留要改，现在由你定。
-                  </div>
-                )}
-
-                {item.reply_status === "replied" ? (
-                  <div
-                    style={{
-                      fontSize: 13.5,
-                      color: "#2A2224",
-                      lineHeight: 1.85,
-                      background: "#FAFAF9",
-                      border: "1px solid #F0EAE5",
-                      borderRadius: 10,
-                      padding: "12px 14px",
-                      whiteSpace: "pre-wrap",
-                    }}
-                  >
-                    {item.xiaoqiao_reply}
-                  </div>
-                ) : (
-                  <>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        marginBottom: 8,
-                      }}
-                    >
-                      <span style={{ fontSize: 11.5, color: "#A89E97" }}>
-                        {untouched ? "机器起草 · 还没经过你的手" : "你的回复"}
-                      </span>
-                      {item.ai_draft && (
-                        <div style={{ display: "flex", gap: 10 }}>
-                          <button
-                            onClick={() =>
-                              setDrafts((p) => ({ ...p, [item.id]: item.ai_draft || "" }))
-                            }
-                            style={{
-                              fontSize: 11.5,
-                              color: "#6D645D",
-                              background: "none",
-                              border: "none",
-                              cursor: "pointer",
-                              padding: 0,
-                              textDecoration: "underline",
-                            }}
-                          >
-                            用回草稿
-                          </button>
-                          <button
-                            onClick={() => setDrafts((p) => ({ ...p, [item.id]: "" }))}
-                            style={{
-                              fontSize: 11.5,
-                              color: "#6D645D",
-                              background: "none",
-                              border: "none",
-                              cursor: "pointer",
-                              padding: 0,
-                              textDecoration: "underline",
-                            }}
-                          >
-                            清空自己写
-                          </button>
-                        </div>
+                {/* Note Card Header */}
+                <div className="p-4 bg-[#F8FAFC] border-b border-[#E1E5EB] flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-[#E8EEFF] text-[#2563EB] font-bold text-sm flex items-center justify-center shrink-0 overflow-hidden border border-[#2563EB]/20">
+                      {item.avatar_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={item.avatar_url}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        item.member_name ? item.member_name.slice(0, 1) : "学"
                       )}
                     </div>
-
-                    <textarea
-                      value={val}
-                      onChange={(e) => setDrafts((p) => ({ ...p, [item.id]: e.target.value }))}
-                      placeholder="想说什么就写什么，一句也够。她认得你的口气。"
-                      rows={3}
-                      style={{
-                        width: "100%",
-                        boxSizing: "border-box",
-                        fontSize: 13.5,
-                        lineHeight: 1.85,
-                        color: untouched ? "#7C736D" : "#1C1415",
-                        background: untouched ? "#FAFAF9" : "#fff",
-                        border: "1px solid #E2D9D2",
-                        borderRadius: 10,
-                        padding: "12px 14px",
-                        resize: "vertical",
-                        outline: "none",
-                        fontFamily: "inherit",
-                      }}
-                    />
-
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 10,
-                        marginTop: 10,
-                      }}
-                    >
-                      <button
-                        onClick={() => send(item)}
-                        disabled={saving === item.id}
-                        style={{
-                          padding: "9px 22px",
-                          borderRadius: 8,
-                          fontSize: 13,
-                          fontWeight: 600,
-                          cursor: saving === item.id ? "wait" : "pointer",
-                          background: "#0E0D10",
-                          color: "#F6E6DA",
-                          border: "none",
-                          opacity: saving === item.id ? 0.6 : 1,
-                        }}
-                      >
-                        {saving === item.id ? "发送中…" : "回复她"}
-                      </button>
-                      <button
-                        onClick={() => dismiss(item)}
-                        disabled={saving === item.id}
-                        style={{
-                          padding: "9px 16px",
-                          borderRadius: 8,
-                          fontSize: 12.5,
-                          cursor: "pointer",
-                          background: "#fff",
-                          color: "#9E948E",
-                          border: "1px solid #E2D9D2",
-                        }}
-                      >
-                        当面聊过了，划掉
-                      </button>
-                      <span style={{ fontSize: 11, color: "#C0B6AF", marginLeft: "auto" }}>
-                        {val.trim().length} 字
-                        {val.trim().length > 120 ? " · 有点长了" : ""}
-                      </span>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-sm text-[#292D35]">
+                          {item.member_name || `学员 #${item.member_id}`}
+                        </span>
+                        <span className="font-mono text-[10px] text-[#697180] bg-[#F0F2F6] px-1.5 py-0.5 rounded">
+                          {item.member_code || `#LW${item.member_id}`}
+                        </span>
+                      </div>
+                      <div className="text-xs text-[#697180] mt-0.5 flex items-center gap-1.5">
+                        <span>入会 {fmtDate(item.joined_at)}</span>
+                        <span>•</span>
+                        <span>累计训练 <strong className="text-[#292D35]">{count}</strong> 节</span>
+                        {item.last_training_date && (
+                          <>
+                            <span>•</span>
+                            <span>最近 {fmtDate(item.last_training_date)}</span>
+                          </>
+                        )}
+                      </div>
                     </div>
-                  </>
-                )}
+                  </div>
+
+                  <div className="text-right">
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${badge.bg} ${badge.text} ${badge.border}`}
+                    >
+                      {badge.label}
+                    </span>
+                    <div className="text-[11px] text-[#697180] mt-1 tabular-nums">
+                      {isPending ? waitedText(item.created_at) : String(item.created_at).slice(0, 10)}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Member's Feeling Content */}
+                <div className="p-5 space-y-3">
+                  {tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {tags.map((t, i) => (
+                        <span
+                          key={i}
+                          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-medium bg-[#F0F2F6] text-[#292D35] border border-[#E1E5EB]"
+                        >
+                          <Tag className="w-3 h-3 text-[#2563EB]" />
+                          {t}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="p-4 bg-[#F8FAFC] border-l-4 border-[#2563EB] rounded-r-lg">
+                    <div className="text-xs font-medium text-[#697180] mb-1 flex items-center gap-1">
+                      <Quote className="w-3.5 h-3.5 text-[#2563EB]" />
+                      学员课后随记：
+                    </div>
+                    {body ? (
+                      <p className="text-sm text-[#292D35] leading-relaxed whitespace-pre-wrap">
+                        {body}
+                      </p>
+                    ) : (
+                      <p className="text-xs text-[#697180] italic">
+                        学员仅勾选了体感标签，未填写补充文字。
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Mentor's Reply Section */}
+                  <div className="pt-2">
+                    {item.reply_status === "replied" ? (
+                      <div className="p-4 bg-[#E8EEFF]/40 border border-[#2563EB]/20 rounded-xl space-y-1.5">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-semibold text-[#2563EB] flex items-center gap-1">
+                            <HeartHandshake className="w-3.5 h-3.5" />
+                            小桥导师已寄语：
+                          </span>
+                          <span className="text-[#697180]">已同步学员微信小程序</span>
+                        </div>
+                        <p className="text-sm text-[#292D35] leading-relaxed whitespace-pre-wrap">
+                          {item.xiaoqiao_reply}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {/* Draft bar */}
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-medium text-[#292D35] flex items-center gap-1.5">
+                            <Sparkles className="w-3.5 h-3.5 text-[#8B83D7]" />
+                            {untouched ? "AI 起草建议（直接修改或重写）：" : "导师回复草稿："}
+                          </span>
+
+                          {item.ai_draft && (
+                            <div className="flex items-center gap-3">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setDrafts((p) => ({ ...p, [item.id]: item.ai_draft || "" }))
+                                }
+                                className="text-[#2563EB] hover:underline flex items-center gap-1"
+                              >
+                                <RotateCcw className="w-3 h-3" /> 恢复 AI 建议
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setDrafts((p) => ({ ...p, [item.id]: "" }))}
+                                className="text-gray-500 hover:text-gray-700 flex items-center gap-1"
+                              >
+                                <Eraser className="w-3 h-3" /> 清空手写
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Input Textarea */}
+                        <textarea
+                          value={val}
+                          onChange={(e) => setDrafts((p) => ({ ...p, [item.id]: e.target.value }))}
+                          rows={3}
+                          placeholder="写下温暖、专业的一两句鼓励与身心关怀..."
+                          className={`w-full p-3 text-sm rounded-xl border focus:outline-none focus:ring-2 focus:ring-[#2563EB] transition-colors leading-relaxed ${
+                            untouched
+                              ? "bg-[#FAFBFD] border-[#E1E5EB] text-[#292D35]"
+                              : "bg-white border-[#2563EB]/40 text-[#292D35]"
+                          }`}
+                        />
+
+                        {/* Reply Controls */}
+                        <div className="flex items-center justify-between pt-1">
+                          <div className="text-[11px] text-[#697180]">
+                            {val.trim().length} 字
+                            {val.trim().length > 100 && (
+                              <span className="text-amber-600 ml-1">（建议精简至80字内，手机端更易阅读）</span>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => dismiss(item)}
+                              disabled={saving === item.id}
+                              className="px-3 py-1.5 text-xs text-[#697180] bg-white border border-[#E1E5EB] hover:bg-[#F5F7FA] rounded-lg transition-colors"
+                            >
+                              当面聊过，标记划掉
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => send(item)}
+                              disabled={saving === item.id}
+                              className="px-4 py-1.5 text-xs font-medium text-white bg-[#2563EB] hover:bg-blue-700 rounded-lg shadow-sm flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                            >
+                              <Send className="w-3 h-3" />
+                              {saving === item.id ? "正在发送..." : "签名并发送手札"}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
     </div>
   );

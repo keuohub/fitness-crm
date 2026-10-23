@@ -1,7 +1,22 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
+import { useToast } from "@/components/admin/Toast";
+import {
+  Sparkles,
+  Plus,
+  Upload,
+  Eye,
+  EyeOff,
+  Edit2,
+  Trash2,
+  X,
+  Image as ImageIcon,
+  Quote,
+  Award,
+  Calendar,
+  Layers,
+} from "lucide-react";
 
 interface MonthlyStar {
   id: number;
@@ -19,11 +34,13 @@ interface MonthlyStar {
 }
 
 export default function AdminStarsPage() {
+  const { showToast } = useToast();
   const [stars, setStars] = useState<MonthlyStar[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingStar, setEditingStar] = useState<Partial<MonthlyStar> | null>(null);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
   const fetchStars = async () => {
     setLoading(true);
@@ -33,8 +50,8 @@ export default function AdminStarsPage() {
       if (Array.isArray(data)) {
         setStars(data);
       }
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      showToast(err.message || "读取星榜数据失败", "error");
     } finally {
       setLoading(false);
     }
@@ -47,7 +64,7 @@ export default function AdminStarsPage() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingStar?.name || !editingStar?.avatarUrl) {
-      alert("请填写会员姓名并上传或填入写真照片！");
+      showToast("请填写学员姓名并上传风采写真照片", "error");
       return;
     }
     setSaving(true);
@@ -60,44 +77,49 @@ export default function AdminStarsPage() {
       });
       if (res.ok) {
         setEditingStar(null);
-        fetchStars();
+        showToast("封面星榜资料已保存，小程序端已同步", "success");
+        await fetchStars();
       } else {
         const err = await res.json();
-        alert(err.error || "保存失败");
+        showToast(err.error || "保存失败", "error");
       }
-    } catch (err) {
-      alert("网络请求失败");
+    } catch (err: any) {
+      showToast(err.message || "网络请求异常", "error");
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("确定要删除该封面之星吗？")) return;
+  const confirmDelete = async () => {
+    if (!deleteConfirmId) return;
     try {
-      const res = await fetch(`/api/admin/stars?id=${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/admin/stars?id=${deleteConfirmId}`, { method: "DELETE" });
       if (res.ok) {
-        fetchStars();
+        setDeleteConfirmId(null);
+        showToast("已成功移除该学员封面", "success");
+        await fetchStars();
       } else {
-        alert("删除失败");
+        showToast("删除失败", "error");
       }
-    } catch (err) {
-      alert("网络请求失败");
+    } catch (err: any) {
+      showToast(err.message || "删除网络异常", "error");
     }
   };
 
   const handleToggleActive = async (star: MonthlyStar) => {
+    const nextActive = star.isActive === 1 ? 0 : 1;
     try {
       const res = await fetch("/api/admin/stars", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: star.id, isActive: star.isActive === 1 ? 0 : 1 }),
+        body: JSON.stringify({ id: star.id, isActive: nextActive }),
       });
       if (res.ok) {
-        fetchStars();
+        showToast(`已${nextActive ? "上架展示" : "隐藏"}${star.name}的封面`, "success");
+        await fetchStars();
       }
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      showToast(err.message, "error");
     }
   };
 
@@ -115,158 +137,170 @@ export default function AdminStarsPage() {
       const data = await res.json();
       if (data.url) {
         setEditingStar((prev) => ({ ...prev, avatarUrl: data.url }));
-        if (data.warning) alert(data.warning);
+        showToast("写真照片已成功上传并压缩", "success");
+        if (data.warning) showToast(data.warning, "error");
       } else {
-        alert(data.error || "图片上传失败");
+        showToast(data.error || "图片上传失败", "error");
       }
-    } catch (err) {
-      alert("图片上传异常");
+    } catch (err: any) {
+      showToast(err.message || "图片上传异常", "error");
     } finally {
       setUploading(false);
     }
   };
 
   return (
-    <div style={{ maxWidth: 1040, margin: "0 auto", padding: "40px 20px", fontFamily: "-apple-system, sans-serif" }}>
-      {/* 顶部导航与介绍 */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 32 }}>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <Link href="/admin" style={{ fontSize: 13, color: "#8B5E3C", textDecoration: "none", display: "inline-block", marginBottom: 8 }}>
-            ← 返回管理总览
-          </Link>
-          <h1 style={{ fontSize: 26, fontWeight: 700, color: "#1C1415", margin: 0 }}>
-            🌟 第 1 板块：徕舞之星 · 封面画廊管理
-          </h1>
-          <p style={{ fontSize: 13, color: "#7A6B69", marginTop: 8, margin: 0, lineHeight: 1.5 }}>
-            直接自主修改小程序首屏画报的<b>会员姓名</b>、<b>相伴天数</b>、<b>上课节数</b>、<b>体态心语</b>与<b>写真大片</b>。
-            保存后微信小程序首屏将即时同步更新。
+          <div className="text-xs font-semibold text-[#2563EB] tracking-wide uppercase">
+            MINIPROGRAM TAB 1 · 徕舞之星
+          </div>
+          <h1 className="text-2xl font-semibold text-[#292D35] mt-1 tracking-tight">学员风采与封面画廊</h1>
+          <p className="text-sm text-[#697180] mt-1">
+            小程序首屏展示的核心内容。精选坚持训练、收获显著形体改变的学员蜕变故事与视觉大片。
           </p>
         </div>
+
         <button
           onClick={() =>
             setEditingStar({
               name: "",
               avatarUrl: "",
-              joinDays: null,
-              trainCount: null,
-              courseType: "大器械私教",
-              journey: "",
-              quote: "",
-              sortOrder: stars.length + 1,
+              joinDays: 90,
+              trainCount: 24,
+              courseType: "普拉提塑形",
+              tag: "优雅形体 · 肩颈舒展",
+              quote: "在徕舞的每一次舒展，都让我找回身心的挺拔与从容。",
+              sortOrder: 0,
               isActive: 1,
             })
           }
-          style={{
-            background: "#0E0D10", color: "#FFFFFF", border: "none", padding: "12px 24px",
-            borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: "pointer", boxShadow: "0 2px 8px rgba(14,13,16,0.25)"
-          }}
+          className="px-4 py-2 text-xs font-medium text-white bg-[#2563EB] hover:bg-blue-700 rounded-lg shadow-sm flex items-center gap-1.5 self-start transition-colors"
         >
-          ＋ 新增封面之星
+          <Plus className="w-4 h-4" /> 录入新学员风采
         </button>
       </div>
 
+      {/* Gallery Cards Grid */}
       {loading ? (
-        <div style={{ textAlign: "center", padding: 80, color: "#9E9E9E", fontSize: 14 }}>
-          正在加载封面画报列表...
+        <div className="bg-white border border-[#E1E5EB] rounded-xl p-16 text-center text-[#697180] text-sm shadow-sm">
+          正在读取封面画廊...
+        </div>
+      ) : stars.length === 0 ? (
+        <div className="bg-white border border-[#E1E5EB] rounded-xl p-16 text-center text-[#697180] text-sm shadow-sm flex flex-col items-center justify-center">
+          <Sparkles className="w-10 h-10 text-gray-300 mb-2" />
+          <span className="font-semibold text-[#292D35]">暂无上架的徕舞之星封面</span>
+          <span className="text-xs text-[#697180] mt-1">点击右上角按钮即可上传第一位学员大片。</span>
         </div>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(310px, 1fr))", gap: 24 }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {stars.map((star) => {
-            const displayJourney =
-              star.journey ||
-              (star.joinDays || star.trainCount
-                ? `相伴自律 ${star.joinDays || 0} 天 · ${star.trainCount || 0} 节${star.courseType || "私教"}`
-                : "未填写经历信息");
-
+            const isVisible = star.isActive === 1;
             return (
               <div
                 key={star.id}
-                style={{
-                  background: "#FFFFFF",
-                  borderRadius: 14,
-                  border: "1px solid #EBE4DF",
-                  overflow: "hidden",
-                  boxShadow: "0 4px 14px rgba(0,0,0,0.04)",
-                  display: "flex",
-                  flexDirection: "column",
-                }}
+                className="bg-white border border-[#E1E5EB] rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col"
               >
-                {/* 封面照片 */}
-                <div style={{ position: "relative", width: "100%", height: 360, background: "#0E0D10" }}>
-                  <img
-                    src={star.avatarUrl}
-                    alt={star.name}
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                  />
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: 12,
-                      right: 12,
-                      background: star.isActive === 1 ? "rgba(46, 125, 50, 0.92)" : "rgba(100, 100, 100, 0.92)",
-                      color: "#FFFFFF",
-                      fontSize: 11,
-                      padding: "4px 10px",
-                      borderRadius: 20,
-                      fontWeight: 600,
-                      backdropFilter: "blur(8px)",
-                    }}
-                  >
-                    {star.isActive === 1 ? "● 展示中" : "○ 已隐藏"}
+                {/* Photo Preview Container */}
+                <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden group">
+                  {star.avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={star.avatarUrl}
+                      alt={star.name}
+                      className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-400">
+                      <ImageIcon className="w-10 h-10" />
+                    </div>
+                  )}
+
+                  {/* Top Overlay Badges */}
+                  <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
+                    <span
+                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shadow-xs ${
+                        isVisible
+                          ? "bg-emerald-500/90 text-white backdrop-blur-xs"
+                          : "bg-gray-800/80 text-gray-300 backdrop-blur-xs"
+                      }`}
+                    >
+                      {isVisible ? "小程序在线" : "已隐藏"}
+                    </span>
+                    <span className="text-[10px] font-mono bg-black/50 text-white px-1.5 py-0.5 rounded backdrop-blur-xs">
+                      排序 {star.sortOrder}
+                    </span>
+                  </div>
+
+                  {/* Bottom Gradient with Name & Tag */}
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 text-white">
+                    <div className="font-semibold text-lg">{star.name}</div>
+                    <div className="text-xs text-white/80 mt-0.5 flex items-center gap-1.5">
+                      <span>{star.courseType || "私教定制"}</span>
+                      {star.tag && (
+                        <>
+                          <span>•</span>
+                          <span className="text-[#8B83D7] font-medium">{star.tag}</span>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
 
-                {/* 核心信息区 */}
-                <div style={{ padding: 20, flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                  <div>
-                    {/* 经历信息 */}
-                    <div style={{ fontSize: 12, color: "#9E2A2B", fontWeight: 600, letterSpacing: 0.5, marginBottom: 6 }}>
-                      {displayJourney}
+                {/* Card Content Body */}
+                <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs text-[#697180] tabular-nums">
+                      <span>陪伴第 <strong className="text-[#292D35]">{star.joinDays || 0}</strong> 天</span>
+                      <span>已习练 <strong className="text-[#292D35]">{star.trainCount || 0}</strong> 节课</span>
                     </div>
 
-                    {/* 姓名与排序 */}
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                      <h3 style={{ margin: "0 0 8px 0", fontSize: 20, fontWeight: 600, color: "#1C1415", fontFamily: "serif" }}>
-                        {star.name}
-                      </h3>
-                      <span style={{ fontSize: 12, color: "#8C827B" }}>排序: {star.sortOrder}</span>
-                    </div>
-
-                    {/* 心语 */}
-                    <p style={{ margin: "6px 0 0 0", fontSize: 13, color: "#554E48", lineHeight: 1.6, fontStyle: "italic" }}>
-                      {star.quote ? `“${star.quote}”` : "（未填写自律心语）"}
-                    </p>
+                    {star.quote && (
+                      <p className="text-xs text-[#697180] italic leading-relaxed line-clamp-2">
+                        “{star.quote}”
+                      </p>
+                    )}
                   </div>
 
-                  {/* 操作按钮组 */}
-                  <div style={{ display: "flex", gap: 10, marginTop: 18, borderTop: "1px solid #F0EAE6", paddingTop: 14 }}>
+                  {/* Action Controls */}
+                  <div className="pt-2 border-t border-[#F0F2F6] flex items-center justify-between">
                     <button
                       onClick={() => handleToggleActive(star)}
-                      style={{
-                        flex: 1, padding: "8px 0", background: "#FAF7F5", border: "1px solid #E2D9D2",
-                        borderRadius: 6, fontSize: 12, cursor: "pointer", color: "#4A403E"
-                      }}
+                      className={`text-xs px-2.5 py-1 rounded border transition-colors flex items-center gap-1 ${
+                        isVisible
+                          ? "text-gray-600 bg-white border-gray-200 hover:bg-gray-50"
+                          : "text-[#2563EB] bg-[#E8EEFF] border-blue-200 hover:bg-blue-100"
+                      }`}
                     >
-                      {star.isActive === 1 ? "设为隐藏" : "设为展示"}
+                      {isVisible ? (
+                        <>
+                          <EyeOff className="w-3 h-3" /> 下架
+                        </>
+                      ) : (
+                        <>
+                          <Eye className="w-3 h-3" /> 上架
+                        </>
+                      )}
                     </button>
-                    <button
-                      onClick={() => setEditingStar(star)}
-                      style={{
-                        flex: 1, padding: "8px 0", background: "#FAF7F5", border: "1px solid #E2D9D2",
-                        borderRadius: 6, fontSize: 12, cursor: "pointer", color: "#0E0D10", fontWeight: 600
-                      }}
-                    >
-                      编辑
-                    </button>
-                    <button
-                      onClick={() => handleDelete(star.id)}
-                      style={{
-                        padding: "8px 12px", background: "#FFF5F5", border: "1px solid #FFCDD2",
-                        borderRadius: 6, fontSize: 12, cursor: "pointer", color: "#C62828"
-                      }}
-                    >
-                      删除
-                    </button>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setEditingStar(star)}
+                        className="p-1.5 text-gray-500 hover:text-[#2563EB] rounded hover:bg-gray-100 transition-colors"
+                        title="编辑资料"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => setDeleteConfirmId(star.id)}
+                        className="p-1.5 text-gray-400 hover:text-red-600 rounded hover:bg-red-50 transition-colors"
+                        title="删除"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -275,218 +309,226 @@ export default function AdminStarsPage() {
         </div>
       )}
 
-      {/* 编辑/新增弹窗 */}
+      {/* Drawer: Edit / Add Star */}
       {editingStar && (
-        <div style={{
-          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-          background: "rgba(0,0,0,0.65)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000
-        }}>
-          <div style={{
-            background: "#FFFFFF", borderRadius: 16, width: 540, maxWidth: "92%", maxHeight: "90vh", overflowY: "auto",
-            padding: 32, boxShadow: "0 16px 40px rgba(0,0,0,0.2)"
-          }}>
-            <h2 style={{ margin: "0 0 6px 0", fontSize: 22, color: "#1C1415", fontFamily: "serif" }}>
-              {editingStar.id ? "编辑封面之星" : "新增封面之星"}
-            </h2>
-            <p style={{ margin: "0 0 20px 0", fontSize: 13, color: "#8C827B" }}>
-              修改后即刻生效至微信小程序首屏满屏画报
-            </p>
-
-            <form onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              {/* 会员姓名 */}
-              <div>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1C1415", marginBottom: 6 }}>
-                  会员姓名 / 昵称 <span style={{ color: "#C62828" }}>*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="如：林晓、许诺"
-                  value={editingStar.name || ""}
-                  onChange={(e) => setEditingStar({ ...editingStar, name: e.target.value })}
-                  style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: "1px solid #D1C7C1", fontSize: 14, boxSizing: "border-box" }}
-                />
-              </div>
-
-              {/* 相伴天数与上课节数 */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+        <div className="fixed inset-0 z-50 overflow-hidden">
+          <div
+            className="absolute inset-0 bg-black/30 backdrop-blur-xs transition-opacity"
+            onClick={() => setEditingStar(null)}
+          />
+          <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
+            <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col">
+              <div className="p-6 border-b border-[#E1E5EB] flex items-center justify-between">
                 <div>
-                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1C1415", marginBottom: 6 }}>
-                    相伴自律天数 (天)
-                  </label>
-                  <input
-                    type="number"
-                    placeholder="如：140"
-                    value={editingStar.joinDays ?? ""}
-                    onChange={(e) => {
-                      const val = e.target.value === "" ? null : Number(e.target.value);
-                      const updated = { ...editingStar, joinDays: val };
-                      if (val || updated.trainCount) {
-                        updated.journey = `相伴自律 ${val || 0} 天 · ${updated.trainCount || 0} 节${updated.courseType || "大器械私教"}`;
-                      }
-                      setEditingStar(updated);
-                    }}
-                    style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: "1px solid #D1C7C1", fontSize: 14, boxSizing: "border-box" }}
-                  />
+                  <h3 className="text-lg font-semibold text-[#292D35]">
+                    {editingStar.id ? "编辑学员风采" : "录入学员风采"}
+                  </h3>
+                  <p className="text-xs text-[#697180] mt-0.5">
+                    照片将呈现在小程序首屏焦点画廊，支持直接拍照或上传高清写真。
+                  </p>
                 </div>
-                <div>
-                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1C1415", marginBottom: 6 }}>
-                    累计上课节数 (节)
-                  </label>
-                  <input
-                    type="number"
-                    placeholder="如：42"
-                    value={editingStar.trainCount ?? ""}
-                    onChange={(e) => {
-                      const val = e.target.value === "" ? null : Number(e.target.value);
-                      const updated = { ...editingStar, trainCount: val };
-                      if (updated.joinDays || val) {
-                        updated.journey = `相伴自律 ${updated.joinDays || 0} 天 · ${val || 0} 节${updated.courseType || "大器械私教"}`;
-                      }
-                      setEditingStar(updated);
-                    }}
-                    style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: "1px solid #D1C7C1", fontSize: 14, boxSizing: "border-box" }}
-                  />
-                </div>
-              </div>
-
-              {/* 课程类别与经历拼接 */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1.6fr", gap: 14 }}>
-                <div>
-                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1C1415", marginBottom: 6 }}>
-                    课程类型
-                  </label>
-                  <select
-                    value={editingStar.courseType || "大器械私教"}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      const updated = { ...editingStar, courseType: val };
-                      if (updated.joinDays || updated.trainCount) {
-                        updated.journey = `相伴自律 ${updated.joinDays || 0} 天 · ${updated.trainCount || 0} 节${val}`;
-                      }
-                      setEditingStar(updated);
-                    }}
-                    style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: "1px solid #D1C7C1", fontSize: 14, boxSizing: "border-box" }}
-                  >
-                    <option value="大器械私教">大器械私教</option>
-                    <option value="精选普拉提">精选普拉提</option>
-                    <option value="维密减脂">维密减脂</option>
-                    <option value="深度蜕变">深度蜕变</option>
-                    <option value="私教">私教</option>
-                  </select>
-                </div>
-                <div>
-                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1C1415", marginBottom: 6 }}>
-                    前台展示经历短句
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="如：相伴自律 140 天 · 42 节大器械私教"
-                    value={editingStar.journey || ""}
-                    onChange={(e) => setEditingStar({ ...editingStar, journey: e.target.value })}
-                    style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: "1px solid #D1C7C1", fontSize: 13, boxSizing: "border-box" }}
-                  />
-                </div>
-              </div>
-
-              {/* 写真照片 */}
-              <div>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1C1415", marginBottom: 6 }}>
-                  写真大片 (1080×1920 高清大片) <span style={{ color: "#C62828" }}>*</span>
-                </label>
-                <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                  <input
-                    type="text"
-                    required
-                    placeholder="/images/stars/member_star_1.jpg 或图片地址"
-                    value={editingStar.avatarUrl || ""}
-                    onChange={(e) => setEditingStar({ ...editingStar, avatarUrl: e.target.value })}
-                    style={{ flex: 1, padding: "10px 14px", borderRadius: 8, border: "1px solid #D1C7C1", fontSize: 13, boxSizing: "border-box" }}
-                  />
-                  <label style={{
-                    padding: "10px 16px", background: "#0E0D10", color: "#FFFFFF",
-                    borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap"
-                  }}>
-                    {uploading ? "正在上传..." : "本地上传"}
-                    <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: "none" }} />
-                  </label>
-                </div>
-                {editingStar.avatarUrl && (
-                  <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 14, background: "#FAF7F5", padding: "10px 14px", borderRadius: 8, border: "1px solid #EBE4DF" }}>
-                    <div style={{ width: 48, height: 64, borderRadius: 6, overflow: "hidden", background: "#0E0D10", flexShrink: 0 }}>
-                      <img src={editingStar.avatarUrl} alt="预览" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: "#2E7D32" }}>✓ 照片格式已识别，已同步至小程序</div>
-                      <div style={{ fontSize: 11, color: "#8C827B", marginTop: 2 }}>{editingStar.avatarUrl}</div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* 自律心语 */}
-              <div>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1C1415", marginBottom: 6 }}>
-                  自律体态心语 (真实短句，建议 20~40 字)
-                </label>
-                <textarea
-                  rows={3}
-                  placeholder="如：肩颈松弛下来之后，呼吸都深了，连夜里的睡眠都踏实了许多。"
-                  value={editingStar.quote || ""}
-                  onChange={(e) => setEditingStar({ ...editingStar, quote: e.target.value })}
-                  style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: "1px solid #D1C7C1", fontSize: 13, boxSizing: "border-box", lineHeight: 1.5 }}
-                />
-              </div>
-
-              {/* 排序与展示状态 */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-                <div>
-                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1C1415", marginBottom: 6 }}>
-                    排序权重 (数字越小越靠前)
-                  </label>
-                  <input
-                    type="number"
-                    value={editingStar.sortOrder ?? 0}
-                    onChange={(e) => setEditingStar({ ...editingStar, sortOrder: Number(e.target.value) })}
-                    style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: "1px solid #D1C7C1", fontSize: 14, boxSizing: "border-box" }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1C1415", marginBottom: 6 }}>
-                    上线展示状态
-                  </label>
-                  <select
-                    value={editingStar.isActive ?? 1}
-                    onChange={(e) => setEditingStar({ ...editingStar, isActive: Number(e.target.value) })}
-                    style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: "1px solid #D1C7C1", fontSize: 14, boxSizing: "border-box" }}
-                  >
-                    <option value={1}>上线展示</option>
-                    <option value={0}>隐藏下线</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* 提交按钮 */}
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 16 }}>
                 <button
-                  type="button"
                   onClick={() => setEditingStar(null)}
-                  style={{ padding: "10px 20px", background: "#F5F5F5", border: "1px solid #DDD", borderRadius: 8, fontSize: 13, cursor: "pointer" }}
+                  className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
                 >
-                  取消
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  style={{
-                    padding: "10px 28px", background: "#0E0D10", color: "#FFFFFF", border: "none",
-                    borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: "pointer", boxShadow: "0 2px 8px rgba(14,13,16,0.25)"
-                  }}
-                >
-                  {saving ? "保存中..." : "保存并同步至小程序"}
+                  <X className="w-5 h-5" />
                 </button>
               </div>
-            </form>
+
+              <form onSubmit={handleSave} className="flex-1 overflow-y-auto p-6 space-y-4">
+                {/* Image Upload Area */}
+                <div>
+                  <label className="block text-xs font-medium text-[#292D35] mb-1.5">
+                    风采封面大片 (推荐 3:4 比例竖图) *
+                  </label>
+                  <div className="relative aspect-[3/4] max-h-56 bg-gray-50 border-2 border-dashed border-[#E1E5EB] rounded-xl overflow-hidden flex flex-col items-center justify-center p-3 text-center">
+                    {editingStar.avatarUrl ? (
+                      <>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={editingStar.avatarUrl}
+                          alt="preview"
+                          className="w-full h-full object-cover rounded-lg"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setEditingStar((prev) => ({ ...prev, avatarUrl: "" }))}
+                          className="absolute top-2 right-2 p-1.5 bg-black/60 text-white rounded-full hover:bg-black"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                        <span className="text-xs font-medium text-[#292D35]">
+                          {uploading ? "正在上传云存储并优化..." : "点击或拖拽照片上传"}
+                        </span>
+                        <span className="text-[11px] text-[#697180] mt-0.5">支持 JPG / PNG / WebP</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFileUpload}
+                          disabled={uploading}
+                          className="absolute inset-0 opacity-0 cursor-pointer"
+                        />
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-[#292D35] mb-1">学员姓名 *</label>
+                  <input
+                    type="text"
+                    placeholder="例如：林女士 / Grace"
+                    value={editingStar.name || ""}
+                    onChange={(e) => setEditingStar({ ...editingStar, name: e.target.value })}
+                    required
+                    className="w-full px-3 py-2 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-[#292D35] mb-1">习练天数</label>
+                    <input
+                      type="number"
+                      placeholder="120"
+                      value={editingStar.joinDays ?? ""}
+                      onChange={(e) =>
+                        setEditingStar({
+                          ...editingStar,
+                          joinDays: e.target.value ? Number(e.target.value) : null,
+                        })
+                      }
+                      className="w-full px-3 py-2 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-[#292D35] mb-1">训练课时数</label>
+                    <input
+                      type="number"
+                      placeholder="36"
+                      value={editingStar.trainCount ?? ""}
+                      onChange={(e) =>
+                        setEditingStar({
+                          ...editingStar,
+                          trainCount: e.target.value ? Number(e.target.value) : null,
+                        })
+                      }
+                      className="w-full px-3 py-2 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-[#292D35] mb-1">训练体系</label>
+                    <input
+                      type="text"
+                      placeholder="普拉提大器械塑形"
+                      value={editingStar.courseType || ""}
+                      onChange={(e) => setEditingStar({ ...editingStar, courseType: e.target.value })}
+                      className="w-full px-3 py-2 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-[#292D35] mb-1">主打标签</label>
+                    <input
+                      type="text"
+                      placeholder="体态重塑 · 挺拔肩颈"
+                      value={editingStar.tag || ""}
+                      onChange={(e) => setEditingStar({ ...editingStar, tag: e.target.value })}
+                      className="w-full px-3 py-2 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-[#292D35] mb-1">学员蜕变心声 Quote</label>
+                  <textarea
+                    rows={3}
+                    placeholder="在徕舞的每一次舒展，都让我找回身体的轻盈与自信。"
+                    value={editingStar.quote || ""}
+                    onChange={(e) => setEditingStar({ ...editingStar, quote: e.target.value })}
+                    className="w-full px-3 py-2 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB] leading-relaxed"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-[#292D35] mb-1">显示排序 (数字越小越前)</label>
+                    <input
+                      type="number"
+                      value={editingStar.sortOrder ?? 0}
+                      onChange={(e) =>
+                        setEditingStar({ ...editingStar, sortOrder: Number(e.target.value) || 0 })
+                      }
+                      className="w-full px-3 py-2 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-[#292D35] mb-1">展示状态</label>
+                    <select
+                      value={editingStar.isActive ?? 1}
+                      onChange={(e) =>
+                        setEditingStar({ ...editingStar, isActive: Number(e.target.value) })
+                      }
+                      className="w-full px-3 py-2 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                    >
+                      <option value={1}>在线展示</option>
+                      <option value={0}>暂隐藏</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-[#E1E5EB] flex items-center justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setEditingStar(null)}
+                    className="px-4 py-2 text-xs font-medium text-[#697180] hover:text-[#292D35] bg-white border border-[#E1E5EB] rounded-lg"
+                  >
+                    取消
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="px-5 py-2 text-xs font-medium text-white bg-[#2563EB] hover:bg-blue-700 rounded-lg shadow-sm disabled:opacity-50"
+                  >
+                    {saving ? "正在发布..." : "确认发布封面"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Modal */}
+      {deleteConfirmId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+          <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-5 border border-[#E1E5EB]">
+            <h3 className="text-base font-semibold text-[#292D35]">确认移除该封面？</h3>
+            <p className="text-xs text-[#697180] mt-1">
+              移除后，该封面将不再出现在小程序端首屏。
+            </p>
+            <div className="flex justify-end gap-2 mt-5">
+              <button
+                type="button"
+                onClick={() => setDeleteConfirmId(null)}
+                className="px-3 py-1.5 text-xs text-[#697180] bg-white border border-[#E1E5EB] rounded-lg"
+              >
+                取消
+              </button>
+              <button
+                type="button"
+                onClick={confirmDelete}
+                className="px-4 py-1.5 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg shadow-sm"
+              >
+                确认移除
+              </button>
+            </div>
           </div>
         </div>
       )}

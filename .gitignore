@@ -3,6 +3,9 @@ node_modules/
 .env
 .env.local
 .env.production
+.env.test
+.env.test.local
+.env*.local
 *.db
 *.db-shm
 *.db-wal

@@ -2,11 +2,22 @@ import { db, rawSql } from "@/db";
 import { members, trainings } from "@/db/schema";
 import { sql } from "drizzle-orm";
 import Link from "next/link";
+import {
+  Users,
+  Calendar,
+  Clock,
+  MessageSquare,
+  ArrowRight,
+  Sparkles,
+  Building2,
+  TrendingUp,
+  CreditCard,
+  CalendarDays,
+  ClipboardCheck,
+  BellRing,
+} from "lucide-react";
 
 export const dynamic = "force-dynamic";
-
-const today = new Date().toISOString().slice(5, 10); // MM-DD
-const sevenDaysLater = new Date(Date.now() + 7 * 86400000).toISOString().slice(5, 10);
 
 interface AnniversaryInfo {
   memberId: number;
@@ -16,7 +27,6 @@ interface AnniversaryInfo {
   level: string;
 }
 
-// Days since joined_at
 function daysBetween(d1: string): number {
   const a = new Date(d1);
   const b = new Date();
@@ -24,14 +34,13 @@ function daysBetween(d1: string): number {
 }
 
 function getLevel(days: number): string {
-  if (days < 30) return "启程";
+  if (days < 30) return "初识启程";
   if (days < 90) return "习惯建立";
   if (days < 180) return "稳定成长";
   if (days < 365) return "深度蜕变";
-  return "长期主义";
+  return "长期相伴";
 }
 
-// Care reminders: 14 days no training members
 interface CareReminder {
   memberId: number;
   memberName: string;
@@ -40,16 +49,48 @@ interface CareReminder {
 }
 
 export default async function AdminPage() {
-  const allMembers = await db.select().from(members).where(sql`${members.status} = 'active'`);
+  const [allMembers, rows, recentFeelings] = await Promise.all([
+    db
+      .select()
+      .from(members)
+      .where(sql`${members.status} = 'active'`)
+      .catch((e) => {
+        console.error("members query error:", e);
+        return [];
+      }),
+    rawSql`
+      SELECT member_id, MAX(training_date) as last_date
+      FROM trainings
+      GROUP BY member_id
+    `.catch((e) => {
+      console.error("trainings query error:", e);
+      return [];
+    }),
+    rawSql`
+      SELECT tf.id, tf.member_id, tf.feeling, tf.xiaoqiao_reply, tf.created_at,
+             m.name as member_name, m.member_code
+        FROM training_feelings tf
+        LEFT JOIN members m ON m.id = tf.member_id
+       ORDER BY tf.created_at DESC
+       LIMIT 6
+    `.catch((e) => {
+      console.error("recentFeelings error:", e);
+      return [];
+    }),
+  ]);
 
-  // Anniversaries this week (MM-DD match in coming 7 days)
+  // 已开通会员端的会员数（原来这里写死「271 人支持微信免密」，是假数）
+  const portalEnabledCount = allMembers.filter(
+    (m) => Number((m as any).portalEnabled) === 1
+  ).length;
+
+  // 本周入会纪念日学员
   const anniversaries: AnniversaryInfo[] = [];
   for (const m of allMembers) {
     if (!m.joinedAt) continue;
-    const joinedMMDD = m.joinedAt.slice(5, 10);
     const days = daysBetween(m.joinedAt);
-    const anniversaries_30 = [30, 90, 180, 365, 1095, 1825];
-    const isClose = anniversaries_30.some((d) => Math.abs(days - d) <= 3);
+    const milestones = [30, 90, 180, 365, 730, 1095];
+    const isClose = milestones.some((d) => Math.abs(days - d) <= 3);
     if (isClose) {
       anniversaries.push({
         memberId: m.id,
@@ -61,18 +102,22 @@ export default async function AdminPage() {
     }
   }
 
-  // Care reminders: 14+ days since last training
+  // 14 天以上未记录训练会员（单表分组聚合查出）
+  const lastTrainingMap = new Map<number, string>();
+  for (const r of rows) {
+    if (r.member_id && r.last_date) {
+      lastTrainingMap.set(Number(r.member_id), String(r.last_date));
+    }
+  }
+
   const careReminders: CareReminder[] = [];
   for (const m of allMembers) {
-    const lastTraining = await db
-      .select({ date: trainings.trainingDate })
-      .from(trainings)
-      .where(sql`${trainings.memberId} = ${m.id}`)
-      .orderBy(sql`${trainings.trainingDate} DESC`)
-      .limit(1);
-
-    const lastDate = lastTraining[0]?.date ?? null;
-    const daysSinceLastTraining = lastDate ? daysBetween(lastDate) : (m.joinedAt ? daysBetween(m.joinedAt) : 999);
+    const lastDate = lastTrainingMap.get(m.id) || null;
+    const daysSinceLastTraining = lastDate
+      ? daysBetween(lastDate)
+      : m.joinedAt
+      ? daysBetween(m.joinedAt)
+      : 999;
 
     if (daysSinceLastTraining >= 14) {
       careReminders.push({
@@ -84,202 +129,645 @@ export default async function AdminPage() {
     }
   }
 
-  // 最新会员心声便签 (小桥来信互动)
-  let recentFeelings: any[] = [];
-  try {
-    recentFeelings = await rawSql`
-      SELECT tf.id, tf.member_id, tf.feeling, tf.xiaoqiao_reply, tf.created_at,
-             m.name as member_name, m.portal_code
-        FROM training_feelings tf
-        LEFT JOIN members m ON m.id = tf.member_id
-       ORDER BY tf.created_at DESC
-       LIMIT 6
-    `;
-  } catch (err) {
-    console.error("fetch recentFeelings error:", err);
-  }
-
   return (
-    <main style={{ background: "#FAFAFA", minHeight: "100vh", padding: "40px 24px" }}>
-      <div style={{ maxWidth: 960, margin: "0 auto" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: "#1A1A1A", margin: 0 }}>CRM 管理中心</h1>
-          <Link href="/members" style={{ fontSize: 14, color: "#8B5E3C", fontWeight: 600, textDecoration: "none" }}>
-            会员列表 (全部 {allMembers.length} 人) →
-          </Link>
-        </div>
-
-        {/* 了解徕舞 · 全能控制中心入口（醒目置顶） */}
-        <div style={{
-          background: "linear-gradient(135deg, #1C0A09 0%, #5E1914 100%)",
-          borderRadius: 16,
-          padding: "24px 28px",
-          color: "#FFFFFF",
-          marginBottom: 32,
+    <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+      {/* 头部标题与面包屑 */}
+      <div
+        style={{
           display: "flex",
           justifyContent: "space-between",
-          alignItems: "center",
+          alignItems: "flex-start",
+          marginBottom: 24,
           flexWrap: "wrap",
-          gap: 16,
-          boxShadow: "0 8px 24px rgba(94, 25, 20, 0.25)"
-        }}>
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-              <span style={{ background: "rgba(255,255,255,0.2)", fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 4, letterSpacing: 1 }}>
-                小程序第 2 板块
-              </span>
-              <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#FFFFFF" }}>
-                🏛️ 「了解徕舞」全能控制中心
-              </h2>
-            </div>
-            <p style={{ margin: 0, fontSize: 13.5, color: "rgba(255, 255, 255, 0.88)", lineHeight: 1.6 }}>
-              集中配置：三大板块主副标题与文案 · 空间相册实拍 · 导师阵容头像 · 课程体系与实拍底图（无限增删、自由排序）
-            </p>
+          gap: 12,
+        }}
+      >
+        <div>
+          <div
+            style={{
+              fontSize: 12,
+              fontWeight: 500,
+              color: "#697180",
+              marginBottom: 4,
+            }}
+          >
+            门店工作台 / 运营中枢与关怀看板
           </div>
+          <h1
+            style={{
+              fontSize: 24,
+              fontWeight: 600,
+              color: "#292D35",
+              margin: 0,
+              letterSpacing: -0.3,
+            }}
+          >
+            总览数据
+          </h1>
+        </div>
+
+        <Link
+          href="/admin/members"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            background: "#2563EB",
+            color: "#FFFFFF",
+            padding: "8px 16px",
+            borderRadius: 6,
+            fontSize: 13,
+            fontWeight: 500,
+            textDecoration: "none",
+            transition: "background 0.15s ease",
+          }}
+        >
+          <span>查看全部会员名录 ({allMembers.length})</span>
+          <ArrowRight size={14} />
+        </Link>
+      </div>
+
+      {/* 4 维核心运营数据指标 (Google 风格冷白卡片) */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))",
+          gap: 16,
+          marginBottom: 28,
+        }}
+      >
+        {/* 卡片 1 */}
+        <div
+          style={{
+            background: "#FFFFFF",
+            border: "1px solid #E1E5EB",
+            borderRadius: 8,
+            padding: "18px 20px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 10,
+            }}
+          >
+            <span style={{ fontSize: 12.5, color: "#697180", fontWeight: 500 }}>
+              在籍活跃会员
+            </span>
+            <Users size={16} style={{ color: "#697180" }} />
+          </div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+            <span
+              style={{
+                fontSize: 28,
+                fontWeight: 600,
+                color: "#292D35",
+                fontFamily: "ui-monospace, monospace",
+              }}
+            >
+              {allMembers.length}
+            </span>
+            <span style={{ fontSize: 12, color: "#10B981", fontWeight: 500 }}>
+              ● {portalEnabledCount} 人已开通会员端
+            </span>
+          </div>
+          <div style={{ fontSize: 12, color: "#697180", marginTop: 8 }}>
+            数据以后台手工维护为准
+          </div>
+        </div>
+
+        {/* 卡片 2 */}
+        <div
+          style={{
+            background: "#FFFFFF",
+            border: "1px solid #E1E5EB",
+            borderRadius: 8,
+            padding: "18px 20px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 10,
+            }}
+          >
+            <span style={{ fontSize: 12.5, color: "#697180", fontWeight: 500 }}>
+              本周纪念日关怀
+            </span>
+            <Calendar size={16} style={{ color: "#2563EB" }} />
+          </div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+            <span
+              style={{
+                fontSize: 28,
+                fontWeight: 600,
+                color: "#2563EB",
+                fontFamily: "ui-monospace, monospace",
+              }}
+            >
+              {anniversaries.length}
+            </span>
+            <span style={{ fontSize: 12, color: "#2563EB", fontWeight: 500 }}>
+              位学员到达节点
+            </span>
+          </div>
+          <div style={{ fontSize: 12, color: "#697180", marginTop: 8 }}>
+            30天/90天/1年/2年陪伴里程碑
+          </div>
+        </div>
+
+        {/* 卡片 3 */}
+        <div
+          style={{
+            background: "#FFFFFF",
+            border: "1px solid #E1E5EB",
+            borderRadius: 8,
+            padding: "18px 20px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 10,
+            }}
+          >
+            <span style={{ fontSize: 12.5, color: "#697180", fontWeight: 500 }}>
+              两周未到馆预警
+            </span>
+            <Clock size={16} style={{ color: "#F59E0B" }} />
+          </div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+            <span
+              style={{
+                fontSize: 28,
+                fontWeight: 600,
+                color: "#292D35",
+                fontFamily: "ui-monospace, monospace",
+              }}
+            >
+              {careReminders.length}
+            </span>
+            <span style={{ fontSize: 12, color: "#F59E0B", fontWeight: 500 }}>
+              人待温情唤醒
+            </span>
+          </div>
+          <div style={{ fontSize: 12, color: "#697180", marginTop: 8 }}>
+            基于真实消课打卡日志计算
+          </div>
+        </div>
+
+        {/* 卡片 4 */}
+        <div
+          style={{
+            background: "#FFFFFF",
+            border: "1px solid #E1E5EB",
+            borderRadius: 8,
+            padding: "18px 20px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 10,
+            }}
+          >
+            <span style={{ fontSize: 12.5, color: "#697180", fontWeight: 500 }}>
+              课后留言便签
+            </span>
+            <MessageSquare size={16} style={{ color: "#8B83D7" }} />
+          </div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+            <span
+              style={{
+                fontSize: 28,
+                fontWeight: 600,
+                color: "#292D35",
+                fontFamily: "ui-monospace, monospace",
+              }}
+            >
+              {recentFeelings.length}
+            </span>
+            <span style={{ fontSize: 12, color: "#697180", fontWeight: 500 }}>
+              条最新学员心声
+            </span>
+          </div>
+          <div style={{ fontSize: 12, color: "#697180", marginTop: 8 }}>
+            支持导师手札亲笔真诚回复
+          </div>
+        </div>
+      </div>
+
+      {/* 小程序 4 大板块内容快捷入口 (1:1 映射微信端 Tab) */}
+      <div style={{ marginBottom: 32 }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 12,
+          }}
+        >
+          <h2 style={{ fontSize: 15, fontWeight: 600, color: "#292D35", margin: 0 }}>
+            微信小程序 4 大内容板块
+          </h2>
+          <span style={{ fontSize: 12, color: "#697180" }}>
+            修改后实时同步至学员端
+          </span>
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+            gap: 14,
+          }}
+        >
+          <Link
+            href="/admin/stars"
+            style={{
+              background: "#FFFFFF",
+              border: "1px solid #E1E5EB",
+              borderRadius: 8,
+              padding: "16px 18px",
+              textDecoration: "none",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              transition: "border-color 0.15s ease",
+            }}
+          >
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                <Sparkles size={16} style={{ color: "#2563EB" }} />
+                <span style={{ fontSize: 14, fontWeight: 600, color: "#292D35" }}>
+                  1. 徕舞之星
+                </span>
+              </div>
+              <p style={{ fontSize: 12.5, color: "#697180", margin: 0, lineHeight: 1.5 }}>
+                首屏大封面画报轮播、优秀学员故事、蜕变语录与杂志风封面。
+              </p>
+            </div>
+            <div style={{ marginTop: 14, fontSize: 12, fontWeight: 500, color: "#2563EB" }}>
+              管理画报 →
+            </div>
+          </Link>
+
           <Link
             href="/admin/brand"
             style={{
-              background: "#F6E6DA",
-              color: "#1C1415",
-              padding: "12px 26px",
+              background: "#FFFFFF",
+              border: "1px solid #E1E5EB",
               borderRadius: 8,
-              fontSize: 14,
-              fontWeight: 700,
+              padding: "16px 18px",
               textDecoration: "none",
-              whiteSpace: "nowrap",
-              boxShadow: "0 2px 10px rgba(0,0,0,0.18)"
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              transition: "border-color 0.15s ease",
             }}
           >
-            进入「了解徕舞」控制台 →
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                <Building2 size={16} style={{ color: "#2563EB" }} />
+                <span style={{ fontSize: 14, fontWeight: 600, color: "#292D35" }}>
+                  2. 了解徕舞
+                </span>
+              </div>
+              <p style={{ fontSize: 12.5, color: "#697180", margin: 0, lineHeight: 1.5 }}>
+                场馆实拍相册、同行导师团队与三大课程体系底图。
+              </p>
+            </div>
+            <div style={{ marginTop: 14, fontSize: 12, fontWeight: 500, color: "#2563EB" }}>
+              配置空间与导师 →
+            </div>
+          </Link>
+
+          <Link
+            href="/admin/transformation"
+            style={{
+              background: "#FFFFFF",
+              border: "1px solid #E1E5EB",
+              borderRadius: 8,
+              padding: "16px 18px",
+              textDecoration: "none",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              transition: "border-color 0.15s ease",
+            }}
+          >
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                <TrendingUp size={16} style={{ color: "#2563EB" }} />
+                <span style={{ fontSize: 14, fontWeight: 600, color: "#292D35" }}>
+                  3. 我的蜕变
+                </span>
+              </div>
+              <p style={{ fontSize: 12.5, color: "#697180", margin: 0, lineHeight: 1.5 }}>
+                学员入学初测与进阶定格对照图谱、三维体态评估与诊断评语。
+              </p>
+            </div>
+            <div style={{ marginTop: 14, fontSize: 12, fontWeight: 500, color: "#2563EB" }}>
+              录入蜕变档案 →
+            </div>
+          </Link>
+
+          <Link
+            href="/admin/members"
+            style={{
+              background: "#FFFFFF",
+              border: "1px solid #E1E5EB",
+              borderRadius: 8,
+              padding: "16px 18px",
+              textDecoration: "none",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              transition: "border-color 0.15s ease",
+            }}
+          >
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                <Users size={16} style={{ color: "#2563EB" }} />
+                <span style={{ fontSize: 14, fontWeight: 600, color: "#292D35" }}>
+                  4. 我的账户
+                </span>
+              </div>
+              <p style={{ fontSize: 12.5, color: "#697180", margin: 0, lineHeight: 1.5 }}>
+                会员名录秒查、四类细分课时手工核销、学员身体手札维护。
+              </p>
+            </div>
+            <div style={{ marginTop: 14, fontSize: 12, fontWeight: 500, color: "#2563EB" }}>
+              管理课时档案 →
+            </div>
           </Link>
         </div>
+      </div>
 
-        {anniversaries.length > 0 && (
-          <div style={{ marginBottom: 32 }}>
-            <p style={{ fontSize: 13, fontWeight: 600, color: "#1A1A1A", marginBottom: 12, textTransform: "uppercase", letterSpacing: 1 }}>
-              本周纪念会员
-            </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {anniversaries.map((a) => (
-                <Link key={a.memberId} href={`/members/${a.memberId}`}
-                  style={{
-                    background: "#FFFFFF", borderRadius: 10, padding: "14px 18px",
-                    display: "flex", justifyContent: "space-between", alignItems: "center",
-                    textDecoration: "none", boxShadow: "0 1px 3px rgba(0,0,0,0.03)"
-                  }}>
-                  <div>
-                    <span style={{ fontWeight: 600, fontSize: 15, color: "#1A1A1A" }}>{a.memberName}</span>
-                    <span style={{ fontSize: 12, color: "#9E9E9E", marginLeft: 10 }}>{a.days}天 · {a.level}</span>
-                  </div>
-                  <span style={{ fontSize: 12, color: "#1A1A1A", fontWeight: 500 }}>加入于 {a.joinedAt?.slice(0, 10)}</span>
-                </Link>
-              ))}
-            </div>
+      {/* 双列工作区：里程碑关怀 vs 最新便签 */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+        {/* 左列：纪念日节点 */}
+        <div
+          style={{
+            background: "#FFFFFF",
+            border: "1px solid #E1E5EB",
+            borderRadius: 8,
+            padding: "20px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 16,
+            }}
+          >
+            <h3 style={{ fontSize: 15, fontWeight: 600, color: "#292D35", margin: 0 }}>
+              入会纪念日节点关怀 ({anniversaries.length})
+            </h3>
+            <span
+              style={{
+                fontSize: 11.5,
+                color: "#2563EB",
+                background: "#E8EEFF",
+                padding: "2px 8px",
+                borderRadius: 4,
+                fontWeight: 500,
+              }}
+            >
+              本周节点
+            </span>
           </div>
-        )}
 
-        {careReminders.length > 0 && (
-          <div style={{ marginBottom: 32 }}>
-            <p style={{ fontSize: 13, fontWeight: 600, color: "#F57F17", marginBottom: 12, textTransform: "uppercase", letterSpacing: 1 }}>
-              值得联系会员
-            </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {careReminders.map((c) => (
-                <Link key={c.memberId} href={`/members/${c.memberId}`}
-                  style={{
-                    background: "#FFFDF7", borderRadius: 10, padding: "14px 18px",
-                    display: "flex", justifyContent: "space-between", alignItems: "center",
-                    textDecoration: "none", border: "1px solid #FCE4EC"
-                  }}>
-                  <div>
-                    <span style={{ fontWeight: 600, fontSize: 15, color: "#1A1A1A" }}>{c.memberName}</span>
-                    <span style={{ fontSize: 12, color: "#9E9E9E", marginLeft: 10 }}>
-                      {c.lastTrainingDate ? `最近训练 ${c.lastTrainingDate}` : "暂无训练记录"}
-                    </span>
-                  </div>
-                  <span style={{ fontSize: 12, color: "#C62828", fontWeight: 500 }}>加入 {c.daysSinceJoin} 天</span>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ─── 最新会员心声便签 (小桥来信互动) ─── */}
-        <div style={{ marginBottom: 32 }}>
-          <p style={{ fontSize: 13, fontWeight: 600, color: "#8B5E3C", marginBottom: 12, textTransform: "uppercase", letterSpacing: 1 }}>
-            最新会员心声 · 小桥来信互动
-          </p>
-          {recentFeelings.length === 0 ? (
-            <div style={{ background: "#FAFAFA", borderRadius: 10, padding: "16px", border: "1px dashed #E5E5E5", color: "#9E9E9E", fontSize: 13 }}>
-              暂无最新会员便签提交
+          {anniversaries.length === 0 ? (
+            <div
+              style={{
+                padding: "36px 0",
+                textAlign: "center",
+                color: "#697180",
+                fontSize: 13,
+              }}
+            >
+              本周暂无刚好到达 30/90/180/365 天节点的学员
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {recentFeelings.map((f: any) => (
-                <Link key={f.id} href={`/members/${f.member_id}`}
+              {anniversaries.map((a) => (
+                <div
+                  key={a.memberId}
                   style={{
-                    background: "#FFFFFF", borderRadius: 10, padding: "14px 18px",
-                    display: "flex", flexDirection: "column", gap: 6,
-                    textDecoration: "none", border: "1px solid #E5E5E5", boxShadow: "0 1px 3px rgba(0,0,0,0.02)"
-                  }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontWeight: 600, fontSize: 15, color: "#1A1A1A" }}>
-                      {f.member_name || "会员"}
-                      <span style={{ fontSize: 11, color: "#8B5E3C", background: "#FAF5F0", padding: "2px 6px", borderRadius: 4, marginLeft: 8 }}>
-                        {f.portal_code || ""}
+                    padding: "10px 14px",
+                    borderRadius: 6,
+                    background: "#F5F7FA",
+                    border: "1px solid #E1E5EB",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontWeight: 600, fontSize: 13.5, color: "#292D35" }}>
+                        {a.memberName}
                       </span>
-                    </span>
-                    <span style={{ fontSize: 12, color: "#9E9E9E" }}>
-                      {f.created_at ? String(f.created_at).slice(0, 16) : ""}
-                    </span>
+                      <span
+                        style={{
+                          fontSize: 11,
+                          background: "#E8EEFF",
+                          color: "#2563EB",
+                          padding: "1px 6px",
+                          borderRadius: 4,
+                          fontWeight: 500,
+                        }}
+                      >
+                        {a.level}
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 12,
+                        color: "#697180",
+                        marginTop: 3,
+                        fontFamily: "ui-monospace, monospace",
+                      }}
+                    >
+                      入会: {a.joinedAt.slice(0, 10)} · 已陪伴 {a.days} 天
+                    </div>
                   </div>
-                  <p style={{ fontSize: 13, color: "#4A4A4A", margin: 0 }}>
-                    <strong style={{ color: "#1A1A1A" }}>会员留言：</strong>{f.feeling}
-                  </p>
-                  {f.xiaoqiao_reply && (
-                    <p style={{ fontSize: 12, color: "#8B5E3C", margin: 0, background: "#FAF5F0", padding: "6px 10px", borderRadius: 6 }}>
-                      <strong>小桥回信：</strong>{f.xiaoqiao_reply}
-                    </p>
-                  )}
-                </Link>
+                  <Link
+                    href={`/admin/members?q=${encodeURIComponent(a.memberName)}`}
+                    style={{
+                      fontSize: 12,
+                      color: "#2563EB",
+                      background: "#FFFFFF",
+                      border: "1px solid #E1E5EB",
+                      padding: "4px 10px",
+                      borderRadius: 4,
+                      textDecoration: "none",
+                      fontWeight: 500,
+                    }}
+                  >
+                    去跟进
+                  </Link>
+                </div>
               ))}
             </div>
           )}
         </div>
 
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 24 }}>
-          <Link href="/admin/stars" style={{
-            background: "#5E1914", padding: "12px 24px", borderRadius: 10,
-            fontSize: 14, color: "#FFFFFF", fontWeight: 600, textDecoration: "none",
-            boxShadow: "0 2px 8px rgba(94,25,20,0.2)"
-          }}>✦ 月度之星管理</Link>
-          <Link href="/admin/venue" style={{
-            background: "#8B5E3C", padding: "12px 24px", borderRadius: 10,
-            fontSize: 14, color: "#FFFFFF", fontWeight: 600, textDecoration: "none",
-            boxShadow: "0 2px 8px rgba(139,94,60,0.2)"
-          }}>✦ 场馆相册管理</Link>
-          <Link href="/admin/team" style={{
-            background: "#4A403E", padding: "12px 24px", borderRadius: 10,
-            fontSize: 14, color: "#FFFFFF", fontWeight: 600, textDecoration: "none",
-            boxShadow: "0 2px 8px rgba(74,64,62,0.2)"
-          }}>✦ 徕舞团队管理</Link>
-          <Link href="/members" style={{
-            background: "#FFFFFF", padding: "12px 24px", borderRadius: 10,
-            fontSize: 14, color: "#1A1A1A", fontWeight: 500, textDecoration: "none",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.04)"
-          }}>全部会员</Link>
-          <Link href="/admin/sync" style={{
-            background: "#FFFFFF", padding: "12px 24px", borderRadius: 10,
-            fontSize: 14, color: "#1A1A1A", fontWeight: 500, textDecoration: "none",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.04)"
-          }}>飞书同步</Link>
-          <Link href="/admin/usage" style={{
-            background: "#FFFFFF", padding: "12px 24px", borderRadius: 10,
-            fontSize: 14, color: "#1A1A1A", fontWeight: 500, textDecoration: "none",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.04)"
-          }}>运营数据</Link>
+        {/* 右列：最新便签与回音 */}
+        <div
+          style={{
+            background: "#FFFFFF",
+            border: "1px solid #E1E5EB",
+            borderRadius: 8,
+            padding: "20px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 16,
+            }}
+          >
+            <h3 style={{ fontSize: 15, fontWeight: 600, color: "#292D35", margin: 0 }}>
+              最新学员课后留言
+            </h3>
+            <Link
+              href="/admin/feelings"
+              style={{
+                fontSize: 12,
+                color: "#2563EB",
+                textDecoration: "none",
+                fontWeight: 500,
+              }}
+            >
+              全部便签 ({recentFeelings.length}) →
+            </Link>
+          </div>
+
+          {recentFeelings.length === 0 ? (
+            <div
+              style={{
+                padding: "36px 0",
+                textAlign: "center",
+                color: "#697180",
+                fontSize: 13,
+              }}
+            >
+              暂无学员课后留言
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {recentFeelings.slice(0, 4).map((f: any) => (
+                <div
+                  key={f.id}
+                  style={{
+                    padding: "10px 14px",
+                    borderRadius: 6,
+                    background: "#F5F7FA",
+                    border: "1px solid #E1E5EB",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 4,
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span
+                        style={{
+                          fontWeight: 600,
+                          fontSize: 13.5,
+                          color: "#292D35",
+                        }}
+                      >
+                        {f.member_name || "学员"}
+                      </span>
+                      {f.member_code && (
+                        <span
+                          style={{
+                            fontSize: 11,
+                            color: "#697180",
+                            background: "#E8EAF0",
+                            padding: "1px 5px",
+                            borderRadius: 4,
+                            fontFamily: "ui-monospace, monospace",
+                          }}
+                        >
+                          {f.member_code}
+                        </span>
+                      )}
+                    </div>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        color: "#697180",
+                        fontFamily: "ui-monospace, monospace",
+                      }}
+                    >
+                      {f.created_at ? String(f.created_at).slice(0, 10) : ""}
+                    </span>
+                  </div>
+                  <p
+                    style={{
+                      fontSize: 12.5,
+                      color: "#292D35",
+                      margin: 0,
+                      lineHeight: 1.45,
+                    }}
+                  >
+                    “{f.feeling}”
+                  </p>
+                  {f.xiaoqiao_reply ? (
+                    <div
+                      style={{
+                        fontSize: 11.5,
+                        color: "#2563EB",
+                        background: "#E8EEFF",
+                        padding: "3px 8px",
+                        borderRadius: 4,
+                        marginTop: 2,
+                      }}
+                    >
+                      导师回音：{f.xiaoqiao_reply}
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        fontSize: 11.5,
+                        color: "#F59E0B",
+                        marginTop: 2,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 4,
+                      }}
+                    >
+                      <span>● 待导师回复</span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
-    </main>
+    </div>
   );
 }

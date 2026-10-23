@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import { COLORS } from "@/lib/design/DESIGN_TOKEN";
+import { User, Lock, ArrowRight, ShieldCheck, Sparkles } from "lucide-react";
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
@@ -34,10 +33,14 @@ export default function AdminLoginPage() {
         return;
       }
 
-      // 提取重定向地址，默认前往月度之星封面画报
+      // 只允许跳回站内后台路径，挡掉 ?redirect=javascript:... 与外部钓鱼地址
       const params = new URLSearchParams(window.location.search);
-      const redirectUrl = params.get("redirect") || "/admin/stars";
-      window.location.href = redirectUrl;
+      const raw = params.get("redirect") || "";
+      const safe =
+        raw.startsWith("/admin") && !raw.startsWith("//") && !raw.includes("://")
+          ? raw
+          : "/admin";
+      window.location.href = safe;
     } catch {
       setError("网络错误，请重试");
     } finally {
@@ -46,94 +49,91 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen px-6 bg-[#FAFAFA]">
-      <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-sm"
-      >
-        <div className="text-center mb-10">
-          <div
-            className="w-14 h-14 mx-auto rounded-xl flex items-center justify-center mb-5"
-            style={{ backgroundColor: `${COLORS.primary}14` }}
-          >
-            <span
-              className="text-xl font-serif"
-              style={{ color: COLORS.primary }}
-            >
-              L
-            </span>
+    <div className="min-h-screen bg-[#F5F7FA] flex flex-col items-center justify-center p-4 selection:bg-[#E8EEFF] selection:text-[#2563EB]">
+      {/* Container */}
+      <div className="w-full max-w-sm bg-white border border-[#E1E5EB] rounded-2xl shadow-sm p-8 space-y-6">
+        {/* Brand Lockup */}
+        <div className="text-center space-y-2">
+          <div className="w-12 h-12 bg-[#2563EB] text-white rounded-xl mx-auto flex items-center justify-center font-bold text-xl tracking-wider shadow-sm">
+            LW
           </div>
-          <h1 className="font-serif text-2xl font-bold text-[#1A1A1A]">
-            徕舞管理中心
-          </h1>
-          <p className="text-sm text-[#9E9E9E] mt-2">
-            管理员登录
+          <div>
+            <div className="text-[11px] font-semibold text-[#2563EB] tracking-widest uppercase mt-3">
+              LAIWU DIGITAL EDITORIAL
+            </div>
+            <h1 className="text-xl font-bold text-[#292D35] tracking-tight mt-0.5">
+              徕舞女子塑形 · 管理中枢
+            </h1>
+          </div>
+          <p className="text-xs text-[#697180]">
+            统一连接学员微信小程序与门店运营业务
           </p>
         </div>
 
+        {/* Error Alert */}
+        {error && (
+          <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700 flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs text-[#666666] font-medium mb-2">
-              账号 (支持邮箱或直接输入 admin)
+            <label className="block text-xs font-medium text-[#292D35] mb-1.5">
+              管理员账号 (输入 admin 即可)
             </label>
-            <input
-              type="text"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@laiwu.fitness 或 admin"
-              className="w-full h-12 px-4 rounded-xl bg-white text-sm text-[#1A1A1A] placeholder-[#9E9E9E] outline-none transition-all focus:ring-2 focus:ring-[#1A1A1A]/20"
-              style={{ border: `1px solid ${COLORS.border}` }}
-              autoFocus
-            />
+            <div className="relative">
+              <User className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="admin"
+                required
+                className="w-full pl-9 pr-3 py-2 text-xs bg-[#F8FAFC] border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:bg-white text-[#292D35] transition-colors"
+              />
+            </div>
           </div>
+
           <div>
-            <label className="block text-xs text-[#666666] font-medium mb-2">
-              密码
+            <label className="block text-xs font-medium text-[#292D35] mb-1.5">
+              安全密码
             </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="请输入密码"
-              className="w-full h-12 px-4 rounded-xl bg-white text-sm text-[#1A1A1A] placeholder-[#9E9E9E] outline-none transition-all focus:ring-2 focus:ring-[#1A1A1A]/20"
-              style={{ border: `1px solid ${COLORS.border}` }}
-            />
+            <div className="relative">
+              <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                className="w-full pl-9 pr-3 py-2 text-xs bg-[#F8FAFC] border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:bg-white text-[#292D35] transition-colors"
+              />
+            </div>
           </div>
-          {error && (
-            <p className="text-xs" style={{ color: "#C62828", fontWeight: 500 }}>
-              {error}
-            </p>
-          )}
+
           <button
             type="submit"
             disabled={loading}
-            className="w-full h-12 rounded-xl text-white text-sm font-medium transition-colors disabled:opacity-50"
-            style={{
-              backgroundColor: COLORS.primary,
-              boxShadow: `0 4px 20px ${COLORS.primary}30`,
-            }}
-            onMouseEnter={(e) =>
-              (e.currentTarget.style.backgroundColor = "#333333")
-            }
-            onMouseLeave={(e) =>
-              (e.currentTarget.style.backgroundColor = COLORS.primary)
-            }
+            className="w-full py-2.5 text-xs font-semibold text-white bg-[#2563EB] hover:bg-blue-700 rounded-lg shadow-sm flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50 mt-2"
           >
-            {loading ? "正在登录..." : "登 录"}
+            {loading ? "正在验证身份..." : (
+              <>
+                进入管理后台 <ArrowRight className="w-3.5 h-3.5" />
+              </>
+            )}
           </button>
         </form>
 
-        <div className="mt-8 pt-6 border-t border-[#EBE4DF] text-center">
-          <p className="text-xs text-[#8C827B]">
-            默认账号：<code className="text-[#1C1415] font-semibold">admin</code> 或 <code className="text-[#1C1415] font-semibold">admin@laiwu.fitness</code>
-          </p>
-          <p className="text-xs text-[#8C827B] mt-1">
-            忘记密码请联系店主在后台重置
-          </p>
+        <div className="pt-4 border-t border-[#F0F2F6] flex items-center justify-between text-[11px] text-[#697180]">
+          <span className="flex items-center gap-1">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> 安全鉴权环境
+          </span>
+          <span className="tabular-nums">v2.5.0</span>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }

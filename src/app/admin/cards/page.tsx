@@ -1,18 +1,49 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import { useToast } from "@/components/admin/Toast";
+import {
+  CreditCard,
+  Plus,
+  Search,
+  Filter,
+  Snowflake,
+  Play,
+  X,
+  CheckCircle2,
+  Calendar,
+  Layers,
+  ArrowRight,
+  User,
+  ShieldAlert,
+} from "lucide-react";
 
 type CardType = {
-  id: number; name: string; category: string; priceCents: number;
-  totalCount: number | null; validityDays: number | null; weeklyLimit: number | null;
+  id: number;
+  name: string;
+  category: string;
+  priceCents: number;
+  totalCount: number | null;
+  validityDays: number | null;
+  weeklyLimit: number | null;
   isActive: number;
 };
+
 type Member = { id: number; name: string; phone: string | null; status: string };
+
 type MemberCard = {
-  id: number; member_id: number; member_name: string; member_phone: string | null;
-  card_name: string; category: string; status: string;
-  total_count: number | null; remaining_count: number | null;
-  valid_from: string | null; valid_until: string | null; price_cents: number;
+  id: number;
+  member_id: number;
+  member_name: string;
+  member_phone: string | null;
+  card_name: string;
+  category: string;
+  status: string;
+  total_count: number | null;
+  remaining_count: number | null;
+  valid_from: string | null;
+  valid_until: string | null;
+  price_cents: number;
 };
 
 async function jsonFetch(url: string, init?: RequestInit) {
@@ -23,24 +54,52 @@ async function jsonFetch(url: string, init?: RequestInit) {
 }
 
 const money = (cents: number) => (Number(cents || 0) / 100).toFixed(0);
-const statusText: Record<string, string> = {
-  active: "有效", frozen: "已冻结", exhausted: "已用完", expired: "已过期",
+
+const statusBadge: Record<string, { label: string; bg: string; text: string; border: string }> = {
+  active: { label: "有效", bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200" },
+  frozen: { label: "已冻结", bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200" },
+  exhausted: { label: "已用完", bg: "bg-gray-100", text: "text-gray-500", border: "border-gray-200" },
+  expired: { label: "已过期", bg: "bg-gray-100", text: "text-gray-500", border: "border-gray-200" },
 };
 
 export default function AdminCardsPage() {
+  const { showToast } = useToast();
   const [types, setTypes] = useState<CardType[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [cards, setCards] = useState<MemberCard[]>([]);
-  const [msg, setMsg] = useState("");
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  // Search & Filter
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+
+  // Drawers
+  const [showIssueDrawer, setShowIssueDrawer] = useState(false);
+  const [showTypeDrawer, setShowTypeDrawer] = useState(false);
+
+  // Forms
   const [newType, setNewType] = useState({
-    name: "", category: "count", priceYuan: "", totalCount: "", validityDays: "", weeklyLimit: "",
+    name: "",
+    category: "count",
+    priceYuan: "",
+    totalCount: "",
+    validityDays: "",
+    weeklyLimit: "",
   });
-  const [issue, setIssue] = useState({ memberId: "", cardTypeId: "", validFrom: "", validUntil: "" });
+
+  const [issue, setIssue] = useState({
+    memberId: "",
+    cardTypeId: "",
+    validFrom: "",
+    validUntil: "",
+  });
+
+  const [memberFilter, setMemberFilter] = useState("");
 
   const load = async () => {
     try {
+      setLoading(true);
       const [t, m, c] = await Promise.all([
         jsonFetch("/api/admin/card-types"),
         jsonFetch("/api/members"),
@@ -50,15 +109,31 @@ export default function AdminCardsPage() {
       setMembers(m.filter((x: Member) => x.status !== "archived"));
       setCards(c);
     } catch (e: any) {
-      setMsg(e.message);
+      showToast(e.message || "加载数据失败", "error");
+    } finally {
+      setLoading(false);
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const mid = params.get("memberId");
+      if (mid) {
+        setIssue((prev) => ({ ...prev, memberId: mid }));
+        setShowIssueDrawer(true);
+      }
+    }
+  }, []);
 
   const createType = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true); setMsg("");
+    if (!newType.name.trim()) {
+      showToast("请输入卡名称", "error");
+      return;
+    }
+    setSaving(true);
     try {
       await jsonFetch("/api/admin/card-types", {
         method: "POST",
@@ -74,15 +149,22 @@ export default function AdminCardsPage() {
       });
       setNewType({ name: "", category: "count", priceYuan: "", totalCount: "", validityDays: "", weeklyLimit: "" });
       await load();
-      setMsg("卡类型已新增");
-    } catch (e: any) { setMsg(e.message); }
-    finally { setSaving(false); }
+      setShowTypeDrawer(false);
+      showToast("新卡种已成功创建", "success");
+    } catch (e: any) {
+      showToast(e.message, "error");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const issueCard = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!issue.memberId || !issue.cardTypeId) { setMsg("请选择会员和卡类型"); return; }
-    setSaving(true); setMsg("");
+    if (!issue.memberId || !issue.cardTypeId) {
+      showToast("请选择开卡会员和卡类型", "error");
+      return;
+    }
+    setSaving(true);
     try {
       await jsonFetch("/api/admin/member-cards", {
         method: "POST",
@@ -95,15 +177,20 @@ export default function AdminCardsPage() {
           idempotencyKey: `manual-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         }),
       });
-      setIssue({ ...issue, memberId: "", cardTypeId: "" });
+      setIssue({ memberId: "", cardTypeId: "", validFrom: "", validUntil: "" });
       await load();
-      setMsg("开卡成功");
-    } catch (e: any) { setMsg(e.message); }
-    finally { setSaving(false); }
+      setShowIssueDrawer(false);
+      showToast("开卡成功，会员账户权益已实时同步", "success");
+    } catch (e: any) {
+      showToast(e.message, "error");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const toggleFreeze = async (card: MemberCard) => {
     const action = card.status === "frozen" ? "unfreeze" : "freeze";
+    const label = action === "freeze" ? "冻结" : "解冻";
     try {
       await jsonFetch("/api/admin/member-cards", {
         method: "PATCH",
@@ -111,126 +198,537 @@ export default function AdminCardsPage() {
         body: JSON.stringify({ memberCardId: card.id, action }),
       });
       await load();
-      setMsg(action === "freeze" ? "已冻结" : "已解冻");
-    } catch (e: any) { setMsg(e.message); }
+      showToast(`已${label}该会员卡`, "success");
+    } catch (e: any) {
+      showToast(e.message, "error");
+    }
   };
 
+  // Filtered Cards
+  const filteredCards = useMemo(() => {
+    return cards.filter((c) => {
+      if (statusFilter !== "all" && c.status !== statusFilter) return false;
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.trim().toLowerCase();
+      const code = `lw${c.member_id}`.toLowerCase();
+      const name = (c.member_name || "").toLowerCase();
+      const phone = (c.member_phone || "").toLowerCase();
+      const cardName = (c.card_name || "").toLowerCase();
+      return code.includes(q) || name.includes(q) || phone.includes(q) || cardName.includes(q);
+    });
+  }, [cards, searchQuery, statusFilter]);
+
+  // Statistics
+  const activeCount = cards.filter((c) => c.status === "active").length;
+  const frozenCount = cards.filter((c) => c.status === "frozen").length;
+  const countCardCount = cards.filter((c) => c.category === "count" && c.status === "active").length;
+  const periodCardCount = cards.filter((c) => c.category === "period" && c.status === "active").length;
+
   return (
-    <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 20px", fontFamily: "-apple-system, sans-serif" }}>
-      <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 13, color: "#8B5E3C", marginBottom: 6 }}>后台 / 会员卡</div>
-        <h1 style={{ fontSize: 26, fontWeight: 700, color: "#1C1415", margin: 0 }}>会员卡与开卡</h1>
-        <p style={{ fontSize: 13, color: "#7A6B69", marginTop: 8, margin: 0 }}>
-          先建卡类型，再给会员开卡。开卡后会员端「我的卡」会立即显示余额/有效期。
-        </p>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <div className="text-xs font-semibold text-[#2563EB] tracking-wide uppercase">
+            MEMBERSHIP CARDS · 会员卡与开卡
+          </div>
+          <h1 className="text-2xl font-semibold text-[#292D35] mt-1 tracking-tight">会员卡管理</h1>
+          <p className="text-sm text-[#697180] mt-1">
+            统一维护场馆卡种体系与会员签约开卡记录，支持实时开卡、冻结及有效期调整。
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowTypeDrawer(true)}
+            className="px-3.5 py-2 text-sm font-medium text-[#292D35] bg-white border border-[#E1E5EB] rounded-lg hover:bg-[#F5F7FA] transition-colors flex items-center gap-1.5 shadow-sm"
+          >
+            <Layers className="w-4 h-4 text-[#697180]" />
+            卡类型配置 ({types.length})
+          </button>
+          <button
+            onClick={() => setShowIssueDrawer(true)}
+            className="px-4 py-2 text-sm font-medium text-white bg-[#2563EB] rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1.5 shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            办理开卡
+          </button>
+        </div>
       </div>
 
-      {msg && (
-        <div style={{ background: "#FFF8E1", border: "1px solid #F0D9A8", color: "#6B4E16", padding: "10px 14px", borderRadius: 8, marginBottom: 18, fontSize: 13 }}>
-          {msg}
+      {/* KPI Stats Strip */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-white border border-[#E1E5EB] rounded-xl p-4 shadow-sm">
+          <div className="text-xs font-medium text-[#697180]">有效会员卡</div>
+          <div className="text-2xl font-bold text-[#292D35] mt-1.5 tabular-nums">{activeCount}</div>
+          <div className="text-xs text-[#2563EB] mt-1">正常在约中</div>
+        </div>
+        <div className="bg-white border border-[#E1E5EB] rounded-xl p-4 shadow-sm">
+          <div className="text-xs font-medium text-[#697180]">有效次卡</div>
+          <div className="text-2xl font-bold text-[#292D35] mt-1.5 tabular-nums">{countCardCount}</div>
+          <div className="text-xs text-[#697180] mt-1">按节消课</div>
+        </div>
+        <div className="bg-white border border-[#E1E5EB] rounded-xl p-4 shadow-sm">
+          <div className="text-xs font-medium text-[#697180]">有效期限卡</div>
+          <div className="text-2xl font-bold text-[#292D35] mt-1.5 tabular-nums">{periodCardCount}</div>
+          <div className="text-xs text-[#697180] mt-1">月卡 / 季卡 / 年卡</div>
+        </div>
+        <div className="bg-white border border-[#E1E5EB] rounded-xl p-4 shadow-sm">
+          <div className="text-xs font-medium text-[#697180]">暂停 / 冻结</div>
+          <div className="text-2xl font-bold text-amber-600 mt-1.5 tabular-nums">{frozenCount}</div>
+          <div className="text-xs text-[#697180] mt-1">延期冻结中</div>
+        </div>
+      </div>
+
+      {/* Main Table Card */}
+      <div className="bg-white border border-[#E1E5EB] rounded-xl shadow-sm overflow-hidden">
+        {/* Table Toolbar */}
+        <div className="p-4 border-b border-[#E1E5EB] flex flex-col md:flex-row md:items-center justify-between gap-3">
+          {/* Status Tabs */}
+          <div className="flex items-center gap-1 bg-[#F5F7FA] p-1 rounded-lg border border-[#E1E5EB] self-start">
+            {[
+              { id: "all", label: "全部", count: cards.length },
+              { id: "active", label: "有效", count: activeCount },
+              { id: "frozen", label: "已冻结", count: frozenCount },
+              { id: "exhausted", label: "已用完/过期", count: cards.length - activeCount - frozenCount },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setStatusFilter(tab.id)}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors flex items-center gap-1.5 ${
+                  statusFilter === tab.id
+                    ? "bg-white text-[#292D35] shadow-xs font-semibold"
+                    : "text-[#697180] hover:text-[#292D35]"
+                }`}
+              >
+                {tab.label}
+                <span className="text-[11px] opacity-70">({tab.count})</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Search Bar */}
+          <div className="relative w-full md:w-72">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#697180]" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="搜索会员名、编号或卡种..."
+              className="w-full pl-9 pr-3 py-1.5 text-xs bg-[#F5F7FA] border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:bg-white text-[#292D35]"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Table View */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-[#F8FAFC] border-b border-[#E1E5EB] text-[#697180] text-xs font-medium">
+              <tr>
+                <th className="px-5 py-3.5">会员档案</th>
+                <th className="px-5 py-3.5">持有卡项</th>
+                <th className="px-5 py-3.5">类别</th>
+                <th className="px-5 py-3.5">权益余额 / 有效期</th>
+                <th className="px-5 py-3.5">状态</th>
+                <th className="px-5 py-3.5 text-right">操作</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#E1E5EB]">
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="py-12 text-center text-[#697180] text-sm">
+                    正在读取会员卡数据...
+                  </td>
+                </tr>
+              ) : filteredCards.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-12 text-center text-[#697180] text-sm">
+                    {searchQuery ? "未找到符合搜索条件的会员卡记录" : "暂无开卡记录"}
+                  </td>
+                </tr>
+              ) : (
+                filteredCards.map((c) => {
+                  const badge = statusBadge[c.status] || {
+                    label: c.status,
+                    bg: "bg-gray-100",
+                    text: "text-gray-600",
+                    border: "border-gray-200",
+                  };
+                  return (
+                    <tr key={c.id} className="hover:bg-[#F8FAFC] transition-colors">
+                      <td className="px-5 py-3.5">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-full bg-[#E8EEFF] text-[#2563EB] font-semibold text-xs flex items-center justify-center shrink-0">
+                            {c.member_name ? c.member_name.slice(0, 1) : "学"}
+                          </div>
+                          <div>
+                            <div className="font-medium text-[#292D35] flex items-center gap-1.5">
+                              {c.member_name}
+                              <span className="font-mono text-[11px] text-[#697180] bg-[#F0F2F6] px-1.5 py-0.5 rounded">
+                                #LW{c.member_id}
+                              </span>
+                            </div>
+                            <div className="text-xs text-[#697180] mt-0.5">{c.member_phone || "未留手机号"}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <div className="font-medium text-[#292D35]">{c.card_name}</div>
+                        <div className="text-xs text-[#697180]">¥{money(c.price_cents)}</div>
+                      </td>
+                      <td className="px-5 py-3.5">
+                        {c.category === "count" ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                            次卡
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200">
+                            期限卡
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-5 py-3.5">
+                        {c.category === "count" ? (
+                          <div className="tabular-nums">
+                            <span className="font-semibold text-[#292D35] text-base">{c.remaining_count ?? 0}</span>
+                            <span className="text-xs text-[#697180] ml-1">/ {c.total_count ?? "-"} 次</span>
+                          </div>
+                        ) : (
+                          <div className="text-xs text-[#292D35]">
+                            <div>截止: <span className="tabular-nums font-medium">{c.valid_until || "长期有效"}</span></div>
+                            <div className="text-[11px] text-[#697180]">起: {c.valid_from || "即日起"}</div>
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${badge.bg} ${badge.text} ${badge.border}`}
+                        >
+                          {badge.label}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3.5 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => toggleFreeze(c)}
+                            disabled={c.status !== "frozen" && c.status !== "active"}
+                            className={`px-2.5 py-1 text-xs font-medium rounded border transition-colors flex items-center gap-1 ${
+                              c.status === "frozen"
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100"
+                                : "bg-white text-[#697180] border-[#E1E5EB] hover:bg-[#F5F7FA] hover:text-[#292D35]"
+                            } disabled:opacity-40 disabled:cursor-not-allowed`}
+                          >
+                            {c.status === "frozen" ? (
+                              <>
+                                <Play className="w-3 h-3" /> 解冻
+                              </>
+                            ) : (
+                              <>
+                                <Snowflake className="w-3 h-3" /> 冻结
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Drawer: Issue Member Card */}
+      {showIssueDrawer && (
+        <div className="fixed inset-0 z-50 overflow-hidden">
+          <div
+            className="absolute inset-0 bg-black/30 backdrop-blur-xs transition-opacity"
+            onClick={() => setShowIssueDrawer(false)}
+          />
+          <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
+            <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col">
+              <div className="p-6 border-b border-[#E1E5EB] flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-[#292D35]">办理开卡</h3>
+                  <p className="text-xs text-[#697180] mt-0.5">为学员签约开通课时卡或期限卡，开卡后即刻同步小程序端。</p>
+                </div>
+                <button
+                  onClick={() => setShowIssueDrawer(false)}
+                  className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={issueCard} className="flex-1 overflow-y-auto p-6 space-y-5">
+                {/* Member selection */}
+                <div>
+                  <label className="block text-xs font-medium text-[#292D35] mb-1.5">
+                    选择会员 <span className="text-red-500">*</span>
+                  </label>
+                  <div className="mb-2">
+                    <input
+                      type="text"
+                      placeholder="🔍 快速搜索姓名、手机或 #LW编号..."
+                      value={memberFilter}
+                      onChange={(e) => setMemberFilter(e.target.value)}
+                      className="w-full px-3 py-1.5 text-xs bg-[#F5F7FA] border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                    />
+                  </div>
+                  <select
+                    value={issue.memberId}
+                    onChange={(e) => setIssue({ ...issue, memberId: e.target.value })}
+                    required
+                    className="w-full px-3 py-2 text-sm bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563EB] text-[#292D35]"
+                  >
+                    <option value="">-- 请选择签约会员 --</option>
+                    {members
+                      .filter((m) => {
+                        if (!memberFilter.trim()) return true;
+                        const q = memberFilter.trim().toLowerCase();
+                        const code = `lw${m.id}`;
+                        const name = (m.name || "").toLowerCase();
+                        const phone = (m.phone || "").toLowerCase();
+                        return code.includes(q) || name.includes(q) || phone.includes(q);
+                      })
+                      .map((m) => (
+                        <option key={m.id} value={m.id}>
+                          #LW{m.id} {m.name} ({m.phone || "无号码"})
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                {/* Card Type selection */}
+                <div>
+                  <label className="block text-xs font-medium text-[#292D35] mb-1.5">
+                    选择卡类型 <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={issue.cardTypeId}
+                    onChange={(e) => setIssue({ ...issue, cardTypeId: e.target.value })}
+                    required
+                    className="w-full px-3 py-2 text-sm bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563EB] text-[#292D35]"
+                  >
+                    <option value="">-- 选择要发放的卡种 --</option>
+                    {types
+                      .filter((t) => t.isActive)
+                      .map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.name} · {t.category === "count" ? `${t.totalCount}次` : `${t.validityDays}天`} · ¥
+                          {money(t.priceCents)}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                {/* Date range */}
+                <div className="grid grid-cols-2 gap-3 pt-2">
+                  <div>
+                    <label className="block text-xs font-medium text-[#697180] mb-1">生效起始日</label>
+                    <input
+                      type="date"
+                      value={issue.validFrom}
+                      onChange={(e) => setIssue({ ...issue, validFrom: e.target.value })}
+                      className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-[#697180] mb-1">失效到期日</label>
+                    <input
+                      type="date"
+                      value={issue.validUntil}
+                      onChange={(e) => setIssue({ ...issue, validUntil: e.target.value })}
+                      className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                    />
+                  </div>
+                </div>
+
+                <div className="p-3 bg-[#F5F7FA] rounded-lg border border-[#E1E5EB] text-xs text-[#697180] leading-relaxed">
+                  提示：留空日期将依照卡种默认规则自动计算有效周期。提交后系统自动完成防重校验与幂等扣记。
+                </div>
+
+                <div className="pt-4 border-t border-[#E1E5EB] flex items-center justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowIssueDrawer(false)}
+                    className="px-4 py-2 text-sm font-medium text-[#697180] hover:text-[#292D35] bg-white border border-[#E1E5EB] rounded-lg"
+                  >
+                    取消
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="px-5 py-2 text-sm font-medium text-white bg-[#2563EB] hover:bg-blue-700 rounded-lg shadow-sm disabled:opacity-50"
+                  >
+                    {saving ? "正在办理..." : "确认签约开卡"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 28 }}>
-        <form onSubmit={issueCard} style={{ background: "#FFFFFF", border: "1px solid #EBE4DF", borderRadius: 12, padding: 20 }}>
-          <h2 style={{ fontSize: 16, margin: "0 0 14px", color: "#5E1914" }}>给会员开卡</h2>
-          <label style={{ display: "block", fontSize: 12, color: "#6D645D", marginBottom: 6 }}>会员</label>
-          <select value={issue.memberId} onChange={(e) => setIssue({ ...issue, memberId: e.target.value })}
-            style={{ width: "100%", padding: "9px 12px", borderRadius: 6, border: "1px solid #D1C7C1", marginBottom: 12, fontSize: 13 }}>
-            <option value="">选择会员</option>
-            {members.map((m) => <option key={m.id} value={m.id}>#{m.id} {m.name} {m.phone || ""}</option>)}
-          </select>
-          <label style={{ display: "block", fontSize: 12, color: "#6D645D", marginBottom: 6 }}>卡类型</label>
-          <select value={issue.cardTypeId} onChange={(e) => setIssue({ ...issue, cardTypeId: e.target.value })}
-            style={{ width: "100%", padding: "9px 12px", borderRadius: 6, border: "1px solid #D1C7C1", marginBottom: 12, fontSize: 13 }}>
-            <option value="">选择卡类型</option>
-            {types.filter((t) => t.isActive).map((t) => (
-              <option key={t.id} value={t.id}>{t.name} · {t.category === "count" ? `${t.totalCount}次` : `${t.validityDays}天`} · {money(t.priceCents)}元</option>
-            ))}
-          </select>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
-            <div>
-              <label style={{ display: "block", fontSize: 12, color: "#6D645D", marginBottom: 6 }}>生效日（可选）</label>
-              <input type="date" value={issue.validFrom} onChange={(e) => setIssue({ ...issue, validFrom: e.target.value })}
-                style={{ width: "100%", padding: "9px 10px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 13, boxSizing: "border-box" }} />
-            </div>
-            <div>
-              <label style={{ display: "block", fontSize: 12, color: "#6D645D", marginBottom: 6 }}>到期日（可选）</label>
-              <input type="date" value={issue.validUntil} onChange={(e) => setIssue({ ...issue, validUntil: e.target.value })}
-                style={{ width: "100%", padding: "9px 10px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 13, boxSizing: "border-box" }} />
-            </div>
-          </div>
-          <button disabled={saving} style={{ width: "100%", padding: "11px 0", background: "#0D0C0F", color: "#F6E6DA", border: "none", borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
-            {saving ? "处理中..." : "确认开卡"}
-          </button>
-        </form>
+      {/* Drawer: Card Types Management */}
+      {showTypeDrawer && (
+        <div className="fixed inset-0 z-50 overflow-hidden">
+          <div
+            className="absolute inset-0 bg-black/30 backdrop-blur-xs transition-opacity"
+            onClick={() => setShowTypeDrawer(false)}
+          />
+          <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
+            <div className="w-screen max-w-lg bg-white shadow-2xl flex flex-col">
+              <div className="p-6 border-b border-[#E1E5EB] flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-[#292D35]">卡类型配置</h3>
+                  <p className="text-xs text-[#697180] mt-0.5">设定场馆的标准课时卡种、售价与课时规约。</p>
+                </div>
+                <button
+                  onClick={() => setShowTypeDrawer(false)}
+                  className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
 
-        <form onSubmit={createType} style={{ background: "#FFFFFF", border: "1px solid #EBE4DF", borderRadius: 12, padding: 20 }}>
-          <h2 style={{ fontSize: 16, margin: "0 0 14px", color: "#5E1914" }}>新增卡类型</h2>
-          <input placeholder="卡名称，如 普拉提次卡" value={newType.name} onChange={(e) => setNewType({ ...newType, name: e.target.value })}
-            style={{ width: "100%", padding: "9px 12px", borderRadius: 6, border: "1px solid #D1C7C1", marginBottom: 12, fontSize: 13, boxSizing: "border-box" }} />
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
-            <select value={newType.category} onChange={(e) => setNewType({ ...newType, category: e.target.value })}
-              style={{ padding: "9px 10px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 13 }}>
-              <option value="count">次数卡</option>
-              <option value="period">期限卡</option>
-            </select>
-            <input type="number" placeholder="售价（元）" value={newType.priceYuan} onChange={(e) => setNewType({ ...newType, priceYuan: e.target.value })}
-              style={{ padding: "9px 10px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 13 }} />
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
-            {newType.category === "count" ? (
-              <input type="number" placeholder="总次数" value={newType.totalCount} onChange={(e) => setNewType({ ...newType, totalCount: e.target.value })}
-                style={{ padding: "9px 10px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 13 }} />
-            ) : (
-              <input type="number" placeholder="有效天数" value={newType.validityDays} onChange={(e) => setNewType({ ...newType, validityDays: e.target.value })}
-                style={{ padding: "9px 10px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 13 }} />
-            )}
-            <input type="number" placeholder="每周限次（可选）" value={newType.weeklyLimit} onChange={(e) => setNewType({ ...newType, weeklyLimit: e.target.value })}
-              style={{ padding: "9px 10px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 13 }} />
-          </div>
-          <button disabled={saving} style={{ width: "100%", padding: "11px 0", background: "#5E1914", color: "#FFFFFF", border: "none", borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
-            {saving ? "处理中..." : "新增卡类型"}
-          </button>
-        </form>
-      </div>
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {/* Existing Types List */}
+                <div>
+                  <div className="text-xs font-semibold text-[#697180] uppercase tracking-wider mb-2">
+                    现有卡种列表 ({types.length})
+                  </div>
+                  <div className="space-y-2">
+                    {types.map((t) => (
+                      <div
+                        key={t.id}
+                        className="p-3 bg-[#F8FAFC] border border-[#E1E5EB] rounded-lg flex items-center justify-between"
+                      >
+                        <div>
+                          <div className="text-sm font-medium text-[#292D35]">{t.name}</div>
+                          <div className="text-xs text-[#697180] mt-0.5">
+                            {t.category === "count" ? `${t.totalCount} 次` : `${t.validityDays} 天有效期`}
+                            {t.weeklyLimit ? ` · 每周限 ${t.weeklyLimit} 次` : ""}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm font-semibold text-[#2563EB]">¥{money(t.priceCents)}</div>
+                          <div
+                            className={`text-[11px] ${
+                              t.isActive ? "text-emerald-600" : "text-[#9AA3B2]"
+                            }`}
+                          >
+                            {t.isActive ? "已启用" : "已停用"}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
-      <div style={{ background: "#FFFFFF", border: "1px solid #EBE4DF", borderRadius: 12, overflow: "hidden" }}>
-        <div style={{ padding: "16px 20px", borderBottom: "1px solid #EBE4DF", fontSize: 15, fontWeight: 600, color: "#1C1415" }}>
-          最近开卡记录
-        </div>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-          <thead>
-            <tr style={{ background: "#FAF7F5", color: "#6D645D" }}>
-              <th style={{ textAlign: "left", padding: "12px 16px" }}>会员</th>
-              <th style={{ textAlign: "left", padding: "12px 16px" }}>卡</th>
-              <th style={{ textAlign: "left", padding: "12px 16px" }}>状态</th>
-              <th style={{ textAlign: "left", padding: "12px 16px" }}>剩余/有效期</th>
-              <th style={{ textAlign: "right", padding: "12px 16px" }}>操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            {cards.map((c) => (
-              <tr key={c.id} style={{ borderTop: "1px solid #F0EAE6" }}>
-                <td style={{ padding: "12px 16px" }}>#{c.member_id} {c.member_name}</td>
-                <td style={{ padding: "12px 16px" }}>{c.card_name} · {c.category === "count" ? "次数卡" : "期限卡"}</td>
-                <td style={{ padding: "12px 16px" }}>{statusText[c.status] || c.status}</td>
-                <td style={{ padding: "12px 16px" }}>
-                  {c.category === "count" ? `${c.remaining_count ?? 0} 次` : `${c.valid_until || "—"} 到期`}
-                </td>
-                <td style={{ padding: "12px 16px", textAlign: "right" }}>
-                  <button onClick={() => toggleFreeze(c)} style={{ padding: "5px 12px", borderRadius: 6, border: "1px solid #D1C7C1", background: "#FAF7F5", fontSize: 12, cursor: "pointer" }}>
-                    {c.status === "frozen" ? "解冻" : "冻结"}
+                {/* Create New Type Form */}
+                <form onSubmit={createType} className="pt-4 border-t border-[#E1E5EB] space-y-4">
+                  <div className="text-xs font-semibold text-[#292D35] uppercase tracking-wider">
+                    新增卡类型
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-[#292D35] mb-1">卡种名称</label>
+                    <input
+                      type="text"
+                      placeholder="例如：普拉提形体私教次卡"
+                      value={newType.name}
+                      onChange={(e) => setNewType({ ...newType, name: e.target.value })}
+                      required
+                      className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-[#292D35] mb-1">卡片类别</label>
+                      <select
+                        value={newType.category}
+                        onChange={(e) => setNewType({ ...newType, category: e.target.value })}
+                        className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                      >
+                        <option value="count">次数卡</option>
+                        <option value="period">期限卡</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-[#292D35] mb-1">标准售价（元）</label>
+                      <input
+                        type="number"
+                        placeholder="售价"
+                        value={newType.priceYuan}
+                        onChange={(e) => setNewType({ ...newType, priceYuan: e.target.value })}
+                        required
+                        className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                      >
+                      </input>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    {newType.category === "count" ? (
+                      <div>
+                        <label className="block text-xs font-medium text-[#292D35] mb-1">总次数</label>
+                        <input
+                          type="number"
+                          placeholder="例如 10"
+                          value={newType.totalCount}
+                          onChange={(e) => setNewType({ ...newType, totalCount: e.target.value })}
+                          required
+                          className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                        />
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="block text-xs font-medium text-[#292D35] mb-1">有效天数</label>
+                        <input
+                          type="number"
+                          placeholder="例如 90"
+                          value={newType.validityDays}
+                          onChange={(e) => setNewType({ ...newType, validityDays: e.target.value })}
+                          required
+                          className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                        />
+                      </div>
+                    )}
+                    <div>
+                      <label className="block text-xs font-medium text-[#697180] mb-1">每周限次（可选）</label>
+                      <input
+                        type="number"
+                        placeholder="不限填空"
+                        value={newType.weeklyLimit}
+                        onChange={(e) => setNewType({ ...newType, weeklyLimit: e.target.value })}
+                        className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="w-full py-2 text-xs font-medium text-white bg-[#292D35] hover:bg-black rounded-lg shadow-sm disabled:opacity-50 mt-2"
+                  >
+                    {saving ? "正在创建..." : "保存新卡种"}
                   </button>
-                </td>
-              </tr>
-            ))}
-            {cards.length === 0 && (
-              <tr><td colSpan={5} style={{ padding: "30px", textAlign: "center", color: "#8C827B" }}>还没有开卡记录</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

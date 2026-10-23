@@ -4,150 +4,95 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* ═══ 徕舞视觉配色 — 黑白体系 ═══ */
+/* ═══ LAIWU DIGITAL EDITORIAL — 规范色彩系统 ═══ */
 :root {
-  --color-laiwu-primary: #1A1A1A;
-  --color-laiwu-bg: #FAFAFA;
-  --color-laiwu-surface: #FFFFFF;
-  --color-laiwu-accent: #333333;
-  --color-laiwu-border: #E5E5E5;
-  --color-laiwu-muted: #9E9E9E;
-  --color-laiwu-danger: #666666;
+  --color-canvas: #F5F7FA;
+  --color-surface: #FFFFFF;
+  --color-surface-muted: #E8EAF0;
+  --color-text-primary: #292D35;
+  --color-text-secondary: #697180;
+  --color-border: #E1E5EB;
+  --color-accent-blue: #2563EB;
+  --color-accent-blue-soft: #E8EEFF;
+  --color-accent-lavender: #8B83D7;
+
+  /* 语义状态 */
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-danger: #EF4444;
 }
 
-/* ═══ 全局强制背景和文字 ═══ */
+/* ═══ 全局基础底色与文本 ═══ */
 html, body {
-  background-color: #FAFAFA !important;
-  color: #1A1A1A !important;
+  background-color: #F5F7FA !important;
+  color: #292D35 !important;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* ═══ 字体系统 ═══ */
-/*
- * 字体策略：纯 CSS 字体栈，零网络依赖。
- * 正文：PingFang SC > HarmonyOS > 微软雅黑 > 系统默认
- * 数字/英文特殊排版：SF Pro > Inter > 系统默认
- * 标题 serif：STSong > 宋体 > 思源宋体 > 系统 serif
- */
 :root {
-  --font-body: 'PingFang SC', 'HarmonyOS Sans SC', 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif;
-  --font-number: 'SF Pro Display', 'Inter', 'Segoe UI', sans-serif;
-  --font-serif: 'STSong', 'Songti SC', 'Noto Serif CJK SC', 'Source Han Serif SC', 'Songti', serif;
+  --font-body: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
-/* ═══ 深色板块通用样式 ═══ */
-.section-dark {
-  background-color: #1A1A1A;
-  color: #E0E0E0;
-}
-.section-dark h1, .section-dark h2, .section-dark h3,
-.section-dark h4, .section-dark h5, .section-dark h6 {
-  color: #FFFFFF;
-}
-.section-dark .text-muted,
-.section-dark p {
-  color: #E0E0E0;
-}
-
-/* ═══ shadcn 主题变量 — 黑白体系 ═══ */
+/* ═══ shadcn 主题变量对齐 ═══ */
 @theme inline {
-    --font-heading: var(--font-body);
-    --font-sans: var(--font-body);
+  --font-heading: var(--font-body);
+  --font-sans: var(--font-body);
 
-    --color-background: #FAFAFA;
-    --color-foreground: #1A1A1A;
-    --color-card: #FFFFFF;
-    --color-card-foreground: #1A1A1A;
-    --color-popover: #FFFFFF;
-    --color-popover-foreground: #1A1A1A;
-    --color-primary: #1A1A1A;
-    --color-primary-foreground: #FFFFFF;
-    --color-secondary: #F5F5F5;
-    --color-secondary-foreground: #1A1A1A;
-    --color-muted: #F5F5F5;
-    --color-muted-foreground: #9E9E9E;
-    --color-accent: #F5F5F5;
-    --color-accent-foreground: #1A1A1A;
-    --color-destructive: #666666;
-    --color-destructive-foreground: #FFFFFF;
-    --color-border: #E5E5E5;
-    --color-input: #E5E5E5;
-    --color-ring: #1A1A1A;
+  --font-number: 'SF Pro Display', 'Inter', 'Segoe UI', sans-serif;
+  --color-background: #F5F7FA;
+  --color-foreground: #292D35;
+  --color-card: #FFFFFF;
+  --color-card-foreground: #292D35;
+  --color-popover: #FFFFFF;
+  --color-popover-foreground: #292D35;
+  --color-primary: #2563EB;
+  --color-primary-foreground: #FFFFFF;
+  --color-secondary: #E8EEFF;
+  --color-secondary-foreground: #2563EB;
+  --color-muted: #E8EAF0;
+  --color-muted-foreground: #697180;
+  --color-accent: #E8EEFF;
+  --color-accent-foreground: #2563EB;
+  --color-destructive: #EF4444;
+  --color-destructive-foreground: #FFFFFF;
+  --color-border: #E1E5EB;
+  --color-input: #E1E5EB;
+  --color-ring: #2563EB;
 
-    --color-chart-1: #1A1A1A;
-    --color-chart-2: #4A4A4A;
-    --color-chart-3: #9E9E9E;
-    --color-chart-4: #E5E5E5;
-    --color-chart-5: #FAFAFA;
+  --color-sidebar: #FFFFFF;
+  --color-sidebar-foreground: #292D35;
+  --color-sidebar-primary: #2563EB;
+  --color-sidebar-primary-foreground: #FFFFFF;
+  --color-sidebar-accent: #E8EEFF;
+  --color-sidebar-accent-foreground: #2563EB;
+  --color-sidebar-border: #E1E5EB;
+  --color-sidebar-ring: #2563EB;
 
-    --color-sidebar: #FAFAFA;
-    --color-sidebar-foreground: #1A1A1A;
-    --color-sidebar-primary: #1A1A1A;
-    --color-sidebar-primary-foreground: #FFFFFF;
-    --color-sidebar-accent: #F5F5F5;
-    --color-sidebar-accent-foreground: #1A1A1A;
-    --color-sidebar-border: #E5E5E5;
-    --color-sidebar-ring: #1A1A1A;
-
-    --radius-sm: calc(var(--radius) * 0.6);
-    --radius-md: calc(var(--radius) * 0.8);
-    --radius-lg: var(--radius);
-    --radius-xl: calc(var(--radius) * 1.4);
-    --radius-2xl: calc(var(--radius) * 1.8);
-    --radius-3xl: calc(var(--radius) * 2.2);
-    --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
 }
 
 :root {
-    --radius: 0.75rem;
-}
-
-.dark {
-    --color-background: #0D0D0D;
-    --color-foreground: #E0E0E0;
-    --color-card: #1A1A1A;
-    --color-card-foreground: #E0E0E0;
-    --color-popover: #1A1A1A;
-    --color-popover-foreground: #E0E0E0;
-    --color-primary: #FFFFFF;
-    --color-primary-foreground: #1A1A1A;
-    --color-secondary: #1A1A1A;
-    --color-secondary-foreground: #E0E0E0;
-    --color-muted: #1A1A1A;
-    --color-muted-foreground: #9E9E9E;
-    --color-accent: #1A1A1A;
-    --color-accent-foreground: #E0E0E0;
-    --color-destructive: #666666;
-    --color-destructive-foreground: #FFFFFF;
-    --color-border: rgba(255,255,255,0.1);
-    --color-input: rgba(255,255,255,0.15);
-    --color-ring: #FFFFFF;
-
-    --color-sidebar: #0D0D0D;
-    --color-sidebar-foreground: #E0E0E0;
-    --color-sidebar-primary: #FFFFFF;
-    --color-sidebar-primary-foreground: #1A1A1A;
-    --color-sidebar-accent: #1A1A1A;
-    --color-sidebar-accent-foreground: #E0E0E0;
-    --color-sidebar-border: rgba(255,255,255,0.1);
-    --color-sidebar-ring: #FFFFFF;
+  --radius: 0.5rem;
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    }
+  }
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-body);
-    }
-  html {
-    @apply font-sans;
-    }
+  }
 }
 
-@keyframes breath {
-  0%, 100% { transform: scale(1); opacity: 0.3; }
-  50% { transform: scale(1.08); opacity: 0.5; }
+/* 等宽数字排版增强 */
+.tabular-numbers {
+  font-variant-numeric: tabular-nums;
 }
 
 html { scroll-behavior: smooth; }

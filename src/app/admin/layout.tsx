@@ -1,15 +1,10 @@
 import type { Metadata } from "next";
-import AdminNavBar from "@/components/admin/AdminNavBar";
+import AdminShell from "@/components/admin/AdminShell";
 
 export const metadata: Metadata = {
-  title: "徕舞 · 管理中心",
+  title: "LAIWU 徕舞 · 统一管理后台",
 };
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <div style={{ minHeight: "100vh", background: "#FAF7F5" }}>
-      <AdminNavBar />
-      <div>{children}</div>
-    </div>
-  );
+  return <AdminShell>{children}</AdminShell>;
 }

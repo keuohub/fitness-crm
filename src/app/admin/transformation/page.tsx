@@ -2,6 +2,22 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useToast } from "@/components/admin/Toast";
+import {
+  User,
+  Plus,
+  Upload,
+  Edit2,
+  Trash2,
+  X,
+  Search,
+  Sparkles,
+  ArrowRight,
+  Quote,
+  Calendar,
+  Image as ImageIcon,
+  CheckCircle2,
+} from "lucide-react";
 
 interface Member {
   id: number;
@@ -23,34 +39,56 @@ interface PostureCompare {
   created_at: string;
 }
 
+const angleMap: Record<string, string> = {
+  front: "正面体态",
+  side: "侧面力学",
+  back: "背面脊柱",
+};
+
 export default function AdminTransformationPage() {
+  const { showToast } = useToast();
   const [members, setMembers] = useState<Member[]>([]);
   const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
+  const [memberSearch, setMemberSearch] = useState("");
   const [comparisons, setComparisons] = useState<PostureCompare[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingItem, setEditingItem] = useState<Partial<PostureCompare> | null>(null);
   const [saving, setSaving] = useState(false);
   const [uploading1, setUploading1] = useState(false);
   const [uploading2, setUploading2] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
-  // 1. 获取会员列表
   const fetchMembers = async () => {
     try {
       const res = await fetch("/api/members");
       const data = await res.json();
       if (Array.isArray(data) && data.length > 0) {
         setMembers(data);
-        // 优先选中 王芳 (id 90) 或首个会员
-        const wf = data.find((m: any) => m.name === "王芳");
-        const initId = wf ? wf.id : data[0].id;
-        setSelectedMemberId(initId);
+
+        let targetId: number | null = null;
+        if (typeof window !== "undefined") {
+          const params = new URLSearchParams(window.location.search);
+          const midParam = params.get("memberId");
+          if (midParam && !isNaN(Number(midParam))) {
+            targetId = Number(midParam);
+          }
+        }
+
+        if (!targetId) {
+          // 不再写死某个真实会员：未指定 memberId 时只按列表第一条兜底
+          if (!data.length) {
+            throw new Error("还没有会员数据");
+          }
+          targetId = data[0].id;
+        }
+
+        setSelectedMemberId(targetId);
       }
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      showToast(err.message || "读取会员列表失败", "error");
     }
   };
 
-  // 2. 获取该会员的体态对比记录
   const fetchComparisons = async (mid: number) => {
     setLoading(true);
     try {
@@ -59,8 +97,8 @@ export default function AdminTransformationPage() {
       if (Array.isArray(data)) {
         setComparisons(data);
       }
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      showToast(err.message || "读取体态对比档案失败", "error");
     } finally {
       setLoading(false);
     }
@@ -79,7 +117,7 @@ export default function AdminTransformationPage() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedMemberId || !editingItem?.photo1_url || !editingItem?.photo2_url) {
-      alert("请填写初测与进阶两张照片！");
+      showToast("请上传入学初测照与进阶定格照两张大片", "error");
       return;
     }
     setSaving(true);
@@ -95,31 +133,34 @@ export default function AdminTransformationPage() {
       });
       if (res.ok) {
         setEditingItem(null);
-        fetchComparisons(selectedMemberId);
+        showToast("体态档案已成功保存并同步至该学员小程序端", "success");
+        await fetchComparisons(selectedMemberId);
       } else {
         const err = await res.json();
-        alert(err.error || "保存失败");
+        showToast(err.error || "保存失败", "error");
       }
-    } catch (err) {
-      alert("网络请求失败");
+    } catch (err: any) {
+      showToast(err.message || "网络请求异常", "error");
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("确定删除这条体态对比记录吗？")) return;
+  const confirmDelete = async () => {
+    if (!deleteConfirmId) return;
     try {
-      const res = await fetch(`/api/admin/photo-compare?id=${id}`, {
+      const res = await fetch(`/api/admin/photo-compare?id=${deleteConfirmId}`, {
         method: "DELETE",
       });
       if (res.ok && selectedMemberId) {
-        fetchComparisons(selectedMemberId);
+        setDeleteConfirmId(null);
+        showToast("已成功删除该条体态对比记录", "success");
+        await fetchComparisons(selectedMemberId);
       } else {
-        alert("删除失败");
+        showToast("删除失败", "error");
       }
-    } catch (err) {
-      alert("请求异常");
+    } catch (err: any) {
+      showToast(err.message || "网络请求异常", "error");
     }
   };
 
@@ -138,12 +179,13 @@ export default function AdminTransformationPage() {
       const data = await res.json();
       if (data.url) {
         setEditingItem((prev) => ({ ...prev, [field]: data.url }));
-        if (data.warning) alert(data.warning);
+        showToast("体态大片已成功上传", "success");
+        if (data.warning) showToast(data.warning, "error");
       } else {
-        alert(data.error || "上传失败");
+        showToast(data.error || "上传失败", "error");
       }
-    } catch (err) {
-      alert("上传网络异常");
+    } catch {
+      showToast("上传网络异常", "error");
     } finally {
       setUploadState(false);
     }
@@ -152,335 +194,420 @@ export default function AdminTransformationPage() {
   const selectedMember = members.find((m) => m.id === selectedMemberId);
 
   return (
-    <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 20px", fontFamily: "-apple-system, sans-serif" }}>
-      {/* 顶部标题区 */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 32 }}>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 style={{ fontSize: 26, fontWeight: 700, color: "#1C1415", margin: 0 }}>
-            👤 第 3 板块：我的蜕变 · 体态对比档案管理
-          </h1>
-          <p style={{ fontSize: 13, color: "#7A6B69", marginTop: 8, margin: 0, lineHeight: 1.5 }}>
-            管理会员的<b>入学初测照</b>（FIG. 01）与<b>进阶定格照</b>（FIG. 02），支持<b>正面/侧面/背面</b>三维对比及<b>导师小桥亲笔体态诊断评语</b>。
-            此处内容与首屏“徕舞之星”完全独立，专用于展示会员自身身形改变。
+          <div className="text-xs font-semibold text-[#2563EB] tracking-wide uppercase">
+            MINIPROGRAM TAB 3 · 我的蜕变档案
+          </div>
+          <h1 className="text-2xl font-semibold text-[#292D35] mt-1 tracking-tight">体态对比与阶段测评</h1>
+          <p className="text-sm text-[#697180] mt-1">
+            为每位学员建立私密专属的体态档案。入学初测与进阶定格并置对比，由小桥导师撰写体态力学分析。
           </p>
         </div>
+
         <button
           onClick={() =>
             setEditingItem({
               photo1_type: "front",
               photo2_type: "front",
-              photo1_date: "2025年10月20日 · 入学初评",
-              photo2_date: "2026年10月18日 · 进阶定格",
-              photo1_url: "/images/posture/posture_front_before.jpg",
-              photo2_url: "/images/posture/posture_front_after.jpg",
+              photo1_date: "入学初评阶段",
+              photo2_date: "阶段进阶定格",
+              photo1_url: "",
+              photo2_url: "",
               analysis:
-                "经过 42 节普拉提与大器械精准训练，肋骨外翻已显著收紧归位；骨盆前倾改善约 6°，左右高低肩平衡对称，下颌线与双侧锁骨线条舒展挺拔。",
+                "经过系统化核心与大器械精准力学纠正，骨盆回正对称，肋骨外翻显著改善，肩颈舒展挺拔。",
             })
           }
-          style={{
-            background: "#0E0D10", color: "#FFFFFF", border: "none", padding: "12px 24px",
-            borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: "pointer",
-            boxShadow: "0 2px 8px rgba(14,13,16,0.25)"
-          }}
+          className="px-4 py-2 text-xs font-medium text-white bg-[#2563EB] hover:bg-blue-700 rounded-lg shadow-sm flex items-center gap-1.5 self-start transition-colors"
         >
-          + 为该会员新增体态对比
+          <Plus className="w-4 h-4" /> 录入新体态对比记录
         </button>
       </div>
 
-      {/* 会员选择器条 */}
-      <div
-        style={{
-          background: "#FFFFFF", padding: "16px 20px", borderRadius: 12,
-          border: "1px solid #EBE4DF", marginBottom: 28, display: "flex",
-          alignItems: "center", justifyContent: "space-between"
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <span style={{ fontSize: 14, fontWeight: 600, color: "#1C1415" }}>当前查看会员：</span>
+      {/* Member Selector Bar */}
+      <div className="bg-white border border-[#E1E5EB] rounded-xl p-4 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="text-xs font-semibold text-[#292D35] flex items-center gap-1.5 shrink-0">
+            <User className="w-4 h-4 text-[#2563EB]" /> 选择档案会员：
+          </div>
+
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="搜索编号或姓名..."
+              value={memberSearch}
+              onChange={(e) => setMemberSearch(e.target.value)}
+              className="pl-8 pr-3 py-1.5 text-xs bg-[#F5F7FA] border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB] w-48 text-[#292D35]"
+            />
+          </div>
+
           <select
             value={selectedMemberId || ""}
             onChange={(e) => setSelectedMemberId(Number(e.target.value))}
-            style={{
-              padding: "8px 16px", borderRadius: 8, border: "1px solid #D1C7C1",
-              fontSize: 14, fontWeight: 500, background: "#FAF7F5", cursor: "pointer"
-            }}
+            className="px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563EB] font-medium text-[#292D35]"
           >
-            {members.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.name} {m.phone ? `(${m.phone})` : ""}
-              </option>
-            ))}
+            {members
+              .filter((m) => {
+                if (!memberSearch.trim()) return true;
+                const q = memberSearch.trim().toLowerCase();
+                const code = `lw${m.id}`;
+                const name = (m.name || "").toLowerCase();
+                const phone = (m.phone || "").toLowerCase();
+                return code.includes(q) || name.includes(q) || phone.includes(q);
+              })
+              .map((m) => (
+                <option key={m.id} value={m.id}>
+                  #LW{m.id} {m.name} {m.phone ? `(${m.phone})` : ""}
+                </option>
+              ))}
           </select>
         </div>
 
         {selectedMember && (
-          <div style={{ fontSize: 13, color: "#8C827B" }}>
-            会员编号: <code style={{ color: "#1C1415", fontWeight: 600 }}>LW{selectedMember.id}</code> ·
-            加入日期: {selectedMember.joinedAt ? selectedMember.joinedAt.slice(0, 10) : "2026-10-02"}
+          <div className="flex items-center gap-2 text-xs text-[#697180]">
+            <span>当前档案：<strong className="text-[#292D35]">{selectedMember.name}</strong></span>
+            <span className="font-mono text-[#2563EB] bg-[#E8EEFF] px-1.5 py-0.5 rounded">
+              #LW{selectedMember.id}
+            </span>
+            <span>•</span>
+            <Link
+              href={`/admin/members?memberId=${selectedMember.id}`}
+              className="text-[#2563EB] hover:underline"
+            >
+              会员主卡
+            </Link>
           </div>
         )}
       </div>
 
-      {/* 对比记录卡片展示 */}
-      {loading ? (
-        <div style={{ textAlign: "center", padding: "60px 0", color: "#8C827B" }}>加载体态对比档案中...</div>
-      ) : comparisons.length === 0 ? (
-        <div
-          style={{
-            background: "#FFFFFF", borderRadius: 12, border: "1px dashed #D1C7C1",
-            padding: "50px 20px", textAlign: "center"
-          }}
-        >
-          <p style={{ fontSize: 15, color: "#1C1415", fontWeight: 600, margin: 0 }}>
-            该会员目前使用临床标准体态评估网格图
-          </p>
-          <p style={{ fontSize: 13, color: "#8C827B", marginTop: 8 }}>
-            点击右上角「+ 为该会员新增体态对比」，即可上传该会员实际的初测与进阶照片并写上导师评语。
-          </p>
-        </div>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-          {comparisons.map((c) => (
+      {/* Comparisons List */}
+      <div className="space-y-6">
+        {loading ? (
+          <div className="bg-white border border-[#E1E5EB] rounded-xl p-16 text-center text-[#697180] text-sm shadow-sm">
+            正在读取体态档案对比记录...
+          </div>
+        ) : comparisons.length === 0 ? (
+          <div className="bg-white border border-[#E1E5EB] rounded-xl p-16 text-center text-[#697180] text-sm shadow-sm flex flex-col items-center justify-center">
+            <Sparkles className="w-10 h-10 text-gray-300 mb-2" />
+            <span className="font-semibold text-[#292D35]">
+              {selectedMember ? selectedMember.name : "该会员"} 暂未录入体态蜕变对比
+            </span>
+            <span className="text-xs text-[#697180] mt-1">
+              可点击右上角按钮上传初测照与进阶照，并填写导师诊断寄语。
+            </span>
+          </div>
+        ) : (
+          comparisons.map((c, idx) => (
             <div
               key={c.id}
-              style={{
-                background: "#FFFFFF", borderRadius: 14, border: "1px solid #EBE4DF",
-                padding: 24, boxShadow: "0 4px 14px rgba(0,0,0,0.03)"
-              }}
+              className="bg-white border border-[#E1E5EB] rounded-xl shadow-sm overflow-hidden"
             >
-              {/* 头部：角度与日期 */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <span
-                    style={{
-                      background: "#0E0D10", color: "#FFFFFF", fontSize: 12,
-                      fontWeight: 600, padding: "4px 12px", borderRadius: 16
-                    }}
-                  >
-                    {c.photo1_type === "side" ? "侧面体态观" : c.photo1_type === "back" ? "背面体态观" : "正面体态观"}
+              {/* Record Top Bar */}
+              <div className="p-4 bg-[#F8FAFC] border-b border-[#E1E5EB] flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-[#2563EB] bg-[#E8EEFF] px-2 py-0.5 rounded">
+                    STAGE {idx + 1}
                   </span>
-                  <span style={{ fontSize: 13, color: "#8C827B" }}>
-                    对比周期：{c.photo1_date} VS {c.photo2_date}
+                  <span className="text-xs font-semibold text-[#292D35]">
+                    {angleMap[c.photo1_type] || "多维体态"}对比
+                  </span>
+                  <span className="text-xs text-[#697180]">
+                    录入于 {String(c.created_at || "").slice(0, 10)}
                   </span>
                 </div>
-                <div style={{ display: "flex", gap: 10 }}>
+
+                <div className="flex items-center gap-1.5">
                   <button
                     onClick={() => setEditingItem(c)}
-                    style={{
-                      background: "#FAF7F5", border: "1px solid #D1C7C1", padding: "6px 14px",
-                      borderRadius: 6, fontSize: 12, cursor: "pointer", color: "#1C1415"
-                    }}
+                    className="p-1.5 text-gray-500 hover:text-[#2563EB] rounded hover:bg-gray-100 transition-colors"
+                    title="编辑对比"
                   >
-                    编辑
+                    <Edit2 className="w-3.5 h-3.5" />
                   </button>
                   <button
-                    onClick={() => handleDelete(c.id)}
-                    style={{
-                      background: "#FFEBEE", border: "1px solid #FFCDD2", padding: "6px 14px",
-                      borderRadius: 6, fontSize: 12, cursor: "pointer", color: "#C62828"
-                    }}
+                    onClick={() => setDeleteConfirmId(c.id)}
+                    className="p-1.5 text-gray-400 hover:text-red-600 rounded hover:bg-red-50 transition-colors"
+                    title="删除"
                   >
-                    删除
+                    <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
 
-              {/* 双幅展陈照片对 */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 20 }}>
-                {/* 初测 */}
-                <div>
-                  <div style={{ fontSize: 12, color: "#8C827B", marginBottom: 8, fontWeight: 600 }}>
-                    FIG. 01 入学初测
+              {/* Side by Side Photos Grid */}
+              <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Photo 1: Initial */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-semibold text-[#697180] uppercase tracking-wider font-mono">
+                      FIG. 01 · 初测定格
+                    </span>
+                    <span className="text-[#697180]">{c.photo1_date || "入学阶段"}</span>
                   </div>
-                  <div style={{ width: "100%", height: 320, background: "#F5F3F0", borderRadius: 8, overflow: "hidden" }}>
-                    <img src={c.photo1_url} alt="初测" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                  <div className="relative aspect-[3/4] bg-gray-100 rounded-xl overflow-hidden border border-[#E1E5EB]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={c.photo1_url}
+                      alt="initial posture"
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-black/60 text-white rounded text-[10px] backdrop-blur-xs">
+                      {angleMap[c.photo1_type] || "初测"}
+                    </div>
                   </div>
                 </div>
 
-                {/* 进阶 */}
-                <div>
-                  <div style={{ fontSize: 12, color: "#9E2A2B", marginBottom: 8, fontWeight: 600 }}>
-                    FIG. 02 进阶定格
+                {/* Photo 2: Advanced */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-semibold text-[#2563EB] uppercase tracking-wider font-mono">
+                      FIG. 02 · 蜕变定格
+                    </span>
+                    <span className="text-[#2563EB] font-medium">{c.photo2_date || "进阶阶段"}</span>
                   </div>
-                  <div style={{ width: "100%", height: 320, background: "#F5F3F0", borderRadius: 8, overflow: "hidden" }}>
-                    <img src={c.photo2_url} alt="进阶" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                  <div className="relative aspect-[3/4] bg-gray-100 rounded-xl overflow-hidden border border-[#2563EB]/30 ring-2 ring-[#2563EB]/10">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={c.photo2_url}
+                      alt="advanced posture"
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-[#2563EB]/90 text-white rounded text-[10px] backdrop-blur-xs font-medium">
+                      {angleMap[c.photo2_type] || "进阶"}
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* 导师体态诊断 */}
-              <div style={{ background: "#FAF7F5", borderRadius: 8, padding: "14px 18px", border: "1px solid #EBE4DF" }}>
-                <div style={{ fontSize: 12, color: "#9E2A2B", fontWeight: 600, marginBottom: 4 }}>
-                  印 导师小桥 · 体态诊断与进阶记录
+              {/* Mentor Analysis Quote Card */}
+              {c.analysis && (
+                <div className="mx-6 mb-6 p-4 bg-[#F8FAFC] border-l-4 border-[#2563EB] rounded-r-xl">
+                  <div className="text-xs font-semibold text-[#2563EB] mb-1 flex items-center gap-1">
+                    <Quote className="w-3.5 h-3.5" />
+                    小桥导师体态诊断与力学蜕变评语：
+                  </div>
+                  <p className="text-xs text-[#292D35] leading-relaxed whitespace-pre-wrap">
+                    {c.analysis}
+                  </p>
                 </div>
-                <div style={{ fontSize: 13, color: "#4A403E", lineHeight: 1.6 }}>{c.analysis}</div>
-              </div>
+              )}
             </div>
-          ))}
+          ))
+        )}
+      </div>
+
+      {/* Drawer: Add / Edit Comparison */}
+      {editingItem && (
+        <div className="fixed inset-0 z-50 overflow-hidden">
+          <div
+            className="absolute inset-0 bg-black/30 backdrop-blur-xs transition-opacity"
+            onClick={() => setEditingItem(null)}
+          />
+          <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
+            <div className="w-screen max-w-lg bg-white shadow-2xl flex flex-col">
+              <div className="p-6 border-b border-[#E1E5EB] flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-[#292D35]">
+                    {editingItem.id ? "编辑体态对比" : "录入体态阶段测评"}
+                  </h3>
+                  <p className="text-xs text-[#697180] mt-0.5">
+                    为 {selectedMember?.name || "学员"} 上传对比照片，将在小程序「我的蜕变」专属呈现。
+                  </p>
+                </div>
+                <button
+                  onClick={() => setEditingItem(null)}
+                  className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSave} className="flex-1 overflow-y-auto p-6 space-y-5">
+                {/* 2 Photos Uploader Grid */}
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Photo 1 */}
+                  <div>
+                    <label className="block text-xs font-medium text-[#292D35] mb-1">
+                      初测定格照 (FIG. 01) *
+                    </label>
+                    <div className="relative aspect-[3/4] bg-gray-50 border-2 border-dashed border-[#E1E5EB] rounded-xl overflow-hidden flex flex-col items-center justify-center p-2 text-center">
+                      {editingItem.photo1_url ? (
+                        <>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={editingItem.photo1_url}
+                            alt="photo1"
+                            className="w-full h-full object-cover rounded-lg"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setEditingItem((p) => ({ ...p, photo1_url: "" }))}
+                            className="absolute top-2 right-2 p-1 bg-black/60 text-white rounded-full hover:bg-black"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-6 h-6 text-gray-400 mb-1" />
+                          <span className="text-[11px] font-medium text-[#292D35]">
+                            {uploading1 ? "正在上传..." : "上传初测照"}
+                          </span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleUploadPhoto(e, "photo1_url", setUploading1)}
+                            disabled={uploading1}
+                            className="absolute inset-0 opacity-0 cursor-pointer"
+                          />
+                        </>
+                      )}
+                    </div>
+
+                    <div className="mt-2 space-y-1.5">
+                      <select
+                        value={editingItem.photo1_type || "front"}
+                        onChange={(e) => setEditingItem({ ...editingItem, photo1_type: e.target.value })}
+                        className="w-full px-2 py-1 text-xs bg-white border border-[#E1E5EB] rounded-lg"
+                      >
+                        <option value="front">正面视角</option>
+                        <option value="side">侧面视角</option>
+                        <option value="back">背面视角</option>
+                      </select>
+                      <input
+                        type="text"
+                        placeholder="初测日期或阶段说明"
+                        value={editingItem.photo1_date || ""}
+                        onChange={(e) => setEditingItem({ ...editingItem, photo1_date: e.target.value })}
+                        className="w-full px-2 py-1 text-xs bg-white border border-[#E1E5EB] rounded-lg"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Photo 2 */}
+                  <div>
+                    <label className="block text-xs font-medium text-[#2563EB] mb-1">
+                      进阶蜕变照 (FIG. 02) *
+                    </label>
+                    <div className="relative aspect-[3/4] bg-gray-50 border-2 border-dashed border-[#2563EB]/40 rounded-xl overflow-hidden flex flex-col items-center justify-center p-2 text-center">
+                      {editingItem.photo2_url ? (
+                        <>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={editingItem.photo2_url}
+                            alt="photo2"
+                            className="w-full h-full object-cover rounded-lg"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setEditingItem((p) => ({ ...p, photo2_url: "" }))}
+                            className="absolute top-2 right-2 p-1 bg-black/60 text-white rounded-full hover:bg-black"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-6 h-6 text-[#2563EB] mb-1" />
+                          <span className="text-[11px] font-medium text-[#2563EB]">
+                            {uploading2 ? "正在上传..." : "上传进阶照"}
+                          </span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleUploadPhoto(e, "photo2_url", setUploading2)}
+                            disabled={uploading2}
+                            className="absolute inset-0 opacity-0 cursor-pointer"
+                          />
+                        </>
+                      )}
+                    </div>
+
+                    <div className="mt-2 space-y-1.5">
+                      <select
+                        value={editingItem.photo2_type || "front"}
+                        onChange={(e) => setEditingItem({ ...editingItem, photo2_type: e.target.value })}
+                        className="w-full px-2 py-1 text-xs bg-white border border-[#E1E5EB] rounded-lg"
+                      >
+                        <option value="front">正面视角</option>
+                        <option value="side">侧面视角</option>
+                        <option value="back">背面视角</option>
+                      </select>
+                      <input
+                        type="text"
+                        placeholder="进阶日期或阶段说明"
+                        value={editingItem.photo2_date || ""}
+                        onChange={(e) => setEditingItem({ ...editingItem, photo2_date: e.target.value })}
+                        className="w-full px-2 py-1 text-xs bg-white border border-[#E1E5EB] rounded-lg"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Analysis Commentary */}
+                <div>
+                  <label className="block text-xs font-medium text-[#292D35] mb-1">
+                    小桥导师亲笔体态力学分析与寄语 *
+                  </label>
+                  <textarea
+                    rows={4}
+                    placeholder="例如：经过 36 节大器械精准训练，骨盆前倾改善约 5°，肋骨外翻显著内敛归位，下颌与锁骨线条挺拔舒展..."
+                    value={editingItem.analysis || ""}
+                    onChange={(e) => setEditingItem({ ...editingItem, analysis: e.target.value })}
+                    required
+                    className="w-full px-3 py-2 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB] leading-relaxed"
+                  />
+                </div>
+
+                <div className="pt-4 border-t border-[#E1E5EB] flex items-center justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setEditingItem(null)}
+                    className="px-4 py-2 text-xs font-medium text-[#697180] hover:text-[#292D35] bg-white border border-[#E1E5EB] rounded-lg"
+                  >
+                    取消
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="px-5 py-2 text-xs font-medium text-white bg-[#2563EB] hover:bg-blue-700 rounded-lg shadow-sm disabled:opacity-50"
+                  >
+                    {saving ? "正在发布..." : "发布体态档案"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* 弹窗编辑/新建 */}
-      {editingItem && (
-        <div
-          style={{
-            position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-            background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)",
-            display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999
-          }}
-        >
-          <div
-            style={{
-              background: "#FFFFFF", borderRadius: 16, width: "100%", maxWidth: 640,
-              maxHeight: "90vh", overflowY: "auto", padding: 32, boxShadow: "0 20px 50px rgba(0,0,0,0.2)"
-            }}
-          >
-            <h2 style={{ margin: "0 0 20px 0", fontSize: 20, color: "#1C1415", fontWeight: 700 }}>
-              {editingItem.id ? "编辑体态对比档案" : "新建体态对比档案"}
-            </h2>
-
-            <form onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-              {/* 评测角度 */}
-              <div>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1C1415", marginBottom: 6 }}>
-                  评测角度
-                </label>
-                <select
-                  value={editingItem.photo1_type || "front"}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setEditingItem({
-                      ...editingItem,
-                      photo1_type: val,
-                      photo2_type: val,
-                      photo1_url:
-                        val === "side"
-                          ? "/images/posture/posture_side_before.jpg"
-                          : val === "back"
-                          ? "/images/posture/posture_back_before.jpg"
-                          : "/images/posture/posture_front_before.jpg",
-                      photo2_url:
-                        val === "side"
-                          ? "/images/posture/posture_side_after.jpg"
-                          : val === "back"
-                          ? "/images/posture/posture_back_after.jpg"
-                          : "/images/posture/posture_front_after.jpg",
-                    });
-                  }}
-                  style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: "1px solid #D1C7C1", fontSize: 14 }}
-                >
-                  <option value="front">正面 (Front)</option>
-                  <option value="side">侧面 (Side)</option>
-                  <option value="back">背面 (Back)</option>
-                </select>
-              </div>
-
-              {/* FIG. 01 初测照 */}
-              <div>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1C1415", marginBottom: 6 }}>
-                  FIG. 01 入学初测照 (支持上传真实照片或评估照)
-                </label>
-                <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                  <input
-                    type="text"
-                    required
-                    value={editingItem.photo1_url || ""}
-                    onChange={(e) => setEditingItem({ ...editingItem, photo1_url: e.target.value })}
-                    style={{ flex: 1, padding: "10px 14px", borderRadius: 8, border: "1px solid #D1C7C1", fontSize: 13 }}
-                  />
-                  <label
-                    style={{
-                      padding: "10px 16px", background: "#0E0D10", color: "#FFFFFF",
-                      borderRadius: 8, fontSize: 13, cursor: "pointer", whiteSpace: "nowrap"
-                    }}
-                  >
-                    {uploading1 ? "上传中..." : "本地上传"}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleUploadPhoto(e, "photo1_url", setUploading1)}
-                      style={{ display: "none" }}
-                    />
-                  </label>
-                </div>
-                {editingItem.photo1_url && (
-                  <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 10 }}>
-                    <img src={editingItem.photo1_url} alt="预览" style={{ height: 60, borderRadius: 6, border: "1px solid #EBE4DF" }} />
-                    <span style={{ fontSize: 12, color: "#2E7D32" }}>✓ 已加载预览</span>
-                  </div>
-                )}
-              </div>
-
-              {/* FIG. 02 进阶定格照 */}
-              <div>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1C1415", marginBottom: 6 }}>
-                  FIG. 02 进阶定格照 (支持上传真实照片或进阶照)
-                </label>
-                <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                  <input
-                    type="text"
-                    required
-                    value={editingItem.photo2_url || ""}
-                    onChange={(e) => setEditingItem({ ...editingItem, photo2_url: e.target.value })}
-                    style={{ flex: 1, padding: "10px 14px", borderRadius: 8, border: "1px solid #D1C7C1", fontSize: 13 }}
-                  />
-                  <label
-                    style={{
-                      padding: "10px 16px", background: "#0E0D10", color: "#FFFFFF",
-                      borderRadius: 8, fontSize: 13, cursor: "pointer", whiteSpace: "nowrap"
-                    }}
-                  >
-                    {uploading2 ? "上传中..." : "本地上传"}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleUploadPhoto(e, "photo2_url", setUploading2)}
-                      style={{ display: "none" }}
-                    />
-                  </label>
-                </div>
-                {editingItem.photo2_url && (
-                  <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 10 }}>
-                    <img src={editingItem.photo2_url} alt="预览" style={{ height: 60, borderRadius: 6, border: "1px solid #EBE4DF" }} />
-                    <span style={{ fontSize: 12, color: "#2E7D32" }}>✓ 已加载预览</span>
-                  </div>
-                )}
-              </div>
-
-              {/* 导师小桥评语 */}
-              <div>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1C1415", marginBottom: 6 }}>
-                  导师体态诊断与进阶记录
-                </label>
-                <textarea
-                  rows={4}
-                  value={editingItem.analysis || ""}
-                  onChange={(e) => setEditingItem({ ...editingItem, analysis: e.target.value })}
-                  style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: "1px solid #D1C7C1", fontSize: 13, lineHeight: 1.5 }}
-                />
-              </div>
-
-              {/* 操作按钮 */}
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 12 }}>
-                <button
-                  type="button"
-                  onClick={() => setEditingItem(null)}
-                  style={{ padding: "10px 20px", background: "#FAF7F5", border: "1px solid #D1C7C1", borderRadius: 8, fontSize: 14, cursor: "pointer" }}
-                >
-                  取消
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  style={{
-                    padding: "10px 24px", background: "#0E0D10", color: "#FFFFFF",
-                    border: "none", borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: "pointer"
-                  }}
-                >
-                  {saving ? "保存中..." : "保存体态档案"}
-                </button>
-              </div>
-            </form>
+      {/* Delete Modal */}
+      {deleteConfirmId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+          <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-5 border border-[#E1E5EB]">
+            <h3 className="text-base font-semibold text-[#292D35]">确认删除此条体态对比？</h3>
+            <p className="text-xs text-[#697180] mt-1">
+              删除后，学员小程序端将不再呈现该阶段的对比照片与评语。
+            </p>
+            <div className="flex justify-end gap-2 mt-5">
+              <button
+                type="button"
+                onClick={() => setDeleteConfirmId(null)}
+                className="px-3 py-1.5 text-xs text-[#697180] bg-white border border-[#E1E5EB] rounded-lg"
+              >
+                取消
+              </button>
+              <button
+                type="button"
+                onClick={confirmDelete}
+                className="px-4 py-1.5 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg shadow-sm"
+              >
+                确认删除
+              </button>
+            </div>
           </div>
         </div>
       )}

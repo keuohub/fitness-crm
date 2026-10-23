@@ -2,6 +2,21 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useToast } from "@/components/admin/Toast";
+import {
+  Compass,
+  Building,
+  Users,
+  Layers,
+  Plus,
+  Upload,
+  Edit2,
+  Trash2,
+  X,
+  Eye,
+  EyeOff,
+  Image as ImageIcon,
+} from "lucide-react";
 
 interface VenueItem {
   id: number;
@@ -16,11 +31,13 @@ interface VenueItem {
 }
 
 export default function AdminVenuePage() {
+  const { showToast } = useToast();
   const [items, setItems] = useState<VenueItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingItem, setEditingItem] = useState<Partial<VenueItem> | null>(null);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
   const fetchItems = async () => {
     setLoading(true);
@@ -30,8 +47,8 @@ export default function AdminVenuePage() {
       if (Array.isArray(data)) {
         setItems(data);
       }
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      showToast(err.message || "读取场馆数据失败", "error");
     } finally {
       setLoading(false);
     }
@@ -44,7 +61,7 @@ export default function AdminVenuePage() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingItem?.title || !editingItem?.imageUrl) {
-      alert("请填写空间标题并上传或填入照片！");
+      showToast("请填写空间名称并上传实拍大片", "error");
       return;
     }
     setSaving(true);
@@ -57,29 +74,32 @@ export default function AdminVenuePage() {
       });
       if (res.ok) {
         setEditingItem(null);
-        fetchItems();
+        showToast("空间实景已成功更新", "success");
+        await fetchItems();
       } else {
         const err = await res.json();
-        alert(err.error || "保存失败");
+        showToast(err.error || "保存失败", "error");
       }
-    } catch (err) {
-      alert("网络请求失败");
+    } catch (err: any) {
+      showToast(err.message || "网络请求失败", "error");
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("确定要删除该空间图片吗？")) return;
+  const confirmDelete = async () => {
+    if (!deleteConfirmId) return;
     try {
-      const res = await fetch(`/api/admin/venue?id=${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/admin/venue?id=${deleteConfirmId}`, { method: "DELETE" });
       if (res.ok) {
-        fetchItems();
+        setDeleteConfirmId(null);
+        showToast("空间记录已成功删除", "success");
+        await fetchItems();
       } else {
-        alert("删除失败");
+        showToast("删除失败", "error");
       }
-    } catch (err) {
-      alert("网络请求失败");
+    } catch (err: any) {
+      showToast(err.message || "网络异常", "error");
     }
   };
 
@@ -97,231 +117,317 @@ export default function AdminVenuePage() {
       const data = await res.json();
       if (data.url) {
         setEditingItem((prev) => ({ ...prev, imageUrl: data.url }));
-        if (data.warning) alert(data.warning);
+        showToast("照片已成功上传", "success");
+        if (data.warning) showToast(data.warning, "error");
       } else {
-        alert(data.error || "图片上传失败");
+        showToast(data.error || "图片上传失败", "error");
       }
-    } catch (err) {
-      alert("图片上传异常");
+    } catch (err: any) {
+      showToast(err.message || "图片上传异常", "error");
     } finally {
       setUploading(false);
     }
   };
 
   return (
-    <div style={{ maxWidth: 1000, margin: "0 auto", padding: "40px 20px", fontFamily: "-apple-system, sans-serif" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <Link href="/admin" style={{ fontSize: 13, color: "#8B5E3C", textDecoration: "none", display: "inline-block", marginBottom: 8 }}>
-            ← 返回管理总览
-          </Link>
-          <h1 style={{ fontSize: 26, fontWeight: 700, color: "#1C1415", margin: 0 }}>
-            🏛️ 第 2 板块：了解徕舞 · 场馆空间管理
-          </h1>
-          <p style={{ fontSize: 13, color: "#7A6B69", marginTop: 6, margin: 0 }}>
-            管理小程序主框架展示的场馆实景与器械大片，留纯净标题框架供后台随心撰写
+          <div className="text-xs font-semibold text-[#2563EB] tracking-wide uppercase">
+            MINIPROGRAM TAB 2 · 场馆空间实景
+          </div>
+          <h1 className="text-2xl font-semibold text-[#292D35] mt-1 tracking-tight">场馆空间与器械大片</h1>
+          <p className="text-sm text-[#697180] mt-1">
+            小程序「了解徕舞」板块一展示的实景大片，支持自由调整标题、简介、大图与呈现顺序。
           </p>
         </div>
+
         <button
-          onClick={() => setEditingItem({ title: "", imageUrl: "", sortOrder: items.length + 1, isActive: 1 })}
-          style={{
-            background: "#5E1914", color: "#FFFFFF", border: "none", padding: "12px 24px",
-            borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: "pointer", boxShadow: "0 2px 8px rgba(94,25,20,0.25)"
-          }}
+          onClick={() =>
+            setEditingItem({
+              title: "",
+              imageUrl: "",
+              sortOrder: items.length + 1,
+              isActive: 1,
+            })
+          }
+          className="px-4 py-2 text-xs font-medium text-white bg-[#2563EB] hover:bg-blue-700 rounded-lg shadow-sm flex items-center gap-1.5 self-start transition-colors"
         >
-          ＋ 上传新空间图片
+          <Plus className="w-4 h-4" /> 上传新空间照片
         </button>
       </div>
 
+      {/* Sub-navigation Tabs */}
+      <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-[#E1E5EB] shadow-xs overflow-x-auto">
+        <Link
+          href="/admin/brand"
+          className="px-4 py-2 text-xs font-medium rounded-lg text-[#697180] hover:text-[#292D35] hover:bg-[#F5F7FA] flex items-center gap-1.5 shrink-0 transition-colors"
+        >
+          <Compass className="w-3.5 h-3.5" /> 品牌理念主视觉
+        </Link>
+        <Link
+          href="/admin/venue"
+          className="px-4 py-2 text-xs font-semibold rounded-lg bg-[#2563EB] text-white flex items-center gap-1.5 shrink-0 shadow-xs"
+        >
+          <Building className="w-3.5 h-3.5" /> 场馆空间实景
+        </Link>
+        <Link
+          href="/admin/team"
+          className="px-4 py-2 text-xs font-medium rounded-lg text-[#697180] hover:text-[#292D35] hover:bg-[#F5F7FA] flex items-center gap-1.5 shrink-0 transition-colors"
+        >
+          <Users className="w-3.5 h-3.5" /> 同行导师团队
+        </Link>
+        <Link
+          href="/admin/offerings"
+          className="px-4 py-2 text-xs font-medium rounded-lg text-[#697180] hover:text-[#292D35] hover:bg-[#F5F7FA] flex items-center gap-1.5 shrink-0 transition-colors"
+        >
+          <Layers className="w-3.5 h-3.5" /> 课程体系与底图
+        </Link>
+      </div>
+
+      {/* Grid of venue cards */}
       {loading ? (
-        <div style={{ textAlign: "center", padding: 60, color: "#9E9E9E" }}>加载中...</div>
+        <div className="bg-white border border-[#E1E5EB] rounded-xl p-16 text-center text-[#697180] text-sm shadow-sm">
+          正在读取空间相册...
+        </div>
+      ) : items.length === 0 ? (
+        <div className="bg-white border border-[#E1E5EB] rounded-xl p-16 text-center text-[#697180] text-sm shadow-sm flex flex-col items-center justify-center">
+          <Building className="w-10 h-10 text-gray-300 mb-2" />
+          <span className="font-semibold text-[#292D35]">暂无场馆空间大片</span>
+          <span className="text-xs text-[#697180] mt-1">点击右上角按钮上传第一张场馆实拍。</span>
+        </div>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 20 }}>
-          {items.map((item) => (
-            <div
-              key={item.id}
-              style={{
-                background: "#FFFFFF", borderRadius: 12, border: "1px solid #EBE4DF", overflow: "hidden",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.03)", display: "flex", flexDirection: "column"
-              }}
-            >
-              <div style={{ position: "relative", width: "100%", height: 200, background: "#2C1B1D" }}>
-                <img
-                  src={item.imageUrl}
-                  alt={item.title}
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                />
-                <div style={{
-                  position: "absolute", top: 10, right: 10,
-                  background: item.isActive === 1 ? "rgba(46, 125, 50, 0.9)" : "rgba(100, 100, 100, 0.9)",
-                  color: "#FFFFFF", fontSize: 11, padding: "3px 8px", borderRadius: 4, fontWeight: 500
-                }}>
-                  {item.isActive === 1 ? "展示中" : "已隐藏"}
-                </div>
-              </div>
-
-              <div style={{ padding: 16, flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                    <span style={{ fontSize: 11, color: "#8B5E3C", fontWeight: 600 }}>{item.tag || "01 / 空间实景"}</span>
-                    <span style={{ fontSize: 11, color: "#8C827B" }}>排序: {item.sortOrder}</span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {items.map((item) => {
+            const isOnline = item.isActive === 1;
+            return (
+              <div
+                key={item.id}
+                className="bg-white border border-[#E1E5EB] rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col"
+              >
+                <div className="relative aspect-[16/10] bg-gray-100 overflow-hidden group">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={item.imageUrl}
+                    alt={item.title}
+                    className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300"
+                  />
+                  <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
+                    <span
+                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shadow-xs ${
+                        isOnline
+                          ? "bg-emerald-500/90 text-white backdrop-blur-xs"
+                          : "bg-gray-800/80 text-gray-300 backdrop-blur-xs"
+                      }`}
+                    >
+                      {isOnline ? "展示中" : "已隐藏"}
+                    </span>
+                    <span className="text-[10px] font-mono bg-black/50 text-white px-1.5 py-0.5 rounded backdrop-blur-xs">
+                      排序 {item.sortOrder}
+                    </span>
                   </div>
-                  <h3 style={{ margin: "4px 0 6px 0", fontSize: 16, fontWeight: 600, color: "#1C1415" }}>{item.name || item.title}</h3>
-                  {item.desc && (
-                    <p style={{ margin: 0, fontSize: 12, color: "#665E5C", lineHeight: 1.5 }}>
-                      {item.desc}
-                    </p>
-                  )}
                 </div>
 
-                <div style={{ display: "flex", gap: 10, marginTop: 16, borderTop: "1px solid #F0EAE6", paddingTop: 10 }}>
-                  <button
-                    onClick={() => setEditingItem(item)}
-                    style={{
-                      flex: 1, padding: "8px 0", background: "#FAF7F5", border: "1px solid #E2D9D2",
-                      borderRadius: 6, fontSize: 12, cursor: "pointer", color: "#5E1914", fontWeight: 500
-                    }}
-                  >
-                    编辑
-                  </button>
-                  <button
-                    onClick={() => handleDelete(item.id)}
-                    style={{
-                      padding: "8px 12px", background: "#FFF5F5", border: "1px solid #FFCDD2",
-                      borderRadius: 6, fontSize: 12, cursor: "pointer", color: "#C62828"
-                    }}
-                  >
-                    删除
-                  </button>
+                <div className="p-4 flex-1 flex flex-col justify-between">
+                  <div>
+                    <h3 className="font-semibold text-sm text-[#292D35]">{item.title}</h3>
+                    {item.desc && (
+                      <p className="text-xs text-[#697180] mt-1 leading-relaxed line-clamp-2">
+                        {item.desc}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="mt-4 pt-3 border-t border-[#F0F2F6] flex items-center justify-between">
+                    <span className="text-[11px] text-[#697180]">
+                      创建: {String(item.createdAt || "").slice(0, 10)}
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => setEditingItem(item)}
+                        className="p-1.5 text-gray-500 hover:text-[#2563EB] rounded hover:bg-gray-100 transition-colors"
+                        title="编辑"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => setDeleteConfirmId(item.id)}
+                        className="p-1.5 text-gray-400 hover:text-red-600 rounded hover:bg-red-50 transition-colors"
+                        title="删除"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
-      {/* 编辑/新增弹窗 */}
+      {/* Drawer: Add / Edit Item */}
       {editingItem && (
-        <div style={{
-          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-          background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000
-        }}>
-          <div style={{ background: "#FFFFFF", borderRadius: 14, width: 480, maxWidth: "90%", maxHeight: "90vh", overflowY: "auto", padding: 28, boxShadow: "0 10px 30px rgba(0,0,0,0.15)" }}>
-            <h2 style={{ margin: "0 0 20px 0", fontSize: 20, color: "#1C1415" }}>
-              {editingItem.id ? "编辑空间与器械" : "上传新空间图片"}
-            </h2>
-            <form onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              <div>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "#4A403E", marginBottom: 6 }}>
-                  空间分类标签 <span style={{ color: "#C62828" }}>*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="如：01 / 核心床静修区"
-                  value={editingItem.tag || ""}
-                  onChange={(e) => setEditingItem({ ...editingItem, tag: e.target.value })}
-                  style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 14, boxSizing: "border-box" }}
-                />
+        <div className="fixed inset-0 z-50 overflow-hidden">
+          <div
+            className="absolute inset-0 bg-black/30 backdrop-blur-xs transition-opacity"
+            onClick={() => setEditingItem(null)}
+          />
+          <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
+            <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col">
+              <div className="p-6 border-b border-[#E1E5EB] flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-[#292D35]">
+                    {editingItem.id ? "编辑空间相册" : "上传新空间相片"}
+                  </h3>
+                  <p className="text-xs text-[#697180] mt-0.5">
+                    高清实拍展示场馆采光、进口木质大器械与私密更衣室。
+                  </p>
+                </div>
+                <button
+                  onClick={() => setEditingItem(null)}
+                  className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
-              <div>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "#4A403E", marginBottom: 6 }}>
-                  空间/器械名称 <span style={{ color: "#C62828" }}>*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="如：静谧大器械空间"
-                  value={editingItem.name || editingItem.title || ""}
-                  onChange={(e) => setEditingItem({ ...editingItem, name: e.target.value, title: e.target.value })}
-                  style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 14, boxSizing: "border-box" }}
-                />
-              </div>
+              <form onSubmit={handleSave} className="flex-1 overflow-y-auto p-6 space-y-4">
+                <div>
+                  <label className="block text-xs font-medium text-[#292D35] mb-1.5">
+                    实景照片大片 (推荐 16:10 横图) *
+                  </label>
+                  <div className="relative aspect-[16/10] bg-gray-50 border-2 border-dashed border-[#E1E5EB] rounded-xl overflow-hidden flex flex-col items-center justify-center p-3 text-center">
+                    {editingItem.imageUrl ? (
+                      <>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={editingItem.imageUrl}
+                          alt="preview"
+                          className="w-full h-full object-cover rounded-lg"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setEditingItem((prev) => ({ ...prev, imageUrl: "" }))}
+                          className="absolute top-2 right-2 p-1.5 bg-black/60 text-white rounded-full hover:bg-black"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                        <span className="text-xs font-medium text-[#292D35]">
+                          {uploading ? "正在上传云存储..." : "点击或拖拽空间大片"}
+                        </span>
+                        <span className="text-[11px] text-[#697180] mt-0.5">JPG / PNG / WebP</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFileUpload}
+                          disabled={uploading}
+                          className="absolute inset-0 opacity-0 cursor-pointer"
+                        />
+                      </>
+                    )}
+                  </div>
+                </div>
 
-              <div>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "#4A403E", marginBottom: 6 }}>
-                  空间特色与器械描述
-                </label>
-                <textarea
-                  rows={3}
-                  placeholder="如：德国原装进口实木核心床，配合温润漫射自然光照，专注于深层小肌群与呼吸节律。"
-                  value={editingItem.desc || ""}
-                  onChange={(e) => setEditingItem({ ...editingItem, desc: e.target.value })}
-                  style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 13, boxSizing: "border-box" }}
-                />
-              </div>
-
-              <div>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "#4A403E", marginBottom: 6 }}>
-                  图片地址 <span style={{ color: "#C62828" }}>*</span>
-                </label>
-                <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                <div>
+                  <label className="block text-xs font-medium text-[#292D35] mb-1">空间名称 *</label>
                   <input
                     type="text"
+                    placeholder="例如：普拉提核心床大器械静修区"
+                    value={editingItem.title || ""}
+                    onChange={(e) => setEditingItem({ ...editingItem, title: e.target.value })}
                     required
-                    placeholder="/images/venue/venue-1.jpg 或图片地址"
-                    value={editingItem.imageUrl || ""}
-                    onChange={(e) => setEditingItem({ ...editingItem, imageUrl: e.target.value })}
-                    style={{ flex: 1, padding: "10px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 13, boxSizing: "border-box" }}
+                    className="w-full px-3 py-2 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
                   />
-                  <label style={{
-                    padding: "10px 14px", background: "#F5ECE5", color: "#5E1914",
-                    borderRadius: 6, fontSize: 12, fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap"
-                  }}>
-                    {uploading ? "上传中..." : "本地上传"}
-                    <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: "none" }} />
-                  </label>
                 </div>
-              </div>
 
-              <div style={{ display: "flex", gap: 14 }}>
-                <div style={{ flex: 1 }}>
-                  <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "#4A403E", marginBottom: 6 }}>
-                    排序权重
-                  </label>
-                  <input
-                    type="number"
-                    value={editingItem.sortOrder ?? 0}
-                    onChange={(e) => setEditingItem({ ...editingItem, sortOrder: Number(e.target.value) })}
-                    style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 14, boxSizing: "border-box" }}
+                <div>
+                  <label className="block text-xs font-medium text-[#292D35] mb-1">空间描述 (可选)</label>
+                  <textarea
+                    rows={3}
+                    placeholder="例如：通透柔和自然采光，进口实木大器械，营造沉静专注的私密身心练习氛围。"
+                    value={editingItem.desc || ""}
+                    onChange={(e) => setEditingItem({ ...editingItem, desc: e.target.value })}
+                    className="w-full px-3 py-2 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB] leading-relaxed"
                   />
                 </div>
-                <div style={{ flex: 1 }}>
-                  <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "#4A403E", marginBottom: 6 }}>
-                    展示状态
-                  </label>
-                  <select
-                    value={editingItem.isActive ?? 1}
-                    onChange={(e) => setEditingItem({ ...editingItem, isActive: Number(e.target.value) })}
-                    style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 14, boxSizing: "border-box" }}
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-[#292D35] mb-1">显示排序</label>
+                    <input
+                      type="number"
+                      value={editingItem.sortOrder ?? 0}
+                      onChange={(e) =>
+                        setEditingItem({ ...editingItem, sortOrder: Number(e.target.value) || 0 })
+                      }
+                      className="w-full px-3 py-2 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-[#292D35] mb-1">展示状态</label>
+                    <select
+                      value={editingItem.isActive ?? 1}
+                      onChange={(e) =>
+                        setEditingItem({ ...editingItem, isActive: Number(e.target.value) })
+                      }
+                      className="w-full px-3 py-2 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                    >
+                      <option value={1}>展示中</option>
+                      <option value={0}>已隐藏</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-[#E1E5EB] flex items-center justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setEditingItem(null)}
+                    className="px-4 py-2 text-xs font-medium text-[#697180] hover:text-[#292D35] bg-white border border-[#E1E5EB] rounded-lg"
                   >
-                    <option value={1}>上线展示</option>
-                    <option value={0}>隐藏下线</option>
-                  </select>
+                    取消
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="px-5 py-2 text-xs font-medium text-white bg-[#2563EB] hover:bg-blue-700 rounded-lg shadow-sm disabled:opacity-50"
+                  >
+                    {saving ? "正在保存..." : "确认保存空间"}
+                  </button>
                 </div>
-              </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
 
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 14 }}>
-                <button
-                  type="button"
-                  onClick={() => setEditingItem(null)}
-                  style={{ padding: "10px 20px", background: "#F5F5F5", border: "1px solid #DDD", borderRadius: 6, fontSize: 13, cursor: "pointer" }}
-                >
-                  取消
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  style={{
-                    padding: "10px 24px", background: "#5E1914", color: "#FFFFFF", border: "none",
-                    borderRadius: 6, fontSize: 13, fontWeight: 500, cursor: "pointer"
-                  }}
-                >
-                  {saving ? "保存中..." : "保存"}
-                </button>
-              </div>
-            </form>
+      {/* Delete Modal */}
+      {deleteConfirmId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+          <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-5 border border-[#E1E5EB]">
+            <h3 className="text-base font-semibold text-[#292D35]">确认移除该空间照片？</h3>
+            <p className="text-xs text-[#697180] mt-1">移除后小程序端将不再呈现此空间。</p>
+            <div className="flex justify-end gap-2 mt-5">
+              <button
+                type="button"
+                onClick={() => setDeleteConfirmId(null)}
+                className="px-3 py-1.5 text-xs text-[#697180] bg-white border border-[#E1E5EB] rounded-lg"
+              >
+                取消
+              </button>
+              <button
+                type="button"
+                onClick={confirmDelete}
+                className="px-4 py-1.5 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg shadow-sm"
+              >
+                确认删除
+              </button>
+            </div>
           </div>
         </div>
       )}

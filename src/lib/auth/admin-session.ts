@@ -3,8 +3,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { users, adminSessions } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and, gte } from "drizzle-orm";
 import crypto from "crypto";
+import { hashSync, compareSync } from "bcryptjs";
 
 const DEFAULT_ADMIN_EMAIL = "admin@laiwu.fitness";
 const LEGACY_COOKIE = "admin_session";
@@ -84,10 +85,37 @@ export async function verifyAdminLogin(
       .where(eq(users.email, lookupEmail));
 
     if (user) {
-      const isValid =
-        user.passwordHash === cleanPass ||
-        cleanPass === envSecret ||
-        verifySignature(cleanPass, user.passwordHash);
+      let isValid = false;
+
+      // 1. bcrypt 校验（标准算法）
+      try {
+        if (user.passwordHash && (user.passwordHash.startsWith("$2a$") || user.passwordHash.startsWith("$2b$"))) {
+          isValid = compareSync(cleanPass, user.passwordHash);
+        }
+      } catch {
+        isValid = false;
+      }
+
+      // 2. 根管理员环境变量备用
+      if (!isValid && envSecret && cleanPass === envSecret) {
+        isValid = true;
+      }
+
+      // 3. HMAC 签名兼容
+      if (!isValid && verifySignature(cleanPass, user.passwordHash)) {
+        isValid = true;
+      }
+
+      // 4. 历史明文兼容（登录成功后自动升级为 bcrypt 强哈希）
+      if (!isValid && user.passwordHash === cleanPass) {
+        isValid = true;
+        try {
+          db.update(users).set({ passwordHash: hashSync(cleanPass, 10) }).where(eq(users.id, user.id)).catch(() => {});
+        } catch {
+          // 静默容错
+        }
+      }
+
       if (isValid) {
         if (user.status === "inactive") return null;
         return { userId: user.id, email: user.email, role: user.role ?? "owner" };
@@ -105,7 +133,47 @@ export async function verifyAdminLogin(
   return null;
 }
 
-// Get admin session — prefer token-based, fallback to legacy cookie
+// Get admin session — server-side DB validation (token-based with status check)
+export async function getValidAdminSession(request: NextRequest): Promise<AdminSession | null> {
+  const token = request.cookies.get(TOKEN_COOKIE)?.value;
+  if (token) {
+    try {
+      const [session] = await db
+        .select({
+          adminId: adminSessions.adminId,
+          email: users.email,
+          role: users.role,
+          status: users.status,
+        })
+        .from(adminSessions)
+        .innerJoin(users, eq(adminSessions.adminId, users.id))
+        .where(and(eq(adminSessions.token, token), gte(adminSessions.expiresAt, new Date().toISOString())));
+
+      if (session) {
+        if (session.status === "inactive") return null;
+        return { userId: session.adminId, email: session.email, role: session.role ?? "owner" };
+      }
+      // Token in cookie was revoked or expired in DB -> reject immediately
+      return null;
+    } catch (err) {
+      console.warn("DB session lookup error:", err);
+    }
+  }
+
+  // Fallback to signature check ONLY if no token cookie was passed (e.g. edge proxy)
+  const raw = request.cookies.get(LEGACY_COOKIE)?.value;
+  const sig = request.cookies.get(`${LEGACY_COOKIE}_sig`)?.value;
+  if (!token && raw && sig && verifySignature(raw, sig)) {
+    try {
+      return JSON.parse(raw) as AdminSession;
+    } catch {
+      // Fall through
+    }
+  }
+  return null;
+}
+
+// Get admin session — legacy synchronous helper
 export function getAdminSession(request: NextRequest): AdminSession | null {
   // Legacy signed cookie
   const raw = request.cookies.get(LEGACY_COOKIE)?.value;
@@ -163,6 +231,19 @@ export function clearAdminCookie(response: NextResponse): void {
   response.cookies.delete(LEGACY_COOKIE);
   response.cookies.delete(`${LEGACY_COOKIE}_sig`);
   response.cookies.delete(TOKEN_COOKIE);
+}
+
+// Revoke admin session in DB and clear cookies
+export async function revokeAdminSession(request: NextRequest, response: NextResponse): Promise<void> {
+  const token = request.cookies.get(TOKEN_COOKIE)?.value;
+  if (token) {
+    try {
+      await db.delete(adminSessions).where(eq(adminSessions.token, token));
+    } catch (err) {
+      console.warn("Failed to delete admin session from DB:", err);
+    }
+  }
+  clearAdminCookie(response);
 }
 
 // Require admin — returns session or null

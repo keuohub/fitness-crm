@@ -2,6 +2,17 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useToast } from "@/components/admin/Toast";
+import {
+  Compass,
+  Building,
+  Users,
+  Layers,
+  Sparkles,
+  Save,
+  ArrowRight,
+  ExternalLink,
+} from "lucide-react";
 
 interface BrandSettings {
   heroTitle: string;
@@ -21,6 +32,7 @@ interface BrandSettings {
 }
 
 export default function AdminBrandUnifiedPage() {
+  const { showToast } = useToast();
   const [settings, setSettings] = useState<BrandSettings>({
     heroTitle: "了解徕舞",
     heroSubtitle: "以克制之道，唤醒身体内在的秩序与平衡",
@@ -40,7 +52,6 @@ export default function AdminBrandUnifiedPage() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
 
   useEffect(() => {
     fetch("/api/admin/brand-settings")
@@ -50,14 +61,13 @@ export default function AdminBrandUnifiedPage() {
           setSettings((prev) => ({ ...prev, ...data }));
         }
       })
-      .catch((err) => console.error(err))
+      .catch((err) => showToast(err.message, "error"))
       .finally(() => setLoading(false));
   }, []);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    setSaveSuccess(false);
     try {
       const res = await fetch("/api/admin/brand-settings", {
         method: "PUT",
@@ -65,355 +75,303 @@ export default function AdminBrandUnifiedPage() {
         body: JSON.stringify(settings),
       });
       if (res.ok) {
-        setSaveSuccess(true);
-        setTimeout(() => setSaveSuccess(false), 3000);
+        showToast("品牌主视觉文案已成功保存并同步小程序", "success");
       } else {
-        alert("保存失败");
+        showToast("保存失败，请检查网络", "error");
       }
     } catch {
-      alert("网络请求失败");
+      showToast("网络请求异常", "error");
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <div style={{ maxWidth: 1040, margin: "0 auto", padding: "40px 20px", fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif" }}>
-      {/* 顶部面包屑与标题 */}
-      <div style={{ marginBottom: 28 }}>
-        <Link href="/admin" style={{ fontSize: 13, color: "#8B5E3C", textDecoration: "none", display: "inline-block", marginBottom: 8 }}>
-          ← 返回管理总览
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <div className="text-xs font-semibold text-[#2563EB] tracking-wide uppercase">
+            MINIPROGRAM TAB 2 · 了解徕舞
+          </div>
+          <h1 className="text-2xl font-semibold text-[#292D35] mt-1 tracking-tight">品牌理念与全局设定</h1>
+          <p className="text-sm text-[#697180] mt-1">
+            统筹管理小程序「了解徕舞」的主屏标题、三大板块引导文案及对应的空间、导师和课程库。
+          </p>
+        </div>
+      </div>
+
+      {/* Sub-navigation Tabs */}
+      <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-[#E1E5EB] shadow-xs overflow-x-auto">
+        <Link
+          href="/admin/brand"
+          className="px-4 py-2 text-xs font-semibold rounded-lg bg-[#2563EB] text-white flex items-center gap-1.5 shrink-0 shadow-xs"
+        >
+          <Compass className="w-3.5 h-3.5" /> 品牌理念主视觉
         </Link>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 14 }}>
+        <Link
+          href="/admin/venue"
+          className="px-4 py-2 text-xs font-medium rounded-lg text-[#697180] hover:text-[#292D35] hover:bg-[#F5F7FA] flex items-center gap-1.5 shrink-0 transition-colors"
+        >
+          <Building className="w-3.5 h-3.5" /> 场馆空间实景
+        </Link>
+        <Link
+          href="/admin/team"
+          className="px-4 py-2 text-xs font-medium rounded-lg text-[#697180] hover:text-[#292D35] hover:bg-[#F5F7FA] flex items-center gap-1.5 shrink-0 transition-colors"
+        >
+          <Users className="w-3.5 h-3.5" /> 同行导师团队
+        </Link>
+        <Link
+          href="/admin/offerings"
+          className="px-4 py-2 text-xs font-medium rounded-lg text-[#697180] hover:text-[#292D35] hover:bg-[#F5F7FA] flex items-center gap-1.5 shrink-0 transition-colors"
+        >
+          <Layers className="w-3.5 h-3.5" /> 课程体系与底图
+        </Link>
+      </div>
+
+      {/* 3 Quick Jump Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white border border-[#E1E5EB] rounded-xl p-5 shadow-sm flex flex-col justify-between hover:border-[#2563EB]/40 transition-colors">
           <div>
-            <h1 style={{ fontSize: 28, fontWeight: 700, color: "#1C1415", margin: "0 0 8px 0" }}>
-              🏛️ 「了解徕舞」全能控制中心
-            </h1>
-            <p style={{ fontSize: 14, color: "#7A6B69", margin: 0 }}>
-              集中掌控小程序「了解徕舞」页面主标题、三大板块标题/简介，以及对应的空间实景、导师阵容、课程体系与实拍底图。
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold text-[#2563EB] bg-[#E8EEFF] px-2 py-0.5 rounded">
+                板块一 · SPACES
+              </span>
+              <Building className="w-4 h-4 text-[#697180]" />
+            </div>
+            <h3 className="text-base font-semibold text-[#292D35] mt-3">场馆空间管理</h3>
+            <p className="text-xs text-[#697180] mt-1 leading-relaxed">
+              核心床大器械静修区、沉浸采光与私密更衣室实拍大片管理。
             </p>
           </div>
-          {saveSuccess && (
-            <div style={{ background: "#E8F5E9", color: "#2E7D32", padding: "8px 16px", borderRadius: 8, fontSize: 13, fontWeight: 600 }}>
-              ✓ 文案已成功保存并同步前台
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* 三大板块快捷直达卡片 (列表增删改、实拍图/底图管理、排序) */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16, marginBottom: 36 }}>
-        {/* 板块 1: 场馆空间 */}
-        <div style={{ background: "#FFFFFF", borderRadius: 14, border: "1px solid #EBE4DF", padding: 22, boxShadow: "0 2px 10px rgba(0,0,0,0.03)" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: "#8B5E3C", background: "#F5ECE5", padding: "3px 8px", borderRadius: 4 }}>
-              板块一
-            </span>
-            <span style={{ fontSize: 12, color: "#9E948E" }}>无限新增 · 自由排序</span>
-          </div>
-          <h3 style={{ margin: "0 0 6px 0", fontSize: 18, color: "#1C1415", fontWeight: 700 }}>
-            🏛️ 场馆空间管理
-          </h3>
-          <p style={{ fontSize: 13, color: "#6D645D", margin: "0 0 16px 0", lineHeight: 1.5 }}>
-            管理核心床静修区、私密更衣室等空间实景卡片、描述与横滑大片。
-          </p>
           <Link
             href="/admin/venue"
-            style={{
-              display: "inline-block",
-              width: "100%",
-              textAlign: "center",
-              background: "#FAF7F5",
-              color: "#5E1914",
-              border: "1px solid #D8CFC8",
-              padding: "10px 0",
-              borderRadius: 8,
-              fontSize: 13,
-              fontWeight: 600,
-              textDecoration: "none",
-              boxSizing: "border-box"
-            }}
+            className="mt-4 pt-3 border-t border-[#F0F2F6] text-xs font-medium text-[#2563EB] hover:underline flex items-center gap-1"
           >
-            进入场馆空间管理 (传实拍/排序) →
+            维护空间相册与排序 <ArrowRight className="w-3 h-3" />
           </Link>
         </div>
 
-        {/* 板块 2: 同行导师 */}
-        <div style={{ background: "#FFFFFF", borderRadius: 14, border: "1px solid #EBE4DF", padding: 22, boxShadow: "0 2px 10px rgba(0,0,0,0.03)" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: "#8B5E3C", background: "#F5ECE5", padding: "3px 8px", borderRadius: 4 }}>
-              板块二
-            </span>
-            <span style={{ fontSize: 12, color: "#9E948E" }}>无限新增 · 自由排序</span>
+        <div className="bg-white border border-[#E1E5EB] rounded-xl p-5 shadow-sm flex flex-col justify-between hover:border-[#2563EB]/40 transition-colors">
+          <div>
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold text-[#8B83D7] bg-purple-50 px-2 py-0.5 rounded">
+                板块二 · MENTORS
+              </span>
+              <Users className="w-4 h-4 text-[#697180]" />
+            </div>
+            <h3 className="text-base font-semibold text-[#292D35] mt-3">同行导师团队</h3>
+            <p className="text-xs text-[#697180] mt-1 leading-relaxed">
+              小桥主理人及资深形体导师团队、解剖资质认证与肖像画廊。
+            </p>
           </div>
-          <h3 style={{ margin: "0 0 6px 0", fontSize: 18, color: "#1C1415", fontWeight: 700 }}>
-            🧘 同行导师管理
-          </h3>
-          <p style={{ fontSize: 13, color: "#6D645D", margin: "0 0 16px 0", lineHeight: 1.5 }}>
-            管理小桥及各位资深塑形教练姓名、头衔、寄语、肖像照与上下线。
-          </p>
           <Link
             href="/admin/team"
-            style={{
-              display: "inline-block",
-              width: "100%",
-              textAlign: "center",
-              background: "#FAF7F5",
-              color: "#5E1914",
-              border: "1px solid #D8CFC8",
-              padding: "10px 0",
-              borderRadius: 8,
-              fontSize: 13,
-              fontWeight: 600,
-              textDecoration: "none",
-              boxSizing: "border-box"
-            }}
+            className="mt-4 pt-3 border-t border-[#F0F2F6] text-xs font-medium text-[#2563EB] hover:underline flex items-center gap-1"
           >
-            进入同行导师管理 (换头像/排序) →
+            维护导师名册与介绍 <ArrowRight className="w-3 h-3" />
           </Link>
         </div>
 
-        {/* 板块 3: 项目介绍 */}
-        <div style={{ background: "#FFFFFF", borderRadius: 14, border: "1px solid #EBE4DF", padding: 22, boxShadow: "0 2px 10px rgba(0,0,0,0.03)" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: "#8B5E3C", background: "#F5ECE5", padding: "3px 8px", borderRadius: 4 }}>
-              板块三
-            </span>
-            <span style={{ fontSize: 12, color: "#9E948E" }}>无限新增 · 自由排序</span>
+        <div className="bg-white border border-[#E1E5EB] rounded-xl p-5 shadow-sm flex flex-col justify-between hover:border-[#2563EB]/40 transition-colors">
+          <div>
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold text-[#292D35] bg-[#F0F2F6] px-2 py-0.5 rounded">
+                板块三 · OFFERINGS
+              </span>
+              <Layers className="w-4 h-4 text-[#697180]" />
+            </div>
+            <h3 className="text-base font-semibold text-[#292D35] mt-3">课程体系与底图</h3>
+            <p className="text-xs text-[#697180] mt-1 leading-relaxed">
+              普拉提核心塑形、高定大器械等课程板块介绍与实拍全景海报。
+            </p>
           </div>
-          <h3 style={{ margin: "0 0 6px 0", fontSize: 18, color: "#1C1415", fontWeight: 700 }}>
-            ✨ 项目介绍与底图
-          </h3>
-          <p style={{ fontSize: 13, color: "#6D645D", margin: "0 0 16px 0", lineHeight: 1.5 }}>
-            管理普拉提、高定大器械等课程板块、训练重点与<strong>专属实拍底图</strong>。
-          </p>
           <Link
             href="/admin/offerings"
-            style={{
-              display: "inline-block",
-              width: "100%",
-              textAlign: "center",
-              background: "#5E1914",
-              color: "#FFFFFF",
-              border: "none",
-              padding: "10px 0",
-              borderRadius: 8,
-              fontSize: 13,
-              fontWeight: 600,
-              textDecoration: "none",
-              boxSizing: "border-box",
-              boxShadow: "0 2px 8px rgba(94,25,20,0.25)"
-            }}
+            className="mt-4 pt-3 border-t border-[#F0F2F6] text-xs font-medium text-[#2563EB] hover:underline flex items-center gap-1"
           >
-            进入项目介绍与底图管理 →
+            配置课程大类与背景海报 <ArrowRight className="w-3 h-3" />
           </Link>
         </div>
       </div>
 
-      {/* 页面主标题与三大板块标题/简介表单 */}
-      <div style={{ background: "#FFFFFF", borderRadius: 16, border: "1px solid #EBE4DF", padding: 32, boxShadow: "0 4px 20px rgba(0,0,0,0.04)" }}>
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1C1415", margin: "0 0 8px 0" }}>
-          ✏️ 编辑「了解徕舞」页面主标题与板块介绍
-        </h2>
-        <p style={{ fontSize: 13, color: "#7A6B69", margin: "0 0 24px 0" }}>
-          在此处修改前台显示的标题与指引文案，点击保存即可实时更新到手机端。
-        </p>
+      {/* Main Settings Form */}
+      <form onSubmit={handleSave} className="bg-white border border-[#E1E5EB] rounded-xl shadow-sm p-6 space-y-6">
+        <div>
+          <h2 className="text-base font-semibold text-[#292D35]">页面全局 Hero 主标题与副标题</h2>
+          <p className="text-xs text-[#697180] mt-0.5">学员进入「了解徕舞」页面顶端时呈现的第一视觉文案。</p>
+        </div>
 
-        {loading ? (
-          <div style={{ padding: 40, textAlign: "center", color: "#8C827B" }}>加载中...</div>
-        ) : (
-          <form onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-            {/* 顶部主标题与副标题 */}
-            <div style={{ background: "#FAF7F5", padding: 18, borderRadius: 10, border: "1px solid #EDE4DE" }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: "#5E1914", marginBottom: 12 }}>
-                一、顶部页面标头
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 14 }}>
-                <div>
-                  <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#4A403E", marginBottom: 6 }}>
-                    页面大标题
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={settings.heroTitle}
-                    onChange={(e) => setSettings({ ...settings, heroTitle: e.target.value })}
-                    style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 14, boxSizing: "border-box" }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#4A403E", marginBottom: 6 }}>
-                    页面副标题 / 品牌宣言
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={settings.heroSubtitle}
-                    onChange={(e) => setSettings({ ...settings, heroSubtitle: e.target.value })}
-                    style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 14, boxSizing: "border-box" }}
-                  />
-                </div>
-              </div>
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-medium text-[#292D35] mb-1">主标题</label>
+            <input
+              type="text"
+              value={settings.heroTitle}
+              onChange={(e) => setSettings({ ...settings, heroTitle: e.target.value })}
+              required
+              className="w-full px-3 py-2 text-xs bg-[#F5F7FA] border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:bg-white text-[#292D35]"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-[#292D35] mb-1">副标题</label>
+            <input
+              type="text"
+              value={settings.heroSubtitle}
+              onChange={(e) => setSettings({ ...settings, heroSubtitle: e.target.value })}
+              required
+              className="w-full px-3 py-2 text-xs bg-[#F5F7FA] border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:bg-white text-[#292D35]"
+            />
+          </div>
+        </div>
 
-            {/* 板块一：场馆空间 */}
-            <div style={{ background: "#FAF7F5", padding: 18, borderRadius: 10, border: "1px solid #EDE4DE" }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: "#5E1914", marginBottom: 12 }}>
-                二、板块一（场馆空间）标题与文案
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "80px 1fr 140px", gap: 12, marginBottom: 12 }}>
-                <div>
-                  <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#4A403E", marginBottom: 6 }}>编号</label>
-                  <input
-                    type="text"
-                    value={settings.sec1Num}
-                    onChange={(e) => setSettings({ ...settings, sec1Num: e.target.value })}
-                    style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 14, boxSizing: "border-box" }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#4A403E", marginBottom: 6 }}>中文板块标题</label>
-                  <input
-                    type="text"
-                    value={settings.sec1Title}
-                    onChange={(e) => setSettings({ ...settings, sec1Title: e.target.value })}
-                    style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 14, boxSizing: "border-box" }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#4A403E", marginBottom: 6 }}>英文标示</label>
-                  <input
-                    type="text"
-                    value={settings.sec1En}
-                    onChange={(e) => setSettings({ ...settings, sec1En: e.target.value })}
-                    style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 14, boxSizing: "border-box" }}
-                  />
-                </div>
-              </div>
-              <div>
-                <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#4A403E", marginBottom: 6 }}>板块引导介绍文案</label>
-                <textarea
-                  rows={2}
-                  value={settings.sec1Intro}
-                  onChange={(e) => setSettings({ ...settings, sec1Intro: e.target.value })}
-                  style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 13, boxSizing: "border-box" }}
-                />
-              </div>
+        {/* Section 1 */}
+        <div className="pt-4 border-t border-[#E1E5EB] space-y-3">
+          <div className="text-xs font-semibold text-[#2563EB] uppercase tracking-wider">
+            板块一配置 · 空间模块标题与引导语
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-[#697180] mb-1">序号标号</label>
+              <input
+                type="text"
+                value={settings.sec1Num}
+                onChange={(e) => setSettings({ ...settings, sec1Num: e.target.value })}
+                className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+              />
             </div>
+            <div>
+              <label className="block text-xs font-medium text-[#697180] mb-1">中文标题</label>
+              <input
+                type="text"
+                value={settings.sec1Title}
+                onChange={(e) => setSettings({ ...settings, sec1Title: e.target.value })}
+                className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[#697180] mb-1">英文小标</label>
+              <input
+                type="text"
+                value={settings.sec1En}
+                onChange={(e) => setSettings({ ...settings, sec1En: e.target.value })}
+                className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB] font-mono"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-[#697180] mb-1">板块指引描述</label>
+            <textarea
+              rows={2}
+              value={settings.sec1Intro}
+              onChange={(e) => setSettings({ ...settings, sec1Intro: e.target.value })}
+              className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB] leading-relaxed"
+            />
+          </div>
+        </div>
 
-            {/* 板块二：同行导师 */}
-            <div style={{ background: "#FAF7F5", padding: 18, borderRadius: 10, border: "1px solid #EDE4DE" }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: "#5E1914", marginBottom: 12 }}>
-                三、板块二（同行导师）标题与文案
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "80px 1fr 140px", gap: 12, marginBottom: 12 }}>
-                <div>
-                  <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#4A403E", marginBottom: 6 }}>编号</label>
-                  <input
-                    type="text"
-                    value={settings.sec2Num}
-                    onChange={(e) => setSettings({ ...settings, sec2Num: e.target.value })}
-                    style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 14, boxSizing: "border-box" }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#4A403E", marginBottom: 6 }}>中文板块标题</label>
-                  <input
-                    type="text"
-                    value={settings.sec2Title}
-                    onChange={(e) => setSettings({ ...settings, sec2Title: e.target.value })}
-                    style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 14, boxSizing: "border-box" }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#4A403E", marginBottom: 6 }}>英文标示</label>
-                  <input
-                    type="text"
-                    value={settings.sec2En}
-                    onChange={(e) => setSettings({ ...settings, sec2En: e.target.value })}
-                    style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 14, boxSizing: "border-box" }}
-                  />
-                </div>
-              </div>
-              <div>
-                <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#4A403E", marginBottom: 6 }}>板块引导介绍文案</label>
-                <textarea
-                  rows={2}
-                  value={settings.sec2Intro}
-                  onChange={(e) => setSettings({ ...settings, sec2Intro: e.target.value })}
-                  style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 13, boxSizing: "border-box" }}
-                />
-              </div>
+        {/* Section 2 */}
+        <div className="pt-4 border-t border-[#E1E5EB] space-y-3">
+          <div className="text-xs font-semibold text-[#8B83D7] uppercase tracking-wider">
+            板块二配置 · 导师模块标题与引导语
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-[#697180] mb-1">序号标号</label>
+              <input
+                type="text"
+                value={settings.sec2Num}
+                onChange={(e) => setSettings({ ...settings, sec2Num: e.target.value })}
+                className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+              />
             </div>
+            <div>
+              <label className="block text-xs font-medium text-[#697180] mb-1">中文标题</label>
+              <input
+                type="text"
+                value={settings.sec2Title}
+                onChange={(e) => setSettings({ ...settings, sec2Title: e.target.value })}
+                className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[#697180] mb-1">英文小标</label>
+              <input
+                type="text"
+                value={settings.sec2En}
+                onChange={(e) => setSettings({ ...settings, sec2En: e.target.value })}
+                className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB] font-mono"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-[#697180] mb-1">板块指引描述</label>
+            <textarea
+              rows={2}
+              value={settings.sec2Intro}
+              onChange={(e) => setSettings({ ...settings, sec2Intro: e.target.value })}
+              className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB] leading-relaxed"
+            />
+          </div>
+        </div>
 
-            {/* 板块三：项目介绍 */}
-            <div style={{ background: "#FAF7F5", padding: 18, borderRadius: 10, border: "1px solid #EDE4DE" }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: "#5E1914", marginBottom: 12 }}>
-                四、板块三（项目介绍）标题与文案
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "80px 1fr 140px", gap: 12, marginBottom: 12 }}>
-                <div>
-                  <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#4A403E", marginBottom: 6 }}>编号</label>
-                  <input
-                    type="text"
-                    value={settings.sec3Num}
-                    onChange={(e) => setSettings({ ...settings, sec3Num: e.target.value })}
-                    style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 14, boxSizing: "border-box" }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#4A403E", marginBottom: 6 }}>中文板块标题</label>
-                  <input
-                    type="text"
-                    value={settings.sec3Title}
-                    onChange={(e) => setSettings({ ...settings, sec3Title: e.target.value })}
-                    style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 14, boxSizing: "border-box" }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#4A403E", marginBottom: 6 }}>英文标示</label>
-                  <input
-                    type="text"
-                    value={settings.sec3En}
-                    onChange={(e) => setSettings({ ...settings, sec3En: e.target.value })}
-                    style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 14, boxSizing: "border-box" }}
-                  />
-                </div>
-              </div>
-              <div>
-                <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#4A403E", marginBottom: 6 }}>板块引导介绍文案</label>
-                <textarea
-                  rows={2}
-                  value={settings.sec3Intro}
-                  onChange={(e) => setSettings({ ...settings, sec3Intro: e.target.value })}
-                  style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: "1px solid #D1C7C1", fontSize: 13, boxSizing: "border-box" }}
-                />
-              </div>
+        {/* Section 3 */}
+        <div className="pt-4 border-t border-[#E1E5EB] space-y-3">
+          <div className="text-xs font-semibold text-[#292D35] uppercase tracking-wider">
+            板块三配置 · 项目模块标题与引导语
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-[#697180] mb-1">序号标号</label>
+              <input
+                type="text"
+                value={settings.sec3Num}
+                onChange={(e) => setSettings({ ...settings, sec3Num: e.target.value })}
+                className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+              />
             </div>
+            <div>
+              <label className="block text-xs font-medium text-[#697180] mb-1">中文标题</label>
+              <input
+                type="text"
+                value={settings.sec3Title}
+                onChange={(e) => setSettings({ ...settings, sec3Title: e.target.value })}
+                className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[#697180] mb-1">英文小标</label>
+              <input
+                type="text"
+                value={settings.sec3En}
+                onChange={(e) => setSettings({ ...settings, sec3En: e.target.value })}
+                className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB] font-mono"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-[#697180] mb-1">板块指引描述</label>
+            <textarea
+              rows={2}
+              value={settings.sec3Intro}
+              onChange={(e) => setSettings({ ...settings, sec3Intro: e.target.value })}
+              className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB] leading-relaxed"
+            />
+          </div>
+        </div>
 
-            {/* 提交按钮 */}
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 10 }}>
-              <button
-                type="submit"
-                disabled={saving}
-                style={{
-                  padding: "12px 32px",
-                  background: "#5E1914",
-                  color: "#FFFFFF",
-                  border: "none",
-                  borderRadius: 8,
-                  fontSize: 14,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  boxShadow: "0 2px 10px rgba(94,25,20,0.3)",
-                }}
-              >
-                {saving ? "正在保存..." : "💾 保存全部标题与介绍"}
-              </button>
-            </div>
-          </form>
-        )}
-      </div>
+        {/* Submit Button */}
+        <div className="pt-4 border-t border-[#E1E5EB] flex items-center justify-end">
+          <button
+            type="submit"
+            disabled={saving}
+            className="px-6 py-2.5 text-sm font-medium text-white bg-[#2563EB] hover:bg-blue-700 rounded-lg shadow-sm flex items-center gap-1.5 transition-colors disabled:opacity-50"
+          >
+            <Save className="w-4 h-4" />
+            {saving ? "正在保存..." : "保存品牌文案设定"}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

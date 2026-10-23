@@ -12,6 +12,12 @@ export default function Navbar() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
 
+  // /admin/* 由后台自己的 AdminShell（AdminHeader + AdminSidebar）提供导航。
+  // 这里再渲染旧导航会和 AdminHeader 叠成两条 56px 的头，登录页也会顶着旧后台导航。
+  if (pathname.startsWith("/admin")) {
+    return null;
+  }
+
   // ─── Brand Nav (/) ───
   if (!isCRMPage(pathname) && pathname !== "/portal/login" && !pathname.startsWith("/portal")) {
     return (
