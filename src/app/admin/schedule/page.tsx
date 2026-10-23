@@ -68,6 +68,13 @@ function mondayOf(d: Date) {
   x.setUTCDate(x.getUTCDate() - day);
   return fmt(x);
 }
+function mondayOfStr(s: string) {
+  const [y, m, dd] = s.split("-").map(Number);
+  const d = new Date(Date.UTC(y, m - 1, dd));
+  const day = (d.getUTCDay() + 6) % 7;
+  d.setUTCDate(d.getUTCDate() - day);
+  return fmt(d);
+}
 function addDays(s: string, n: number) {
   const [y, m, dd] = s.split("-").map(Number);
   const d = new Date(Date.UTC(y, m - 1, dd));
@@ -140,6 +147,34 @@ export default function AdminSchedulePage() {
   useEffect(() => {
     load();
   }, [week]);
+
+  // 首次进入时：本周若没有排课（常见于课都排在下周），自动跳到最近有课的那一周，
+  // 否则主人打开排课页只看到一片「无排课」，会以为课丢了。
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const today = fmt(new Date());
+        const list = await jf(`/api/admin/schedule?from=${today}&to=${addDays(today, 60)}`);
+        if (!alive || !Array.isArray(list) || !list.length) return;
+        const inCurrentWeek = list.some((s: any) => s.session_date >= week && s.session_date <= addDays(week, 6));
+        if (inCurrentWeek) return;
+        const next = list.filter((s: any) => s.session_date >= today).sort((a: any, b: any) => String(a.session_date).localeCompare(String(b.session_date)))[0];
+        if (!next) return;
+        const targetWeek = mondayOfStr(String(next.session_date));
+        if (targetWeek !== week) {
+          setWeek(targetWeek);
+          showToast(`本周没有排课，已跳到最近有课的一周（${targetWeek} 起）`, "success");
+        }
+      } catch {
+        /* 静默：拿不到就保持当前周 */
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleOpenAdd = (date?: string) => {
     setForm((prev) => ({
