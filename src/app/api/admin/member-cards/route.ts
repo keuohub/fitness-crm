@@ -182,19 +182,74 @@ export async function PUT(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   const admin = await requireRole(request, "manager");
-  if (!admin) return bad("权限不足，仅店长或店主可冻结或解冻卡", 403);
+  if (!admin) return bad("权限不足，仅店长或店主可调整会员卡", 403);
   const body = await request.json();
   const id = Number(body.memberCardId);
   const action = String(body.action || "");
   if (!id) return bad("缺少 memberCardId");
-  if (!["freeze", "unfreeze"].includes(action)) return bad("action 只能是 freeze 或 unfreeze");
-  const status = action === "freeze" ? "frozen" : "active";
+  if (!["freeze", "unfreeze", "adjust", "extend", "setExpiry"].includes(action)) {
+    return bad("action 只能是 freeze / unfreeze / adjust / extend / setExpiry");
+  }
+
+  const [card] = await rawSql`
+    SELECT mc.*, ct.category, ct.name AS card_name
+    FROM member_cards mc
+    LEFT JOIN card_types ct ON ct.id = mc.card_type_id
+    WHERE mc.id = ${id} AND mc.tenant_id = 1`;
+  if (!card) return bad("持卡记录不存在", 404);
+
+  // 冻结 / 解冻
+  if (action === "freeze" || action === "unfreeze") {
+    const status = action === "freeze" ? "frozen" : "active";
+    const [row] = await rawSql`
+      UPDATE member_cards SET status = ${status}, updated_at = NOW()
+      WHERE id = ${id} AND tenant_id = 1 RETURNING *`;
+    await rawSql`
+      INSERT INTO card_transactions (tenant_id, member_card_id, member_id, type, amount, balance_after, note, created_at)
+      VALUES (1, ${id}, ${row.member_id}, 'adjust', 0, ${row.remaining_count}, ${action === "freeze" ? "冻结" : "解冻"}, NOW())`;
+    return NextResponse.json(row);
+  }
+
+  // 临时调次：delta 正负整数，只改剩余次数，不动 total_count（运营临时补救用）
+  if (action === "adjust") {
+    const delta = Number(body.delta);
+    if (!delta || !Number.isInteger(delta)) return bad("delta 必须是非零整数");
+    if (String(card.category || "") !== "count") return bad("期限卡没有次数，请用 extend 延长有效期");
+    const before = Number(card.remaining_count || 0);
+    const after = Math.max(0, before + delta);
+    const note = String(body.note || "").slice(0, 200) || `手工调次 ${delta > 0 ? "+" : ""}${delta}`;
+    const [row] = await rawSql`
+      UPDATE member_cards SET remaining_count = ${after}, updated_at = NOW()
+      WHERE id = ${id} AND tenant_id = 1 RETURNING *`;
+    await rawSql`
+      INSERT INTO card_transactions (tenant_id, member_card_id, member_id, type, amount, balance_after, note, created_at)
+      VALUES (1, ${id}, ${row.member_id}, 'adjust', ${delta}, ${after}, ${note}, NOW())`;
+    return NextResponse.json(row);
+  }
+
+  // 延长有效期：从「今天与当前截止日期的较晚者」往后加天数
+  if (action === "extend") {
+    const days = Number(body.days);
+    if (!Number.isInteger(days) || days <= 0 || days > 3650) return bad("days 必须是 1~3650 的整数");
+    const base = maxDate(card.valid_until || null, today());
+    const validUntil = addDays(base || today(), days);
+    const [row] = await rawSql`
+      UPDATE member_cards SET valid_until = ${validUntil}, updated_at = NOW()
+      WHERE id = ${id} AND tenant_id = 1 RETURNING *`;
+    await rawSql`
+      INSERT INTO card_transactions (tenant_id, member_card_id, member_id, type, amount, balance_after, note, created_at)
+      VALUES (1, ${id}, ${row.member_id}, 'adjust', 0, ${row.remaining_count}, ${`延期 +${days} 天至 ${validUntil}`}, NOW())`;
+    return NextResponse.json(row);
+  }
+
+  // 直接指定到期日
+  const validUntil = String(body.validUntil || "").trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(validUntil)) return bad("validUntil 格式应为 YYYY-MM-DD");
   const [row] = await rawSql`
-    UPDATE member_cards SET status = ${status}, updated_at = NOW()
+    UPDATE member_cards SET valid_until = ${validUntil}, updated_at = NOW()
     WHERE id = ${id} AND tenant_id = 1 RETURNING *`;
-  if (!row) return bad("持卡记录不存在", 404);
   await rawSql`
     INSERT INTO card_transactions (tenant_id, member_card_id, member_id, type, amount, balance_after, note, created_at)
-    VALUES (1, ${id}, ${row.member_id}, 'adjust', 0, ${row.remaining_count}, ${action === "freeze" ? "冻结" : "解冻"}, NOW())`;
+    VALUES (1, ${id}, ${row.member_id}, 'adjust', 0, ${row.remaining_count}, ${`有效期改为 ${validUntil}`}, NOW())`;
   return NextResponse.json(row);
 }

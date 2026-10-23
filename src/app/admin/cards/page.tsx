@@ -204,6 +204,83 @@ export default function AdminCardsPage() {
     }
   };
 
+
+  // 临时调次（次卡）：给运营留的手动补救入口，记入卡流水
+  const adjustCount = async (card: MemberCard) => {
+    const raw = window.prompt(
+      `调整「${card.member_name}」的剩余次数\n当前 ${card.remaining_count ?? 0} / ${card.total_count ?? "-"} 次\n\n增加填正数，减少填负数（例：5 或 -2）`,
+      ""
+    );
+    if (raw === null) return;
+    const delta = Number(String(raw).trim());
+    if (!delta || !Number.isInteger(delta)) {
+      showToast("请输入非零整数", "error");
+      return;
+    }
+    const note = window.prompt("调整原因（会记入卡流水，可留空）：", "") ?? "";
+    try {
+      await jsonFetch("/api/admin/member-cards", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ memberCardId: card.id, action: "adjust", delta, note }),
+      });
+      await load();
+      showToast(`已${delta > 0 ? "增加" : "减少"} ${Math.abs(delta)} 次`, "success");
+    } catch (e: any) {
+      showToast(e.message, "error");
+    }
+  };
+
+  // 延期（期限卡）：从今天与当前截止日中较晚的那天往后加
+  const extendCard = async (card: MemberCard) => {
+    const raw = window.prompt(
+      `延期「${card.member_name}」的 ${card.card_name}\n当前截止 ${card.valid_until || "长期有效"}\n\n延长天数（例：30）`,
+      "30"
+    );
+    if (raw === null) return;
+    const days = Number(String(raw).trim());
+    if (!Number.isInteger(days) || days <= 0) {
+      showToast("请输入正整数天数", "error");
+      return;
+    }
+    try {
+      await jsonFetch("/api/admin/member-cards", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ memberCardId: card.id, action: "extend", days }),
+      });
+      await load();
+      showToast(`已延期 ${days} 天`, "success");
+    } catch (e: any) {
+      showToast(e.message, "error");
+    }
+  };
+
+  // 直接指定到期日
+  const setExpiry = async (card: MemberCard) => {
+    const raw = window.prompt(
+      `修改「${card.member_name}」的到期日\n当前 ${card.valid_until || "长期有效"}\n\n格式 YYYY-MM-DD`,
+      card.valid_until || ""
+    );
+    if (raw === null) return;
+    const validUntil = String(raw).trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(validUntil)) {
+      showToast("请按 YYYY-MM-DD 格式输入", "error");
+      return;
+    }
+    try {
+      await jsonFetch("/api/admin/member-cards", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ memberCardId: card.id, action: "setExpiry", validUntil }),
+      });
+      await load();
+      showToast(`到期日已改为 ${validUntil}`, "success");
+    } catch (e: any) {
+      showToast(e.message, "error");
+    }
+  };
+
   // Filtered Cards
   const filteredCards = useMemo(() => {
     return cards.filter((c) => {
@@ -417,6 +494,26 @@ export default function AdminCardsPage() {
                       </td>
                       <td className="px-5 py-3.5 text-right">
                         <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => adjustCount(c)}
+                            disabled={c.category !== "count"}
+                            title={c.category !== "count" ? "期限卡无次数，请用延期" : "临时加减剩余次数"}
+                            className="px-2.5 py-1 text-xs font-medium rounded border bg-white text-[#697180] border-[#E1E5EB] hover:bg-[#F5F7FA] hover:text-[#292D35] disabled:opacity-40 disabled:cursor-not-allowed"
+                          >
+                            调次
+                          </button>
+                          <button
+                            onClick={() => extendCard(c)}
+                            className="px-2.5 py-1 text-xs font-medium rounded border bg-white text-[#697180] border-[#E1E5EB] hover:bg-[#F5F7FA] hover:text-[#292D35]"
+                          >
+                            延期
+                          </button>
+                          <button
+                            onClick={() => setExpiry(c)}
+                            className="px-2.5 py-1 text-xs font-medium rounded border bg-white text-[#697180] border-[#E1E5EB] hover:bg-[#F5F7FA] hover:text-[#292D35]"
+                          >
+                            改到期
+                          </button>
                           <button
                             onClick={() => toggleFreeze(c)}
                             disabled={c.status !== "frozen" && c.status !== "active"}
