@@ -40,3 +40,13 @@ miniprogram/images/uploads/
 
 # 预览二维码
 preview_qr.png
+
+# ── 验收取证（含真实会员姓名/手机号/登录PIN 截图，禁止入库）──────────
+# docs/visual/d5-live-* 与 d5-fix-header-* 是 2026-10-23 线上验收截图，
+# 会员抽屉截图里能看到真实登录 PIN；仓库若公开会直接泄露会员凭据。
+docs/visual/d5-live-*
+docs/visual/d5-fix-header-*
+docs/visual/d5-local-*
+docs/D5_线上可视化验收_20261023.md
+docs/D5_发版状态核对_20261023.md
+docs/D5_仓库与凭据提示_20261023.md

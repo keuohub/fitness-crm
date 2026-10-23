@@ -3,8 +3,27 @@ import requests
 import xlsxwriter
 
 # Feishu Credentials
-APP_ID = 'cli_aa9f954ccd79dbc8'
-APP_SECRET = 'lmJG16xBayLglDXmrQH2mg7joYwlZ3vK'
+def _read_env_file(key, path):
+    """从 .env.local 读取单个键（不依赖 python-dotenv）。"""
+    try:
+        with open(path, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                k, v = line.split("=", 1)
+                if k.strip() == key:
+                    return v.strip().strip('"').strip("'")
+    except OSError:
+        pass
+    return ""
+
+
+_ENV_LOCAL = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env.local")
+APP_ID = os.environ.get("FEISHU_APP_ID") or _read_env_file("FEISHU_APP_ID", _ENV_LOCAL)
+APP_SECRET = os.environ.get("FEISHU_APP_SECRET") or _read_env_file("FEISHU_APP_SECRET", _ENV_LOCAL)
+if not APP_ID or not APP_SECRET:
+    sys.exit("缺少 FEISHU_APP_ID / FEISHU_APP_SECRET：请写入 .env.local 或环境变量")
 BASE_TOKEN = 'RnlqbnTcBaGIW0skLLWclgHbnzb'  # 徕舞普拉提｜会员管理系统
 MEMBER_TABLE_ID = 'tblg1rCqMOOjksj5'       # 数据表
 QUESTIONNAIRE_TABLE_ID = 'tblOf0X59JZnQcXs' # 徕舞高定身材美学 · 新会员问卷

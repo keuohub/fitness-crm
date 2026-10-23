@@ -76,8 +76,8 @@ sudo certbot --nginx -d your-domain.com
 ```env
 # .env.local on production server
 DEEPSEEK_API_KEY=sk-...
-FEISHU_APP_ID=cli_aa9f954ccd79dbc8
-FEISHU_APP_SECRET=lmJG16xBayLglDXmrQH2mg7joYwlZ3vK
+FEISHU_APP_ID=<在飞书开放平台获取，勿写明文>
+FEISHU_APP_SECRET=<在飞书开放平台获取，勿写明文>
 FEISHU_BASE_TOKEN=RnlqbnTcBaGIW0skLLWclgHbnzb
 FEISHU_TABLE_ID=tblg1rCqMOOjksj5
 ADMIN_EMAIL=admin@laiwu.fitness
