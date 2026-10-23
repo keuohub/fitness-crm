@@ -658,3 +658,29 @@ API：`PATCH /api/admin/member-cards` 现在支持 `freeze / unfreeze / adjust /
 - **周报 AI 生成已实测**：线上 `POST /api/admin/weekly-report` → 200，3.2 秒，237 字，署名小桥；测试报告 id=203 已删。
 - **飞书同步暂不跑**：`src/lib/feishu-sync-engine.ts` 里是 `UPDATE members SET name/gender/phone/stage/tags/status`——
   会**覆盖后台手改的会员档案**，违反「导入只做基线」规则。要跑必须先改成「只补空缺、不覆盖非空值」。
+
+## 十四、环境变量与口令轮换完成（2026-10-23 17:00）
+
+云托管已发布 **crm-026**（环境变量变更触发），实测：
+
+| 项 | 结果 |
+|---|---|
+| `MEMBER_TOKEN_SECRET` 生效 | 线上新签发会员 token 的 HMAC 命中 `.env.local` 的 `MEMBER_TOKEN_SECRET`；不再命中 `ADMIN_PASSWORD` |
+| 旧密钥签的会员 token | `/api/portal/me` → **401**（271 个已登录会员掉线一次，需重输邀请码+手机尾号；之后改口令不再影响会员） |
+| 数据库里的旧明文口令 | `users.password_hash` 原为明文 `laiwu2025`，已替换为 bcrypt(新口令)；备份 `backups/users-before-pwchange-*.json` |
+| 旧口令登录 | **401**（`laiwu2025` 彻底作废） |
+| 新口令登录 | 200，Set-Cookie 只有 `admin_token` |
+| 后台接口 | /admin、/api/admin/session、/api/members、member-cards、users 全 200 |
+| 退出登录 | /admin 307、API 401；**重放退出前 cookie 全部 401** |
+| D5 验收 | **15/15 全 PASS** |
+
+新口令在 `backups/新管理员口令_20261023.txt`（GitHub 不入库）；本机 `.env.local` 已同步。
+
+**仍需轮换的凭证**（今天截图里露出的）：DeepSeek API Key、COS SecretId/SecretKey（真正生效的在数据库
+`studio_settings`，不是环境变量）、Neon 数据库密码、GitHub PAT。
+
+## 十五、小程序提审注意（2026-10-23）
+
+- 小程序名称「徕舞会员成长陪伴系统」审核不通过（涉及通用词），`mp` 后台还能改 2 次；建议改成品牌名
+  （如「徕舞普拉提」）先过名称审核，再提审 1.3.2，避免浪费每月提审次数。
+- 主体是**个人**：不能选教育培训类目，当前「工具 > 健康管理」是合规选择；无交易无支付，不需要支付资质。
