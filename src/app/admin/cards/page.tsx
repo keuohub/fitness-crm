@@ -480,8 +480,23 @@ export default function AdminCardsPage() {
                           </div>
                         ) : (
                           <div className="text-xs text-[#292D35]">
-                            <div>截止: <span className="tabular-nums font-medium">{c.valid_until || "长期有效"}</span></div>
-                            <div className="text-[11px] text-[#697180]">起: {c.valid_from || "即日起"}</div>
+                            <div>
+                              剩{" "}
+                              <span className="tabular-nums font-semibold text-base">
+                                {c.valid_until
+                                  ? (() => {
+                                      const d = Math.ceil(
+                                        (new Date(c.valid_until + "T23:59:59").getTime() - Date.now()) / 86400000
+                                      );
+                                      return d >= 0 ? d : 0;
+                                    })()
+                                  : "长期"}
+                              </span>
+                              {c.valid_until ? " 天" : ""}
+                            </div>
+                            <div className="text-[11px] text-[#697180]">
+                              截止: {c.valid_until || "长期有效"} · 起: {c.valid_from || "即日起"}
+                            </div>
                           </div>
                         )}
                       </td>
