@@ -85,22 +85,39 @@ export default function AdminHeader({ onToggleSidebar }: { onToggleSidebar?: () 
   };
 
   return (
-    <header
-      style={{
-        height: 56,
-        background: "#FFFFFF",
-        borderBottom: "1px solid #E1E5EB",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: "0 20px",
-        position: "sticky",
-        top: 0,
-        zIndex: 50,
-      }}
-    >
+    <>
+      {/* 窄屏适配：390/768 下品牌文字会被压成竖排、退出按钮被挤出视口（原无 nowrap/无断点）。
+          这里用媒体查询收窄：900 以下隐藏副标题与搜索框，480 以下只留图标。 */}
+      <style>{`
+        .admin-header-brand, .admin-header-brand-text { white-space: nowrap; flex-shrink: 0; }
+        .admin-header-search { min-width: 0; }
+        @media (max-width: 900px) {
+          .admin-header-brand-subtitle { display: none; }
+          .admin-header-search { display: none; }
+          .admin-header-actions { gap: 10px !important; }
+        }
+        @media (max-width: 480px) {
+          .admin-header-health-text, .admin-header-account-name { display: none; }
+          .admin-header { padding: 0 12px !important; }
+        }
+      `}</style>
+      <header
+        className="admin-header"
+        style={{
+          height: 56,
+          background: "#FFFFFF",
+          borderBottom: "1px solid #E1E5EB",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0 20px",
+          position: "sticky",
+          top: 0,
+          zIndex: 50,
+        }}
+      >
       {/* 左侧：菜单开关 (窄屏可见) + 品牌标识 */}
-      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 14, flexShrink: 0 }}>
         {onToggleSidebar && (
           <button
             type="button"
@@ -122,6 +139,7 @@ export default function AdminHeader({ onToggleSidebar }: { onToggleSidebar?: () 
 
         <Link
           href="/admin"
+          className="admin-header-brand"
           style={{
             display: "flex",
             alignItems: "center",
@@ -147,7 +165,7 @@ export default function AdminHeader({ onToggleSidebar }: { onToggleSidebar?: () 
           >
             LW
           </div>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+          <div className="admin-header-brand-text" style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
             <span
               style={{
                 fontSize: 14.5,
@@ -159,6 +177,7 @@ export default function AdminHeader({ onToggleSidebar }: { onToggleSidebar?: () 
               LAIWU
             </span>
             <span
+              className="admin-header-brand-subtitle"
               style={{
                 fontSize: 12,
                 color: "#697180",
@@ -174,6 +193,7 @@ export default function AdminHeader({ onToggleSidebar }: { onToggleSidebar?: () 
       {/* 中间：全局会员搜索栏 (支持会员编号与姓名) */}
       <div
         ref={searchRef}
+        className="admin-header-search"
         style={{
           position: "relative",
           width: "100%",
@@ -358,7 +378,7 @@ export default function AdminHeader({ onToggleSidebar }: { onToggleSidebar?: () 
       </div>
 
       {/* 右侧：服务健康状态 + 账号与退出 */}
-      <div style={{ display: "flex", alignItems: "center", gap: 14, flexShrink: 0 }}>
+      <div className="admin-header-actions" style={{ display: "flex", alignItems: "center", gap: 14, flexShrink: 0 }}>
         {/* 真实服务状态 */}
         <div
           style={{
@@ -376,12 +396,12 @@ export default function AdminHeader({ onToggleSidebar }: { onToggleSidebar?: () 
           {isHealthy === false ? (
             <>
               <AlertCircle size={13} />
-              <span>服务异常</span>
+              <span className="admin-header-health-text">服务异常</span>
             </>
           ) : (
             <>
               <CheckCircle2 size={13} />
-              <span>服务正常</span>
+              <span className="admin-header-health-text">服务正常</span>
             </>
           )}
         </div>
@@ -397,7 +417,7 @@ export default function AdminHeader({ onToggleSidebar }: { onToggleSidebar?: () 
           }}
         >
           <User size={14} style={{ color: "#697180" }} />
-          <span>admin</span>
+          <span className="admin-header-account-name">admin</span>
         </div>
 
         {/* 退出按钮 */}
@@ -431,6 +451,7 @@ export default function AdminHeader({ onToggleSidebar }: { onToggleSidebar?: () 
           <span>退出</span>
         </button>
       </div>
-    </header>
+      </header>
+    </>
   );
 }
