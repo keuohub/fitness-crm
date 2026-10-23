@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
     const [anyCard] = await rawSql`
       SELECT id, status FROM member_cards
       WHERE tenant_id = 1 AND member_id = ${memberId} ORDER BY id DESC LIMIT 1`;
-    return bad(anyCard ? "会员卡已冻结、过期或次数不足，暂不能预约" : "请先办理会员卡后再预约", 422);
+    return bad(anyCard ? "会员卡已冻结、过期或次数不足，暂不能预约" : "还没有有效会员卡，请联系小桥开卡后再预约", 422);
   }
 
   const s = await settings();

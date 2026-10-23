@@ -22,7 +22,8 @@ Page({
     sessions: [],
     shownSessions: [],
     myBookings: [],
-    submitting: false
+    submitting: false,
+    hasCard: null
   },
 
   onLoad: function() {
@@ -70,7 +71,7 @@ Page({
     var finished = typeof done === "function" ? done : function() {};
     var from = that.data.weekStart;
     var to = addDays(from, 6);
-    var pending = 2;
+    var pending = 3;
     function oneDone() { pending--; if (pending === 0) finished(); }
 
     api.request({
@@ -89,6 +90,23 @@ Page({
         that.setData({ loading: false, error: "网络没有连上，请下拉重试" });
         oneDone();
       }
+    });
+
+    // 有没有有效会员卡：无卡会员可以看课表，但不能预约
+    api.request({
+      url: "/api/portal/cards",
+      success: function(res) {
+        if (res.statusCode === 200 && res.data && Array.isArray(res.data.cards)) {
+          var usable = res.data.cards.some(function(c) {
+            if (!c || c.status !== "active") return false;
+            if (c.category === "count") return Number(c.remainingCount || 0) > 0;
+            return true;
+          });
+          that.setData({ hasCard: usable });
+        }
+        oneDone();
+      },
+      fail: oneDone
     });
 
     api.request({
@@ -120,6 +138,10 @@ Page({
     var id = Number(e.currentTarget.dataset.id);
     var session = that.data.sessions.filter(function(s) { return s.id === id; })[0];
     if (!session) return;
+    if (that.data.hasCard === false) {
+      wx.showToast({ title: "还没有会员卡，请联系小桥开卡后再约", icon: "none", duration: 2800 });
+      return;
+    }
     if (session.bookedByMe) { wx.showToast({ title: "已经约过了", icon: "none" }); return; }
     if (session.remaining <= 0) { wx.showToast({ title: "名额已满", icon: "none" }); return; }
     that.setData({ submitting: true });

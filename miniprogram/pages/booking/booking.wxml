@@ -13,6 +13,11 @@
 
     <view wx:if="{{error}}" class="bk-error"><text>{{error}}</text></view>
 
+    <view wx:if="{{hasCard === false}}" class="bk-nocard">
+      <text class="bk-nocard-title">还没有有效会员卡</text>
+      <text class="bk-nocard-body">课表可以先看，预约需要先开卡。开卡请联系小桥。</text>
+    </view>
+
     <scroll-view class="bk-dates" scroll-x="{{true}}" show-scrollbar="{{false}}">
       <view
         wx:for="{{dates}}"

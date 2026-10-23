@@ -54,3 +54,25 @@ page {
 .bk-my-course { font-size: 26rpx; font-weight: 600; color: #1C1415; }
 .bk-my-meta { margin-top: 6rpx; font-size: 20rpx; color: #8C827B; }
 .bk-bottom-space { height: calc(env(safe-area-inset-bottom) + 120rpx); }
+
+/* 无有效会员卡提示：可看课表，不能预约 */
+.bk-nocard {
+  margin: 20rpx 32rpx 0;
+  padding: 22rpx 26rpx;
+  border-radius: 16rpx;
+  background: #FBF3EC;
+  border: 1rpx solid #E8D3BF;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+.bk-nocard-title {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #8A5A32;
+}
+.bk-nocard-body {
+  font-size: 24rpx;
+  color: #A2764F;
+  line-height: 1.6;
+}
