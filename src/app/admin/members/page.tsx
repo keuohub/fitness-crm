@@ -13,6 +13,7 @@ import {
   MessageSquare,
   Check,
   UserPlus,
+  Upload,
 } from "lucide-react";
 import { useToast } from "@/components/admin/Toast";
 
@@ -79,7 +80,7 @@ export default function AdminMembersPage() {
     mentorName: "",
     notes: "",
   });
-  const [createdCred, setCreatedCred] = useState<{ name: string; portalCode: string; loginPin: string } | null>(null);
+  const [createdCred, setCreatedCred] = useState<{ name: string; portalCode: string; loginPin: string; phone?: string | null } | null>(null);
 
   const handleCreateMember = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,6 +101,7 @@ export default function AdminMembersPage() {
         name: data.name,
         portalCode: data.portalCode || data.portal_code || "",
         loginPin: data.loginPin || data.login_pin || "",
+        phone: data.phone || null,
       });
       setNewMember({ name: "", phone: "", gender: "", birthday: "", joinedAt: "", mentorName: "", notes: "" });
       await fetchData();
@@ -389,6 +391,26 @@ export default function AdminMembersPage() {
 
         {activeTab === "members" && (
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <Link
+            href="/admin/members/import"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              height: 32,
+              padding: "0 12px",
+              borderRadius: 6,
+              border: "1px solid #E1E5EB",
+              background: "#FFFFFF",
+              color: "#292D35",
+              fontSize: 12.5,
+              fontWeight: 500,
+              textDecoration: "none",
+            }}
+          >
+            <Upload size={14} />
+            <span>批量导入</span>
+          </Link>
           <button
             type="button"
             onClick={() => {
@@ -1430,11 +1452,27 @@ export default function AdminMembersPage() {
                       </span>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0" }}>
-                      <span style={{ fontSize: 13, color: "#065F46" }}>登录 PIN</span>
-                      <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <b style={{ fontFamily: "ui-monospace, monospace", fontSize: 15, color: "#065F46" }}>{createdCred.loginPin}</b>
-                        <button type="button" onClick={() => copyCred(createdCred.loginPin, "登录 PIN")} style={{ border: "1px solid #A7F3D0", background: "#FFFFFF", color: "#065F46", borderRadius: 4, padding: "2px 8px", fontSize: 12, cursor: "pointer" }}>复制</button>
+                      <span style={{ fontSize: 13, color: "#065F46" }}>
+                        {createdCred.phone && String(createdCred.phone).replace(/\D/g, "").length >= 4 ? "手机尾号后 4 位" : "登录 PIN"}
                       </span>
+                      <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <b style={{ fontFamily: "ui-monospace, monospace", fontSize: 15, color: "#065F46" }}>
+                          {createdCred.phone && String(createdCred.phone).replace(/\D/g, "").length >= 4
+                            ? String(createdCred.phone).replace(/\D/g, "").slice(-4)
+                            : createdCred.loginPin}
+                        </b>
+                        <button type="button" onClick={() => copyCred(
+                          createdCred.phone && String(createdCred.phone).replace(/\D/g, "").length >= 4
+                            ? String(createdCred.phone).replace(/\D/g, "").slice(-4)
+                            : createdCred.loginPin,
+                          "登录信息"
+                        )} style={{ border: "1px solid #A7F3D0", background: "#FFFFFF", color: "#065F46", borderRadius: 4, padding: "2px 8px", fontSize: 12, cursor: "pointer" }}>复制</button>
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 12, color: "#065F46", opacity: 0.8, marginTop: 4, lineHeight: 1.6 }}>
+                      {createdCred.phone && String(createdCred.phone).replace(/\D/g, "").length >= 4
+                        ? "这位会员填了手机号，登录时第二格填手机尾号后 4 位。"
+                        : "这位会员没填手机号，登录时第二格填上面的 6 位登录 PIN。"}
                     </div>
                   </div>
                   <button
