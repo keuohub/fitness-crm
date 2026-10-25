@@ -33,6 +33,8 @@ Page({
             return {
               id: c.id,
               name: c.name,
+              // 年卡身份：接口按「期限卡且有效期≥365天或名称含年卡」判定
+              isAnnual: c.isAnnualCard === true,
               categoryText: c.category === "count" ? "次数卡" : "期限卡",
               statusText: statusMap[c.status] || c.status,
               status: c.status,

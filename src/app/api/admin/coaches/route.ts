@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   if (!(await requireAdmin(request))) return bad("需要管理员登录", 401);
   const rows = await rawSql`
     SELECT id, name, email, role, status, avatar_url
-    FROM users WHERE tenant_id = 1 AND role = 'coach' AND status = 'active'
+    FROM users WHERE tenant_id = 1 AND is_coach = 1 AND status = 'active'
     ORDER BY id`;
   return NextResponse.json(rows);
 }
@@ -25,8 +25,8 @@ export async function POST(request: NextRequest) {
   const plain = String(b.password || crypto.randomBytes(8).toString("hex"));
   const hash = hashSync(plain, 10);
   const [row] = await rawSql`
-    INSERT INTO users (tenant_id, name, email, password_hash, role, status, avatar_url)
-    VALUES (1, ${name}, ${email}, ${hash}, 'coach', 'active', ${b.avatarUrl || null})
+    INSERT INTO users (tenant_id, name, email, password_hash, role, is_coach, status, avatar_url)
+    VALUES (1, ${name}, ${email}, ${hash}, 'coach', 1, 'active', ${b.avatarUrl || null})
     RETURNING id, name, email, role, status, avatar_url`;
   return NextResponse.json(row, { status: 201 });
 }

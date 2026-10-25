@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
   const cards = await rawSql`
     SELECT mc.id, mc.card_type_id, mc.status, mc.total_count, mc.remaining_count,
            mc.valid_from, mc.valid_until, mc.purchased_at, mc.price_cents,
-           ct.name AS card_name, ct.category, ct.weekly_limit
+           ct.name AS card_name, ct.category, ct.validity_days, ct.weekly_limit
     FROM member_cards mc
     JOIN card_types ct ON ct.id = mc.card_type_id
     WHERE mc.tenant_id = 1 AND mc.member_id = ${memberId}
@@ -57,6 +57,10 @@ export async function GET(request: NextRequest) {
     purchasedAt: c.purchased_at,
     priceCents: c.price_cents,
     weeklyLimit: c.weekly_limit,
+    // 年卡身份：期限卡且（有效期≥365 天或名称含「年卡」）。会员端据此显示年卡徽章与金色身份条。
+    isAnnualCard:
+      String(c.category) === "period" &&
+      (Number(c.validity_days || 0) >= 365 || String(c.card_name || "").includes("年卡")),
     courseCategoryNames: courseMap.get(c.card_type_id) || [],
     transactions: transactions
       .filter((t: any) => t.member_card_id === c.id)

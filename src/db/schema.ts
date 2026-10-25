@@ -20,6 +20,9 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
   role: text("role").notNull().default("coach"),
+  // 教练身份与后台角色解耦：is_coach=1 表示出现在教练课表/可登录教练端；
+  // role 只决定后台管理权限（owner/manager/coach/viewer）。小桥同时是 owner + 教练。
+  isCoach: integer("is_coach").notNull().default(0),
   status: text("status").default("active"),
   avatarUrl: text("avatar_url"),
   createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),

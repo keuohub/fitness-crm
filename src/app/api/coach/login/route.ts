@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
 
   const [user] = await rawSql`
     SELECT id, name, email, password_hash, role, status
-    FROM users WHERE lower(email) = ${email} AND role = 'coach' AND status = 'active' LIMIT 1`;
+    FROM users WHERE lower(email) = ${email} AND is_coach = 1 AND status = 'active' LIMIT 1`;
   if (!user) return NextResponse.json({ error: "教练账号或密码不正确" }, { status: 401 });
 
   let ok = false;

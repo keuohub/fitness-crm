@@ -41,3 +41,58 @@ page {
 .card-tx-amount { color: #9E2A2B; }
 .card-tx-date { color: #A79E9A; }
 .cards-bottom-space { height: calc(env(safe-area-inset-bottom) + 120rpx); }
+
+/* ── 年卡身份标识：金色身份条 + 年卡徽章 + 深金卡面 ── */
+.card-item-annual {
+  background: linear-gradient(158deg, #2B241C 0%, #3E3225 52%, #2B241C 100%);
+  border: 1rpx solid rgba(201,162,75,.5);
+  box-shadow: 0 16rpx 40rpx rgba(43,36,28,.28);
+}
+.card-item-annual .card-name { color: #F4E6C4; }
+.card-item-annual .card-type { color: rgba(244,230,196,.6); }
+.card-item-annual .card-balance-num { color: #E9CB82; }
+.card-item-annual .card-balance-label { color: rgba(244,230,196,.55); }
+.card-item-annual .card-valid-text { color: #F4E6C4; }
+.card-item-annual .card-valid-label { color: rgba(244,230,196,.55); }
+.card-item-annual .card-scope { background: rgba(233,203,130,.1); }
+.card-item-annual .card-scope-label { color: #E9CB82; background: rgba(233,203,130,.16); }
+.card-item-annual .card-scope-text { color: rgba(244,230,196,.85); }
+.card-item-annual .card-balance-row,
+.card-item-annual .card-tx { border-top-color: rgba(233,203,130,.2); }
+.card-item-annual .card-tx-row { color: rgba(244,230,196,.72); }
+.card-item-annual .card-tx-amount { color: #E9CB82; }
+.card-item-annual .card-tx-date { color: rgba(244,230,196,.45); }
+.card-item-annual .card-status { background: rgba(233,203,130,.16); color: #E9CB82; }
+.card-item-annual .card-status-frozen,
+.card-item-annual .card-status-expired { background: rgba(158,42,43,.24); color: #F0B9B0; }
+.card-annual-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: -28rpx -28rpx 22rpx;
+  padding: 16rpx 28rpx 14rpx;
+  background: linear-gradient(96deg, #C9A24B 0%, #E9CB82 46%, #B8893B 100%);
+  border-radius: 26rpx 26rpx 0 0;
+}
+.card-annual-bar-text { font-size: 22rpx; font-weight: 600; letter-spacing: 3rpx; color: #26201A; }
+.card-annual-bar-en { font-size: 18rpx; letter-spacing: 4rpx; color: rgba(38,32,26,.6); }
+.card-name-row { display: flex; align-items: center; }
+.card-annual-badge {
+  margin-left: 12rpx;
+  padding: 2rpx 12rpx;
+  border-radius: 8rpx;
+  font-size: 18rpx;
+  font-weight: 600;
+  letter-spacing: 1rpx;
+  color: #26201A;
+  background: linear-gradient(135deg, #F0D79B 0%, #C9A24B 100%);
+}
+.card-annual-footer {
+  margin-top: 18rpx;
+  padding-top: 14rpx;
+  border-top: 1rpx dashed rgba(233,203,130,.26);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.card-annual-footer-text { font-size: 19rpx; letter-spacing: 2rpx; color: rgba(233,203,130,.72); }
