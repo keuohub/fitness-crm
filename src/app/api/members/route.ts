@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { members, questionnaireSubmissions, memberMemories, dailyHealthLogs, trainings, aiFeedbackReports, photos } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { requireAdmin } from "@/lib/auth/admin-session";
+import crypto from "crypto";
 
 export async function GET(request: NextRequest) {
   if (!(await requireAdmin(request))) {
@@ -19,6 +20,39 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
+
+  const name = String(body.name || "").trim();
+  if (!name) return NextResponse.json({ error: "请填写会员姓名" }, { status: 400 });
+  const phone = body.phone ? String(body.phone).trim() : null;
+  if (phone) {
+    const [dup] = await db.select({ id: members.id }).from(members).where(eq(members.phone, phone)).limit(1);
+    if (dup) return NextResponse.json({ error: "这个手机号已经有一位会员了，请直接搜索该会员" }, { status: 409 });
+  }
+
+  // 登录凭据：邀请码 8 位（大写字母与数字）+ 登录 PIN 6 位数字，可在后台手动指定
+  const genCode = () => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let out = "";
+    for (let i = 0; i < 8; i++) out += chars[crypto.randomInt(chars.length)];
+    return out;
+  };
+  const genPin = () => String(crypto.randomInt(100000, 1000000));
+  let portalCode = body.portalCode ? String(body.portalCode).trim().toUpperCase() : "";
+  if (portalCode && !/^[A-Z0-9]{4,20}$/.test(portalCode)) {
+    return NextResponse.json({ error: "邀请码只能是 4 到 20 位大写字母或数字" }, { status: 400 });
+  }
+  let loginPin = body.loginPin ? String(body.loginPin).trim() : "";
+  if (loginPin && !/^[0-9]{4,8}$/.test(loginPin)) {
+    return NextResponse.json({ error: "登录 PIN 只能是 4 到 8 位数字" }, { status: 400 });
+  }
+  if (!portalCode) {
+    for (let i = 0; i < 20; i++) {
+      const c = genCode();
+      const [dup] = await db.select({ id: members.id }).from(members).where(eq(members.portalCode, c)).limit(1);
+      if (!dup) { portalCode = c; break; }
+    }
+  }
+  if (!loginPin) loginPin = genPin();
 
   const tagsValue = body.tags
     ? JSON.stringify(
@@ -53,6 +87,11 @@ export async function POST(request: NextRequest) {
       status: body.status || "active",
       joinedAt: body.joinedAt || null,
       birthday: body.birthday || null,
+      notes: body.notes || null,
+      mentorName: body.mentorName || null,
+      portalCode,
+      loginPin,
+      portalEnabled: 1,
       tenantId: 1,
     })
     .returning();

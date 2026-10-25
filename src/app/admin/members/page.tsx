@@ -12,6 +12,7 @@ import {
   TrendingUp,
   MessageSquare,
   Check,
+  UserPlus,
 } from "lucide-react";
 import { useToast } from "@/components/admin/Toast";
 
@@ -66,6 +67,58 @@ export default function AdminMembersPage() {
 
   // 新增手札抽屉状态
   const [showAddFeeling, setShowAddFeeling] = useState(false);
+  // 新增会员抽屉
+  const [showAddMember, setShowAddMember] = useState(false);
+  const [savingNewMember, setSavingNewMember] = useState(false);
+  const [newMember, setNewMember] = useState({
+    name: "",
+    phone: "",
+    gender: "",
+    birthday: "",
+    joinedAt: "",
+    mentorName: "",
+    notes: "",
+  });
+  const [createdCred, setCreatedCred] = useState<{ name: string; portalCode: string; loginPin: string } | null>(null);
+
+  const handleCreateMember = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMember.name.trim()) {
+      showToast("请填写会员姓名", "warning");
+      return;
+    }
+    setSavingNewMember(true);
+    try {
+      const res = await fetch("/api/members", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newMember),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "新增会员失败");
+      setCreatedCred({
+        name: data.name,
+        portalCode: data.portalCode || data.portal_code || "",
+        loginPin: data.loginPin || data.login_pin || "",
+      });
+      setNewMember({ name: "", phone: "", gender: "", birthday: "", joinedAt: "", mentorName: "", notes: "" });
+      await fetchData();
+      showToast("会员已新增，并已自动开通小程序登录", "success");
+    } catch (err: any) {
+      showToast(err.message || "新增会员失败", "error");
+    } finally {
+      setSavingNewMember(false);
+    }
+  };
+
+  const copyCred = async (text: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast(label + "已复制", "success");
+    } catch {
+      showToast("复制失败，请手动选中复制", "error");
+    }
+  };
   const [newFeelingMemberId, setNewFeelingMemberId] = useState<number>(0);
   const [newFeelingFilter, setNewFeelingFilter] = useState("");
   const [newFeelingText, setNewFeelingText] = useState("");
@@ -335,6 +388,31 @@ export default function AdminMembersPage() {
         </div>
 
         {activeTab === "members" && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <button
+            type="button"
+            onClick={() => {
+              setShowAddMember(true);
+              setCreatedCred(null);
+            }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              height: 32,
+              padding: "0 12px",
+              borderRadius: 6,
+              border: "none",
+              background: "#2563EB",
+              color: "#FFFFFF",
+              fontSize: 12.5,
+              fontWeight: 500,
+              cursor: "pointer",
+            }}
+          >
+            <UserPlus size={14} />
+            <span>新增会员</span>
+          </button>
           <div
             style={{
               display: "flex",
@@ -386,6 +464,7 @@ export default function AdminMembersPage() {
               <LayoutGrid size={14} />
               <span>卡片</span>
             </button>
+          </div>
           </div>
         )}
       </div>
@@ -1290,6 +1369,182 @@ export default function AdminMembersPage() {
               >
                 {savingNewFeeling ? "录入中..." : "确认录入"}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── 侧滑抽屉 3：新增会员 ─── */}
+      {showAddMember && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(41, 45, 53, 0.4)",
+            display: "flex",
+            justifyContent: "flex-end",
+            zIndex: 1000,
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: 480,
+              background: "#FFFFFF",
+              height: "100%",
+              padding: "24px 28px",
+              boxSizing: "border-box",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              boxShadow: "-8px 0 24px rgba(41, 45, 53, 0.08)",
+              overflowY: "auto",
+            }}
+          >
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                <h3 style={{ margin: 0, fontSize: 17, fontWeight: 600, color: "#292D35" }}>新增会员</h3>
+                <button
+                  type="button"
+                  onClick={() => setShowAddMember(false)}
+                  style={{ background: "none", border: "none", cursor: "pointer", color: "#697180", padding: 4 }}
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <p style={{ margin: "0 0 18px", fontSize: 12.5, color: "#697180", lineHeight: 1.6 }}>
+                保存后系统会自动生成邀请码与登录 PIN，会员用这两个就能在小程序登录。开卡请到「会员卡」页面办理。
+              </p>
+
+              {createdCred ? (
+                <div>
+                  <div style={{ background: "#ECFDF5", border: "1px solid #A7F3D0", borderRadius: 8, padding: 16, marginBottom: 16 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "#065F46", marginBottom: 10 }}>
+                      {createdCred.name} 已创建，登录凭据如下
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "1px dashed #A7F3D0" }}>
+                      <span style={{ fontSize: 13, color: "#065F46" }}>邀请码</span>
+                      <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <b style={{ fontFamily: "ui-monospace, monospace", fontSize: 15, color: "#065F46" }}>{createdCred.portalCode}</b>
+                        <button type="button" onClick={() => copyCred(createdCred.portalCode, "邀请码")} style={{ border: "1px solid #A7F3D0", background: "#FFFFFF", color: "#065F46", borderRadius: 4, padding: "2px 8px", fontSize: 12, cursor: "pointer" }}>复制</button>
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0" }}>
+                      <span style={{ fontSize: 13, color: "#065F46" }}>登录 PIN</span>
+                      <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <b style={{ fontFamily: "ui-monospace, monospace", fontSize: 15, color: "#065F46" }}>{createdCred.loginPin}</b>
+                        <button type="button" onClick={() => copyCred(createdCred.loginPin, "登录 PIN")} style={{ border: "1px solid #A7F3D0", background: "#FFFFFF", color: "#065F46", borderRadius: 4, padding: "2px 8px", fontSize: 12, cursor: "pointer" }}>复制</button>
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setCreatedCred(null)}
+                    style={{ width: "100%", padding: "9px 0", borderRadius: 6, border: "1px dashed #C7D2FE", background: "#F5F7FA", color: "#2563EB", fontSize: 13, cursor: "pointer", marginBottom: 8 }}
+                  >
+                    再新增一位会员
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleCreateMember} id="add-member-form" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#697180", marginBottom: 6 }}>
+                      姓名 <span style={{ color: "#DC2626" }}>必填</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={newMember.name}
+                      onChange={(e) => setNewMember({ ...newMember, name: e.target.value })}
+                      placeholder="例如 张三"
+                      style={{ width: "100%", height: 36, padding: "0 12px", borderRadius: 6, border: "1px solid #E1E5EB", fontSize: 13, boxSizing: "border-box", outline: "none" }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#697180", marginBottom: 6 }}>手机号</label>
+                    <input
+                      type="text"
+                      value={newMember.phone}
+                      onChange={(e) => setNewMember({ ...newMember, phone: e.target.value })}
+                      placeholder="没有手机号可留空，会员用登录 PIN 登录"
+                      style={{ width: "100%", height: 36, padding: "0 12px", borderRadius: 6, border: "1px solid #E1E5EB", fontSize: 13, boxSizing: "border-box", outline: "none" }}
+                    />
+                  </div>
+                  <div style={{ display: "flex", gap: 12 }}>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#697180", marginBottom: 6 }}>性别</label>
+                      <select
+                        value={newMember.gender}
+                        onChange={(e) => setNewMember({ ...newMember, gender: e.target.value })}
+                        style={{ width: "100%", height: 36, padding: "0 10px", borderRadius: 6, border: "1px solid #E1E5EB", fontSize: 13, boxSizing: "border-box", background: "#FFFFFF" }}
+                      >
+                        <option value="">未填</option>
+                        <option value="female">女</option>
+                        <option value="male">男</option>
+                      </select>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#697180", marginBottom: 6 }}>生日</label>
+                      <input
+                        type="date"
+                        value={newMember.birthday}
+                        onChange={(e) => setNewMember({ ...newMember, birthday: e.target.value })}
+                        style={{ width: "100%", height: 36, padding: "0 10px", borderRadius: 6, border: "1px solid #E1E5EB", fontSize: 13, boxSizing: "border-box", outline: "none" }}
+                      />
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 12 }}>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#697180", marginBottom: 6 }}>入会日期</label>
+                      <input
+                        type="date"
+                        value={newMember.joinedAt}
+                        onChange={(e) => setNewMember({ ...newMember, joinedAt: e.target.value })}
+                        style={{ width: "100%", height: 36, padding: "0 10px", borderRadius: 6, border: "1px solid #E1E5EB", fontSize: 13, boxSizing: "border-box", outline: "none" }}
+                      />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#697180", marginBottom: 6 }}>带教导师</label>
+                      <input
+                        type="text"
+                        value={newMember.mentorName}
+                        onChange={(e) => setNewMember({ ...newMember, mentorName: e.target.value })}
+                        placeholder="例如 小桥"
+                        style={{ width: "100%", height: 36, padding: "0 12px", borderRadius: 6, border: "1px solid #E1E5EB", fontSize: 13, boxSizing: "border-box", outline: "none" }}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#697180", marginBottom: 6 }}>备注</label>
+                    <textarea
+                      value={newMember.notes}
+                      onChange={(e) => setNewMember({ ...newMember, notes: e.target.value })}
+                      rows={3}
+                      placeholder="身体情况、诉求、转介绍来源等，可留空"
+                      style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: "1px solid #E1E5EB", fontSize: 13, boxSizing: "border-box", outline: "none", resize: "vertical", fontFamily: "inherit" }}
+                    />
+                  </div>
+                </form>
+              )}
+            </div>
+
+            <div style={{ display: "flex", gap: 10, paddingTop: 16, borderTop: "1px solid #E1E5EB" }}>
+              <button
+                type="button"
+                onClick={() => setShowAddMember(false)}
+                style={{ flex: 1, padding: "9px 0", borderRadius: 6, border: "1px solid #E1E5EB", background: "#F5F7FA", color: "#697180", fontSize: 13, cursor: "pointer" }}
+              >
+                {createdCred ? "完成" : "取消"}
+              </button>
+              {!createdCred && (
+                <button
+                  type="submit"
+                  form="add-member-form"
+                  disabled={savingNewMember}
+                  style={{ flex: 2, padding: "9px 0", borderRadius: 6, border: "none", background: "#2563EB", color: "#FFFFFF", fontSize: 13, fontWeight: 500, cursor: "pointer" }}
+                >
+                  {savingNewMember ? "保存中..." : "保存并生成登录凭据"}
+                </button>
+              )}
             </div>
           </div>
         </div>
