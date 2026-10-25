@@ -65,4 +65,11 @@ Page({
       }
     });
   }
+,
+  onShareAppMessage: function() {
+    return { title: "徕舞女子塑形 · 我的会员卡", path: "/pages/brand/brand" };
+  },
+  onShareTimeline: function() {
+    return { title: "徕舞女子塑形 · 身体掌权，终生优雅" };
+  }
 });

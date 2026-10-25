@@ -166,6 +166,9 @@ Page({
     });
   },
 
+  onShareTimeline: function() {
+    return { title: "徕舞女子塑形 · 身体掌权，终生优雅" };
+  },
   onShareAppMessage: function() {
     return {
       title: "了解徕舞 · 专注体态与身心平衡的私享空间",

@@ -8,7 +8,7 @@
       <view class="poster-card" catchtap="noop">
         <view class="poster-brand">
           <text class="poster-brand-en">身 体 掌 权 · 终 生 优 雅</text>
-          <text class="poster-brand-cn">徕舞 · 私人体态美学档案</text>
+          <text class="poster-brand-cn">徕舞 · 女子体态美学档案</text>
         </view>
 
         <view class="poster-member-info">

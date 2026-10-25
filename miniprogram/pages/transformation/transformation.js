@@ -256,6 +256,9 @@ Page({
     wx.navigateTo({ url: "/pages/feedback/feedback" });
   },
 
+  onShareTimeline: function() {
+    return { title: "徕舞女子塑形 · 身体掌权，终生优雅" };
+  },
   onShareAppMessage: function() {
     return { title: "我的身体手札 · 徕舞", path: "/pages/stars/stars" };
   }

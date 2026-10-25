@@ -18,4 +18,11 @@ Page({
       finished();
     }, fail:function(){ that.setData({loading:false,error:"网络没有连上，请下拉重试"}); finished(); }});
   }
+,
+  onShareAppMessage: function() {
+    return { title: "徕舞女子塑形 · 我的课后手札", path: "/pages/brand/brand" };
+  },
+  onShareTimeline: function() {
+    return { title: "徕舞女子塑形 · 身体掌权，终生优雅" };
+  }
 });

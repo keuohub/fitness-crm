@@ -197,4 +197,11 @@ Page({
       }
     });
   }
+,
+  onShareAppMessage: function() {
+    return { title: "徕舞女子塑形 · 本周课表", path: "/pages/booking/booking" };
+  },
+  onShareTimeline: function() {
+    return { title: "徕舞女子塑形 · 来约一节课" };
+  }
 });
