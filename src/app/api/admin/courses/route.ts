@@ -51,8 +51,11 @@ export async function DELETE(request: NextRequest) {
   const id = Number(new URL(request.url).searchParams.get("id"));
   if (!id) return bad("缺少 id");
   const [used] = await rawSql`SELECT id FROM class_sessions WHERE course_category_id = ${id} LIMIT 1`;
-  if (used) return bad("已有课次使用该课程，不能删除；可停用", 409);
-  const [row] = await rawSql`UPDATE course_categories SET is_active = 0 WHERE id = ${id} AND tenant_id = 1 RETURNING *`;
+  if (used) return bad("已有课次使用该课种，不能删除；可改为停用", 409);
+  const [linked] = await rawSql`SELECT COUNT(*)::int AS n FROM card_type_courses WHERE course_category_id = ${id}`;
+  const linkedCount = Number(linked?.n || 0);
+  if (linkedCount > 0) return bad(`已有 ${linkedCount} 个卡种勾选该课种，不能删除；可改为停用`, 409);
+  const [row] = await rawSql`DELETE FROM course_categories WHERE id = ${id} AND tenant_id = 1 RETURNING *`;
   if (!row) return bad("课程不存在", 404);
   return NextResponse.json({ success: true, row });
 }

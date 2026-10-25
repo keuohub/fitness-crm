@@ -126,3 +126,17 @@ export async function PUT(request: NextRequest) {
 
   return NextResponse.json({ ...row, courseCategoryIds });
 }
+
+export async function DELETE(request: NextRequest) {
+  if (!(await requireAdmin(request))) return bad("需要管理员登录", 401);
+  const id = Number(new URL(request.url).searchParams.get("id"));
+  if (!id) return bad("缺少 id");
+  const [existing] = await db.select().from(cardTypes).where(eq(cardTypes.id, id));
+  if (!existing) return bad("卡类型不存在", 404);
+  const [used] = await rawSql`SELECT COUNT(*)::int AS n FROM member_cards WHERE card_type_id = ${id}`;
+  const usedCount = Number(used?.n || 0);
+  if (usedCount > 0) return bad(`已有 ${usedCount} 张会员卡引用该卡种，不能删除，请改用停用`, 409);
+  await rawSql`DELETE FROM card_type_courses WHERE card_type_id = ${id}`;
+  await db.delete(cardTypes).where(eq(cardTypes.id, id));
+  return NextResponse.json({ success: true });
+}

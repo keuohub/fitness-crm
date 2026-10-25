@@ -20,7 +20,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 
-type Course = { id: number; name: string; duration_minutes: number; default_capacity: number };
+type Course = { id: number; name: string; duration_minutes: number; default_capacity: number; is_active?: number };
 type Coach = { id: number; name: string };
 type Room = { id: number; name: string; capacity: number };
 type Session = {
@@ -176,11 +176,14 @@ export default function AdminSchedulePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // 新建课次/模板的课种下拉只展示启用中的课种；已有课次渲染不受影响（可能仍在用已停用课种）
+  const activeCourses = useMemo(() => courses.filter((c) => c.is_active !== 0), [courses]);
+
   const handleOpenAdd = (date?: string) => {
     setForm((prev) => ({
       ...prev,
       sessionDate: date || fmt(new Date()),
-      courseCategoryId: courses[0]?.id ? String(courses[0].id) : "",
+      courseCategoryId: activeCourses[0]?.id ? String(activeCourses[0].id) : "",
       coachId: coaches[0]?.id ? String(coaches[0].id) : "",
       roomId: rooms[0]?.id ? String(rooms[0].id) : "",
     }));
@@ -549,7 +552,7 @@ export default function AdminSchedulePage() {
                     className="w-full px-3 py-2 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
                   >
                     <option value="">-- 选择课程 --</option>
-                    {courses.map((c) => (
+                    {activeCourses.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.name} ({c.duration_minutes}分钟)
                       </option>
@@ -714,7 +717,7 @@ export default function AdminSchedulePage() {
                       className="px-2.5 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg"
                     >
                       <option value="">课程</option>
-                      {courses.map((c) => (
+                      {activeCourses.map((c) => (
                         <option key={c.id} value={c.id}>
                           {c.name}
                         </option>
