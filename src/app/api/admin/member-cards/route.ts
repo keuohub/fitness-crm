@@ -69,15 +69,31 @@ export async function POST(request: NextRequest) {
   let remaining: number | null = null;
   let validUntil: string | null = null;
 
+  // 灵活开卡逻辑：允许店主完全自定义次数与天数，不写死任何卡种默认值
+  const customTotal = body.totalCount != null && body.totalCount !== "" ? Number(body.totalCount) : null;
+  const customRemaining = body.remainingCount != null && body.remainingCount !== "" ? Number(body.remainingCount) : null;
+  const customDays = body.validityDays != null && body.validityDays !== "" ? Number(body.validityDays) : null;
+
   if (ct.category === "count") {
-    totalCount = Number(ct.total_count || 0);
-    if (!totalCount) return bad("次数卡未配置总次数");
-    remaining = totalCount;
-    validUntil = body.validUntil ? String(body.validUntil) : (ct.validity_days ? addDays(validFrom, Number(ct.validity_days)) : null);
+    totalCount = customTotal !== null ? customTotal : Number(ct.total_count || 0);
+    remaining = customRemaining !== null ? customRemaining : totalCount;
+    if (totalCount === null || totalCount <= 0) return bad("次数卡请填写总次数");
+    const days = customDays !== null ? customDays : Number(ct.validity_days || 0);
+    validUntil = body.validUntil ? String(body.validUntil) : (days > 0 ? addDays(validFrom, days) : null);
   } else {
-    validUntil = body.validUntil ? String(body.validUntil) : addDays(validFrom, Number(ct.validity_days || 0));
-    if (!validUntil) return bad("期限卡未配置有效天数");
+    // 期限卡（月卡/季卡/年卡）：可自由指定天数或到期日；若店主需要兼具有效次数，也可自如填入
+    totalCount = customTotal;
+    remaining = customRemaining !== null ? customRemaining : totalCount;
+    const days = customDays !== null ? customDays : Number(ct.validity_days || 0);
+    validUntil = body.validUntil ? String(body.validUntil) : (days > 0 ? addDays(validFrom, days) : null);
+    if (!validUntil) return bad("期限卡未配置有效天数或失效到期日");
   }
+
+  if (remaining !== null) {
+    if (!Number.isFinite(remaining) || remaining < 0) return bad("初始可用次数不能为负数");
+    if (totalCount !== null && remaining > totalCount) return bad("初始可用次数不能大于总次数");
+  }
+  if (totalCount !== null && !Number.isFinite(totalCount)) return bad("总次数格式不正确");
 
   const priceCents = body.priceCents != null ? Math.max(0, Math.round(Number(body.priceCents))) : Number(ct.price_cents || 0);
 

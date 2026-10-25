@@ -27,7 +27,16 @@ type CardType = {
   validityDays: number | null;
   weeklyLimit: number | null;
   isActive: number;
+  courseCategoryIds?: number[];
 };
+
+const COURSE_CATEGORIES = [
+  { id: 1, key: "pilates", name: "精品普拉提", color: "bg-blue-50 text-blue-700 border-blue-200" },
+  { id: 2, key: "equipment", name: "高定大器械", color: "bg-purple-50 text-purple-700 border-purple-200" },
+  { id: 3, key: "fat_burn", name: "维密超模班", color: "bg-pink-50 text-pink-700 border-pink-200" },
+  { id: 4, key: "private", name: "私教", color: "bg-amber-50 text-amber-700 border-amber-200" },
+  { id: 5, key: "yoga", name: "瑜伽", color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+];
 
 type Member = { id: number; name: string; phone: string | null; status: string };
 
@@ -86,16 +95,26 @@ export default function AdminCardsPage() {
     totalCount: "",
     validityDays: "",
     weeklyLimit: "",
+    courseCategoryIds: [1] as number[],
   });
 
   const [issue, setIssue] = useState({
     memberId: "",
     cardTypeId: "",
+    totalCount: "",
+    remainingCount: "",
+    validityDays: "",
     validFrom: "",
     validUntil: "",
+    priceYuan: "",
   });
 
   const [memberFilter, setMemberFilter] = useState("");
+
+  const selectedCardType = useMemo(
+    () => types.find((t) => String(t.id) === String(issue.cardTypeId)),
+    [types, issue.cardTypeId]
+  );
 
   const load = async () => {
     try {
@@ -127,10 +146,109 @@ export default function AdminCardsPage() {
     }
   }, []);
 
+  const handleSelectCardType = (cardTypeId: string) => {
+    const selected = types.find((t) => String(t.id) === cardTypeId);
+    if (!selected) {
+      setIssue((prev) => ({
+        ...prev,
+        cardTypeId: "",
+        totalCount: "",
+        remainingCount: "",
+        validityDays: "",
+        priceYuan: "",
+      }));
+      return;
+    }
+    const today = new Date().toISOString().slice(0, 10);
+    let validUntil = "";
+    if (selected.validityDays) {
+      const d = new Date();
+      d.setDate(d.getDate() + selected.validityDays);
+      validUntil = d.toISOString().slice(0, 10);
+    }
+    const tc = selected.totalCount != null ? String(selected.totalCount) : "";
+    const vd = selected.validityDays != null ? String(selected.validityDays) : "";
+    const py = selected.priceCents != null ? (selected.priceCents / 100).toFixed(0) : "";
+    setIssue((prev) => ({
+      ...prev,
+      cardTypeId,
+      totalCount: tc,
+      remainingCount: tc,
+      validityDays: vd,
+      validFrom: prev.validFrom || today,
+      validUntil: prev.validUntil || validUntil,
+      priceYuan: py,
+    }));
+  };
+
+  const handleValidityDaysChange = (daysStr: string) => {
+    const days = parseInt(daysStr, 10);
+    setIssue((prev) => {
+      let validUntil = prev.validUntil;
+      if (!isNaN(days) && days > 0) {
+        const base = prev.validFrom ? new Date(prev.validFrom) : new Date();
+        const d = new Date(base);
+        d.setDate(d.getDate() + days);
+        validUntil = d.toISOString().slice(0, 10);
+      }
+      return { ...prev, validityDays: daysStr, validUntil };
+    });
+  };
+
+  const handleValidFromChange = (fromStr: string) => {
+    setIssue((prev) => {
+      let validUntil = prev.validUntil;
+      const days = parseInt(prev.validityDays, 10);
+      if (!isNaN(days) && days > 0 && fromStr) {
+        const d = new Date(fromStr);
+        d.setDate(d.getDate() + days);
+        validUntil = d.toISOString().slice(0, 10);
+      }
+      return { ...prev, validFrom: fromStr, validUntil };
+    });
+  };
+
+  const toggleTypeCourse = async (cardTypeId: number, courseId: number, currentIds: number[]) => {
+    const nextIds = currentIds.includes(courseId)
+      ? currentIds.filter((id) => id !== courseId)
+      : [...currentIds, courseId];
+    if (nextIds.length === 0) {
+      showToast("卡种至少需保留一种课程权限", "error");
+      return;
+    }
+    try {
+      const t = types.find((x) => x.id === cardTypeId);
+      if (!t) return;
+      await jsonFetch("/api/admin/card-types", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: cardTypeId,
+          name: t.name,
+          category: t.category,
+          priceCents: t.priceCents,
+          totalCount: t.totalCount,
+          validityDays: t.validityDays,
+          weeklyLimit: t.weeklyLimit,
+          isActive: t.isActive,
+          courseCategoryIds: nextIds,
+        }),
+      });
+      await load();
+      showToast("课程权限已同步更新", "success");
+    } catch (e: any) {
+      showToast(e.message, "error");
+    }
+  };
+
   const createType = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newType.name.trim()) {
       showToast("请输入卡名称", "error");
+      return;
+    }
+    if (newType.courseCategoryIds.length === 0) {
+      showToast("请至少勾选一种适用课程", "error");
       return;
     }
     setSaving(true);
@@ -145,9 +263,18 @@ export default function AdminCardsPage() {
           totalCount: newType.category === "count" ? Number(newType.totalCount || 0) : null,
           validityDays: newType.validityDays ? Number(newType.validityDays) : null,
           weeklyLimit: newType.weeklyLimit ? Number(newType.weeklyLimit) : null,
+          courseCategoryIds: newType.courseCategoryIds,
         }),
       });
-      setNewType({ name: "", category: "count", priceYuan: "", totalCount: "", validityDays: "", weeklyLimit: "" });
+      setNewType({
+        name: "",
+        category: "count",
+        priceYuan: "",
+        totalCount: "",
+        validityDays: "",
+        weeklyLimit: "",
+        courseCategoryIds: [1],
+      });
       await load();
       setShowTypeDrawer(false);
       showToast("新卡种已成功创建", "success");
@@ -172,12 +299,25 @@ export default function AdminCardsPage() {
         body: JSON.stringify({
           memberId: Number(issue.memberId),
           cardTypeId: Number(issue.cardTypeId),
+          totalCount: issue.totalCount.trim() !== "" ? Number(issue.totalCount) : null,
+          remainingCount: issue.remainingCount.trim() !== "" ? Number(issue.remainingCount) : null,
+          validityDays: issue.validityDays.trim() !== "" ? Number(issue.validityDays) : null,
           validFrom: issue.validFrom || undefined,
           validUntil: issue.validUntil || undefined,
+          priceCents: issue.priceYuan.trim() !== "" ? Math.round(Number(issue.priceYuan) * 100) : undefined,
           idempotencyKey: `manual-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         }),
       });
-      setIssue({ memberId: "", cardTypeId: "", validFrom: "", validUntil: "" });
+      setIssue({
+        memberId: "",
+        cardTypeId: "",
+        totalCount: "",
+        remainingCount: "",
+        validityDays: "",
+        validFrom: "",
+        validUntil: "",
+        priceYuan: "",
+      });
       await load();
       setShowIssueDrawer(false);
       showToast("开卡成功，会员账户权益已实时同步", "success");
@@ -511,8 +651,8 @@ export default function AdminCardsPage() {
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => adjustCount(c)}
-                            disabled={c.category !== "count"}
-                            title={c.category !== "count" ? "期限卡无次数，请用延期" : "临时加减剩余次数"}
+                            disabled={c.remaining_count === null}
+                            title={c.remaining_count === null ? "不限次卡，请用延期" : "临时加减剩余次数"}
                             className="px-2.5 py-1 text-xs font-medium rounded border bg-white text-[#697180] border-[#E1E5EB] hover:bg-[#F5F7FA] hover:text-[#292D35] disabled:opacity-40 disabled:cursor-not-allowed"
                           >
                             调次
@@ -581,11 +721,11 @@ export default function AdminCardsPage() {
                 </button>
               </div>
 
-              <form onSubmit={issueCard} className="flex-1 overflow-y-auto p-6 space-y-5">
+              <form onSubmit={issueCard} className="flex-1 overflow-y-auto p-6 space-y-4">
                 {/* Member selection */}
                 <div>
                   <label className="block text-xs font-medium text-[#292D35] mb-1.5">
-                    选择会员 <span className="text-red-500">*</span>
+                    1. 选择会员 <span className="text-red-500">*</span>
                   </label>
                   <div className="mb-2">
                     <input
@@ -623,11 +763,11 @@ export default function AdminCardsPage() {
                 {/* Card Type selection */}
                 <div>
                   <label className="block text-xs font-medium text-[#292D35] mb-1.5">
-                    选择卡类型 <span className="text-red-500">*</span>
+                    2. 选择卡项与名称 <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={issue.cardTypeId}
-                    onChange={(e) => setIssue({ ...issue, cardTypeId: e.target.value })}
+                    onChange={(e) => handleSelectCardType(e.target.value)}
                     required
                     className="w-full px-3 py-2 text-sm bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563EB] text-[#292D35]"
                   >
@@ -636,33 +776,140 @@ export default function AdminCardsPage() {
                       .filter((t) => t.isActive)
                       .map((t) => (
                         <option key={t.id} value={t.id}>
-                          {t.name} · {t.category === "count" ? `${t.totalCount}次` : `${t.validityDays}天`} · ¥
+                          {t.name} · {t.category === "count" ? `次数卡` : `期限卡`} · 标准¥
                           {money(t.priceCents)}
                         </option>
                       ))}
                   </select>
+
+                  {/* Show selected card details & course badges */}
+                  {selectedCardType && (
+                    <div className="mt-2.5 p-2.5 bg-[#F8FAFC] border border-[#E1E5EB] rounded-lg">
+                      <div className="text-[11px] text-[#697180] mb-1.5 flex items-center justify-between">
+                        <span>该卡覆盖可预约课程：</span>
+                        <span className="font-medium text-[#2563EB]">
+                          {selectedCardType.category === "count" ? "次卡" : "期限卡"}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {(selectedCardType.courseCategoryIds || []).map((cid) => {
+                          const cat = COURSE_CATEGORIES.find((x) => x.id === cid);
+                          return cat ? (
+                            <span
+                              key={cid}
+                              className={`px-1.5 py-0.5 rounded text-[11px] font-medium border ${cat.color}`}
+                            >
+                              {cat.name}
+                            </span>
+                          ) : null;
+                        })}
+                        {(!selectedCardType.courseCategoryIds || selectedCardType.courseCategoryIds.length === 0) && (
+                          <span className="text-[11px] text-amber-600">暂未关联课程（请在卡类型配置中勾选）</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                {/* Date range */}
-                <div className="grid grid-cols-2 gap-3 pt-2">
+                {/* Course count configuration */}
+                <div className="p-3 bg-[#F8FAFC] rounded-lg border border-[#E1E5EB] space-y-3">
+                  <div className="text-xs font-semibold text-[#292D35] flex items-center justify-between">
+                    <span>3. 自定义课程次数</span>
+                    <span className="text-[11px] font-normal text-[#697180]">不限定固定次数，自由输入</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-medium text-[#697180] mb-1">
+                        课程总次数（次）
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="留空表示不限次"
+                        value={issue.totalCount}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setIssue((prev) => ({
+                            ...prev,
+                            totalCount: val,
+                            remainingCount:
+                              prev.remainingCount === "" || prev.remainingCount === prev.totalCount
+                                ? val
+                                : prev.remainingCount,
+                          }));
+                        }}
+                        className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-medium text-[#697180] mb-1">
+                        初始可用次数（次）
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="默认同总次数"
+                        value={issue.remainingCount}
+                        onChange={(e) => setIssue({ ...issue, remainingCount: e.target.value })}
+                        className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-[#9AA3B2] leading-tight">
+                    💡 次数卡直接填次数（如 10、20）；如果是年卡/月卡不限次，总次数与可用次数可直接留空。
+                  </p>
+                </div>
+
+                {/* Validity days and dates configuration */}
+                <div className="p-3 bg-[#F8FAFC] rounded-lg border border-[#E1E5EB] space-y-3">
+                  <div className="text-xs font-semibold text-[#292D35] flex items-center justify-between">
+                    <span>4. 有效天数与到期日</span>
+                    <span className="text-[11px] font-normal text-[#697180]">可填天数或指定日期</span>
+                  </div>
                   <div>
-                    <label className="block text-xs font-medium text-[#697180] mb-1">生效起始日</label>
+                    <label className="block text-[11px] font-medium text-[#697180] mb-1">
+                      有效天数（天）
+                    </label>
                     <input
-                      type="date"
-                      value={issue.validFrom}
-                      onChange={(e) => setIssue({ ...issue, validFrom: e.target.value })}
+                      type="number"
+                      placeholder="例如 30(月卡)、90(季卡)、365(年卡)"
+                      value={issue.validityDays}
+                      onChange={(e) => handleValidityDaysChange(e.target.value)}
                       className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
                     />
                   </div>
-                  <div>
-                    <label className="block text-xs font-medium text-[#697180] mb-1">失效到期日</label>
-                    <input
-                      type="date"
-                      value={issue.validUntil}
-                      onChange={(e) => setIssue({ ...issue, validUntil: e.target.value })}
-                      className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
-                    />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-medium text-[#697180] mb-1">生效起始日</label>
+                      <input
+                        type="date"
+                        value={issue.validFrom}
+                        onChange={(e) => handleValidFromChange(e.target.value)}
+                        className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-medium text-[#697180] mb-1">失效到期日</label>
+                      <input
+                        type="date"
+                        value={issue.validUntil}
+                        onChange={(e) => setIssue({ ...issue, validUntil: e.target.value })}
+                        className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                      />
+                    </div>
                   </div>
+                </div>
+
+                {/* Price input */}
+                <div>
+                  <label className="block text-xs font-medium text-[#292D35] mb-1">
+                    5. 实收金额（元，支持自定义修改）
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="实收金额"
+                    value={issue.priceYuan}
+                    onChange={(e) => setIssue({ ...issue, priceYuan: e.target.value })}
+                    className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                  />
                 </div>
 
                 <div className="p-3 bg-[#F5F7FA] rounded-lg border border-[#E1E5EB] text-xs text-[#697180] leading-relaxed">
@@ -703,7 +950,7 @@ export default function AdminCardsPage() {
               <div className="p-6 border-b border-[#E1E5EB] flex items-center justify-between">
                 <div>
                   <h3 className="text-lg font-semibold text-[#292D35]">卡类型配置</h3>
-                  <p className="text-xs text-[#697180] mt-0.5">设定场馆的标准课时卡种、售价与课时规约。</p>
+                  <p className="text-xs text-[#697180] mt-0.5">设定场馆的标准课时卡种、售价与课程预约权限。</p>
                 </div>
                 <button
                   onClick={() => setShowTypeDrawer(false)}
@@ -717,33 +964,68 @@ export default function AdminCardsPage() {
                 {/* Existing Types List */}
                 <div>
                   <div className="text-xs font-semibold text-[#697180] uppercase tracking-wider mb-2">
-                    现有卡种列表 ({types.length})
+                    现有卡种列表 ({types.length}) · 点击课程标签可直接开关权限
                   </div>
-                  <div className="space-y-2">
-                    {types.map((t) => (
-                      <div
-                        key={t.id}
-                        className="p-3 bg-[#F8FAFC] border border-[#E1E5EB] rounded-lg flex items-center justify-between"
-                      >
-                        <div>
-                          <div className="text-sm font-medium text-[#292D35]">{t.name}</div>
-                          <div className="text-xs text-[#697180] mt-0.5">
-                            {t.category === "count" ? `${t.totalCount} 次` : `${t.validityDays} 天有效期`}
-                            {t.weeklyLimit ? ` · 每周限 ${t.weeklyLimit} 次` : ""}
+                  <div className="space-y-2.5">
+                    {types.map((t) => {
+                      const curIds = t.courseCategoryIds || [];
+                      return (
+                        <div
+                          key={t.id}
+                          className="p-3 bg-[#F8FAFC] border border-[#E1E5EB] rounded-lg space-y-2"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <div className="text-sm font-medium text-[#292D35] flex items-center gap-1.5">
+                                <span>{t.name}</span>
+                                <span className="text-[10px] text-[#697180] bg-white border border-[#E1E5EB] px-1 py-0.5 rounded">
+                                  #{t.id}
+                                </span>
+                              </div>
+                              <div className="text-xs text-[#697180] mt-0.5">
+                                {t.category === "count" ? `${t.totalCount ?? "-"} 次` : `${t.validityDays ?? "-"} 天有效期`}
+                                {t.weeklyLimit ? ` · 每周限 ${t.weeklyLimit} 次` : ""}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-sm font-semibold text-[#2563EB]">¥{money(t.priceCents)}</div>
+                              <div
+                                className={`text-[11px] ${
+                                  t.isActive ? "text-emerald-600" : "text-[#9AA3B2]"
+                                }`}
+                              >
+                                {t.isActive ? "已启用" : "已停用"}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Interactive Course Permission Tags */}
+                          <div>
+                            <div className="text-[11px] text-[#697180] mb-1">允许预约课种（点击开关）：</div>
+                            <div className="flex flex-wrap gap-1.5">
+                              {COURSE_CATEGORIES.map((cat) => {
+                                const has = curIds.includes(cat.id);
+                                return (
+                                  <button
+                                    key={cat.id}
+                                    type="button"
+                                    onClick={() => toggleTypeCourse(t.id, cat.id, curIds)}
+                                    title={has ? "点击关闭该课程权限" : "点击开启该课程权限"}
+                                    className={`px-2 py-0.5 text-[11px] rounded transition-all border ${
+                                      has
+                                        ? `${cat.color} font-medium shadow-2xs`
+                                        : "bg-white text-gray-400 border-dashed border-gray-200 hover:border-gray-400 line-through"
+                                    }`}
+                                  >
+                                    {has ? `✓ ${cat.name}` : `+ ${cat.name}`}
+                                  </button>
+                                );
+                              })}
+                            </div>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className="text-sm font-semibold text-[#2563EB]">¥{money(t.priceCents)}</div>
-                          <div
-                            className={`text-[11px] ${
-                              t.isActive ? "text-emerald-600" : "text-[#9AA3B2]"
-                            }`}
-                          >
-                            {t.isActive ? "已启用" : "已停用"}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -785,8 +1067,7 @@ export default function AdminCardsPage() {
                         onChange={(e) => setNewType({ ...newType, priceYuan: e.target.value })}
                         required
                         className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
-                      >
-                      </input>
+                      />
                     </div>
                   </div>
 
@@ -825,6 +1106,71 @@ export default function AdminCardsPage() {
                         onChange={(e) => setNewType({ ...newType, weeklyLimit: e.target.value })}
                         className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
                       />
+                    </div>
+                  </div>
+
+                  {/* Course Category Permission Multi-select */}
+                  <div>
+                    <label className="block text-xs font-medium text-[#292D35] mb-1.5">
+                      适用课程 <span className="text-red-500">*</span>
+                      <span className="text-[#697180] font-normal ml-1">（勾选该卡可以预约的课程，一卡通类卡勾全部）</span>
+                    </label>
+                    <div className="grid grid-cols-2 gap-2 p-2.5 bg-[#F8FAFC] border border-[#E1E5EB] rounded-lg">
+                      {COURSE_CATEGORIES.map((cat) => {
+                        const checked = newType.courseCategoryIds.includes(cat.id);
+                        return (
+                          <label
+                            key={cat.id}
+                            className={`flex items-center gap-2 p-2 rounded cursor-pointer border text-xs transition-colors ${
+                              checked
+                                ? "bg-blue-50 border-blue-200 text-blue-900 font-medium"
+                                : "bg-white border-[#E1E5EB] text-[#292D35]"
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setNewType({
+                                    ...newType,
+                                    courseCategoryIds: [...newType.courseCategoryIds, cat.id],
+                                  });
+                                } else {
+                                  setNewType({
+                                    ...newType,
+                                    courseCategoryIds: newType.courseCategoryIds.filter((x) => x !== cat.id),
+                                  });
+                                }
+                              }}
+                              className="rounded border-[#E1E5EB] text-[#2563EB] focus:ring-[#2563EB]"
+                            />
+                            <span>{cat.name}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                    <div className="mt-1 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setNewType({
+                            ...newType,
+                            courseCategoryIds: COURSE_CATEGORIES.map((c) => c.id),
+                          })
+                        }
+                        className="text-[11px] text-[#2563EB] hover:underline"
+                      >
+                        一键全选（通卡）
+                      </button>
+                      <span className="text-[11px] text-gray-300">|</span>
+                      <button
+                        type="button"
+                        onClick={() => setNewType({ ...newType, courseCategoryIds: [] })}
+                        className="text-[11px] text-[#697180] hover:underline"
+                      >
+                        清空
+                      </button>
                     </div>
                   </div>
 

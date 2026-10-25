@@ -36,6 +36,9 @@ Page({
               categoryText: c.category === "count" ? "次数卡" : "期限卡",
               statusText: statusMap[c.status] || c.status,
               status: c.status,
+              courseScopeText: (c.courseCategoryNames && c.courseCategoryNames.length > 0)
+                ? c.courseCategoryNames.join(" · ")
+                : "",
               remainingText: c.category === "count" ? (c.remainingCount || 0) + " 次" : "不限次",
               validText: c.validUntil ? (c.validUntil + " 到期") : "长期有效",
               purchasedText: c.purchasedAt ? format.formatChineseDate(c.purchasedAt) : "",

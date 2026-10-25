@@ -50,3 +50,9 @@ docs/visual/d5-local-*
 docs/D5_线上可视化验收_20261023.md
 docs/D5_发版状态核对_20261023.md
 docs/D5_仓库与凭据提示_20261023.md
+
+# 本地产物与渲染缓存
+.dsh-office.*
+/*.docx
+make_wps_doc.py
+.d6d-edge.mjs

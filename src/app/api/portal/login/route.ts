@@ -6,7 +6,11 @@ import crypto from "crypto";
 import { signMemberToken } from "@/lib/auth/member-token";
 
 function getSignKey(): string {
-  return process.env.COOKIE_SIGN_KEY || process.env.ADMIN_PASSWORD || "CHANGE_ME";
+  const secret = process.env.MEMBER_TOKEN_SECRET || process.env.COOKIE_SIGN_KEY;
+  if (!secret) {
+    throw new Error("Missing MEMBER_TOKEN_SECRET or COOKIE_SIGN_KEY in environment variables");
+  }
+  return secret;
 }
 
 function sign(payload: string): string {

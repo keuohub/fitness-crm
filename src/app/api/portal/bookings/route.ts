@@ -60,21 +60,58 @@ export async function POST(request: NextRequest) {
   if (!session) return bad("课次不存在", 404);
   if (session.status !== "open") return bad("该课次不可预约", 409);
 
-  // 预约必须有可用卡：状态 active、在有效期内、次数卡有余次；不信任客户端。
+  // 预约卡种与课程权限强校验（P0-A）
   const [validCard] = await rawSql`
-    SELECT mc.id, mc.status, mc.valid_until, mc.valid_from, mc.remaining_count, ct.category
-    FROM member_cards mc JOIN card_types ct ON ct.id = mc.card_type_id
+    SELECT mc.id, ct.category, ct.name AS card_name
+    FROM member_cards mc
+    JOIN card_types ct ON ct.id = mc.card_type_id
+    JOIN class_sessions s ON s.id = ${sessionId}
     WHERE mc.tenant_id = 1 AND mc.member_id = ${memberId}
       AND mc.status = 'active'
       AND (mc.valid_from IS NULL OR mc.valid_from::date <= CURRENT_DATE)
       AND (mc.valid_until IS NULL OR mc.valid_until::date >= CURRENT_DATE)
-      AND ct.category IN ('count', 'period')
       AND (ct.category = 'period' OR mc.remaining_count > 0)
-    ORDER BY CASE WHEN ct.category = 'count' THEN 0 ELSE 1 END,
+      AND (
+        EXISTS (
+          SELECT 1 FROM card_type_courses ctc
+          WHERE ctc.card_type_id = ct.id
+            AND ctc.course_category_id = s.course_category_id
+        )
+        OR NOT EXISTS (
+          SELECT 1 FROM card_type_courses ctc_none
+          WHERE ctc_none.card_type_id = ct.id
+        )
+      )
+    ORDER BY CASE WHEN ct.category = 'period' THEN 0 ELSE 1 END,
              CASE WHEN mc.valid_until IS NULL THEN 1 ELSE 0 END,
              mc.valid_until, mc.id
     LIMIT 1`;
+
   if (!validCard) {
+    // 区分三种错误状态：
+    // a. 检查会员是否有任何有效卡（不论课种）
+    const validOtherCards = await rawSql`
+      SELECT mc.id, ct.name AS card_name
+      FROM member_cards mc JOIN card_types ct ON ct.id = mc.card_type_id
+      WHERE mc.tenant_id = 1 AND mc.member_id = ${memberId}
+        AND mc.status = 'active'
+        AND (mc.valid_from IS NULL OR mc.valid_from::date <= CURRENT_DATE)
+        AND (mc.valid_until IS NULL OR mc.valid_until::date >= CURRENT_DATE)
+        AND (ct.category = 'period' OR mc.remaining_count > 0)
+      LIMIT 1`;
+
+    if (validOtherCards.length > 0) {
+      // 有有效卡，但该卡无权约本课
+      const allowedCardTypes = await rawSql`
+        SELECT ct.name FROM card_types ct
+        JOIN card_type_courses ctc ON ctc.card_type_id = ct.id
+        WHERE ctc.course_category_id = ${session.course_category_id} AND ct.is_active = 1
+      `;
+      const allowedNames = allowedCardTypes.map((r: any) => r.name).join("或");
+      return bad(`这张卡不能约${session.course_name}，请使用${allowedNames || "对应专属卡"}或联系小桥`, 422);
+    }
+
+    // b. 检查是否有历史卡（过期、冻结、次数耗尽）
     const [anyCard] = await rawSql`
       SELECT id, status FROM member_cards
       WHERE tenant_id = 1 AND member_id = ${memberId} ORDER BY id DESC LIMIT 1`;

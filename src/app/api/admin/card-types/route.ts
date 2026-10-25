@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/admin-session";
-import { db } from "@/db";
-import { cardTypes } from "@/db/schema";
+import { db, rawSql } from "@/db";
+import { cardTypes, cardTypeCourses } from "@/db/schema";
 import { asc, eq } from "drizzle-orm";
 
 function bad(msg: string, status = 400) {
@@ -11,7 +11,26 @@ function bad(msg: string, status = 400) {
 export async function GET(request: NextRequest) {
   if (!(await requireAdmin(request))) return bad("需要管理员登录", 401);
   const rows = await db.select().from(cardTypes).orderBy(asc(cardTypes.sortOrder), asc(cardTypes.id));
-  return NextResponse.json(rows);
+  
+  // 聚合关联课种
+  const courses = await rawSql`
+    SELECT card_type_id, course_category_id 
+    FROM card_type_courses
+    ORDER BY course_category_id ASC
+  `;
+  const courseMap = new Map<number, number[]>();
+  for (const c of courses) {
+    const list = courseMap.get(c.card_type_id) || [];
+    list.push(Number(c.course_category_id));
+    courseMap.set(c.card_type_id, list);
+  }
+
+  const result = rows.map((r) => ({
+    ...r,
+    courseCategoryIds: courseMap.get(r.id) || [],
+  }));
+
+  return NextResponse.json(result);
 }
 
 export async function POST(request: NextRequest) {
@@ -40,7 +59,22 @@ export async function POST(request: NextRequest) {
     isActive: body.isActive === 0 ? 0 : 1,
     sortOrder: body.sortOrder == null ? 0 : Math.round(Number(body.sortOrder)),
   }).returning();
-  return NextResponse.json(row, { status: 201 });
+
+  const courseCategoryIds = Array.isArray(body.courseCategoryIds)
+    ? body.courseCategoryIds.map(Number).filter((n: number) => !isNaN(n) && n > 0)
+    : [];
+
+  if (courseCategoryIds.length > 0) {
+    for (const cid of courseCategoryIds) {
+      await rawSql`
+        INSERT INTO card_type_courses (card_type_id, course_category_id)
+        VALUES (${row.id}, ${cid})
+        ON CONFLICT (card_type_id, course_category_id) DO NOTHING
+      `;
+    }
+  }
+
+  return NextResponse.json({ ...row, courseCategoryIds }, { status: 201 });
 }
 
 export async function PUT(request: NextRequest) {
@@ -60,8 +94,35 @@ export async function PUT(request: NextRequest) {
   if (body.weeklyLimit !== undefined) patch.weeklyLimit = body.weeklyLimit == null || body.weeklyLimit === "" ? null : Math.max(0, Math.round(Number(body.weeklyLimit)));
   if (body.isActive !== undefined) patch.isActive = body.isActive ? 1 : 0;
   if (body.sortOrder !== undefined) patch.sortOrder = Math.round(Number(body.sortOrder));
-  if (!Object.keys(patch).length) return bad("没有可更新字段");
-  const [row] = await db.update(cardTypes).set(patch).where(eq(cardTypes.id, id)).returning();
+
+  let row = null;
+  if (Object.keys(patch).length > 0) {
+    const [updated] = await db.update(cardTypes).set(patch).where(eq(cardTypes.id, id)).returning();
+    row = updated;
+  } else {
+    const [existing] = await db.select().from(cardTypes).where(eq(cardTypes.id, id));
+    row = existing;
+  }
   if (!row) return bad("卡类型不存在", 404);
-  return NextResponse.json(row);
+
+  let courseCategoryIds = body.courseCategoryIds;
+  if (Array.isArray(courseCategoryIds)) {
+    const validIds = courseCategoryIds.map(Number).filter((n: number) => !isNaN(n) && n > 0);
+    await rawSql`DELETE FROM card_type_courses WHERE card_type_id = ${id}`;
+    for (const cid of validIds) {
+      await rawSql`
+        INSERT INTO card_type_courses (card_type_id, course_category_id)
+        VALUES (${id}, ${cid})
+        ON CONFLICT (card_type_id, course_category_id) DO NOTHING
+      `;
+    }
+    courseCategoryIds = validIds;
+  } else {
+    const existingCourses = await rawSql`
+      SELECT course_category_id FROM card_type_courses WHERE card_type_id = ${id}
+    `;
+    courseCategoryIds = existingCourses.map((c: any) => Number(c.course_category_id));
+  }
+
+  return NextResponse.json({ ...row, courseCategoryIds });
 }

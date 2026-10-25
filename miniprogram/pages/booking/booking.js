@@ -159,7 +159,14 @@ Page({
           wx.showToast({ title: "预约成功", icon: "success" });
           that.loadAll();
         } else {
-          wx.showToast({ title: (res.data && res.data.error) || "预约失败", icon: "none", duration: 2500 });
+          var msg = (res.data && res.data.error) || "预约失败";
+          wx.showModal({
+            title: "预约提示",
+            content: msg,
+            showCancel: false,
+            confirmText: "我知道了",
+            confirmColor: "#BA2428"
+          });
         }
       },
       fail: function() {

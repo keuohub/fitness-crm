@@ -30,6 +30,20 @@ export async function GET(request: NextRequest) {
     WHERE tenant_id = 1 AND member_id = ${memberId}
     ORDER BY id DESC LIMIT 100`;
 
+  // 查询每个卡种绑定的课种名称
+  const cardCourses = await rawSql`
+    SELECT ctc.card_type_id, cc.name AS course_name
+    FROM card_type_courses ctc
+    JOIN course_categories cc ON cc.id = ctc.course_category_id
+    ORDER BY ctc.course_category_id ASC
+  `;
+  const courseMap = new Map<number, string[]>();
+  for (const cc of cardCourses) {
+    const list = courseMap.get(cc.card_type_id) || [];
+    list.push(String(cc.course_name));
+    courseMap.set(cc.card_type_id, list);
+  }
+
   const formatted = cards.map((c: any) => ({
     id: c.id,
     cardTypeId: c.card_type_id,
@@ -43,6 +57,7 @@ export async function GET(request: NextRequest) {
     purchasedAt: c.purchased_at,
     priceCents: c.price_cents,
     weeklyLimit: c.weekly_limit,
+    courseCategoryNames: courseMap.get(c.card_type_id) || [],
     transactions: transactions
       .filter((t: any) => t.member_card_id === c.id)
       .map((t: any) => ({

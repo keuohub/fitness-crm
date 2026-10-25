@@ -27,6 +27,11 @@
         <text class="card-status card-status-{{item.status}}">{{item.statusText}}</text>
       </view>
 
+      <view class="card-scope" wx:if="{{item.courseScopeText}}">
+        <text class="card-scope-label">可约</text>
+        <text class="card-scope-text">{{item.courseScopeText}}</text>
+      </view>
+
       <view class="card-balance-row">
         <view class="card-balance">
           <text class="card-balance-num">{{item.remainingText}}</text>

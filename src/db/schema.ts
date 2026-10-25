@@ -1,4 +1,4 @@
-import { pgTable, serial, integer, real, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, real, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 
 // ── 租户 ──
 export const tenants = pgTable("tenants", {
@@ -417,6 +417,19 @@ export const cardTypes = pgTable("card_types", {
   sortOrder: integer("sort_order").notNull().default(0),
   createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
 });
+
+export const cardTypeCourses = pgTable(
+  "card_type_courses",
+  {
+    id: serial("id").primaryKey(),
+    cardTypeId: integer("card_type_id").notNull(),
+    courseCategoryId: integer("course_category_id").notNull(),
+    createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
+  },
+  (t) => ({
+    uniq: uniqueIndex("card_type_courses_uniq").on(t.cardTypeId, t.courseCategoryId),
+  })
+);
 
 export const memberCards = pgTable("member_cards", {
   id: serial("id").primaryKey(),

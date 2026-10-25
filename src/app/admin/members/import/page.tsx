@@ -9,6 +9,7 @@ type ResultRow = {
   line: number;
   status: "created" | "skipped" | "failed";
   name: string;
+  matchedBy?: "phone" | "memberCode" | "name" | "new";
   portalCode?: string;
   loginPin?: string;
   loginMode?: "phone" | "pin";
@@ -21,6 +22,7 @@ type ResultRow = {
 const HEADER_ALIASES: Record<string, string[]> = {
   name: ["姓名", "会员姓名", "名字", "name"],
   phone: ["手机号", "手机", "电话", "phone", "mobile"],
+  memberCode: ["会员编号", "卡号", "编号", "membercode", "code"],
   gender: ["性别", "gender"],
   birthday: ["生日", "birthday"],
   joinedAt: ["入会日期", "入会时间", "joinedat", "joindate"],
@@ -126,11 +128,13 @@ export default function MembersImportPage() {
   const downloadCsv = () => {
     if (!results.length) return;
     const esc = (v: any) => `"${String(v ?? "").replace(/"/g, '""')}"`;
-    const lines = [["行号", "姓名", "结果", "邀请码", "登录方式", "登录第二因子", "登录PIN备用", "卡", "说明"].map(esc).join(",")];
+    const lines = [["行号", "姓名", "匹配方式", "结果", "邀请码", "登录方式", "登录第二因子", "登录PIN备用", "卡", "说明"].map(esc).join(",")];
     results.forEach((r) => {
+      const matchLabel = r.matchedBy === "phone" ? "手机号匹配(老会员)" : r.matchedBy === "memberCode" ? "卡号匹配(老会员)" : r.matchedBy === "name" ? "姓名匹配(老会员)" : "新会员入会";
       lines.push([
         r.line, r.name,
-        r.status === "created" ? "已创建" : r.status === "skipped" ? "已跳过" : "失败",
+        matchLabel,
+        r.status === "created" ? "成功" : r.status === "skipped" ? "已跳过" : "失败",
         r.portalCode || "",
         r.loginMode === "phone" ? "手机尾号后4位" : "登录PIN",
         r.secondFactor || "",
@@ -256,7 +260,7 @@ export default function MembersImportPage() {
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5 }}>
               <thead>
                 <tr style={{ background: "#F5F7FA" }}>
-                  {["行", "姓名", "结果", "邀请码", "登录第二因子", "卡", "说明"].map((h) => (
+                  {["行", "姓名", "匹配方式", "结果", "邀请码", "登录第二因子", "卡", "说明"].map((h) => (
                     <th key={h} style={{ textAlign: "left", padding: "9px 10px", borderBottom: "1px solid #E1E5EB", fontWeight: 600, color: "#697180", whiteSpace: "nowrap" }}>{h}</th>
                   ))}
                 </tr>
@@ -267,9 +271,21 @@ export default function MembersImportPage() {
                     <td style={{ padding: "8px 10px", borderBottom: "1px solid #F1F3F6", color: "#697180" }}>{r.line}</td>
                     <td style={{ padding: "8px 10px", borderBottom: "1px solid #F1F3F6" }}>{r.name}</td>
                     <td style={{ padding: "8px 10px", borderBottom: "1px solid #F1F3F6" }}>
+                      <span style={{
+                        fontSize: 11.5,
+                        padding: "2px 6px",
+                        borderRadius: 4,
+                        background: r.matchedBy === "new" ? "#F0FDF4" : "#EFF6FF",
+                        color: r.matchedBy === "new" ? "#166534" : "#1E40AF",
+                        border: `1px solid ${r.matchedBy === "new" ? "#BBF7D0" : "#BFDBFE"}`,
+                      }}>
+                        {r.matchedBy === "phone" ? "手机号匹配" : r.matchedBy === "memberCode" ? "卡号匹配" : r.matchedBy === "name" ? "姓名唯一匹配" : "新会员入会"}
+                      </span>
+                    </td>
+                    <td style={{ padding: "8px 10px", borderBottom: "1px solid #F1F3F6" }}>
                       <span style={{ display: "inline-flex", alignItems: "center", gap: 5, color: r.status === "created" ? "#059669" : r.status === "skipped" ? "#B45309" : "#DC2626" }}>
                         {r.status === "created" ? <CheckCircle2 size={13} /> : <AlertCircle size={13} />}
-                        {r.status === "created" ? "已创建" : r.status === "skipped" ? "已跳过" : "失败"}
+                        {r.status === "created" ? "成功" : r.status === "skipped" ? "已跳过" : "失败"}
                       </span>
                     </td>
                     <td style={{ padding: "8px 10px", borderBottom: "1px solid #F1F3F6", fontFamily: "ui-monospace, monospace", fontWeight: 600, color: "#2563EB" }}>{r.portalCode || "—"}</td>
