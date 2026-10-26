@@ -62,6 +62,19 @@ export async function POST(req: NextRequest) {
       })
       .returning();
 
+    // 自动同步到排课教练库（users 表），保证两端名字和档案 100% 对齐
+    try {
+      const [existingUser] = await rawSql`SELECT id FROM users WHERE name = ${name} AND is_coach = 1`;
+      if (!existingUser) {
+        await rawSql`
+          INSERT INTO users (tenant_id, name, email, password_hash, role, is_coach, status, avatar_url)
+          VALUES (1, ${name}, ${`coach-${Date.now()}-${Math.floor(Math.random() * 1000)}@laiwu.local`}, 'coach-pass', 'coach', 1, 'active', ${avatarUrl})
+        `;
+      }
+    } catch (e) {
+      console.error("Sync team member to users error:", e);
+    }
+
     invalidateCache("team");
     return NextResponse.json(created);
   } catch (err: any) {
@@ -93,11 +106,22 @@ export async function PUT(req: NextRequest) {
     if (sortOrder !== undefined) updateData.sortOrder = Number(sortOrder);
     if (isActive !== undefined) updateData.isActive = Number(isActive);
 
+    const [oldRow] = await db.select({ name: teamMembers.name }).from(teamMembers).where(eq(teamMembers.id, Number(id)));
+
     const [updated] = await db
       .update(teamMembers)
       .set(updateData)
       .where(eq(teamMembers.id, Number(id)))
       .returning();
+
+    // 如果修改了导师姓名，同步更新排课教练库的姓名，避免课时数据错乱
+    if (name && oldRow?.name && oldRow.name !== name) {
+      try {
+        await rawSql`UPDATE users SET name = ${name} WHERE name = ${oldRow.name} AND is_coach = 1`;
+      } catch (e) {
+        console.error("Update coach name error:", e);
+      }
+    }
 
     invalidateCache("team");
     return NextResponse.json(updated);
