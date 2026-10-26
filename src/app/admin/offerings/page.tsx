@@ -41,6 +41,15 @@ export default function AdminOfferingsPage() {
   const [uploading, setUploading] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
+  // Section 3 Header & Intro settings
+  const [sectionHeader, setSectionHeader] = useState({
+    secNum: "03",
+    secTitle: "项目介绍",
+    secEn: "OFFERINGS",
+    secIntro: "针对不同阶段与体态目标，由主理团队精心研发的核心训练体系。",
+  });
+  const [savingHeader, setSavingHeader] = useState(false);
+
   const fetchOfferings = async () => {
     setLoading(true);
     try {
@@ -58,7 +67,50 @@ export default function AdminOfferingsPage() {
 
   useEffect(() => {
     fetchOfferings();
+    fetch("/api/admin/brand-settings")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && !data.error) {
+          setSectionHeader({
+            secNum: data.sec3Num || "03",
+            secTitle: data.sec3Title || "项目介绍",
+            secEn: data.sec3En || "OFFERINGS",
+            secIntro: data.sec3Intro || "",
+          });
+        }
+      })
+      .catch(() => {});
   }, []);
+
+  const handleSaveHeader = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingHeader(true);
+    try {
+      const getRes = await fetch("/api/admin/brand-settings");
+      const current = await getRes.json();
+      const payload = {
+        ...current,
+        sec3Num: sectionHeader.secNum,
+        sec3Title: sectionHeader.secTitle,
+        sec3En: sectionHeader.secEn,
+        sec3Intro: sectionHeader.secIntro,
+      };
+      const res = await fetch("/api/admin/brand-settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        showToast("板块三（课程体系）标题与描述已成功更新并同步小程序", "success");
+      } else {
+        showToast("保存失败，请重试", "error");
+      }
+    } catch {
+      showToast("网络请求异常", "error");
+    } finally {
+      setSavingHeader(false);
+    }
+  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -191,6 +243,72 @@ export default function AdminOfferingsPage() {
           <Layers className="w-3.5 h-3.5" /> 课程体系与底图
         </Link>
       </div>
+
+      {/* Section 3 Header & Intro Editor */}
+      <form
+        onSubmit={handleSaveHeader}
+        className="bg-white border border-[#E1E5EB] rounded-xl p-4 shadow-xs space-y-3"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-[#292D35] bg-[#F0F2F6] px-2 py-0.5 rounded">
+              板块三顶部文案
+            </span>
+            <span className="text-xs text-[#292D35] font-medium">
+              小程序「03 项目介绍」标题与指引描述
+            </span>
+          </div>
+          <button
+            type="submit"
+            disabled={savingHeader}
+            className="px-3.5 py-1.5 text-xs font-medium text-white bg-[#2563EB] hover:bg-blue-700 rounded-lg shadow-xs disabled:opacity-50 transition-colors"
+          >
+            {savingHeader ? "保存中..." : "保存板块三文案"}
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label className="block text-[11px] font-medium text-[#697180] mb-1">序号标号 (如 03)</label>
+            <input
+              type="text"
+              value={sectionHeader.secNum}
+              onChange={(e) => setSectionHeader({ ...sectionHeader, secNum: e.target.value })}
+              className="w-full px-3 py-1.5 text-xs bg-[#F8FAFC] border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+            />
+          </div>
+          <div>
+            <label className="block text-[11px] font-medium text-[#697180] mb-1">板块标题 (如 课程体系 或 项目介绍)</label>
+            <input
+              type="text"
+              value={sectionHeader.secTitle}
+              onChange={(e) => setSectionHeader({ ...sectionHeader, secTitle: e.target.value })}
+              className="w-full px-3 py-1.5 text-xs bg-[#F8FAFC] border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+            />
+          </div>
+          <div>
+            <label className="block text-[11px] font-medium text-[#697180] mb-1">英文小标 (如 OFFERINGS)</label>
+            <input
+              type="text"
+              value={sectionHeader.secEn}
+              onChange={(e) => setSectionHeader({ ...sectionHeader, secEn: e.target.value })}
+              className="w-full px-3 py-1.5 text-xs bg-[#F8FAFC] border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB] font-mono"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-[11px] font-medium text-[#697180] mb-1">
+            板块介绍描述 (展示在标题下方的那句话)
+          </label>
+          <textarea
+            rows={2}
+            value={sectionHeader.secIntro}
+            onChange={(e) => setSectionHeader({ ...sectionHeader, secIntro: e.target.value })}
+            className="w-full px-3 py-1.5 text-xs bg-[#F8FAFC] border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB] leading-relaxed"
+          />
+        </div>
+      </form>
 
       {/* Grid of Course Offerings */}
       {loading ? (

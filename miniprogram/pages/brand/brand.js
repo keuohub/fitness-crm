@@ -86,11 +86,12 @@ Page({
       url: "/api/portal/venue",
       success: function(res) {
         if (res.statusCode === 200 && Array.isArray(res.data) && res.data.length > 0) {
-          var mapped = res.data.map(function(v) {
+          var mapped = res.data.map(function(v, index) {
+            var autoNum = (index + 1 < 10 ? "0" : "") + (index + 1);
             return {
               id: v.id,
               imageUrl: that.fullUrl(v.imageUrl),
-              tag: v.tag || "01 / 空间实景",
+              tag: v.tag || (autoNum + " / 空间实景"),
               name: v.name || v.title || "空间实景",
               desc: v.desc || ""
             };

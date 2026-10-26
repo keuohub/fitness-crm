@@ -42,6 +42,15 @@ export default function AdminTeamPage() {
   const [uploading, setUploading] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
+  // Section 2 Header & Intro settings
+  const [sectionHeader, setSectionHeader] = useState({
+    secNum: "02",
+    secTitle: "同行导师",
+    secEn: "MENTORS",
+    secIntro: "深耕女子塑形与体态矫正，用细腻口令与精准触觉纠正，守护每次发力安全。",
+  });
+  const [savingHeader, setSavingHeader] = useState(false);
+
   const fetchTeam = async () => {
     setLoading(true);
     try {
@@ -59,7 +68,50 @@ export default function AdminTeamPage() {
 
   useEffect(() => {
     fetchTeam();
+    fetch("/api/admin/brand-settings")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && !data.error) {
+          setSectionHeader({
+            secNum: data.sec2Num || "02",
+            secTitle: data.sec2Title || "同行导师",
+            secEn: data.sec2En || "MENTORS",
+            secIntro: data.sec2Intro || "",
+          });
+        }
+      })
+      .catch(() => {});
   }, []);
+
+  const handleSaveHeader = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingHeader(true);
+    try {
+      const getRes = await fetch("/api/admin/brand-settings");
+      const current = await getRes.json();
+      const payload = {
+        ...current,
+        sec2Num: sectionHeader.secNum,
+        sec2Title: sectionHeader.secTitle,
+        sec2En: sectionHeader.secEn,
+        sec2Intro: sectionHeader.secIntro,
+      };
+      const res = await fetch("/api/admin/brand-settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        showToast("板块二（同行导师）标题与描述已成功更新并同步小程序", "success");
+      } else {
+        showToast("保存失败，请重试", "error");
+      }
+    } catch {
+      showToast("网络请求异常", "error");
+    } finally {
+      setSavingHeader(false);
+    }
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -193,6 +245,72 @@ export default function AdminTeamPage() {
           <Layers className="w-3.5 h-3.5" /> 课程体系与底图
         </Link>
       </div>
+
+      {/* Section 2 Header & Intro Editor */}
+      <form
+        onSubmit={handleSaveHeader}
+        className="bg-white border border-[#E1E5EB] rounded-xl p-4 shadow-xs space-y-3"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-[#8B83D7] bg-purple-50 px-2 py-0.5 rounded">
+              板块二顶部文案
+            </span>
+            <span className="text-xs text-[#292D35] font-medium">
+              小程序「02 同行导师」标题与指引描述
+            </span>
+          </div>
+          <button
+            type="submit"
+            disabled={savingHeader}
+            className="px-3.5 py-1.5 text-xs font-medium text-white bg-[#2563EB] hover:bg-blue-700 rounded-lg shadow-xs disabled:opacity-50 transition-colors"
+          >
+            {savingHeader ? "保存中..." : "保存板块二文案"}
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label className="block text-[11px] font-medium text-[#697180] mb-1">序号标号 (如 02)</label>
+            <input
+              type="text"
+              value={sectionHeader.secNum}
+              onChange={(e) => setSectionHeader({ ...sectionHeader, secNum: e.target.value })}
+              className="w-full px-3 py-1.5 text-xs bg-[#F8FAFC] border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+            />
+          </div>
+          <div>
+            <label className="block text-[11px] font-medium text-[#697180] mb-1">板块标题 (如 同行导师)</label>
+            <input
+              type="text"
+              value={sectionHeader.secTitle}
+              onChange={(e) => setSectionHeader({ ...sectionHeader, secTitle: e.target.value })}
+              className="w-full px-3 py-1.5 text-xs bg-[#F8FAFC] border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+            />
+          </div>
+          <div>
+            <label className="block text-[11px] font-medium text-[#697180] mb-1">英文小标 (如 MENTORS)</label>
+            <input
+              type="text"
+              value={sectionHeader.secEn}
+              onChange={(e) => setSectionHeader({ ...sectionHeader, secEn: e.target.value })}
+              className="w-full px-3 py-1.5 text-xs bg-[#F8FAFC] border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB] font-mono"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-[11px] font-medium text-[#697180] mb-1">
+            板块介绍描述 (展示在标题下方的那句话)
+          </label>
+          <textarea
+            rows={2}
+            value={sectionHeader.secIntro}
+            onChange={(e) => setSectionHeader({ ...sectionHeader, secIntro: e.target.value })}
+            className="w-full px-3 py-1.5 text-xs bg-[#F8FAFC] border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB] leading-relaxed"
+          />
+        </div>
+      </form>
 
       {/* Team Cards Grid */}
       {loading ? (

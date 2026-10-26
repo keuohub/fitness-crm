@@ -49,20 +49,24 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { title, name, tag, desc: descText, imageUrl, sortOrder = 0, isActive = 1 } = body;
 
-    const displayTitle = title || name || "空间实景";
+    const displayTitle = (title || name || "空间实景").trim();
     if (!imageUrl) {
       return NextResponse.json({ error: "照片为必填项" }, { status: 400 });
     }
+
+    const order = Number(sortOrder) || 1;
+    const autoIndex = String(order).padStart(2, "0");
+    const displayTag = (tag && String(tag).trim()) ? String(tag).trim() : `${autoIndex} / 空间实景`;
 
     const [created] = await db
       .insert(venueItems)
       .values({
         title: displayTitle,
-        name: name || displayTitle,
-        tag: tag || "01 / 空间实景",
+        name: displayTitle,
+        tag: displayTag,
         desc: descText || "",
         imageUrl,
-        sortOrder: Number(sortOrder) || 0,
+        sortOrder: order,
         isActive: Number(isActive) || 1,
       })
       .returning();
@@ -89,9 +93,17 @@ export async function PUT(req: NextRequest) {
     }
 
     const updateData: any = {};
-    if (title !== undefined) updateData.title = title;
-    if (name !== undefined) updateData.name = name;
-    if (tag !== undefined) updateData.tag = tag;
+    if (title !== undefined) {
+      updateData.title = String(title).trim();
+      updateData.name = String(title).trim();
+    }
+    if (name !== undefined && title === undefined) {
+      updateData.name = String(name).trim();
+      updateData.title = String(name).trim();
+    }
+    if (tag !== undefined) {
+      updateData.tag = String(tag).trim();
+    }
     if (descText !== undefined) updateData.desc = descText;
     if (imageUrl !== undefined) updateData.imageUrl = imageUrl;
     if (sortOrder !== undefined) updateData.sortOrder = Number(sortOrder);

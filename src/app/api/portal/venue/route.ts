@@ -23,19 +23,23 @@ export async function GET() {
       .select()
       .from(venueItems)
       .where(eq(venueItems.isActive, 1))
-      .orderBy(asc(venueItems.sortOrder));
+      .orderBy(asc(venueItems.sortOrder), asc(venueItems.id));
 
     if (rows && rows.length > 0) {
-      const formatted = rows.map((r: any) => ({
-        id: r.id,
-        title: r.title || r.name,
-        name: r.name || r.title,
-        tag: r.tag || "01 / 空间实景",
-        desc: r.desc || "",
-        imageUrl: r.imageUrl,
-        sortOrder: r.sortOrder,
-        isActive: r.isActive,
-      }));
+      const formatted = rows.map((r: any, idx: number) => {
+        const orderNum = String(r.sortOrder || idx + 1).padStart(2, "0");
+        const defaultTag = `${orderNum} / 空间实景`;
+        return {
+          id: r.id,
+          title: r.title || r.name || "空间实景",
+          name: r.name || r.title || "空间实景",
+          tag: (r.tag && r.tag.trim()) ? r.tag.trim() : defaultTag,
+          desc: r.desc || "",
+          imageUrl: r.imageUrl,
+          sortOrder: r.sortOrder,
+          isActive: r.isActive,
+        };
+      });
       return NextResponse.json(formatted);
     }
 
