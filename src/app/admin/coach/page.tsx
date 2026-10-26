@@ -269,8 +269,9 @@ export default function CoachTodayPage() {
           <div className="text-xs font-semibold text-[#2563EB] tracking-wide uppercase">
             COACH HOURS & PERFORMANCE · 教练课时与绩效管理
           </div>
-          <h1 className="text-2xl font-semibold text-[#292D35] mt-1 tracking-tight">
-            教练课表与课时统计
+          <h1 className="text-2xl font-semibold text-[#292D35] mt-1 tracking-tight flex items-center gap-2">
+            <span>教练课表与课时统计</span>
+            <span className="text-[11px] font-normal text-[#2563EB] bg-[#E8EEFF] px-2 py-0.5 rounded-full">v1.4 可视日历版</span>
           </h1>
           <p className="text-sm text-[#697180] mt-1">
             自定义起止日期筛选各教练已上课时数、执教节数与学员人次，作为课时费结算和绩效考勤的统一依据。
