@@ -18,6 +18,8 @@ import {
   UserPlus,
   ArrowRight,
   RotateCcw,
+  Edit2,
+  Building2,
 } from "lucide-react";
 
 type Course = { id: number; name: string; duration_minutes: number; default_capacity: number; is_active?: number };
@@ -34,6 +36,7 @@ type Session = {
   end_time: string;
   capacity: number;
   status: string;
+  note?: string | null;
   course_name: string;
   coach_name: string;
   room_name: string | null;
@@ -100,17 +103,30 @@ export default function AdminSchedulePage() {
   const [showAddDrawer, setShowAddDrawer] = useState(false);
   const [showTplDrawer, setShowTplDrawer] = useState(false);
   const [showCoachModal, setShowCoachModal] = useState(false);
+  const [showRoomModal, setShowRoomModal] = useState(false);
+  const [editingSession, setEditingSession] = useState<Session | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
   // Forms
   const [coachName, setCoachName] = useState("");
+  const [roomName, setRoomName] = useState("");
   const [form, setForm] = useState({
     courseCategoryId: "",
     coachId: "",
     roomId: "",
     sessionDate: "",
     startTime: "09:00",
-    capacity: "",
+    capacity: "6",
+    note: "",
+  });
+  const [editForm, setEditForm] = useState({
+    id: 0,
+    courseCategoryId: "",
+    coachId: "",
+    roomId: "",
+    sessionDate: "",
+    startTime: "09:00",
+    capacity: "6",
     note: "",
   });
   const [tpl, setTpl] = useState({
@@ -180,14 +196,36 @@ export default function AdminSchedulePage() {
   const activeCourses = useMemo(() => courses.filter((c) => c.is_active !== 0), [courses]);
 
   const handleOpenAdd = (date?: string) => {
-    setForm((prev) => ({
-      ...prev,
+    const firstCourse = activeCourses[0];
+    const defaultCap = firstCourse?.default_capacity
+      ? String(firstCourse.default_capacity)
+      : firstCourse?.name?.includes("私教")
+      ? "1"
+      : "6";
+    setForm({
       sessionDate: date || fmt(new Date()),
-      courseCategoryId: activeCourses[0]?.id ? String(activeCourses[0].id) : "",
+      courseCategoryId: firstCourse?.id ? String(firstCourse.id) : "",
       coachId: coaches[0]?.id ? String(coaches[0].id) : "",
       roomId: rooms[0]?.id ? String(rooms[0].id) : "",
-    }));
+      startTime: "09:00",
+      capacity: defaultCap,
+      note: "",
+    });
     setShowAddDrawer(true);
+  };
+
+  const handleOpenEdit = (s: Session) => {
+    setEditForm({
+      id: s.id,
+      courseCategoryId: String(s.course_category_id),
+      coachId: String(s.coach_id),
+      roomId: s.room_id ? String(s.room_id) : "",
+      sessionDate: s.session_date,
+      startTime: s.start_time,
+      capacity: String(s.capacity || 6),
+      note: s.note || "",
+    });
+    setEditingSession(s);
   };
 
   const create = async (e: React.FormEvent) => {
@@ -197,23 +235,43 @@ export default function AdminSchedulePage() {
       return;
     }
     setSaving(true);
-    setWarnings([]);
     try {
-      const res = await jf("/api/admin/schedule", {
+      await jf("/api/admin/schedule", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
-          capacity: form.capacity ? Number(form.capacity) : undefined,
+          capacity: form.capacity ? Number(form.capacity) : 6,
         }),
       });
-      if (res.warnings?.length) {
-        setWarnings(res.warnings);
-        showToast("课次已创建（注意：存在时间或场地冲突）", "error");
-      } else {
-        showToast("课次已成功保存", "success");
-      }
+      showToast("课次已成功保存并发布", "success");
       setShowAddDrawer(false);
+      await load();
+    } catch (e: any) {
+      showToast(e.message, "error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const updateSession = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editForm.id || !editForm.courseCategoryId || !editForm.coachId || !editForm.sessionDate || !editForm.startTime) {
+      showToast("请完整填写排课必填信息", "error");
+      return;
+    }
+    setSaving(true);
+    try {
+      await jf("/api/admin/schedule", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...editForm,
+          capacity: editForm.capacity ? Number(editForm.capacity) : 6,
+        }),
+      });
+      showToast("课次与人数容量已成功更新", "success");
+      setEditingSession(null);
       await load();
     } catch (e: any) {
       showToast(e.message, "error");
@@ -227,6 +285,9 @@ export default function AdminSchedulePage() {
     try {
       await jf(`/api/admin/schedule?id=${deleteConfirmId}`, { method: "DELETE" });
       setDeleteConfirmId(null);
+      if (editingSession?.id === deleteConfirmId) {
+        setEditingSession(null);
+      }
       await load();
       showToast("课次已成功删除", "success");
     } catch (e: any) {
@@ -238,15 +299,67 @@ export default function AdminSchedulePage() {
     e.preventDefault();
     if (!coachName.trim()) return;
     try {
-      await jf("/api/admin/coaches", {
+      const newCoach = await jf("/api/admin/coaches", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: coachName.trim() }),
       });
       setCoachName("");
-      setShowCoachModal(false);
+      if (showAddDrawer) {
+        setForm((prev) => ({ ...prev, coachId: String(newCoach.id) }));
+      }
+      if (editingSession) {
+        setEditForm((prev) => ({ ...prev, coachId: String(newCoach.id) }));
+      }
       await load();
-      showToast("教练已新增", "success");
+      showToast(`教练「${newCoach.name}」已添加并选定`, "success");
+      setShowCoachModal(false);
+    } catch (e: any) {
+      showToast(e.message, "error");
+    }
+  };
+
+  const removeCoach = async (id: number, name: string) => {
+    if (!confirm(`确定要移除教练「${name}」的排课身份吗？`)) return;
+    try {
+      await jf(`/api/admin/coaches?id=${id}`, { method: "DELETE" });
+      await load();
+      showToast(`教练「${name}」已移除`, "success");
+    } catch (e: any) {
+      showToast(e.message, "error");
+    }
+  };
+
+  const addRoom = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!roomName.trim()) return;
+    try {
+      const newRoom = await jf("/api/admin/rooms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: roomName.trim(), capacity: 10 }),
+      });
+      setRoomName("");
+      if (showAddDrawer) {
+        setForm((prev) => ({ ...prev, roomId: String(newRoom.id) }));
+      }
+      if (editingSession) {
+        setEditForm((prev) => ({ ...prev, roomId: String(newRoom.id) }));
+      }
+      await load();
+      showToast(`场地「${newRoom.name}」已添加并选定`, "success");
+      setShowRoomModal(false);
+    } catch (e: any) {
+      showToast(e.message, "error");
+    }
+  };
+
+  const removeRoom = async (id: number, name: string) => {
+    if (!confirm(`确定要删除或停用场地「${name}」吗？`)) return;
+    try {
+      await jf(`/api/admin/rooms?id=${id}`, { method: "DELETE" });
+      await load();
+      showToast(`场地「${name}」已删除`, "success");
     } catch (e: any) {
       showToast(e.message, "error");
     }
@@ -357,21 +470,6 @@ export default function AdminSchedulePage() {
         </div>
       </div>
 
-      {/* Warnings Banner */}
-      {warnings.length > 0 && (
-        <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 flex items-start gap-2.5">
-          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-          <div className="space-y-1">
-            <div className="font-semibold text-amber-800">检测到排课冲突提示：</div>
-            {warnings.map((w, i) => (
-              <div key={i} className="text-amber-700">
-                • {w}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Calendar Week Columns Grid */}
       <div className="grid grid-cols-1 md:grid-cols-7 gap-3">
         {weekdays.map((w, i) => {
@@ -436,20 +534,38 @@ export default function AdminSchedulePage() {
                   daySessions.map((s) => (
                     <div
                       key={s.id}
-                      className="group relative p-2.5 rounded-lg border border-[#E1E5EB] bg-white hover:border-[#2563EB]/40 hover:shadow-xs transition-all text-xs"
+                      onClick={() => handleOpenEdit(s)}
+                      className="group relative p-2.5 rounded-lg border border-[#E1E5EB] bg-white hover:border-[#2563EB] hover:shadow-xs transition-all text-xs cursor-pointer"
                     >
-                      {/* Time & Delete */}
+                      {/* Time & Action buttons */}
                       <div className="flex items-center justify-between text-[#697180]">
                         <span className="font-semibold text-[#292D35] tabular-nums">
                           {s.start_time} - {s.end_time}
                         </span>
-                        <button
-                          onClick={() => setDeleteConfirmId(s.id)}
-                          className="opacity-0 group-hover:opacity-100 p-1 hover:text-red-600 transition-opacity"
-                          title="删除此课次"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenEdit(s);
+                            }}
+                            className="p-1 text-gray-400 hover:text-[#2563EB] transition-colors"
+                            title="修改课次与人数容量"
+                          >
+                            <Edit2 className="w-3 h-3" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeleteConfirmId(s.id);
+                            }}
+                            className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                            title="删除此课次"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
                       </div>
 
                       {/* Course Title */}
@@ -464,9 +580,9 @@ export default function AdminSchedulePage() {
                       </div>
 
                       <div className="flex items-center justify-between text-[11px] text-[#697180] mt-1">
-                        <span className="truncate">{s.room_name || "未分配教室"}</span>
-                        <span className="tabular-nums font-medium text-[#292D35]">
-                          容量 {s.capacity}
+                        <span className="truncate">{s.room_name || "未分配场地"}</span>
+                        <span className="tabular-nums font-semibold text-[#2563EB] bg-blue-50 px-1.5 py-0.5 rounded text-[11px]">
+                          {s.capacity} 人
                         </span>
                       </div>
 
@@ -481,12 +597,18 @@ export default function AdminSchedulePage() {
                         >
                           {s.status === "cancelled" ? "已取消" : "可预约"}
                         </span>
-                        <a
-                          href={`/admin/bookings?date=${s.session_date}`}
-                          className="text-[10px] text-[#2563EB] hover:underline"
-                        >
-                          名单
-                        </a>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] text-[#2563EB] font-medium hover:underline">
+                            改人数
+                          </span>
+                          <a
+                            href={`/admin/bookings?date=${s.session_date}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-[10px] text-[#697180] hover:text-[#2563EB] hover:underline"
+                          >
+                            名单
+                          </a>
+                        </div>
                       </div>
                     </div>
                   ))
@@ -504,14 +626,21 @@ export default function AdminSchedulePage() {
           <span>•</span>
           <span>在任教练: {coaches.length} 位</span>
           <span>•</span>
-          <span>可用教室: {rooms.length} 间</span>
+          <span>可用教室/空间: {rooms.length} 处</span>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={() => setShowCoachModal(true)}
             className="text-[#2563EB] hover:underline flex items-center gap-1 font-medium"
           >
-            <UserPlus className="w-3.5 h-3.5" /> 加教练
+            <UserPlus className="w-3.5 h-3.5" /> 自定义管理教练
+          </button>
+          <span>|</span>
+          <button
+            onClick={() => setShowRoomModal(true)}
+            className="text-[#2563EB] hover:underline flex items-center gap-1 font-medium"
+          >
+            <Building2 className="w-3.5 h-3.5" /> 自定义管理场地
           </button>
           <span>|</span>
           <a href="/admin/coach" className="text-[#2563EB] hover:underline flex items-center gap-1 font-medium">
@@ -547,7 +676,16 @@ export default function AdminSchedulePage() {
                   <label className="block text-xs font-medium text-[#292D35] mb-1">选择课程 *</label>
                   <select
                     value={form.courseCategoryId}
-                    onChange={(e) => setForm({ ...form, courseCategoryId: e.target.value })}
+                    onChange={(e) => {
+                      const cid = e.target.value;
+                      const sel = activeCourses.find((c) => String(c.id) === cid);
+                      const defaultCap = sel?.default_capacity
+                        ? String(sel.default_capacity)
+                        : sel?.name?.includes("私教")
+                        ? "1"
+                        : "6";
+                      setForm({ ...form, courseCategoryId: cid, capacity: defaultCap });
+                    }}
                     required
                     className="w-full px-3 py-2 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
                   >
@@ -561,7 +699,16 @@ export default function AdminSchedulePage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-[#292D35] mb-1">主讲教练 *</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-medium text-[#292D35]">主讲教练 *</label>
+                    <button
+                      type="button"
+                      onClick={() => setShowCoachModal(true)}
+                      className="text-xs text-[#2563EB] hover:underline flex items-center gap-1 font-medium"
+                    >
+                      <UserPlus className="w-3.5 h-3.5" /> + 自定义添加教练
+                    </button>
+                  </div>
                   <select
                     value={form.coachId}
                     onChange={(e) => setForm({ ...form, coachId: e.target.value })}
@@ -578,7 +725,16 @@ export default function AdminSchedulePage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-[#292D35] mb-1">场地教室</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-medium text-[#292D35]">场地教室 / 空间</label>
+                    <button
+                      type="button"
+                      onClick={() => setShowRoomModal(true)}
+                      className="text-xs text-[#2563EB] hover:underline flex items-center gap-1 font-medium"
+                    >
+                      <Plus className="w-3.5 h-3.5" /> + 自定义添加场地
+                    </button>
+                  </div>
                   <select
                     value={form.roomId}
                     onChange={(e) => setForm({ ...form, roomId: e.target.value })}
@@ -587,7 +743,7 @@ export default function AdminSchedulePage() {
                     <option value="">-- 暂不分配 / 待定 --</option>
                     {rooms.map((r) => (
                       <option key={r.id} value={r.id}>
-                        {r.name} (容量 {r.capacity} 人)
+                        {r.name}
                       </option>
                     ))}
                   </select>
@@ -617,14 +773,41 @@ export default function AdminSchedulePage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-[#292D35] mb-1">预约容量上限（留空使用默认）</label>
-                  <input
-                    type="number"
-                    placeholder="例如 6"
-                    value={form.capacity}
-                    onChange={(e) => setForm({ ...form, capacity: e.target.value })}
-                    className="w-full px-3 py-2 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
-                  />
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-medium text-[#292D35]">本节课可约人数 (容量) *</label>
+                    <span className="text-[11px] text-[#2563EB] font-medium">后台可灵活调大调小</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={1}
+                      max={99}
+                      placeholder="例如 6"
+                      value={form.capacity}
+                      onChange={(e) => setForm({ ...form, capacity: e.target.value })}
+                      required
+                      className="flex-1 px-3 py-2 text-sm bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB] font-bold text-[#292D35]"
+                    />
+                    <div className="flex items-center gap-1">
+                      {[1, 6, 8, 10].map((num) => (
+                        <button
+                          key={num}
+                          type="button"
+                          onClick={() => setForm({ ...form, capacity: String(num) })}
+                          className={`px-2 py-1.5 text-xs rounded border transition-colors ${
+                            form.capacity === String(num)
+                              ? "bg-[#2563EB] text-white border-[#2563EB]"
+                              : "bg-[#F4F6F8] text-[#292D35] border-[#E1E5EB] hover:bg-gray-200"
+                          }`}
+                        >
+                          {num === 1 ? "1人(私教)" : `${num}人`}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-[#697180] mt-1">
+                    满员后小程序自动提示约满。排课后随时可点击卡片修改人数。
+                  </p>
                 </div>
 
                 <div>
@@ -653,6 +836,202 @@ export default function AdminSchedulePage() {
                   >
                     {saving ? "正在保存..." : "发布此课次"}
                   </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Drawer: Edit Session */}
+      {editingSession && (
+        <div className="fixed inset-0 z-50 overflow-hidden">
+          <div
+            className="absolute inset-0 bg-black/30 backdrop-blur-xs transition-opacity"
+            onClick={() => setEditingSession(null)}
+          />
+          <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
+            <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col">
+              <div className="p-6 border-b border-[#E1E5EB] flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-[#292D35]">调整课次与人数容量</h3>
+                  <p className="text-xs text-[#697180] mt-0.5">随时灵活修改每节课的预约人数上限、教练与场地</p>
+                </div>
+                <button
+                  onClick={() => setEditingSession(null)}
+                  className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={updateSession} className="flex-1 overflow-y-auto p-6 space-y-4">
+                <div>
+                  <label className="block text-xs font-medium text-[#292D35] mb-1">课程项目 *</label>
+                  <select
+                    value={editForm.courseCategoryId}
+                    onChange={(e) => setEditForm({ ...editForm, courseCategoryId: e.target.value })}
+                    required
+                    className="w-full px-3 py-2 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                  >
+                    {courses.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name} ({c.duration_minutes}分钟)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-medium text-[#292D35]">主讲教练 *</label>
+                    <button
+                      type="button"
+                      onClick={() => setShowCoachModal(true)}
+                      className="text-xs text-[#2563EB] hover:underline flex items-center gap-1 font-medium"
+                    >
+                      <UserPlus className="w-3.5 h-3.5" /> + 自定义添加教练
+                    </button>
+                  </div>
+                  <select
+                    value={editForm.coachId}
+                    onChange={(e) => setEditForm({ ...editForm, coachId: e.target.value })}
+                    required
+                    className="w-full px-3 py-2 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                  >
+                    <option value="">-- 选择教练 --</option>
+                    {coaches.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-medium text-[#292D35]">场地教室 / 空间</label>
+                    <button
+                      type="button"
+                      onClick={() => setShowRoomModal(true)}
+                      className="text-xs text-[#2563EB] hover:underline flex items-center gap-1 font-medium"
+                    >
+                      <Plus className="w-3.5 h-3.5" /> + 自定义添加场地
+                    </button>
+                  </div>
+                  <select
+                    value={editForm.roomId}
+                    onChange={(e) => setEditForm({ ...editForm, roomId: e.target.value })}
+                    className="w-full px-3 py-2 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                  >
+                    <option value="">-- 暂不分配 / 待定 --</option>
+                    {rooms.map((r) => (
+                      <option key={r.id} value={r.id}>
+                        {r.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-[#292D35] mb-1">排课日期 *</label>
+                    <input
+                      type="date"
+                      value={editForm.sessionDate}
+                      onChange={(e) => setEditForm({ ...editForm, sessionDate: e.target.value })}
+                      required
+                      className="w-full px-3 py-2 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-[#292D35] mb-1">开始时间 *</label>
+                    <input
+                      type="time"
+                      value={editForm.startTime}
+                      onChange={(e) => setEditForm({ ...editForm, startTime: e.target.value })}
+                      required
+                      className="w-full px-3 py-2 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-medium text-[#292D35]">本节课可约人数 (容量) *</label>
+                    <span className="text-[11px] text-[#2563EB] font-medium">后台可灵活调大调小</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={1}
+                      max={99}
+                      value={editForm.capacity}
+                      onChange={(e) => setEditForm({ ...editForm, capacity: e.target.value })}
+                      required
+                      className="flex-1 px-3 py-2 text-sm bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB] font-bold text-[#292D35]"
+                    />
+                    <div className="flex items-center gap-1">
+                      {[1, 6, 8, 10].map((num) => (
+                        <button
+                          key={num}
+                          type="button"
+                          onClick={() => setEditForm({ ...editForm, capacity: String(num) })}
+                          className={`px-2 py-1.5 text-xs rounded border transition-colors ${
+                            editForm.capacity === String(num)
+                              ? "bg-[#2563EB] text-white border-[#2563EB]"
+                              : "bg-[#F4F6F8] text-[#292D35] border-[#E1E5EB] hover:bg-gray-200"
+                          }`}
+                        >
+                          {num === 1 ? "1人(私教)" : `${num}人`}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-[#697180] mt-1">
+                    满员后小程序自动提示约满。调整此数字后即刻对前端预约生效。
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-[#292D35] mb-1">内部备注</label>
+                  <input
+                    type="text"
+                    placeholder="仅内部可见"
+                    value={editForm.note}
+                    onChange={(e) => setEditForm({ ...editForm, note: e.target.value })}
+                    className="w-full px-3 py-2 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                  />
+                </div>
+
+                <div className="pt-4 border-t border-[#E1E5EB] flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const id = editingSession.id;
+                      setEditingSession(null);
+                      setDeleteConfirmId(id);
+                    }}
+                    className="px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  >
+                    删除此课次
+                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setEditingSession(null)}
+                      className="px-4 py-2 text-xs font-medium text-[#697180] hover:text-[#292D35] bg-white border border-[#E1E5EB] rounded-lg"
+                    >
+                      取消
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={saving}
+                      className="px-5 py-2 text-xs font-medium text-white bg-[#2563EB] hover:bg-blue-700 rounded-lg shadow-sm disabled:opacity-50 transition-colors"
+                    >
+                      {saving ? "保存中..." : "保存修改"}
+                    </button>
+                  </div>
                 </div>
               </form>
             </div>
@@ -793,37 +1172,138 @@ export default function AdminSchedulePage() {
         </div>
       )}
 
-      {/* Modal: Add Coach */}
+      {/* Modal: Coach Management */}
       {showCoachModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
-          <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-5 border border-[#E1E5EB]">
-            <h3 className="text-base font-semibold text-[#292D35]">快速新增教练</h3>
-            <p className="text-xs text-[#697180] mt-1">添加新教练档案，即可在排课时指派。</p>
-            <form onSubmit={addCoach} className="mt-4 space-y-3">
-              <input
-                type="text"
-                placeholder="教练姓名，如：周教练"
-                value={coachName}
-                onChange={(e) => setCoachName(e.target.value)}
-                required
-                className="w-full px-3 py-2 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
-              />
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowCoachModal(false)}
-                  className="px-3 py-1.5 text-xs text-[#697180] bg-white border border-[#E1E5EB] rounded-lg"
-                >
-                  取消
-                </button>
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 border border-[#E1E5EB]">
+            <div className="flex items-center justify-between pb-3 border-b border-[#E1E5EB]">
+              <div>
+                <h3 className="text-base font-semibold text-[#292D35]">自定义管理教练</h3>
+                <p className="text-xs text-[#697180] mt-0.5">新增教练档案，添加后即可在排课时任意指派</p>
+              </div>
+              <button
+                onClick={() => setShowCoachModal(false)}
+                className="p-1 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Quick Add Coach */}
+            <form onSubmit={addCoach} className="mt-4 p-3 bg-[#F8FAFC] rounded-lg border border-[#E1E5EB] space-y-2">
+              <label className="block text-xs font-semibold text-[#292D35]">添加新教练</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="输入教练姓名（如：周周、小可）"
+                  value={coachName}
+                  onChange={(e) => setCoachName(e.target.value)}
+                  required
+                  className="flex-1 px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                />
                 <button
                   type="submit"
-                  className="px-4 py-1.5 text-xs font-medium text-white bg-[#2563EB] hover:bg-blue-700 rounded-lg shadow-sm"
+                  className="px-4 py-1.5 text-xs font-medium text-white bg-[#2563EB] hover:bg-blue-700 rounded-lg shrink-0 shadow-xs"
                 >
-                  保存
+                  保存并选定
                 </button>
               </div>
             </form>
+
+            {/* Coach List */}
+            <div className="mt-4">
+              <div className="text-xs font-medium text-[#697180] mb-2">当前教练列表（{coaches.length} 位）</div>
+              <div className="max-h-48 overflow-y-auto space-y-1.5">
+                {coaches.map((c) => (
+                  <div
+                    key={c.id}
+                    className="flex items-center justify-between p-2 rounded-lg bg-white border border-[#E1E5EB] text-xs"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-[#E8EEFF] text-[#2563EB] flex items-center justify-center font-bold text-[11px]">
+                        {c.name.slice(0, 1)}
+                      </div>
+                      <span className="font-medium text-[#292D35]">{c.name}</span>
+                    </div>
+                    {c.id !== 1 && c.id !== 11 && (
+                      <button
+                        type="button"
+                        onClick={() => removeCoach(c.id, c.name)}
+                        className="text-[11px] text-red-500 hover:text-red-700 hover:underline px-2 py-0.5"
+                      >
+                        移除
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Room Management */}
+      {showRoomModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 border border-[#E1E5EB]">
+            <div className="flex items-center justify-between pb-3 border-b border-[#E1E5EB]">
+              <div>
+                <h3 className="text-base font-semibold text-[#292D35]">自定义管理场地 / 空间</h3>
+                <p className="text-xs text-[#697180] mt-0.5">新增或管理排课可选的空间与教室</p>
+              </div>
+              <button
+                onClick={() => setShowRoomModal(false)}
+                className="p-1 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Quick Add Room */}
+            <form onSubmit={addRoom} className="mt-4 p-3 bg-[#F8FAFC] rounded-lg border border-[#E1E5EB] space-y-2">
+              <label className="block text-xs font-semibold text-[#292D35]">添加新场地 / 教室</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="场地名称（如：高定大器械室、1V1私教室）"
+                  value={roomName}
+                  onChange={(e) => setRoomName(e.target.value)}
+                  required
+                  className="flex-1 px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                />
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 text-xs font-medium text-white bg-[#2563EB] hover:bg-blue-700 rounded-lg shrink-0 shadow-xs"
+                >
+                  保存并选定
+                </button>
+              </div>
+            </form>
+
+            {/* Room List */}
+            <div className="mt-4">
+              <div className="text-xs font-medium text-[#697180] mb-2">当前场地列表（{rooms.length} 处）</div>
+              <div className="max-h-48 overflow-y-auto space-y-1.5">
+                {rooms.map((r) => (
+                  <div
+                    key={r.id}
+                    className="flex items-center justify-between p-2 rounded-lg bg-white border border-[#E1E5EB] text-xs"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Building2 className="w-4 h-4 text-[#2563EB]" />
+                      <span className="font-medium text-[#292D35]">{r.name}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeRoom(r.id, r.name)}
+                      className="text-[11px] text-red-500 hover:text-red-700 hover:underline px-2 py-0.5"
+                    >
+                      删除
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       )}

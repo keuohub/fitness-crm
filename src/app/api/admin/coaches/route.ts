@@ -30,3 +30,19 @@ export async function POST(request: NextRequest) {
     RETURNING id, name, email, role, status, avatar_url`;
   return NextResponse.json(row, { status: 201 });
 }
+
+export async function DELETE(request: NextRequest) {
+  if (!(await requireAdmin(request))) return bad("需要管理员登录", 401);
+  const id = Number(new URL(request.url).searchParams.get("id"));
+  if (!id) return bad("缺少教练 id");
+  if (id === 1 || id === 11) return bad("系统核心主理人账号不可删除", 400);
+
+  const [used] = await rawSql`SELECT id FROM class_sessions WHERE coach_id = ${id} LIMIT 1`;
+  if (used) {
+    // 课表中已有排课，软注销教练排课身份，确保历史课次仍保留记录
+    await rawSql`UPDATE users SET is_coach = 0 WHERE id = ${id} AND tenant_id = 1`;
+    return NextResponse.json({ success: true, mode: "deactivated" });
+  }
+  await rawSql`UPDATE users SET is_coach = 0, status = 'inactive' WHERE id = ${id} AND tenant_id = 1`;
+  return NextResponse.json({ success: true, mode: "removed" });
+}

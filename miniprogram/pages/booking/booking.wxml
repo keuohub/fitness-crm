@@ -55,7 +55,7 @@
           <text class="bk-remain {{item.remaining === 0 ? 'bk-remain-full' : ''}}">{{item.remaining === 0 ? '已满' : '余 ' + item.remaining}}</text>
         </view>
         <view class="bk-session-bottom">
-          <text class="bk-capacity">容量 {{item.capacity}} 人</text>
+          <text class="bk-capacity">{{item.capacity > 1 ? item.capacity + '人席位' : '1V1专属私教'}}</text>
           <view wx:if="{{item.bookedByMe}}" class="bk-booked">
             <text class="bk-booked-text">已预约</text>
             <view class="bk-cancel-mini" data-id="{{item.bookingId}}" bindtap="cancel">取消</view>

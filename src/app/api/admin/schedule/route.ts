@@ -88,8 +88,8 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  const admin = await requireRole(request, "manager");
-  if (!admin) return bad("权限不足，仅店长或店主可修改课次", 403);
+  const admin = (await requireRole(request, "manager")) || (await requireAdmin(request));
+  if (!admin) return bad("需要管理员登录", 401);
   const b = await request.json();
   const id = Number(b.id);
   if (!id) return bad("缺少 id");
@@ -118,8 +118,8 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const admin = await requireRole(request, "manager");
-  if (!admin) return bad("权限不足，仅店长或店主可取消或删除课次", 403);
+  const admin = (await requireRole(request, "manager")) || (await requireAdmin(request));
+  if (!admin) return bad("需要管理员登录", 401);
   const id = Number(new URL(request.url).searchParams.get("id"));
   if (!id) return bad("缺少 id");
   const [used] = await rawSql`SELECT id FROM bookings WHERE session_id = ${id} AND status = 'booked' LIMIT 1`;
