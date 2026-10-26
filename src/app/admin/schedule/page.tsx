@@ -654,7 +654,7 @@ export default function AdminSchedulePage() {
           </button>
           <span>|</span>
           <a href="/admin/coach" className="text-[#2563EB] hover:underline flex items-center gap-1 font-medium">
-            查看教练今日课表 <ArrowRight className="w-3 h-3" />
+            查看教练课表与课时统计 <ArrowRight className="w-3 h-3" />
           </a>
         </div>
       </div>

@@ -13,11 +13,20 @@ import {
   Lock,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   ExternalLink,
   Users,
+  BarChart3,
+  Award,
+  TrendingUp,
+  CheckCircle2,
+  Filter,
+  FileSpreadsheet,
 } from "lucide-react";
 
-type Coach = { id: number; name: string };
+type Coach = { id: number; name: string; email?: string };
+
 type Session = {
   id: number;
   title: string | null;
@@ -31,6 +40,50 @@ type Session = {
   note: string | null;
 };
 
+type CoachStatSession = {
+  id: number;
+  sessionDate: string;
+  startTime: string;
+  endTime: string;
+  durationHours: number;
+  courseName: string;
+  roomName: string;
+  capacity: number;
+  bookedCount: number;
+  attendedCount: number;
+  status: "completed" | "upcoming" | "cancelled";
+  rawStatus: string;
+};
+
+type CoachStat = {
+  coachId: number;
+  coachName: string;
+  email: string;
+  avatarUrl: string | null;
+  totalSessions: number;
+  completedSessions: number;
+  completedHours: number;
+  upcomingSessions: number;
+  cancelledSessions: number;
+  totalBookings: number;
+  totalAttended: number;
+  totalCapacity: number;
+  attendanceRate: number;
+  fillRate: number;
+  sessions: CoachStatSession[];
+};
+
+type StatsSummary = {
+  totalCoaches: number;
+  totalSessions: number;
+  completedSessions: number;
+  completedHours: number;
+  upcomingSessions: number;
+  cancelledSessions: number;
+  totalBookings: number;
+  totalAttended: number;
+};
+
 async function jf(url: string) {
   const r = await fetch(url);
   const d = await r.json().catch(() => ({}));
@@ -39,18 +92,36 @@ async function jf(url: string) {
 }
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
+const curMonthStr = () => new Date().toISOString().slice(0, 7);
 
 export default function CoachTodayPage() {
   const { showToast } = useToast();
+
+  // Tab 切换：stats（课时与绩效统计） / roster（单日排课与花名册）
+  const [activeTab, setActiveTab] = useState<"stats" | "roster">("stats");
+
+  // 1. 课时与绩效汇总状态
+  const [selectedMonth, setSelectedMonth] = useState(curMonthStr());
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsData, setStatsData] = useState<{
+    summary: StatsSummary;
+    coaches: CoachStat[];
+  } | null>(null);
+  const [expandedCoachId, setExpandedCoachId] = useState<number | null>(null);
+
+  // 2. 单日排课状态
   const [coaches, setCoaches] = useState<Coach[]>([]);
   const [coachId, setCoachId] = useState("");
   const [date, setDate] = useState(todayStr());
   const [sessions, setSessions] = useState<Session[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [rosterLoading, setRosterLoading] = useState(false);
+
+  // 3. 新建教练账号弹窗
   const [showAddModal, setShowAddModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [newCoach, setNewCoach] = useState({ name: "", email: "", password: "" });
 
+  // 加载教练列表
   useEffect(() => {
     jf("/api/admin/coaches")
       .then((d) => {
@@ -60,13 +131,29 @@ export default function CoachTodayPage() {
       .catch((e) => showToast(e.message, "error"));
   }, []);
 
+  // 加载课时与绩效统计数据
+  const loadStats = (month: string) => {
+    setStatsLoading(true);
+    jf(`/api/admin/coaches/stats?month=${month}`)
+      .then((data) => {
+        setStatsData(data);
+      })
+      .catch((e) => showToast(e.message, "error"))
+      .finally(() => setStatsLoading(false));
+  };
+
+  useEffect(() => {
+    loadStats(selectedMonth);
+  }, [selectedMonth]);
+
+  // 加载单日课表
   useEffect(() => {
     if (!coachId) return;
-    setLoading(true);
+    setRosterLoading(true);
     jf(`/api/admin/schedule?from=${date}&to=${date}&coachId=${coachId}`)
       .then(setSessions)
       .catch((e) => showToast(e.message, "error"))
-      .finally(() => setLoading(false));
+      .finally(() => setRosterLoading(false));
   }, [coachId, date]);
 
   const createCoach = async (e: React.FormEvent) => {
@@ -89,6 +176,7 @@ export default function CoachTodayPage() {
       showToast("教练登录账号已成功创建", "success");
       const list = await jf("/api/admin/coaches");
       setCoaches(list);
+      loadStats(selectedMonth);
     } catch (err: any) {
       showToast(err.message, "error");
     } finally {
@@ -100,143 +188,504 @@ export default function CoachTodayPage() {
     return coaches.find((c) => String(c.id) === coachId);
   }, [coaches, coachId]);
 
+  // 快速切换月份快捷键
+  const shiftMonth = (delta: number) => {
+    const [y, m] = selectedMonth.split("-").map(Number);
+    const dt = new Date(Date.UTC(y, m - 1 + delta, 1));
+    const nextY = dt.getUTCFullYear();
+    const nextM = String(dt.getUTCMonth() + 1).padStart(2, "0");
+    setSelectedMonth(`${nextY}-${nextM}`);
+  };
+
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      {/* Header */}
+    <div className="max-w-5xl mx-auto space-y-6">
+      {/* 头部标题区 */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="text-xs font-semibold text-[#2563EB] tracking-wide uppercase">
-            COACH ROSTER · 教练课表
+            COACH HOURS & PERFORMANCE · 教练课时与绩效管理
           </div>
-          <h1 className="text-2xl font-semibold text-[#292D35] mt-1 tracking-tight">教练今日课表</h1>
+          <h1 className="text-2xl font-semibold text-[#292D35] mt-1 tracking-tight">
+            教练课表与课时统计
+          </h1>
           <p className="text-sm text-[#697180] mt-1">
-            按教练筛选今日排课与上课进度。教练账号支持在移动端 /coach 专属入口直接查阅。
+            汇总核算教练已上课时数、执教节数与学员人次，作为课时费结算和绩效考勤的统一依据。
           </p>
         </div>
 
+        <div className="flex items-center gap-2 self-start">
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="px-3.5 py-2 text-xs font-medium text-white bg-[#2563EB] hover:bg-blue-700 rounded-lg shadow-sm flex items-center gap-1.5 transition-colors"
+          >
+            <Plus className="w-4 h-4" /> 新建教练账号
+          </button>
+        </div>
+      </div>
+
+      {/* 视图切换 Tabs */}
+      <div className="flex border-b border-[#E1E5EB] bg-white rounded-t-xl px-4 pt-2 gap-2 shadow-2xs">
         <button
-          onClick={() => setShowAddModal(true)}
-          className="px-4 py-2 text-xs font-medium text-white bg-[#2563EB] hover:bg-blue-700 rounded-lg shadow-sm flex items-center gap-1.5 self-start transition-colors"
+          onClick={() => setActiveTab("stats")}
+          className={`pb-3 px-4 text-xs font-semibold flex items-center gap-2 border-b-2 transition-all ${
+            activeTab === "stats"
+              ? "border-[#2563EB] text-[#2563EB]"
+              : "border-transparent text-[#697180] hover:text-[#292D35]"
+          }`}
         >
-          <Plus className="w-4 h-4" /> 新建教练账号
+          <BarChart3 className="w-4 h-4" /> 教练课时与绩效汇总
+        </button>
+        <button
+          onClick={() => setActiveTab("roster")}
+          className={`pb-3 px-4 text-xs font-semibold flex items-center gap-2 border-b-2 transition-all ${
+            activeTab === "roster"
+              ? "border-[#2563EB] text-[#2563EB]"
+              : "border-transparent text-[#697180] hover:text-[#292D35]"
+          }`}
+        >
+          <Calendar className="w-4 h-4" /> 单日排课与花名册
         </button>
       </div>
 
-      {/* Filter Bar */}
-      <div className="bg-white border border-[#E1E5EB] rounded-xl p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="text-xs font-medium text-[#697180] flex items-center gap-1">
-            <User className="w-3.5 h-3.5 text-[#2563EB]" /> 选择教练：
-          </div>
-          <select
-            value={coachId}
-            onChange={(e) => setCoachId(e.target.value)}
-            className="px-3 py-1.5 text-xs bg-[#F5F7FA] border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563EB] font-medium text-[#292D35]"
-          >
-            {coaches.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </div>
+      {/* TAB 1: 课时与绩效统计 */}
+      {activeTab === "stats" && (
+        <div className="space-y-6">
+          {/* 月份筛选工具栏 */}
+          <div className="bg-white border border-[#E1E5EB] rounded-xl p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-[#697180] flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5 text-[#2563EB]" /> 统计周期：
+              </span>
+              <div className="flex items-center gap-1 bg-[#F5F7FA] border border-[#E1E5EB] rounded-lg p-0.5">
+                <button
+                  type="button"
+                  onClick={() => shiftMonth(-1)}
+                  className="p-1 hover:bg-white rounded text-[#697180] hover:text-[#292D35]"
+                  title="上个月"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </button>
+                <input
+                  type="month"
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  className="px-2 py-1 text-xs bg-transparent border-0 font-semibold text-[#292D35] focus:outline-none tabular-nums"
+                />
+                <button
+                  type="button"
+                  onClick={() => shiftMonth(1)}
+                  className="p-1 hover:bg-white rounded text-[#697180] hover:text-[#292D35]"
+                  title="下个月"
+                >
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
 
-        <div className="flex items-center gap-2">
-          <div className="text-xs font-medium text-[#697180] flex items-center gap-1">
-            <Calendar className="w-3.5 h-3.5 text-[#2563EB]" /> 排课日期：
-          </div>
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="px-3 py-1.5 text-xs bg-[#F5F7FA] border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563EB] tabular-nums text-[#292D35]"
-          />
-        </div>
-      </div>
+              <button
+                type="button"
+                onClick={() => setSelectedMonth(curMonthStr())}
+                className="px-2.5 py-1 text-xs font-medium text-[#2563EB] bg-[#E8EEFF] hover:bg-blue-100 rounded-md transition-colors"
+              >
+                当前月
+              </button>
+            </div>
 
-      {/* Sessions List */}
-      <div className="space-y-3">
-        {loading ? (
-          <div className="bg-white border border-[#E1E5EB] rounded-xl p-12 text-center text-sm text-[#697180]">
-            正在读取课表数据...
+            <div className="text-xs text-[#697180]">
+              结算标准：60分钟 = 1.0课时 · 仅统计未取消且时间已到达的已上课次
+            </div>
           </div>
-        ) : sessions.length === 0 ? (
-          <div className="bg-white border border-[#E1E5EB] rounded-xl p-12 text-center text-sm text-[#697180] flex flex-col items-center justify-center shadow-sm">
-            <Clock className="w-10 h-10 text-gray-300 mb-2" />
-            <span className="font-semibold text-[#292D35]">
-              {currentCoach ? currentCoach.name : "该教练"} 在 {date} 暂无课程安排
-            </span>
-            <span className="text-xs text-[#697180] mt-1">可在周排课表中为其指派课次。</span>
-          </div>
-        ) : (
-          sessions.map((s) => (
-            <div
-              key={s.id}
-              className="bg-white border border-[#E1E5EB] rounded-xl p-5 shadow-sm hover:border-[#2563EB]/40 transition-colors"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-[#E8EEFF] text-[#2563EB] font-bold text-sm flex items-center justify-center shrink-0">
-                    <Clock className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-base text-[#292D35] tabular-nums">
-                        {s.start_time} - {s.end_time}
-                      </span>
-                      <span className="font-medium text-sm text-[#292D35]">· {s.course_name}</span>
-                    </div>
-                    <div className="text-xs text-[#697180] mt-0.5 flex items-center gap-2">
-                      <span className="flex items-center gap-1">
-                        <MapPin className="w-3.5 h-3.5 text-[#2563EB]" /> {s.room_name || "未分配教室"}
-                      </span>
-                      <span>•</span>
-                      <span>容量上限 {s.capacity} 人</span>
-                      {s.note && (
-                        <>
-                          <span>•</span>
-                          <span className="text-gray-500">{s.note}</span>
-                        </>
-                      )}
-                    </div>
-                  </div>
+
+          {/* 汇总核心指标卡片 */}
+          {statsData?.summary && (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="bg-white border border-[#E1E5EB] rounded-xl p-4 shadow-sm">
+                <div className="text-xs font-medium text-[#697180] flex items-center justify-between">
+                  <span>累计已上课时</span>
+                  <Clock className="w-4 h-4 text-[#2563EB]" />
                 </div>
-
-                <div className="flex items-center gap-3">
-                  <span
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium border ${
-                      s.status === "cancelled"
-                        ? "bg-red-50 text-red-700 border-red-200"
-                        : "bg-emerald-50 text-emerald-700 border-emerald-200"
-                    }`}
-                  >
-                    {s.status === "cancelled" ? "已取消" : "正常上课"}
-                  </span>
-                  <a
-                    href={`/admin/bookings?date=${s.session_date}`}
-                    className="px-3 py-1.5 text-xs text-[#2563EB] bg-[#E8EEFF] hover:bg-blue-100 rounded-lg transition-colors font-medium flex items-center gap-1"
-                  >
-                    <Users className="w-3.5 h-3.5" /> 查阅学员名单
-                  </a>
+                <div className="text-2xl font-bold text-[#292D35] mt-2 tabular-nums">
+                  {statsData.summary.completedHours.toFixed(1)}{" "}
+                  <span className="text-xs font-normal text-[#697180]">课时</span>
+                </div>
+                <div className="text-xs text-[#697180] mt-1">
+                  共计 {statsData.summary.completedSessions} 节已完成课程
                 </div>
               </div>
-            </div>
-          ))
-        )}
-      </div>
 
-      {/* Coach portal tip */}
+              <div className="bg-white border border-[#E1E5EB] rounded-xl p-4 shadow-sm">
+                <div className="text-xs font-medium text-[#697180] flex items-center justify-between">
+                  <span>本月总排课</span>
+                  <Calendar className="w-4 h-4 text-emerald-600" />
+                </div>
+                <div className="text-2xl font-bold text-[#292D35] mt-2 tabular-nums">
+                  {statsData.summary.totalSessions}{" "}
+                  <span className="text-xs font-normal text-[#697180]">节</span>
+                </div>
+                <div className="text-xs text-[#697180] mt-1">
+                  待上课 {statsData.summary.upcomingSessions} 节 · 已取消 {statsData.summary.cancelledSessions} 节
+                </div>
+              </div>
+
+              <div className="bg-white border border-[#E1E5EB] rounded-xl p-4 shadow-sm">
+                <div className="text-xs font-medium text-[#697180] flex items-center justify-between">
+                  <span>学员服务人次</span>
+                  <Users className="w-4 h-4 text-purple-600" />
+                </div>
+                <div className="text-2xl font-bold text-[#292D35] mt-2 tabular-nums">
+                  {statsData.summary.totalAttended}{" "}
+                  <span className="text-xs font-normal text-[#697180]">人次</span>
+                </div>
+                <div className="text-xs text-[#697180] mt-1">
+                  累计预约 {statsData.summary.totalBookings} 人次
+                </div>
+              </div>
+
+              <div className="bg-white border border-[#E1E5EB] rounded-xl p-4 shadow-sm">
+                <div className="text-xs font-medium text-[#697180] flex items-center justify-between">
+                  <span>在任执教教练</span>
+                  <Award className="w-4 h-4 text-amber-600" />
+                </div>
+                <div className="text-2xl font-bold text-[#292D35] mt-2 tabular-nums">
+                  {statsData.summary.totalCoaches}{" "}
+                  <span className="text-xs font-normal text-[#697180]">位</span>
+                </div>
+                <div className="text-xs text-[#697180] mt-1">全部教练统一课时考勤</div>
+              </div>
+            </div>
+          )}
+
+          {/* 教练课时排行榜与绩效表格 */}
+          <div className="bg-white border border-[#E1E5EB] rounded-xl shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-[#E1E5EB] flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-semibold text-[#292D35]">各教练课时核算与绩效明细</h2>
+                <p className="text-xs text-[#697180] mt-0.5">
+                  按已上课时数从高到低排序，点击教练行可展开查看每堂课的排课与学员签到明细。
+                </p>
+              </div>
+              <div className="text-xs font-medium text-[#2563EB] bg-[#E8EEFF] px-2.5 py-1 rounded-md">
+                周期：{selectedMonth}
+              </div>
+            </div>
+
+            {statsLoading ? (
+              <div className="p-12 text-center text-sm text-[#697180]">
+                正在统计各教练课时数据...
+              </div>
+            ) : !statsData || statsData.coaches.length === 0 ? (
+              <div className="p-12 text-center text-sm text-[#697180]">
+                暂无教练数据
+              </div>
+            ) : (
+              <div className="divide-y divide-[#E1E5EB]">
+                {/* 表头 */}
+                <div className="grid grid-cols-12 px-5 py-3 text-xs font-medium text-[#697180] bg-[#F8FAFC]">
+                  <div className="col-span-1">排名</div>
+                  <div className="col-span-3">教练姓名</div>
+                  <div className="col-span-2 text-right">已上课时(结算)</div>
+                  <div className="col-span-2 text-right">已上节数 / 总排课</div>
+                  <div className="col-span-2 text-right">学员到课人次</div>
+                  <div className="col-span-2 text-right">操作</div>
+                </div>
+
+                {/* 教练行 */}
+                {statsData.coaches.map((c, index) => {
+                  const isExpanded = expandedCoachId === c.coachId;
+                  return (
+                    <div key={c.coachId} className="group">
+                      <div
+                        onClick={() => setExpandedCoachId(isExpanded ? null : c.coachId)}
+                        className={`grid grid-cols-12 px-5 py-3.5 text-xs items-center cursor-pointer transition-colors ${
+                          isExpanded
+                            ? "bg-blue-50/50"
+                            : "hover:bg-[#F9FAFB] bg-white"
+                        }`}
+                      >
+                        {/* 排名 */}
+                        <div className="col-span-1">
+                          <span
+                            className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold tabular-nums ${
+                              index === 0
+                                ? "bg-amber-100 text-amber-800"
+                                : index === 1
+                                ? "bg-gray-200 text-gray-800"
+                                : index === 2
+                                ? "bg-amber-50 text-amber-900"
+                                : "text-gray-500"
+                            }`}
+                          >
+                            {index + 1}
+                          </span>
+                        </div>
+
+                        {/* 姓名 */}
+                        <div className="col-span-3">
+                          <div className="font-semibold text-sm text-[#292D35] flex items-center gap-1.5">
+                            <User className="w-3.5 h-3.5 text-[#2563EB]" />
+                            {c.coachName}
+                          </div>
+                          <div className="text-[11px] text-[#697180] mt-0.5 font-mono truncate max-w-[180px]">
+                            {c.email || "未绑定邮箱"}
+                          </div>
+                        </div>
+
+                        {/* 已上课时 (核心指标) */}
+                        <div className="col-span-2 text-right">
+                          <div className="text-base font-bold text-[#2563EB] tabular-nums">
+                            {c.completedHours.toFixed(1)}{" "}
+                            <span className="text-xs font-normal text-[#697180]">课时</span>
+                          </div>
+                          <div className="text-[11px] text-[#697180]">课时费基准</div>
+                        </div>
+
+                        {/* 已上节数 / 总排课 */}
+                        <div className="col-span-2 text-right">
+                          <div className="font-semibold text-[#292D35] tabular-nums">
+                            {c.completedSessions}{" "}
+                            <span className="text-[#697180] font-normal">/ {c.totalSessions} 节</span>
+                          </div>
+                          <div className="text-[11px] text-[#697180]">
+                            待上 {c.upcomingSessions} 节
+                          </div>
+                        </div>
+
+                        {/* 学员到课人次 */}
+                        <div className="col-span-2 text-right">
+                          <div className="font-semibold text-[#292D35] tabular-nums">
+                            {c.totalAttended}{" "}
+                            <span className="text-[#697180] font-normal">人次</span>
+                          </div>
+                          <div className="text-[11px] text-[#697180]">
+                            预约 {c.totalBookings} 人次
+                          </div>
+                        </div>
+
+                        {/* 操作 */}
+                        <div className="col-span-2 text-right">
+                          <button
+                            type="button"
+                            className="inline-flex items-center gap-1 text-xs font-medium text-[#2563EB] hover:text-blue-700 bg-white border border-[#E1E5EB] px-2.5 py-1 rounded-md shadow-2xs group-hover:border-blue-300"
+                          >
+                            {isExpanded ? (
+                              <>
+                                收起明细 <ChevronUp className="w-3 h-3" />
+                              </>
+                            ) : (
+                              <>
+                                查看明细 <ChevronDown className="w-3 h-3" />
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* 展开的每堂课明细 */}
+                      {isExpanded && (
+                        <div className="bg-[#F8FAFC] border-y border-[#E1E5EB] px-6 py-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="text-xs font-semibold text-[#292D35] flex items-center gap-1.5">
+                              <FileSpreadsheet className="w-3.5 h-3.5 text-[#2563EB]" />
+                              {c.coachName} 教练 · {selectedMonth} 执教课程明细（共 {c.sessions.length} 节）
+                            </div>
+                            <div className="text-xs text-[#697180]">
+                              已结算上课：{c.completedSessions} 节（{c.completedHours.toFixed(1)} 课时）
+                            </div>
+                          </div>
+
+                          {c.sessions.length === 0 ? (
+                            <div className="text-xs text-[#697180] py-4 text-center bg-white rounded-lg border border-[#E1E5EB]">
+                              该教练在 {selectedMonth} 暂无排课记录
+                            </div>
+                          ) : (
+                            <div className="bg-white border border-[#E1E5EB] rounded-lg overflow-hidden shadow-2xs">
+                              <table className="w-full text-xs text-left">
+                                <thead className="bg-[#F1F4F9] text-[#697180] border-b border-[#E1E5EB]">
+                                  <tr>
+                                    <th className="py-2 px-3 font-medium">上课日期</th>
+                                    <th className="py-2 px-3 font-medium">时间段</th>
+                                    <th className="py-2 px-3 font-medium">课程名称</th>
+                                    <th className="py-2 px-3 font-medium">教室</th>
+                                    <th className="py-2 px-3 font-medium text-right">核算课时</th>
+                                    <th className="py-2 px-3 font-medium text-right">预约/到课</th>
+                                    <th className="py-2 px-3 font-medium text-right">课程状态</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-[#E1E5EB]">
+                                  {c.sessions.map((s) => (
+                                    <tr key={s.id} className="hover:bg-blue-50/20">
+                                      <td className="py-2 px-3 font-medium text-[#292D35] tabular-nums">
+                                        {s.sessionDate}
+                                      </td>
+                                      <td className="py-2 px-3 text-[#697180] tabular-nums">
+                                        {s.startTime} - {s.endTime}
+                                      </td>
+                                      <td className="py-2 px-3 font-semibold text-[#292D35]">
+                                        {s.courseName}
+                                      </td>
+                                      <td className="py-2 px-3 text-[#697180]">
+                                        {s.roomName}
+                                      </td>
+                                      <td className="py-2 px-3 text-right font-bold text-[#2563EB] tabular-nums">
+                                        {s.durationHours.toFixed(1)} 课时
+                                      </td>
+                                      <td className="py-2 px-3 text-right tabular-nums">
+                                        <span className="font-medium text-[#292D35]">{s.attendedCount}</span>
+                                        <span className="text-gray-400"> / {s.capacity} 人</span>
+                                      </td>
+                                      <td className="py-2 px-3 text-right">
+                                        {s.status === "completed" ? (
+                                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                            <CheckCircle2 className="w-2.5 h-2.5" /> 已上课
+                                          </span>
+                                        ) : s.status === "cancelled" ? (
+                                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-50 text-red-700 border border-red-200">
+                                            已取消
+                                          </span>
+                                        ) : (
+                                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                                            待上课
+                                          </span>
+                                        )}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 2: 单日排课与花名册 */}
+      {activeTab === "roster" && (
+        <div className="space-y-6">
+          {/* 单日筛选工具栏 */}
+          <div className="bg-white border border-[#E1E5EB] rounded-xl p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="text-xs font-medium text-[#697180] flex items-center gap-1">
+                <User className="w-3.5 h-3.5 text-[#2563EB]" /> 选择教练：
+              </div>
+              <select
+                value={coachId}
+                onChange={(e) => setCoachId(e.target.value)}
+                className="px-3 py-1.5 text-xs bg-[#F5F7FA] border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563EB] font-medium text-[#292D35]"
+              >
+                {coaches.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className="text-xs font-medium text-[#697180] flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5 text-[#2563EB]" /> 排课日期：
+              </div>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="px-3 py-1.5 text-xs bg-[#F5F7FA] border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563EB] tabular-nums text-[#292D35]"
+              />
+            </div>
+          </div>
+
+          {/* 单日课程卡片列表 */}
+          <div className="space-y-3">
+            {rosterLoading ? (
+              <div className="bg-white border border-[#E1E5EB] rounded-xl p-12 text-center text-sm text-[#697180]">
+                正在读取课表数据...
+              </div>
+            ) : sessions.length === 0 ? (
+              <div className="bg-white border border-[#E1E5EB] rounded-xl p-12 text-center text-sm text-[#697180] flex flex-col items-center justify-center shadow-sm">
+                <Clock className="w-10 h-10 text-gray-300 mb-2" />
+                <span className="font-semibold text-[#292D35]">
+                  {currentCoach ? currentCoach.name : "该教练"} 在 {date} 暂无课程安排
+                </span>
+                <span className="text-xs text-[#697180] mt-1">可在周排课表中为其指派课次。</span>
+              </div>
+            ) : (
+              sessions.map((s) => (
+                <div
+                  key={s.id}
+                  className="bg-white border border-[#E1E5EB] rounded-xl p-5 shadow-sm hover:border-[#2563EB]/40 transition-colors"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-[#E8EEFF] text-[#2563EB] font-bold text-sm flex items-center justify-center shrink-0">
+                        <Clock className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-base text-[#292D35] tabular-nums">
+                            {s.start_time} - {s.end_time}
+                          </span>
+                          <span className="font-medium text-sm text-[#292D35]">· {s.course_name}</span>
+                        </div>
+                        <div className="text-xs text-[#697180] mt-0.5 flex items-center gap-2">
+                          <span className="flex items-center gap-1">
+                            <MapPin className="w-3.5 h-3.5 text-[#2563EB]" /> {s.room_name || "未分配教室"}
+                          </span>
+                          <span>•</span>
+                          <span>容量上限 {s.capacity} 人</span>
+                          {s.note && (
+                            <>
+                              <span>•</span>
+                              <span className="text-gray-500">{s.note}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <span
+                        className={`px-2.5 py-1 rounded-full text-xs font-medium border ${
+                          s.status === "cancelled"
+                            ? "bg-red-50 text-red-700 border-red-200"
+                            : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        }`}
+                      >
+                        {s.status === "cancelled" ? "已取消" : "正常上课"}
+                      </span>
+                      <a
+                        href={`/admin/bookings?date=${s.session_date}`}
+                        className="px-3 py-1.5 text-xs text-[#2563EB] bg-[#E8EEFF] hover:bg-blue-100 rounded-lg transition-colors font-medium flex items-center gap-1"
+                      >
+                        <Users className="w-3.5 h-3.5" /> 查阅学员名单
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 底部移动端提示栏 */}
       <div className="p-4 bg-[#F8FAFC] border border-[#E1E5EB] rounded-xl text-xs text-[#697180] flex items-center justify-between">
         <div className="flex items-center gap-2">
           <KeyRound className="w-4 h-4 text-[#2563EB]" />
-          <span>教练专属移动端登录入口：<code className="text-[#2563EB] font-mono">/coach</code> （教练只能查阅自己名下的课次与学员）</span>
+          <span>
+            教练专属移动端登录入口：<code className="text-[#2563EB] font-mono">/coach</code> （教练只能查阅自己名下的课次与学员）
+          </span>
         </div>
         <a href="/coach" target="_blank" className="text-[#2563EB] hover:underline flex items-center gap-1">
           直达入口 <ExternalLink className="w-3 h-3" />
         </a>
       </div>
 
-      {/* Modal: Add Coach */}
+      {/* 弹窗：新建教练登录账号 */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
           <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6 border border-[#E1E5EB]">
@@ -302,9 +751,9 @@ export default function CoachTodayPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-4 py-1.5 text-xs font-medium text-white bg-[#2563EB] hover:bg-blue-700 rounded-lg shadow-sm disabled:opacity-50"
+                  className="px-4 py-1.5 text-xs text-white bg-[#2563EB] hover:bg-blue-700 rounded-lg disabled:opacity-50"
                 >
-                  {submitting ? "正在创建..." : "确认创建账号"}
+                  {submitting ? "正在创建..." : "确认创建"}
                 </button>
               </div>
             </form>
