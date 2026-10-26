@@ -23,6 +23,7 @@ import {
   CheckCircle2,
   Filter,
   FileSpreadsheet,
+  ArrowRight,
 } from "lucide-react";
 
 type Coach = { id: number; name: string; email?: string };
@@ -92,7 +93,55 @@ async function jf(url: string) {
 }
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
-const curMonthStr = () => new Date().toISOString().slice(0, 7);
+
+const formatDateStr = (d: Date) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
+const getMonthStart = (d = new Date()) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  return `${y}-${m}-01`;
+};
+
+const getMonthEnd = (d = new Date()) => {
+  const y = d.getFullYear();
+  const m = d.getMonth() + 1;
+  const lastDay = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  return `${y}-${String(m).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+};
+
+const getPrevMonthRange = () => {
+  const now = new Date();
+  const dt = new Date(Date.UTC(now.getFullYear(), now.getMonth() - 1, 1));
+  const y = dt.getUTCFullYear();
+  const m = dt.getUTCMonth() + 1;
+  const lastDay = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  return {
+    start: `${y}-${String(m).padStart(2, "0")}-01`,
+    end: `${y}-${String(m).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`,
+  };
+};
+
+const getRecent30DaysRange = () => {
+  const end = new Date();
+  const start = new Date();
+  start.setDate(end.getDate() - 29);
+  return { start: formatDateStr(start), end: formatDateStr(end) };
+};
+
+const getThisWeekRange = () => {
+  const now = new Date();
+  const day = now.getDay() || 7;
+  const mon = new Date(now);
+  mon.setDate(now.getDate() - (day - 1));
+  const sun = new Date(now);
+  sun.setDate(now.getDate() + (7 - day));
+  return { start: formatDateStr(mon), end: formatDateStr(sun) };
+};
 
 export default function CoachTodayPage() {
   const { showToast } = useToast();
@@ -100,10 +149,12 @@ export default function CoachTodayPage() {
   // Tab 切换：stats（课时与绩效统计） / roster（单日排课与花名册）
   const [activeTab, setActiveTab] = useState<"stats" | "roster">("stats");
 
-  // 1. 课时与绩效汇总状态
-  const [selectedMonth, setSelectedMonth] = useState(curMonthStr());
+  // 1. 自选起止日期统计状态（前面开始日期，后面截止日期）
+  const [startDate, setStartDate] = useState(getMonthStart());
+  const [endDate, setEndDate] = useState(getMonthEnd());
   const [statsLoading, setStatsLoading] = useState(true);
   const [statsData, setStatsData] = useState<{
+    period: { from: string; to: string };
     summary: StatsSummary;
     coaches: CoachStat[];
   } | null>(null);
@@ -131,10 +182,11 @@ export default function CoachTodayPage() {
       .catch((e) => showToast(e.message, "error"));
   }, []);
 
-  // 加载课时与绩效统计数据
-  const loadStats = (month: string) => {
+  // 加载自选起止日期课时统计
+  const loadStats = (from: string, to: string) => {
+    if (!from || !to) return;
     setStatsLoading(true);
-    jf(`/api/admin/coaches/stats?month=${month}`)
+    jf(`/api/admin/coaches/stats?from=${from}&to=${to}`)
       .then((data) => {
         setStatsData(data);
       })
@@ -143,8 +195,8 @@ export default function CoachTodayPage() {
   };
 
   useEffect(() => {
-    loadStats(selectedMonth);
-  }, [selectedMonth]);
+    loadStats(startDate, endDate);
+  }, [startDate, endDate]);
 
   // 加载单日课表
   useEffect(() => {
@@ -176,7 +228,7 @@ export default function CoachTodayPage() {
       showToast("教练登录账号已成功创建", "success");
       const list = await jf("/api/admin/coaches");
       setCoaches(list);
-      loadStats(selectedMonth);
+      loadStats(startDate, endDate);
     } catch (err: any) {
       showToast(err.message, "error");
     } finally {
@@ -188,13 +240,24 @@ export default function CoachTodayPage() {
     return coaches.find((c) => String(c.id) === coachId);
   }, [coaches, coachId]);
 
-  // 快速切换月份快捷键
-  const shiftMonth = (delta: number) => {
-    const [y, m] = selectedMonth.split("-").map(Number);
-    const dt = new Date(Date.UTC(y, m - 1 + delta, 1));
-    const nextY = dt.getUTCFullYear();
-    const nextM = String(dt.getUTCMonth() + 1).padStart(2, "0");
-    setSelectedMonth(`${nextY}-${nextM}`);
+  // 快捷区间切换
+  const applyPreset = (type: "thisMonth" | "prevMonth" | "thisWeek" | "recent30") => {
+    if (type === "thisMonth") {
+      setStartDate(getMonthStart());
+      setEndDate(getMonthEnd());
+    } else if (type === "prevMonth") {
+      const p = getPrevMonthRange();
+      setStartDate(p.start);
+      setEndDate(p.end);
+    } else if (type === "thisWeek") {
+      const w = getThisWeekRange();
+      setStartDate(w.start);
+      setEndDate(w.end);
+    } else if (type === "recent30") {
+      const r = getRecent30DaysRange();
+      setStartDate(r.start);
+      setEndDate(r.end);
+    }
   };
 
   return (
@@ -209,7 +272,7 @@ export default function CoachTodayPage() {
             教练课表与课时统计
           </h1>
           <p className="text-sm text-[#697180] mt-1">
-            汇总核算教练已上课时数、执教节数与学员人次，作为课时费结算和绩效考勤的统一依据。
+            自定义起止日期筛选各教练已上课时数、执教节数与学员人次，作为课时费结算和绩效考勤的统一依据。
           </p>
         </div>
 
@@ -250,44 +313,67 @@ export default function CoachTodayPage() {
       {/* TAB 1: 课时与绩效统计 */}
       {activeTab === "stats" && (
         <div className="space-y-6">
-          {/* 月份筛选工具栏 */}
-          <div className="bg-white border border-[#E1E5EB] rounded-xl p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
+          {/* 自选起止日期工具栏 */}
+          <div className="bg-white border border-[#E1E5EB] rounded-xl p-4 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-2.5">
               <span className="text-xs font-medium text-[#697180] flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5 text-[#2563EB]" /> 统计周期：
               </span>
-              <div className="flex items-center gap-1 bg-[#F5F7FA] border border-[#E1E5EB] rounded-lg p-0.5">
-                <button
-                  type="button"
-                  onClick={() => shiftMonth(-1)}
-                  className="p-1 hover:bg-white rounded text-[#697180] hover:text-[#292D35]"
-                  title="上个月"
-                >
-                  <ChevronLeft className="w-3.5 h-3.5" />
-                </button>
-                <input
-                  type="month"
-                  value={selectedMonth}
-                  onChange={(e) => setSelectedMonth(e.target.value)}
-                  className="px-2 py-1 text-xs bg-transparent border-0 font-semibold text-[#292D35] focus:outline-none tabular-nums"
-                />
-                <button
-                  type="button"
-                  onClick={() => shiftMonth(1)}
-                  className="p-1 hover:bg-white rounded text-[#697180] hover:text-[#292D35]"
-                  title="下个月"
-                >
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </button>
+
+              {/* 前面选开始日期，后面选截止日期 */}
+              <div className="flex items-center gap-2 bg-[#F5F7FA] border border-[#E1E5EB] rounded-lg px-2.5 py-1.5 shadow-2xs">
+                <div className="flex items-center gap-1">
+                  <span className="text-xs text-[#697180] whitespace-nowrap">开始</span>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="px-2 py-0.5 text-xs bg-white border border-[#D1D5DB] rounded focus:outline-none focus:ring-1 focus:ring-[#2563EB] font-medium text-[#292D35] tabular-nums"
+                  />
+                </div>
+                <span className="text-xs text-[#9CA3AF]">至</span>
+                <div className="flex items-center gap-1">
+                  <span className="text-xs text-[#697180] whitespace-nowrap">截止</span>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="px-2 py-0.5 text-xs bg-white border border-[#D1D5DB] rounded focus:outline-none focus:ring-1 focus:ring-[#2563EB] font-medium text-[#292D35] tabular-nums"
+                  />
+                </div>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setSelectedMonth(curMonthStr())}
-                className="px-2.5 py-1 text-xs font-medium text-[#2563EB] bg-[#E8EEFF] hover:bg-blue-100 rounded-md transition-colors"
-              >
-                当前月
-              </button>
+              {/* 快捷预设按钮 */}
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => applyPreset("thisMonth")}
+                  className="px-2.5 py-1 text-xs font-medium text-[#2563EB] bg-[#E8EEFF] hover:bg-blue-100 rounded-md transition-colors"
+                >
+                  本月
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyPreset("prevMonth")}
+                  className="px-2.5 py-1 text-xs font-medium text-[#697180] hover:text-[#292D35] bg-[#F3F4F6] hover:bg-gray-200 rounded-md transition-colors"
+                >
+                  上月
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyPreset("thisWeek")}
+                  className="px-2.5 py-1 text-xs font-medium text-[#697180] hover:text-[#292D35] bg-[#F3F4F6] hover:bg-gray-200 rounded-md transition-colors"
+                >
+                  本周
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyPreset("recent30")}
+                  className="px-2.5 py-1 text-xs font-medium text-[#697180] hover:text-[#292D35] bg-[#F3F4F6] hover:bg-gray-200 rounded-md transition-colors"
+                >
+                  近30天
+                </button>
+              </div>
             </div>
 
             <div className="text-xs text-[#697180]">
@@ -314,7 +400,7 @@ export default function CoachTodayPage() {
 
               <div className="bg-white border border-[#E1E5EB] rounded-xl p-4 shadow-sm">
                 <div className="text-xs font-medium text-[#697180] flex items-center justify-between">
-                  <span>本月总排课</span>
+                  <span>期间总排课</span>
                   <Calendar className="w-4 h-4 text-emerald-600" />
                 </div>
                 <div className="text-2xl font-bold text-[#292D35] mt-2 tabular-nums">
@@ -363,8 +449,8 @@ export default function CoachTodayPage() {
                   按已上课时数从高到低排序，点击教练行可展开查看每堂课的排课与学员签到明细。
                 </p>
               </div>
-              <div className="text-xs font-medium text-[#2563EB] bg-[#E8EEFF] px-2.5 py-1 rounded-md">
-                周期：{selectedMonth}
+              <div className="text-xs font-medium text-[#2563EB] bg-[#E8EEFF] px-2.5 py-1 rounded-md tabular-nums">
+                统计周期：{startDate} 至 {endDate}
               </div>
             </div>
 
@@ -485,7 +571,7 @@ export default function CoachTodayPage() {
                           <div className="flex items-center justify-between mb-3">
                             <div className="text-xs font-semibold text-[#292D35] flex items-center gap-1.5">
                               <FileSpreadsheet className="w-3.5 h-3.5 text-[#2563EB]" />
-                              {c.coachName} 教练 · {selectedMonth} 执教课程明细（共 {c.sessions.length} 节）
+                              {c.coachName} 教练 · 执教课程明细（共 {c.sessions.length} 节）
                             </div>
                             <div className="text-xs text-[#697180]">
                               已结算上课：{c.completedSessions} 节（{c.completedHours.toFixed(1)} 课时）
@@ -494,7 +580,7 @@ export default function CoachTodayPage() {
 
                           {c.sessions.length === 0 ? (
                             <div className="text-xs text-[#697180] py-4 text-center bg-white rounded-lg border border-[#E1E5EB]">
-                              该教练在 {selectedMonth} 暂无排课记录
+                              该教练在此期间暂无排课记录
                             </div>
                           ) : (
                             <div className="bg-white border border-[#E1E5EB] rounded-lg overflow-hidden shadow-2xs">

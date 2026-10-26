@@ -20,17 +20,26 @@ export async function GET(request: NextRequest) {
   const todayStr = new Date().toISOString().slice(0, 10);
   const nowTime = new Date().toTimeString().slice(0, 5); // "HH:MM"
 
-  // 默认当月
+  // 支持自定义开始日期 from 与 截止日期 to，也兼容月份 month
   let from = u.searchParams.get("from");
   let to = u.searchParams.get("to");
   const month = u.searchParams.get("month");
 
-  if (month && /^\d{4}-\d{2}$/.test(month)) {
+  if (from && to) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to)) {
+      return bad("日期格式应为 YYYY-MM-DD");
+    }
+    if (from > to) {
+      const tmp = from;
+      from = to;
+      to = tmp;
+    }
+  } else if (month && /^\d{4}-\d{2}$/.test(month)) {
     const [y, m] = month.split("-").map(Number);
     const lastDay = new Date(Date.UTC(y, m, 0)).getUTCDate();
     from = `${month}-01`;
     to = `${month}-${String(lastDay).padStart(2, "0")}`;
-  } else if (!from || !to) {
+  } else {
     const now = new Date();
     const curYear = now.getFullYear();
     const curMonth = String(now.getMonth() + 1).padStart(2, "0");
