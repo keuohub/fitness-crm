@@ -25,6 +25,7 @@ import {
   FileSpreadsheet,
   ArrowRight,
 } from "lucide-react";
+import CalendarRangePicker from "@/components/admin/CalendarRangePicker";
 
 type Coach = { id: number; name: string; email?: string };
 
@@ -313,35 +314,22 @@ export default function CoachTodayPage() {
       {/* TAB 1: 课时与绩效统计 */}
       {activeTab === "stats" && (
         <div className="space-y-6">
-          {/* 自选起止日期工具栏 */}
+          {/* 可视化日历选择工具栏 */}
           <div className="bg-white border border-[#E1E5EB] rounded-xl p-4 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex flex-wrap items-center gap-2.5">
               <span className="text-xs font-medium text-[#697180] flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5 text-[#2563EB]" /> 统计周期：
               </span>
 
-              {/* 前面选开始日期，后面选截止日期 */}
-              <div className="flex items-center gap-2 bg-[#F5F7FA] border border-[#E1E5EB] rounded-lg px-2.5 py-1.5 shadow-2xs">
-                <div className="flex items-center gap-1">
-                  <span className="text-xs text-[#697180] whitespace-nowrap">开始</span>
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="px-2 py-0.5 text-xs bg-white border border-[#D1D5DB] rounded focus:outline-none focus:ring-1 focus:ring-[#2563EB] font-medium text-[#292D35] tabular-nums"
-                  />
-                </div>
-                <span className="text-xs text-[#9CA3AF]">至</span>
-                <div className="flex items-center gap-1">
-                  <span className="text-xs text-[#697180] whitespace-nowrap">截止</span>
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="px-2 py-0.5 text-xs bg-white border border-[#D1D5DB] rounded focus:outline-none focus:ring-1 focus:ring-[#2563EB] font-medium text-[#292D35] tabular-nums"
-                  />
-                </div>
-              </div>
+              {/* 点击直接弹出可视化日历表，彻底告别手打 */}
+              <CalendarRangePicker
+                startDate={startDate}
+                endDate={endDate}
+                onChange={(start, end) => {
+                  setStartDate(start);
+                  setEndDate(end);
+                }}
+              />
 
               {/* 快捷预设按钮 */}
               <div className="flex items-center gap-1">
