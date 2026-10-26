@@ -297,12 +297,17 @@ export default function AdminSchedulePage() {
 
   const addCoach = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!coachName.trim()) return;
+    const trimmed = coachName.trim();
+    if (!trimmed) return;
+    if (coaches.some((c) => c.name.trim().toLowerCase() === trimmed.toLowerCase())) {
+      showToast(`教练「${trimmed}」已在教练库中，请勿重复添加`, "error");
+      return;
+    }
     try {
       const newCoach = await jf("/api/admin/coaches", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: coachName.trim() }),
+        body: JSON.stringify({ name: trimmed }),
       });
       setCoachName("");
       if (showAddDrawer) {
@@ -332,12 +337,17 @@ export default function AdminSchedulePage() {
 
   const addRoom = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!roomName.trim()) return;
+    const trimmed = roomName.trim();
+    if (!trimmed) return;
+    if (rooms.some((r) => r.name.trim().toLowerCase() === trimmed.toLowerCase())) {
+      showToast(`场地「${trimmed}」已存在，请勿重复添加`, "error");
+      return;
+    }
     try {
       const newRoom = await jf("/api/admin/rooms", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: roomName.trim(), capacity: 10 }),
+        body: JSON.stringify({ name: trimmed, capacity: 10 }),
       });
       setRoomName("");
       if (showAddDrawer) {

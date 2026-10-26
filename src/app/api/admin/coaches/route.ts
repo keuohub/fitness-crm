@@ -30,7 +30,17 @@ export async function GET(request: NextRequest) {
     SELECT id, name, email, role, status, avatar_url
     FROM users WHERE tenant_id = 1 AND is_coach = 1 AND status = 'active'
     ORDER BY id`;
-  return NextResponse.json(rows);
+
+  // 严格按教练姓名去重，杜绝任何重复项显示在下拉框中
+  const seen = new Set<string>();
+  const uniqueRows = rows.filter((r: any) => {
+    const n = (r.name || "").trim();
+    if (!n || seen.has(n)) return false;
+    seen.add(n);
+    return true;
+  });
+
+  return NextResponse.json(uniqueRows);
 }
 
 export async function POST(request: NextRequest) {
@@ -39,10 +49,13 @@ export async function POST(request: NextRequest) {
   const name = String(b.name || "").trim();
   if (!name) return bad("教练姓名必填");
 
-  // 若该姓名教练已存在且为活跃排课教练，直接返回
-  const [exists] = await rawSql`SELECT id, name, email, role, status, avatar_url FROM users WHERE name = ${name} AND is_coach = 1 AND status = 'active'`;
-  if (exists) {
-    return NextResponse.json(exists, { status: 200 });
+  // 严格同名拦截：教练库中已存在同名教练时直接拦截并返回明确提示
+  const [dupCoach] = await rawSql`
+    SELECT id, name FROM users
+    WHERE tenant_id = 1 AND LOWER(TRIM(name)) = LOWER(${name}) AND is_coach = 1 AND status = 'active'
+  `;
+  if (dupCoach) {
+    return bad(`教练「${name}」已在教练库中，请勿重复添加`, 409);
   }
 
   const email = String(b.email || `coach-${Date.now()}@laiwu.local`).trim().toLowerCase();
