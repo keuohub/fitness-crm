@@ -1,85 +1,135 @@
-<view class="bk-page">
+<view class="bk-container">
 
-  <view wx:if="{{loading}}" class="bk-loading">
-    <text class="bk-loading-text">正在打开课表…</text>
-  </view>
-
-  <block wx:else>
-    <view class="bk-hero">
-      <text class="bk-eyebrow">BOOK A SESSION</text>
-      <text class="bk-title">预约课程</text>
-      <text class="bk-sub">选一天，选一节课。名额以实时余位为准。</text>
+  <!-- 自定义顶部导航栏（完美避让灵动岛与状态栏） -->
+  <view class="bk-header-sticky">
+    <view class="bk-navbar">
+      <text class="bk-nav-title">徕舞普拉提女子塑形</text>
     </view>
 
-    <view wx:if="{{error}}" class="bk-error"><text>{{error}}</text></view>
-
-    <view wx:if="{{hasCard === false}}" class="bk-nocard">
-      <text class="bk-nocard-title">还没有有效会员卡</text>
-      <text class="bk-nocard-body">课表可以先看，预约需要先开卡。开卡请联系小桥。</text>
-    </view>
-
-    <scroll-view class="bk-dates" scroll-x="{{true}}" show-scrollbar="{{false}}">
+    <!-- 一级分类导航 Tab（精品课 / 团体课 / 私教课 / 全部） -->
+    <view class="bk-cat-tabs">
       <view
-        wx:for="{{dates}}"
-        wx:key="value"
-        class="bk-date {{selectedDate === item.value ? 'bk-date-active' : ''}}"
-        data-date="{{item.value}}"
-        bindtap="selectDate"
+        wx:for="{{categories}}"
+        wx:key="key"
+        class="bk-cat-tab {{selectedCategory === item.key ? 'bk-cat-active' : ''}}"
+        data-key="{{item.key}}"
+        bindtap="selectCategory"
       >
-        <text class="bk-date-week">{{item.weekday}}</text>
-        <text class="bk-date-day">{{item.day}}</text>
+        <text class="bk-cat-label">{{item.label}}</text>
+        <view wx:if="{{selectedCategory === item.key}}" class="bk-cat-bar"></view>
+      </view>
+    </view>
+
+    <!-- 单行周历横滑条（高亮当天，不阻挡） -->
+    <scroll-view class="bk-dates-scroll" scroll-x="{{true}}" show-scrollbar="{{false}}">
+      <view class="bk-dates-row">
+        <view
+          wx:for="{{dates}}"
+          wx:key="value"
+          class="bk-date-pill {{selectedDate === item.value ? 'bk-date-active' : ''}}"
+          data-date="{{item.value}}"
+          bindtap="selectDate"
+        >
+          <text class="bk-date-weekday">{{item.weekday}}</text>
+          <text class="bk-date-daynum">{{item.day}}</text>
+          <view wx:if="{{selectedDate === item.value}}" class="bk-date-dot"></view>
+        </view>
       </view>
     </scroll-view>
+  </view>
 
-    <view class="bk-section">
-      <view class="bk-section-head">
-        <text class="bk-section-title">当日课表</text>
-        <text class="bk-section-note">{{shownSessions.length}} 节</text>
+  <!-- 页面主体区域 -->
+  <view class="bk-content">
+    <view wx:if="{{loading}}" class="bk-loading">
+      <text class="bk-loading-text">正在同步最新排课…</text>
+    </view>
+
+    <block wx:else>
+      <!-- 异常提示 -->
+      <view wx:if="{{error}}" class="bk-alert bk-alert-error"><text>{{error}}</text></view>
+
+      <!-- 无卡提示（温和典雅） -->
+      <view wx:if="{{hasCard === false}}" class="bk-nocard">
+        <text class="bk-nocard-title">尊享体验提示</text>
+        <text class="bk-nocard-body">当前课表支持随时查阅，预约上课需持有有效卡项。开卡或续期请联系小桥或馆内导师。</text>
       </view>
 
+      <!-- 当天无课空状态 -->
       <view wx:if="{{shownSessions.length === 0}}" class="bk-empty">
-        <text class="bk-empty-title">这一天还没有排课</text>
-        <text class="bk-empty-body">换一天看看，或联系小桥。</text>
+        <text class="bk-empty-title">该分类当日暂无排课</text>
+        <text class="bk-empty-body">您可以切换上方分类或点击其他日期查看。</text>
       </view>
 
-      <view wx:for="{{shownSessions}}" wx:key="id" class="bk-session">
-        <view class="bk-session-top">
-          <view class="bk-session-time">
-            <text class="bk-time-start">{{item.startTime}}</text>
-            <text class="bk-time-end">{{item.endTime}}</text>
+      <!-- 标准化动态三栏卡片列表（直观高屏效） -->
+      <view class="bk-list">
+        <view wx:for="{{shownSessions}}" wx:key="id" class="bk-card">
+          <!-- 左栏：课程部位动作封面图 -->
+          <view class="bk-card-cover-wrap">
+            <image
+              class="bk-card-cover"
+              src="{{item.cover}}"
+              mode="aspectFill"
+              lazy-load="true"
+            ></image>
           </view>
-          <view class="bk-session-main">
-            <text class="bk-course">{{item.courseName}}</text>
-            <text class="bk-meta">{{item.coachName || '教练待定'}}{{item.roomName ? ' · ' + item.roomName : ''}}</text>
-          </view>
-          <text class="bk-remain {{item.remaining === 0 ? 'bk-remain-full' : ''}}">{{item.remaining === 0 ? '已满' : '余 ' + item.remaining}}</text>
-        </view>
-        <view class="bk-session-bottom">
-          <text class="bk-capacity">{{item.capacity > 1 ? item.capacity + '人席位' : '1V1专属私教'}}</text>
-          <view wx:if="{{item.bookedByMe}}" class="bk-booked">
-            <text class="bk-booked-text">已预约</text>
-            <view class="bk-cancel-mini" data-id="{{item.bookingId}}" bindtap="cancel">取消</view>
-          </view>
-          <view wx:elif="{{item.remaining > 0}}" class="bk-book-btn" data-id="{{item.id}}" bindtap="reserve">预约</view>
-          <view wx:else class="bk-book-disabled">已满</view>
-        </view>
-      </view>
-    </view>
 
-    <view class="bk-section" wx:if="{{myBookings.length > 0}}">
-      <view class="bk-section-head">
-        <text class="bk-section-title">我的预约</text>
-        <text class="bk-section-note">待上课</text>
-      </view>
-      <view wx:for="{{myBookings}}" wx:key="id" class="bk-my-item">
-        <view class="bk-my-main">
-          <text class="bk-my-course">{{item.courseName}}</text>
-          <text class="bk-my-meta">{{item.date}} · {{item.time}}{{item.coachName ? ' · ' + item.coachName : ''}}</text>
-        </view>
-        <view class="bk-cancel-btn" data-id="{{item.id}}" bindtap="cancel">取消</view>
-      </view>
-    </view>
+          <!-- 中栏：课程名称、星级难度、导师与席位 -->
+          <view class="bk-card-info">
+            <text class="bk-card-name">{{item.courseName}}</text>
+            
+            <view class="bk-card-rating">
+              <view class="bk-stars">
+                <text wx:for="{{item.starsList}}" wx:key="*this" class="bk-star {{item ? 'bk-star-gold' : 'bk-star-gray'}}">★</text>
+              </view>
+              <text class="bk-remain-tag {{item.remaining === 0 ? 'bk-remain-full' : ''}}">
+                {{item.remaining === 0 ? '人数已满' : '还可预约 ' + item.remaining + ' 人'}}
+              </text>
+            </view>
 
-    <view class="bk-bottom-space"></view>
-  </block>
+            <view class="bk-card-coach-row">
+              <text class="bk-coach-name">{{item.coachName || '专属导师'}}</text>
+              <text wx:if="{{item.roomName}}" class="bk-room-name">· {{item.roomName}}</text>
+            </view>
+          </view>
+
+          <!-- 右栏：大字时间区间与高质感行动按钮 -->
+          <view class="bk-card-action">
+            <text class="bk-card-time">{{item.startTime}}–{{item.endTime}}</text>
+            
+            <view wx:if="{{item.bookedByMe}}" class="bk-btn bk-btn-booked" data-id="{{item.bookingId}}" bindtap="cancel">
+              <text class="bk-btn-text">已预约</text>
+            </view>
+            <view wx:elif="{{item.isEnded}}" class="bk-btn bk-btn-disabled">
+              <text class="bk-btn-text">已开课</text>
+            </view>
+            <view wx:elif="{{item.remaining <= 0}}" class="bk-btn bk-btn-disabled">
+              <text class="bk-btn-text">已满</text>
+            </view>
+            <view wx:else class="bk-btn bk-btn-primary" data-id="{{item.id}}" bindtap="reserve">
+              <text class="bk-btn-text">预约</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 我的近期预约待上课（贴心置底卡片） -->
+      <view class="bk-my-section" wx:if="{{myBookings.length > 0}}">
+        <view class="bk-my-head">
+          <text class="bk-my-title">我的待上课预约</text>
+          <text class="bk-my-badge">共 {{myBookings.length}} 节</text>
+        </view>
+        <view wx:for="{{myBookings}}" wx:key="id" class="bk-my-card">
+          <view class="bk-my-main">
+            <text class="bk-my-course">{{item.courseName}}</text>
+            <text class="bk-my-meta">{{item.date}} · {{item.time}} · {{item.coachName}}</text>
+          </view>
+          <view class="bk-my-cancel" data-id="{{item.id}}" bindtap="cancel">取消预约</view>
+        </view>
+      </view>
+
+      <!-- 底部安全垫高，杜绝悬浮底栏遮挡卡片 -->
+      <view class="bk-bottom-space"></view>
+    </block>
+  </view>
+
 </view>

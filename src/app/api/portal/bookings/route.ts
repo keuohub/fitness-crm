@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPortalMemberId } from "@/lib/auth/member-session";
 import { rawSql } from "@/db";
+import { autoSettleFinishedBookings } from "@/lib/booking-settle";
 
 const bad = (msg: string, status = 400) => NextResponse.json({ error: msg }, { status });
 const today = () => new Date().toISOString().slice(0, 10);
@@ -21,6 +22,10 @@ async function settings() {
 export async function GET(request: NextRequest) {
   const memberId = await getPortalMemberId(request);
   if (!memberId) return bad("未登录", 401);
+  
+  // 触发一次后台自动结课消课（下课后自动扣除）
+  autoSettleFinishedBookings().catch((err) => console.error("[bookings] autoSettle error:", err));
+
   const u = new URL(request.url);
   const scope = u.searchParams.get("scope") || "all";
   const rows = await rawSql`
@@ -118,13 +123,28 @@ export async function POST(request: NextRequest) {
     return bad(anyCard ? "会员卡已冻结、过期或次数不足，暂不能预约" : "还没有有效会员卡，请联系小桥开卡后再预约", 422);
   }
 
+  // 次卡防超额预订校验：可用次数必须大于当前待上课已预约次数
+  if (validCard.category === 'count') {
+    const [{ bookedCount }] = await rawSql`
+      SELECT COUNT(*)::int AS "bookedCount"
+      FROM bookings b
+      WHERE b.tenant_id = 1 AND b.member_id = ${memberId} AND b.status = 'booked'
+    `;
+    const [cardBalance] = await rawSql`
+      SELECT remaining_count FROM member_cards WHERE id = ${validCard.id}
+    `;
+    const rem = Number(cardBalance?.remaining_count || 0);
+    if (rem - Number(bookedCount) <= 0) {
+      return bad("您的会员卡可用次数已被其他待上课的预约占用，请勿超额预订", 422);
+    }
+  }
+
   const s = await settings();
-  const cutoffHours = Number(s.cancel_cutoff_hours || 2);
   const advanceDays = Number(s.booking_advance_days || 7);
   const sameDayLimit = Number(s.same_day_limit || 2);
   const start = sessionStart(session.session_date, session.start_time);
   const now = Date.now();
-  if (start <= now + cutoffHours * 3600_000) return bad("距开课不足 2 小时，无法预约", 409);
+  if (start <= now) return bad("该课程已经开课，无法预约", 409);
   if (start > now + advanceDays * 86400_000) return bad(`最多提前 ${advanceDays} 天预约`, 409);
 
   const [{ n }] = await rawSql`

@@ -20,9 +20,10 @@ export async function POST(request: NextRequest) {
   const [dup] = await rawSql`SELECT id FROM course_categories WHERE tenant_id = 1 AND key = ${key}`;
   if (dup) return bad("key 已存在", 409);
   const [row] = await rawSql`
-    INSERT INTO course_categories (tenant_id, key, name, duration_minutes, default_capacity, color, sort_order, is_active)
+    INSERT INTO course_categories (tenant_id, key, name, duration_minutes, default_capacity, color, category_type, difficulty_stars, cover_image, description, sort_order, is_active)
     VALUES (1, ${key}, ${name}, ${Math.max(1, Number(b.durationMinutes || 60))}, ${Math.max(1, Number(b.defaultCapacity || 6))},
-            ${b.color || null}, ${Number(b.sortOrder || 0)}, ${b.isActive === 0 ? 0 : 1})
+            ${b.color || null}, ${b.categoryType || 'boutique'}, ${Math.min(5, Math.max(1, Number(b.difficultyStars || 3)))},
+            ${b.coverImage || ''}, ${b.description || ''}, ${Number(b.sortOrder || 0)}, ${b.isActive === 0 ? 0 : 1})
     RETURNING *`;
   return NextResponse.json(row, { status: 201 });
 }
@@ -40,6 +41,10 @@ export async function PUT(request: NextRequest) {
       duration_minutes = ${b.durationMinutes !== undefined ? Math.max(1, Number(b.durationMinutes)) : existing.duration_minutes},
       default_capacity = ${b.defaultCapacity !== undefined ? Math.max(1, Number(b.defaultCapacity)) : existing.default_capacity},
       color = ${b.color !== undefined ? (b.color || null) : existing.color},
+      category_type = ${b.categoryType !== undefined ? String(b.categoryType).trim() : (existing.category_type || 'boutique')},
+      difficulty_stars = ${b.difficultyStars !== undefined ? Math.min(5, Math.max(1, Number(b.difficultyStars))) : (existing.difficulty_stars || 3)},
+      cover_image = ${b.coverImage !== undefined ? String(b.coverImage).trim() : (existing.cover_image || '')},
+      description = ${b.description !== undefined ? String(b.description).trim() : (existing.description || '')},
       sort_order = ${b.sortOrder !== undefined ? Number(b.sortOrder) : existing.sort_order},
       is_active = ${b.isActive !== undefined ? (b.isActive ? 1 : 0) : existing.is_active}
     WHERE id = ${id} AND tenant_id = 1 RETURNING *`;

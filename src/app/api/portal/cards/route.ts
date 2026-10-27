@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPortalMemberId } from "@/lib/auth/member-session";
 import { rawSql } from "@/db";
+import { autoSettleFinishedBookings } from "@/lib/booking-settle";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -14,6 +15,9 @@ function effectiveStatus(card: any) {
 export async function GET(request: NextRequest) {
   const memberId = await getPortalMemberId(request);
   if (!memberId) return NextResponse.json({ error: "未登录" }, { status: 401 });
+
+  // 触发一次后台自动结课消课（下课后自动扣除）
+  autoSettleFinishedBookings().catch((err) => console.error("[cards] autoSettle error:", err));
 
   const cards = await rawSql`
     SELECT mc.id, mc.card_type_id, mc.status, mc.total_count, mc.remaining_count,

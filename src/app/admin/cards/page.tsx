@@ -184,6 +184,38 @@ export default function AdminCardsPage() {
   // Forms
   const [newType, setNewType] = useState<TypeForm>(emptyTypeForm);
 
+  // 快捷录入新会员
+  const [showQuickAddMember, setShowQuickAddMember] = useState(false);
+  const [quickMember, setQuickMember] = useState({ name: "", phone: "" });
+  const [savingQuickMember, setSavingQuickMember] = useState(false);
+
+  const handleQuickAddMember = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quickMember.name.trim()) {
+      showToast("请填写会员姓名", "error");
+      return;
+    }
+    setSavingQuickMember(true);
+    try {
+      const res = await fetch("/api/members", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: quickMember.name.trim(), phone: quickMember.phone.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "录入会员失败");
+      await load();
+      setIssue((prev) => ({ ...prev, memberId: String(data.id) }));
+      setQuickMember({ name: "", phone: "" });
+      setShowQuickAddMember(false);
+      showToast(`会员 ${data.name} 录入成功，已为您直接选定`, "success");
+    } catch (err: any) {
+      showToast(err.message || "录入会员失败", "error");
+    } finally {
+      setSavingQuickMember(false);
+    }
+  };
+
   // 卡种编辑 / 复制权限 / 删除
   const [editing, setEditing] = useState<(TypeForm & { id: number }) | null>(null);
   const [copySource, setCopySource] = useState<CardType | null>(null);
@@ -893,6 +925,16 @@ export default function AdminCardsPage() {
                       <td className="px-5 py-3.5 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button
+                            onClick={() => {
+                              setIssue((prev) => ({ ...prev, memberId: String(c.member_id) }));
+                              setShowIssueDrawer(true);
+                            }}
+                            title="为该会员办理另一张新卡或升级新卡项"
+                            className="px-2.5 py-1 text-xs font-semibold rounded border bg-blue-50 text-[#2563EB] border-blue-200 hover:bg-blue-100 flex items-center gap-1 shadow-2xs"
+                          >
+                            <Plus className="w-3 h-3" /> 加新卡
+                          </button>
+                          <button
                             onClick={() => adjustCount(c)}
                             disabled={c.remaining_count === null}
                             title={c.remaining_count === null ? "不限次卡，请用延期" : "临时加减剩余次数"}
@@ -967,9 +1009,18 @@ export default function AdminCardsPage() {
               <form onSubmit={issueCard} className="flex-1 overflow-y-auto p-6 space-y-4">
                 {/* Member selection */}
                 <div>
-                  <label className="block text-xs font-medium text-[#292D35] mb-1.5">
-                    1. 选择会员 <span className="text-red-500">*</span>
-                  </label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-medium text-[#292D35]">
+                      1. 选择签约会员 <span className="text-red-500">*</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowQuickAddMember(true)}
+                      className="text-xs text-[#2563EB] hover:text-blue-700 font-medium flex items-center gap-1 bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded border border-blue-200 transition-colors"
+                    >
+                      <Plus className="w-3 h-3" /> 现场录入新会员
+                    </button>
+                  </div>
                   <div className="mb-2">
                     <input
                       type="text"
@@ -1880,6 +1931,71 @@ export default function AdminCardsPage() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Modal: Quick Add Member */}
+      {showQuickAddMember && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+          <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6 border border-[#E1E5EB]">
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="text-base font-semibold text-[#292D35]">现场录入新会员</h3>
+                <p className="text-xs text-[#697180] mt-1">录入后将自动为您选定，直接继续办卡流程。</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowQuickAddMember(false)}
+                className="p-1 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleQuickAddMember} className="mt-4 space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-[#292D35] mb-1">
+                  会员姓名 <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="例如：王小萌"
+                  value={quickMember.name}
+                  onChange={(e) => setQuickMember({ ...quickMember, name: e.target.value })}
+                  required
+                  autoFocus
+                  className="w-full px-3 py-2 text-sm bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-[#292D35] mb-1">手机号码（可选）</label>
+                <input
+                  type="tel"
+                  placeholder="用于短信与小程序登录匹配"
+                  value={quickMember.phone}
+                  onChange={(e) => setQuickMember({ ...quickMember, phone: e.target.value })}
+                  className="w-full px-3 py-2 text-sm bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-[#E1E5EB] mt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowQuickAddMember(false)}
+                  className="px-3.5 py-1.5 text-xs text-[#697180] bg-white border border-[#E1E5EB] rounded-lg hover:bg-[#F5F7FA]"
+                >
+                  取消
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingQuickMember}
+                  className="px-4 py-1.5 text-xs font-medium text-white bg-[#2563EB] hover:bg-blue-700 rounded-lg shadow-sm disabled:opacity-50"
+                >
+                  {savingQuickMember ? "录入中..." : "确认录入并开卡"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

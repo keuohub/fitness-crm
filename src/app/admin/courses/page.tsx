@@ -25,6 +25,10 @@ type Course = {
   duration_minutes: number;
   default_capacity: number;
   color: string | null;
+  category_type?: string;
+  difficulty_stars?: number;
+  cover_image?: string;
+  description?: string;
   sort_order: number;
   is_active: number;
 };
@@ -61,6 +65,10 @@ export default function AdminCoursesPage() {
     durationMinutes: "60",
     defaultCapacity: "6",
     color: "",
+    categoryType: "boutique",
+    difficultyStars: "3",
+    description: "",
+    coverImage: "",
     sortOrder: "0",
   });
   const [editForm, setEditForm] = useState({
@@ -68,6 +76,10 @@ export default function AdminCoursesPage() {
     durationMinutes: "60",
     defaultCapacity: "6",
     color: "",
+    categoryType: "boutique",
+    difficultyStars: "3",
+    description: "",
+    coverImage: "",
     sortOrder: "0",
   });
   const [r, setR] = useState({ name: "", capacity: "10" });
@@ -77,7 +89,18 @@ export default function AdminCoursesPage() {
 
   const openAddCourse = () => {
     const next = nextSortOrder();
-    setC({ key: "", name: "", durationMinutes: "60", defaultCapacity: "6", color: "", sortOrder: String(next) });
+    setC({
+      key: "",
+      name: "",
+      durationMinutes: "60",
+      defaultCapacity: "6",
+      color: "",
+      categoryType: "boutique",
+      difficultyStars: "3",
+      description: "",
+      coverImage: "",
+      sortOrder: String(next),
+    });
     setShowAddCourse(true);
   };
 
@@ -116,10 +139,14 @@ export default function AdminCoursesPage() {
           durationMinutes: Number(c.durationMinutes),
           defaultCapacity: Number(c.defaultCapacity),
           color: c.color,
+          categoryType: c.categoryType,
+          difficultyStars: Number(c.difficultyStars),
+          description: c.description,
+          coverImage: c.coverImage,
           sortOrder: c.sortOrder === "" ? nextSortOrder() : Number(c.sortOrder),
         }),
       });
-      setC({ key: "", name: "", durationMinutes: "60", defaultCapacity: "6", color: "", sortOrder: "0" });
+      setC({ key: "", name: "", durationMinutes: "60", defaultCapacity: "6", color: "", categoryType: "boutique", difficultyStars: "3", description: "", coverImage: "", sortOrder: "0" });
       setShowAddCourse(false);
       await load();
       showToast("课程类目已成功新增", "success");
@@ -176,6 +203,10 @@ export default function AdminCoursesPage() {
       durationMinutes: String(x.duration_minutes),
       defaultCapacity: String(x.default_capacity),
       color: x.color || "",
+      categoryType: x.category_type || "boutique",
+      difficultyStars: String(x.difficulty_stars || 3),
+      description: x.description || "",
+      coverImage: x.cover_image || "",
       sortOrder: String(x.sort_order),
     });
   };
@@ -198,6 +229,10 @@ export default function AdminCoursesPage() {
           durationMinutes: Number(editForm.durationMinutes),
           defaultCapacity: Number(editForm.defaultCapacity),
           color: editForm.color,
+          categoryType: editForm.categoryType,
+          difficultyStars: Number(editForm.difficultyStars),
+          description: editForm.description,
+          coverImage: editForm.coverImage,
           sortOrder: Number(editForm.sortOrder),
         }),
       });
@@ -549,6 +584,57 @@ export default function AdminCoursesPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
+                  <label className="block text-xs font-medium text-[#292D35] mb-1">所属分类 *</label>
+                  <select
+                    value={editForm.categoryType}
+                    onChange={(e) => setEditForm({ ...editForm, categoryType: e.target.value })}
+                    className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                  >
+                    <option value="boutique">精品课 (小班器械)</option>
+                    <option value="group">团体课 (垫上/超模)</option>
+                    <option value="private">私教课 (1V1)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[#292D35] mb-1">难度强度星级 (1-5星) *</label>
+                  <select
+                    value={editForm.difficultyStars}
+                    onChange={(e) => setEditForm({ ...editForm, difficultyStars: e.target.value })}
+                    className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                  >
+                    <option value="1">1 星 (入门舒缓)</option>
+                    <option value="2">2 星 (轻柔柔韧)</option>
+                    <option value="3">3 星 (标准进阶)</option>
+                    <option value="4">4 星 (深度塑形)</option>
+                    <option value="5">5 星 (高能暴汗)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-[#292D35] mb-1">课程简介（展示给小程序学员）</label>
+                <textarea
+                  rows={2}
+                  placeholder="例如：普拉提大器械精准塑形，强化深层小肌群，紧致腰腹体态"
+                  value={editForm.description}
+                  onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                  className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-[#292D35] mb-1">封面图片 URL (可选)</label>
+                <input
+                  type="text"
+                  placeholder="留空则自动使用系统内置的高品质体态美图"
+                  value={editForm.coverImage}
+                  onChange={(e) => setEditForm({ ...editForm, coverImage: e.target.value })}
+                  className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
                   <label className="block text-xs font-medium text-[#292D35] mb-1">单节课长 (分钟) *</label>
                   <input
                     type="number"
@@ -682,6 +768,57 @@ export default function AdminCoursesPage() {
                   value={editForm.name}
                   onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
                   required
+                  className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-[#292D35] mb-1">所属分类 *</label>
+                  <select
+                    value={editForm.categoryType}
+                    onChange={(e) => setEditForm({ ...editForm, categoryType: e.target.value })}
+                    className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                  >
+                    <option value="boutique">精品课 (小班器械)</option>
+                    <option value="group">团体课 (垫上/超模)</option>
+                    <option value="private">私教课 (1V1)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[#292D35] mb-1">难度强度星级 (1-5星) *</label>
+                  <select
+                    value={editForm.difficultyStars}
+                    onChange={(e) => setEditForm({ ...editForm, difficultyStars: e.target.value })}
+                    className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                  >
+                    <option value="1">1 星 (入门舒缓)</option>
+                    <option value="2">2 星 (轻柔柔韧)</option>
+                    <option value="3">3 星 (标准进阶)</option>
+                    <option value="4">4 星 (深度塑形)</option>
+                    <option value="5">5 星 (高能暴汗)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-[#292D35] mb-1">课程简介（展示给小程序学员）</label>
+                <textarea
+                  rows={2}
+                  placeholder="例如：普拉提大器械精准塑形，强化深层小肌群，紧致腰腹体态"
+                  value={editForm.description}
+                  onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                  className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-[#292D35] mb-1">封面图片 URL (可选)</label>
+                <input
+                  type="text"
+                  placeholder="留空则自动使用系统内置的高品质体态美图"
+                  value={editForm.coverImage}
+                  onChange={(e) => setEditForm({ ...editForm, coverImage: e.target.value })}
                   className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
                 />
               </div>

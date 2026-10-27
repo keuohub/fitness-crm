@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPortalMemberId } from "@/lib/auth/member-session";
 import { rawSql } from "@/db";
+import { autoSettleFinishedBookings } from "@/lib/booking-settle";
 
 const today = () => new Date().toISOString().slice(0, 10);
 function addDays(date: string, days: number) {
@@ -19,10 +20,15 @@ export async function GET(request: NextRequest) {
   const to = u.searchParams.get("to") || addDays(from, 7);
   if (!isDate(from) || !isDate(to)) return NextResponse.json({ error: "日期格式错误" }, { status: 400 });
 
+  // 触发一次后台自动结课消课（下课后自动扣除）
+  autoSettleFinishedBookings().catch((err) => console.error("[schedule] autoSettle error:", err));
+
   const sessions = await rawSql`
     SELECT s.id, s.course_category_id, s.coach_id, s.room_id, s.title,
            s.session_date, s.start_time, s.end_time, s.capacity, s.booked_count, s.status,
-           c.name AS course_name, u2.name AS coach_name, r.name AS room_name
+           c.name AS course_name, c.key AS course_key, c.category_type, c.difficulty_stars,
+           c.cover_image, c.description AS course_desc,
+           u2.name AS coach_name, r.name AS room_name
     FROM class_sessions s
     JOIN course_categories c ON c.id = s.course_category_id
     LEFT JOIN users u2 ON u2.id = s.coach_id
@@ -40,6 +46,11 @@ export async function GET(request: NextRequest) {
   const rows = sessions.map((s: any) => ({
     id: s.id,
     courseName: s.course_name,
+    courseKey: s.course_key || "",
+    categoryType: s.category_type || "boutique",
+    difficultyStars: Number(s.difficulty_stars || 3),
+    coverImage: s.cover_image || "",
+    description: s.course_desc || "",
     coachName: s.coach_name,
     roomName: s.room_name,
     title: s.title,
