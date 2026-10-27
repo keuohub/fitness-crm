@@ -1,0 +1,21 @@
+name: Keep CloudBase Container Warm
+
+on:
+  schedule:
+    # 微信云托管空闲30分钟自动休眠；每15分钟保活一次，保证容器24小时热机在线，杜绝冷启动
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+jobs:
+  keep-warm:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Health Endpoint
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://crm-330905-9-1509862887.sh.run.tcloudbase.com/api/health")
+          echo "Health check HTTP status: $STATUS"
+          if [ "$STATUS" -ne 200 ]; then
+            echo "Retrying once..."
+            sleep 3
+            curl -s "https://crm-330905-9-1509862887.sh.run.tcloudbase.com/api/health"
+          fi
