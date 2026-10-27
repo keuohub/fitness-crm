@@ -63,5 +63,19 @@
     <text style="margin-top:26rpx;font-size:46rpx;font-weight:600;color:#FFFFFF;font-family:serif;">本月之星 · 名单待定</text>
     <text style="margin-top:22rpx;font-size:25rpx;line-height:1.9;color:rgba(255,255,255,.85);">我们只在本人点头之后，才放上她的照片和故事。这一期还在等她们答复。</text>
   </view>
-  <view wx:if="{{loading}}" style="position:fixed;left:0;right:0;top:0;bottom:0;background:linear-gradient(170deg,#F5E5D9 0%,#D4423C 100%);"></view>
+  <view wx:if="{{loading && !showSplash}}" style="position:fixed;left:0;right:0;top:0;bottom:0;background:linear-gradient(170deg,#F5E5D9 0%,#D4423C 100%);"></view>
+
+  <!-- ====== 全屏开屏：到徕舞 一起好状态 ====== -->
+  <view class="splash-screen {{splashFadeOut ? 'splash-fade-out' : ''}}" wx:if="{{showSplash}}" catchtouchmove="noop">
+    <view class="splash-center">
+      <text class="splash-brand-luxury">L A I W U</text>
+      <view class="splash-brand-line"></view>
+
+      <text class="splash-sub">到徕舞</text>
+      <text class="splash-main">一起</text>
+      <text class="splash-main">好状态</text>
+
+      <view class="splash-cta" bindtap="skipSplash">即刻开启</view>
+    </view>
+  </view>
 </view>

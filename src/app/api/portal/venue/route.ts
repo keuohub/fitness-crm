@@ -1,24 +1,10 @@
 import { NextResponse } from "next/server";
-import { db, rawSql } from "@/db";
+import { db } from "@/db";
 import { venueItems } from "@/db/schema";
 import { eq, asc } from "drizzle-orm";
 
 export async function GET() {
   try {
-    await rawSql`
-      CREATE TABLE IF NOT EXISTS venue_items (
-        id SERIAL PRIMARY KEY,
-        title TEXT NOT NULL,
-        image_url TEXT NOT NULL,
-        sort_order INTEGER DEFAULT 0,
-        is_active INTEGER DEFAULT 1,
-        created_at TIMESTAMP NOT NULL DEFAULT NOW()
-      );
-    `;
-    await rawSql`ALTER TABLE venue_items ADD COLUMN IF NOT EXISTS name TEXT;`;
-    await rawSql`ALTER TABLE venue_items ADD COLUMN IF NOT EXISTS tag TEXT;`;
-    await rawSql`ALTER TABLE venue_items ADD COLUMN IF NOT EXISTS "desc" TEXT;`;
-
     const rows = await db
       .select()
       .from(venueItems)

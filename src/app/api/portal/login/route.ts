@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { members } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import crypto from "crypto";
 import { signMemberToken } from "@/lib/auth/member-token";
 
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "尝试次数过多，请 15 分钟后再试，或联系小桥" }, { status: 429 });
     }
 
-    const allMembers = await db
+    const [member] = await db
       .select({
         id: members.id,
         name: members.name,
@@ -65,29 +65,27 @@ export async function POST(request: NextRequest) {
         loginPin: members.loginPin,
       })
       .from(members)
-      .where(eq(members.portalEnabled, 1));
-
-    const member = allMembers.find(
-      (m) => m.portalCode && m.portalCode.trim().toUpperCase() === rawCode
-    );
+      .where(
+        and(
+          eq(members.portalEnabled, 1),
+          sql`UPPER(${members.portalCode}) = ${rawCode}`
+        )
+      )
+      .limit(1);
 
     if (!member) {
       return NextResponse.json({ error: "邀请码或手机尾号不匹配，请核对后重试，或联系小桥" }, { status: 401 });
     }
 
-    // 第二因子：有手机号必须验证尾号后4位；无手机号必须验证 6 位登录 PIN。
-    // 绝不允许只凭邀请码进入（LW88xx 是连号，可以被逐个尝试）。
+    // 第二因子：有手机号支持手机尾号4位或PIN码；无手机号支持PIN码
     const cleanPhone = (member.phone || "").replace(/\D/g, "");
     const genericError = "邀请码或验证信息不匹配，请核对后重试，或联系小桥";
 
-    if (cleanPhone.length >= 4) {
-      if (!phoneSuffix || !cleanPhone.endsWith(phoneSuffix)) {
-        return NextResponse.json({ error: genericError }, { status: 401 });
-      }
-    } else {
-      if (!member.loginPin || phoneSuffix !== member.loginPin) {
-        return NextResponse.json({ error: genericError }, { status: 401 });
-      }
+    const matchPhone = cleanPhone.length >= 4 && phoneSuffix && cleanPhone.endsWith(phoneSuffix);
+    const matchPin = member.loginPin && phoneSuffix === member.loginPin;
+
+    if (!matchPhone && !matchPin) {
+      return NextResponse.json({ error: genericError }, { status: 401 });
     }
 
     LOGIN_ATTEMPTS.delete(ip + ":" + rawCode);
