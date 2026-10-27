@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import AdminHeader from "./AdminHeader";
 import AdminSidebar from "./AdminSidebar";
+import AdminMobileNav from "./AdminMobileNav";
 import { ToastProvider } from "./Toast";
 
 export default function AdminShell({ children }: { children: React.ReactNode }) {
@@ -35,6 +36,20 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
   return (
     <ToastProvider>
+      <style>{`
+        .admin-main-content {
+          flex: 1;
+          min-width: 0;
+          background: #F5F7FA;
+          overflow-x: hidden;
+          padding: 28px 32px;
+        }
+        @media (max-width: 768px) {
+          .admin-main-content {
+            padding: 12px 12px 76px 12px !important;
+          }
+        }
+      `}</style>
       <div
         style={{
           minHeight: "100vh",
@@ -55,18 +70,13 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             mobileOpen={mobileOpen}
             onCloseMobile={() => setMobileOpen(false)}
           />
-          <main
-            style={{
-              flex: 1,
-              minWidth: 0,
-              background: "#F5F7FA",
-              overflowX: "hidden",
-              padding: "28px 32px",
-            }}
-          >
+          <main className="admin-main-content">
             {children}
           </main>
         </div>
+
+        {/* 手机端底部轻量导航栏 (仅在屏幕宽度 <= 768px 时显示) */}
+        <AdminMobileNav onOpenSidebar={() => setMobileOpen(true)} />
       </div>
     </ToastProvider>
   );

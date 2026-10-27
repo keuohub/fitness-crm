@@ -2,6 +2,7 @@ import { db, rawSql } from "@/db";
 import { members, trainings } from "@/db/schema";
 import { sql } from "drizzle-orm";
 import Link from "next/link";
+import MobileManagementHome from "@/components/admin/MobileManagementHome";
 import {
   Users,
   Calendar,
@@ -49,7 +50,15 @@ interface CareReminder {
 }
 
 export default async function AdminPage() {
-  const [allMembers, rows, recentFeelings] = await Promise.all([
+  const [
+    allMembers,
+    rows,
+    recentFeelings,
+    todayBookingsRes,
+    todayCardsRes,
+    todayMembersRes,
+    recentActivitiesRes,
+  ] = await Promise.all([
     db
       .select()
       .from(members)
@@ -75,6 +84,53 @@ export default async function AdminPage() {
        LIMIT 6
     `.catch((e) => {
       console.error("recentFeelings error:", e);
+      return [];
+    }),
+    rawSql`
+      SELECT count(*)::int as count
+      FROM bookings b
+      JOIN class_sessions cs ON b.session_id = cs.id
+      WHERE cs.session_date = to_char(CURRENT_DATE, 'YYYY-MM-DD')
+        AND b.status IN ('booked', 'attended')
+    `.catch((e) => {
+      console.error("todayBookings error:", e);
+      return [{ count: 0 }];
+    }),
+    rawSql`
+      SELECT count(*)::int as count
+      FROM member_cards
+      WHERE created_at >= CURRENT_DATE
+    `.catch((e) => {
+      console.error("todayCards error:", e);
+      return [{ count: 0 }];
+    }),
+    rawSql`
+      SELECT count(*)::int as count
+      FROM members
+      WHERE created_at >= CURRENT_DATE
+    `.catch((e) => {
+      console.error("todayMembers error:", e);
+      return [{ count: 0 }];
+    }),
+    rawSql`
+      SELECT
+        b.id,
+        b.status,
+        b.created_at,
+        b.cancelled_at,
+        b.updated_at,
+        m.name as member_name,
+        COALESCE(c.name, cs.title, '普拉提课程') as course_name,
+        cs.session_date,
+        cs.start_time
+      FROM bookings b
+      LEFT JOIN members m ON b.member_id = m.id
+      LEFT JOIN class_sessions cs ON b.session_id = cs.id
+      LEFT JOIN course_categories c ON cs.course_category_id = c.id
+      ORDER BY b.updated_at DESC
+      LIMIT 6
+    `.catch((e) => {
+      console.error("recentActivities error:", e);
       return [];
     }),
   ]);
@@ -131,7 +187,48 @@ export default async function AdminPage() {
 
   return (
     <div style={{ maxWidth: 1280, margin: "0 auto" }}>
-      {/* 头部标题与面包屑 */}
+      <style>{`
+        .mobile-dashboard-section {
+          display: none;
+        }
+        .desktop-dashboard-section {
+          display: block;
+        }
+        @media (max-width: 768px) {
+          .mobile-dashboard-section {
+            display: block !important;
+          }
+          .desktop-dashboard-section {
+            display: none !important;
+          }
+        }
+      `}</style>
+
+      {/* 手机端专用管理控制台 (依据用户对标的 9 宫格与实时指标打造) */}
+      <div className="mobile-dashboard-section">
+        <MobileManagementHome
+          todayBookingsCount={Number(todayBookingsRes[0]?.count || 0)}
+          todayNewCardsCount={Number(todayCardsRes[0]?.count || 0)}
+          todayNewMembersCount={Number(todayMembersRes[0]?.count || 0)}
+          recentActivities={recentActivitiesRes.map((r: any) => ({
+            id: Number(r.id),
+            status: String(r.status || "booked"),
+            created_at: String(r.created_at || ""),
+            cancelled_at: r.cancelled_at ? String(r.cancelled_at) : null,
+            updated_at: String(r.updated_at || r.created_at || ""),
+            member_name: String(r.member_name || "会员"),
+            course_name: String(r.course_name || "普拉提课程"),
+            session_date: String(r.session_date || ""),
+            start_time: String(r.start_time || ""),
+          }))}
+          totalMembersCount={allMembers.length}
+          portalEnabledCount={portalEnabledCount}
+        />
+      </div>
+
+      {/* 桌面端总览中枢 */}
+      <div className="desktop-dashboard-section">
+        {/* 头部标题与面包屑 */}
       <div
         style={{
           display: "flex",
@@ -767,6 +864,7 @@ export default async function AdminPage() {
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   );
