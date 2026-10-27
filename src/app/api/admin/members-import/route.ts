@@ -37,6 +37,74 @@ function toDate(v: string): string {
   return `${m[1]}-${String(m[2]).padStart(2, "0")}-${String(m[3]).padStart(2, "0")}`;
 }
 
+// 智能推算入会起始日（来时路）
+// 支持明确日期、具体年份、或从备注自然语言提取："约2年"、"3年老会员"、"2022年来的"、"1年半"、"半年"等
+function deduceJoinedAt(rawJoined: string, notes: string): { date: string; inferred: boolean; label?: string } {
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const now = new Date();
+
+  // 1. 明确的完整日期 (YYYY-MM-DD / YYYY.M.D / YYYY/M/D)
+  const explicit = toDate(rawJoined);
+  if (explicit) return { date: explicit, inferred: false };
+
+  // 2. 年月 (如 2023-05, 2023.5) 或单纯年份 (如 2022)
+  const ymMatch = rawJoined.replace(/[./]/g, "-").trim().match(/^(\d{4})(?:-(\d{1,2}))?$/);
+  if (ymMatch) {
+    const y = ymMatch[1];
+    const m = ymMatch[2] ? String(ymMatch[2]).padStart(2, "0") : "01";
+    return { date: `${y}-${m}-01`, inferred: true, label: `${y}年` };
+  }
+
+  // 3. 扫描文本（合并入会日期与备注）
+  const text = `${rawJoined} ${notes}`.trim();
+  if (!text) return { date: todayStr, inferred: false };
+
+  // 3.1 识别年份：如 "2021年", "2022老会员", "2020年来莱芜", "2023开卡"
+  const yearInText = text.match(/(20\d{2})\s*年?/);
+  if (yearInText) {
+    const y = parseInt(yearInText[1], 10);
+    if (y >= 2010 && y <= now.getFullYear()) {
+      return { date: `${y}-01-01`, inferred: true, label: `${y}年` };
+    }
+  }
+
+  // 3.2 识别具体年数带半：如 "1年半", "2年半", "3年半"
+  const halfYearMatch = text.match(/(\d+)\s*年半/);
+  if (halfYearMatch) {
+    const years = parseFloat(halfYearMatch[1]) + 0.5;
+    const pastTime = new Date(now.getTime() - years * 365.25 * 86400000);
+    return { date: pastTime.toISOString().slice(0, 10), inferred: true, label: `约${years}年` };
+  }
+
+  // 3.3 识别 "半年"
+  if (/半年/.test(text)) {
+    const pastTime = new Date(now.getTime() - 182.5 * 86400000);
+    return { date: pastTime.toISOString().slice(0, 10), inferred: true, label: "约半年" };
+  }
+
+  // 3.4 识别通用年数：如 "约3年", "上了2年", "3年老会员", "练习4年", "大概2年", "2.5年"
+  const yearMatch = text.match(/(?:约|大概|上了|练了|相伴|已有|会员)?\s*(\d+(?:\.\d+)?)\s*年/);
+  if (yearMatch) {
+    const years = parseFloat(yearMatch[1]);
+    if (years > 0 && years <= 30) {
+      const pastTime = new Date(now.getTime() - years * 365.25 * 86400000);
+      return { date: pastTime.toISOString().slice(0, 10), inferred: true, label: `约${years}年` };
+    }
+  }
+
+  // 3.5 识别月份：如 "约6个月", "8个月", "大概10个月"
+  const monthMatch = text.match(/(?:约|大概|上了|练了)?\s*(\d+)\s*个?月/);
+  if (monthMatch) {
+    const months = parseInt(monthMatch[1], 10);
+    if (months > 0 && months < 120) {
+      const pastTime = new Date(now.getTime() - months * 30.5 * 86400000);
+      return { date: pastTime.toISOString().slice(0, 10), inferred: true, label: `约${months}个月` };
+    }
+  }
+
+  return { date: todayStr, inferred: false };
+}
+
 function addDays(date: string, days: number): string {
   const [y, m, d] = date.split("-").map(Number);
   const dt = new Date(Date.UTC(y, m - 1, d));
@@ -110,9 +178,11 @@ export async function POST(request: NextRequest) {
     const memberCodeInput = pick(row, ["会员编号", "卡号", "编号", "memberCode", "code"]).toUpperCase();
     const gender = mapGender(pick(row, ["性别", "gender"]));
     const birthday = toDate(pick(row, ["生日", "birthday"]));
-    const joinedAt = toDate(pick(row, ["入会日期", "入会时间", "joinedAt", "joinDate"])) || today;
+    const rawJoined = pick(row, ["入会日期", "入会时间", "joinedAt", "joinDate"]);
     const mentorName = pick(row, ["带教导师", "导师", "mentorName", "mentor"]);
     const notes = pick(row, ["备注", "notes", "note"]);
+    const deduced = deduceJoinedAt(rawJoined, notes);
+    const joinedAt = deduced.date;
     const cardName = pick(row, ["卡名", "卡种", "卡类型", "cardName", "cardType"]);
     const totalRaw = pick(row, ["总次数", "总数", "total", "totalCount"]);
     const remainRaw = pick(row, ["剩余次数", "剩余", "remaining", "remainingCount"]);
@@ -171,7 +241,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 新会员创建逻辑
+    // 新老会员更新逻辑
+    let memberUpdated = false;
     if (!isExistingMember) {
       // 重新生成唯一 8 位邀请码
       for (let t = 0; t < 20; t++) {
@@ -202,6 +273,24 @@ export async function POST(request: NextRequest) {
       } catch (err: any) {
         results.push({ line, status: "failed", name, reason: "建会员失败：" + String(err?.message || err).slice(0, 80) });
         continue;
+      }
+    } else {
+      // 老会员：如果提供了入会时间/推算出相伴起始日，或提供了备注，回填更新到会员档案
+      try {
+        if (deduced.inferred || rawJoined || notes) {
+          if ((deduced.inferred || rawJoined) && notes) {
+            await rawSql`UPDATE members SET joined_at = ${joinedAt}, notes = ${notes}, updated_at = NOW() WHERE id = ${memberId}`;
+            memberUpdated = true;
+          } else if (deduced.inferred || rawJoined) {
+            await rawSql`UPDATE members SET joined_at = ${joinedAt}, updated_at = NOW() WHERE id = ${memberId}`;
+            memberUpdated = true;
+          } else if (notes) {
+            await rawSql`UPDATE members SET notes = ${notes}, updated_at = NOW() WHERE id = ${memberId}`;
+            memberUpdated = true;
+          }
+        }
+      } catch (e) {
+        // 回填失败不阻断后续开卡
       }
     }
 
@@ -250,8 +339,17 @@ export async function POST(request: NextRequest) {
           }
         }
       }
-    } else if (isExistingMember) {
-      cardReason = "老会员未填写开卡卡名，跳过开卡";
+    } else {
+      // 未填卡名：不开卡
+      if (isExistingMember) {
+        if (memberUpdated) {
+          cardReason = `老会员档案已更新相伴起始日（${joinedAt}${deduced.label ? " · " + deduced.label : ""}，未开卡）`;
+        } else {
+          cardReason = "老会员未填写开卡卡名，跳过开卡";
+        }
+      } else {
+        cardReason = `已建档并生成相伴旅程（起始日：${joinedAt}${deduced.label ? " · " + deduced.label : ""}，未开卡）`;
+      }
     }
 
     const cleanPhone = (activePhone || "").replace(/\D/g, "");
@@ -262,8 +360,10 @@ export async function POST(request: NextRequest) {
     if (isExistingMember) {
       if (cardId && !isDuplicateCard) {
         rowStatus = "created"; // 成功补卡
+      } else if (memberUpdated) {
+        rowStatus = "created"; // 成功更新老会员相伴资料
       } else {
-        rowStatus = "skipped"; // 老会员无新卡开通或卡已存在
+        rowStatus = "skipped"; // 老会员无新卡开通且无资料更新
       }
     }
 

@@ -157,6 +157,22 @@ export default function MembersImportPage() {
     if (fileRef.current) fileRef.current.value = "";
   };
 
+  const downloadTemplate = () => {
+    const csvContent =
+      "\uFEFF" +
+      "姓名,手机号,性别,生日,入会日期,带教导师,备注,卡名,总次数,剩余次数,生效日,到期日,有效天数\n" +
+      "王小华,13800000001,女,,2022-03-15,小桥,老会员陪伴多年,,,,,\n" +
+      "李美云,13800000002,女,,,何老师,约3年老会员（卡名留空不绑卡只记相伴）,,,,,\n" +
+      "赵晴,13800000003,女,,,翠翠,上了2年,普拉提次卡,10,8,2026-10-01,2027-04-01,180\n";
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "徕舞会员与相伴来时路导入模板.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const inputStyle: React.CSSProperties = {
     width: "100%", borderRadius: 8, border: "1px solid #E1E5EB", padding: "10px 12px",
     fontSize: 13, boxSizing: "border-box", outline: "none", color: "#292D35",
@@ -182,12 +198,22 @@ export default function MembersImportPage() {
             <span style={{ fontSize: 14, fontWeight: 600, color: "#292D35" }}>第一步 填入数据</span>
           </div>
 
-          <div style={{ display: "flex", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 10, marginBottom: 14, flexWrap: "wrap", alignItems: "center" }}>
             <button type="button" onClick={() => fileRef.current?.click()} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 6, border: "1px solid #E1E5EB", background: "#F5F7FA", color: "#292D35", fontSize: 13, cursor: "pointer" }}>
               <Upload size={14} /> 上传 CSV 文件
             </button>
+            <button type="button" onClick={downloadTemplate} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 6, border: "1px solid #E1E5EB", background: "#FFFFFF", color: "#2563EB", fontSize: 13, cursor: "pointer" }}>
+              <Download size={14} /> 下载标准导入模板
+            </button>
             <input ref={fileRef} type="file" accept=".csv,.txt" style={{ display: "none" }} onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); }} />
-            <span style={{ fontSize: 12.5, color: "#697180", alignSelf: "center" }}>或者把 Excel 里的内容直接粘贴到下面</span>
+            <span style={{ fontSize: 12.5, color: "#697180" }}>或者直接从 Excel 复制整张表粘贴到下方输入框</span>
+          </div>
+
+          <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 8, padding: "12px 14px", marginBottom: 14, fontSize: 12.5, color: "#475569", lineHeight: 1.7 }}>
+            <div style={{ fontWeight: 600, color: "#1E293B", marginBottom: 4 }}>相伴来时路与开卡说明：</div>
+            <div>1. <strong>卡与人完全解绑</strong>：以前上过的老卡不需要录入。「卡名」一列直接留空，系统只建立会员档案，不绑定任何废卡，完全不影响会员在小程序查看相伴经历。</div>
+            <div>2. <strong>智能推算相伴天数</strong>：若记不清具体几月几号入会，「入会日期」可留空，直接在「备注」里写「约3年」、「上了2年」、「2021老会员」、「1年半」等，系统会自动反推起始日。</div>
+            <div>3. <strong>每日自然累加</strong>：一旦录入起始日，会员端每天打开小程序，相伴天数都会自然 +1 天（如相伴 730 天、陪伴第 3 年），无需人工每天跑数据更新。</div>
           </div>
 
           <textarea

@@ -689,9 +689,25 @@ export default function AdminMembersPage() {
                           </div>
                         </td>
 
-                        {/* 入会时间 */}
-                        <td style={{ padding: "12px 16px", color: "#697180", fontFamily: "ui-monospace, monospace", fontSize: 12 }}>
-                          {m.joinedAt ? m.joinedAt.slice(0, 10) : "待录入"}
+                        {/* 入会时间与相伴来时路 */}
+                        <td style={{ padding: "12px 16px", color: "#697180", fontSize: 12 }}>
+                          {m.joinedAt ? (
+                            <div>
+                              <div style={{ fontFamily: "ui-monospace, monospace" }}>{m.joinedAt.slice(0, 10)}</div>
+                              {(() => {
+                                const t = new Date(m.joinedAt.replace(/-/g, "/")).getTime();
+                                if (isNaN(t)) return null;
+                                const days = Math.max(1, Math.floor((Date.now() - t) / 86400000) + 1);
+                                return (
+                                  <div style={{ fontSize: 11, color: "#2563EB", marginTop: 2 }}>
+                                    相伴 {days} 天
+                                  </div>
+                                );
+                              })()}
+                            </div>
+                          ) : (
+                            <span style={{ color: "#D1D5DB" }}>待录入</span>
+                          )}
                         </td>
 
                         {/* 操作 */}
@@ -796,6 +812,12 @@ export default function AdminMembersPage() {
                         </span>
                         <span style={{ fontSize: 12, color: "#697180" }}>
                           入会：{m.joinedAt ? m.joinedAt.slice(0, 10) : "待录入"}
+                          {m.joinedAt && (() => {
+                            const t = new Date(m.joinedAt.replace(/-/g, "/")).getTime();
+                            if (isNaN(t)) return null;
+                            const days = Math.max(1, Math.floor((Date.now() - t) / 86400000) + 1);
+                            return <span style={{ color: "#2563EB", marginLeft: 6 }}>· 相伴 {days} 天</span>;
+                          })()}
                         </span>
                       </div>
 
@@ -1065,7 +1087,13 @@ export default function AdminMembersPage() {
 
                 <div>
                   <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#697180", marginBottom: 4 }}>
-                    入会日期 (YYYY-MM-DD)
+                    入会日期 (来时路起始日)
+                    {editingMember.joinedAt && (() => {
+                      const t = new Date(editingMember.joinedAt.replace(/-/g, "/")).getTime();
+                      if (isNaN(t)) return null;
+                      const days = Math.max(1, Math.floor((Date.now() - t) / 86400000) + 1);
+                      return <span style={{ color: "#2563EB", marginLeft: 8 }}>已相伴 {days} 天</span>;
+                    })()}
                   </label>
                   <input
                     type="date"
@@ -1073,6 +1101,7 @@ export default function AdminMembersPage() {
                     onChange={(e) => setEditingMember({ ...editingMember, joinedAt: e.target.value })}
                     style={{ width: "100%", padding: "8px 10px", borderRadius: 6, border: "1px solid #E1E5EB", fontSize: 13, boxSizing: "border-box" }}
                   />
+                  <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 4 }}>修改后，小程序将按此日期每天自动累加相伴天数，不与卡项绑定</div>
                 </div>
 
                 <div>
