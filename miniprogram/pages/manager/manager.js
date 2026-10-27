@@ -1,5 +1,5 @@
 // pages/manager/manager.js
-// 徕舞普拉提 · 手机端管家工作台 (仅具备管理权限人员可见)
+// 徕舞普拉提 · 手机端管家工作台 (实打实可进行现场后台操作：查预约、代取消、录会员、改课程、加排课)
 var api = require("../../utils/api.js");
 
 Page({
@@ -19,14 +19,52 @@ Page({
     topActivityTime: "实时",
     todaySessions: [],
     todayDateStr: "",
-    
-    // 当前激活的九宫格抽屉/弹层
-    activeModal: null, // 'pc' | 'invite' | 'checkin' | 'bookings' | 'courses' | 'stats'
+    todayDateIso: "",
+
+    // 弹窗状态: 'pc' | 'invite' | 'checkin' | 'bookings' | 'courses' | 'edit_course' | 'create_member' | 'create_session'
+    activeModal: null,
+
+    // 预约详情列表 (包含每场实际预约学员)
+    bookingSessions: [],
+    loadingBookings: false,
+
+    // 新会员录入表单
+    newMemberName: "",
+    newMemberPhone: "",
+    submittingMember: false,
+
+    // 课程列表与当前编辑课程
+    coursesList: [],
+    loadingCourses: false,
+    editingCourse: {
+      id: 0,
+      name: "",
+      categoryType: "boutique",
+      difficultyStars: 3,
+      description: ""
+    },
+    submittingCourse: false,
+
+    // 快速排课表单
+    sessionOptions: {
+      courses: [],
+      coaches: [],
+      rooms: []
+    },
+    newSessionCourseIndex: 0,
+    newSessionCoachIndex: 0,
+    newSessionRoomIndex: 0,
+    newSessionDate: "",
+    newSessionStartTime: "10:00",
+    newSessionEndTime: "11:00",
+    newSessionCapacity: 6,
+    submittingSession: false
   },
 
   onLoad: function() {
     this.initDate();
     this.loadDashboard();
+    this.loadSessionOptions();
   },
 
   onPullDownRefresh: function() {
@@ -39,8 +77,16 @@ Page({
   initDate: function() {
     var now = new Date();
     var days = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
-    var str = now.getFullYear() + "年" + (now.getMonth() + 1) + "月" + now.getDate() + "日 · " + days[now.getDay()];
-    this.setData({ todayDateStr: str });
+    var y = now.getFullYear();
+    var m = String(now.getMonth() + 1).padStart(2, "0");
+    var d = String(now.getDate()).padStart(2, "0");
+    var dateIso = y + "-" + m + "-" + d;
+    var str = y + "年" + (now.getMonth() + 1) + "月" + now.getDate() + "日 · " + days[now.getDay()];
+    this.setData({
+      todayDateStr: str,
+      todayDateIso: dateIso,
+      newSessionDate: dateIso
+    });
   },
 
   loadDashboard: function(done) {
@@ -102,6 +148,24 @@ Page({
     });
   },
 
+  loadSessionOptions: function() {
+    var that = this;
+    api.request({
+      url: "/api/portal/manager/actions?action=options",
+      success: function(res) {
+        if (res.statusCode === 200 && res.data) {
+          that.setData({
+            sessionOptions: {
+              courses: res.data.courses || [],
+              coaches: res.data.coaches || [],
+              rooms: res.data.rooms || []
+            }
+          });
+        }
+      }
+    });
+  },
+
   formatRelativeTime: function(isoStr) {
     if (!isoStr) return "刚刚";
     var now = Date.now();
@@ -113,78 +177,284 @@ Page({
     return Math.floor(diff / 86400) + "天前";
   },
 
-  // 快捷工具弹窗
-  openPcLoginModal: function() {
-    this.setData({ activeModal: "pc" });
-  },
-
-  openInviteModal: function() {
-    this.setData({ activeModal: "invite" });
-  },
-
-  openCheckinModal: function() {
-    this.setData({ activeModal: "checkin" });
-  },
-
+  // 弹窗关闭
   closeModal: function() {
     this.setData({ activeModal: null });
   },
 
+  // 快捷工具
+  openPcLoginModal: function() { this.setData({ activeModal: "pc" }); },
+  openInviteModal: function() { this.setData({ activeModal: "invite" }); },
+  openCheckinModal: function() { this.setData({ activeModal: "checkin" }); },
+
   copyPcUrl: function() {
-    var url = "https://crm.laiwupilates.com/admin";
     wx.setClipboardData({
-      data: url,
-      success: function() {
-        wx.showToast({ title: "已复制电脑网址", icon: "success" });
-      }
+      data: "https://crm.laiwupilates.com/admin",
+      success: function() { wx.showToast({ title: "已复制电脑网址", icon: "success" }); }
     });
   },
 
   copyInviteText: function() {
-    var text = "微信搜索小程序【徕舞普拉提】即可在线约课与选座";
     wx.setClipboardData({
-      data: text,
-      success: function() {
-        wx.showToast({ title: "已复制引导文案", icon: "success" });
+      data: "微信搜索小程序【徕舞普拉提】即可在线约课与选座",
+      success: function() { wx.showToast({ title: "已复制引导文案", icon: "success" }); }
+    });
+  },
+
+  // ── 1. 预约管理：加载真实场次与学员名单，并支持取消 ──
+  tapBookings: function() {
+    var that = this;
+    this.setData({ activeModal: "bookings", loadingBookings: true });
+    api.request({
+      url: "/api/portal/manager/actions?action=bookings&date=" + this.data.todayDateIso,
+      success: function(res) {
+        if (res.statusCode === 200 && res.data) {
+          that.setData({ bookingSessions: res.data.sessions || [], loadingBookings: false });
+        } else {
+          that.setData({ loadingBookings: false });
+        }
+      },
+      fail: function() {
+        that.setData({ loadingBookings: false });
       }
     });
   },
 
-  // 九宫格点击交互
-  tapBookings: function() {
-    this.setData({ activeModal: "bookings" });
-  },
+  // 帮会员现场取消预约
+  cancelBookingAttendee: function(e) {
+    var that = this;
+    var bookingId = e.currentTarget.dataset.id;
+    var memberName = e.currentTarget.dataset.name;
 
-  tapSchedule: function() {
-    wx.switchTab({ url: "/pages/booking/booking" });
-  },
-
-  tapCourses: function() {
-    this.setData({ activeModal: "courses" });
-  },
-
-  tapCoach: function() {
-    wx.navigateTo({ url: "/pages/notes/notes" });
-  },
-
-  tapMembers: function() {
-    var count = this.data.totalMembersCount;
-    var portal = this.data.portalEnabledCount;
     wx.showModal({
-      title: "会员CRM档案",
-      content: "当前在籍活跃会员 " + count + " 位，其中 " + portal + " 人已开通微信小程序免密约课。\n\n如需录入新会员或批量导入，可使用手机电脑端后台操作。",
-      showCancel: false,
-      confirmText: "我知道了"
+      title: "取消预约确认",
+      content: "确定要为学员【" + memberName + "】取消本节课吗？取消后席位将立即释放，课时将自动退还。",
+      confirmColor: "#DC2626",
+      confirmText: "确认取消",
+      cancelText: "保留",
+      success: function(sm) {
+        if (!sm.confirm) return;
+        wx.showLoading({ title: "正在退课…" });
+        api.request({
+          url: "/api/portal/manager/actions?action=cancel_booking",
+          method: "POST",
+          data: { bookingId: bookingId, reason: "导师在小程序手动退约" },
+          success: function(res) {
+            wx.hideLoading();
+            if (res.statusCode === 200 && res.data && res.data.success) {
+              wx.showToast({ title: "已取消并释放席位", icon: "success" });
+              that.tapBookings(); // 刷新名单
+              that.loadDashboard(); // 刷新指标
+            } else {
+              wx.showToast({ title: (res.data && res.data.error) || "取消失败", icon: "none" });
+            }
+          },
+          fail: function() {
+            wx.hideLoading();
+            wx.showToast({ title: "网络异常", icon: "none" });
+          }
+        });
+      }
     });
   },
 
-  tapTeam: function() {
-    wx.switchTab({ url: "/pages/brand/brand" });
+  // ── 2. 现场录入新会员 ──
+  tapMembers: function() {
+    this.setData({
+      activeModal: "create_member",
+      newMemberName: "",
+      newMemberPhone: ""
+    });
   },
 
-  tapCards: function() {
-    wx.navigateTo({ url: "/pages/cards/cards" });
+  onMemberNameInput: function(e) { this.setData({ newMemberName: e.detail.value }); },
+  onMemberPhoneInput: function(e) { this.setData({ newMemberPhone: e.detail.value }); },
+
+  submitCreateMember: function() {
+    var that = this;
+    var name = this.data.newMemberName.trim();
+    var phone = this.data.newMemberPhone.trim();
+
+    if (!name) { wx.showToast({ title: "请输入会员姓名", icon: "none" }); return; }
+    if (!phone || !/^1\d{10}$/.test(phone)) { wx.showToast({ title: "请输入11位手机号", icon: "none" }); return; }
+
+    this.setData({ submittingMember: true });
+    wx.showLoading({ title: "正在录入…" });
+
+    api.request({
+      url: "/api/portal/manager/actions?action=create_member",
+      method: "POST",
+      data: { name: name, phone: phone },
+      success: function(res) {
+        wx.hideLoading();
+        that.setData({ submittingMember: false });
+        if (res.statusCode === 200 && res.data && res.data.success) {
+          wx.showModal({
+            title: "录入成功",
+            content: res.data.message + "\n\n已自动激活该会员的小程序约课通道，可立即开始约课。",
+            showCancel: false,
+            confirmText: "好的",
+            success: function() {
+              that.closeModal();
+              that.loadDashboard();
+            }
+          });
+        } else {
+          wx.showToast({ title: (res.data && res.data.error) || "录入失败", icon: "none" });
+        }
+      },
+      fail: function() {
+        wx.hideLoading();
+        that.setData({ submittingMember: false });
+        wx.showToast({ title: "网络请求失败", icon: "none" });
+      }
+    });
   },
+
+  // ── 3. 课程管理与修改 ──
+  tapCourses: function() {
+    var that = this;
+    this.setData({ activeModal: "courses", loadingCourses: true });
+    api.request({
+      url: "/api/portal/manager/actions?action=courses",
+      success: function(res) {
+        if (res.statusCode === 200 && res.data) {
+          that.setData({ coursesList: res.data.courses || [], loadingCourses: false });
+        } else {
+          that.setData({ loadingCourses: false });
+        }
+      },
+      fail: function() {
+        that.setData({ loadingCourses: false });
+      }
+    });
+  },
+
+  // 点击某门课打开编辑
+  openEditCourse: function(e) {
+    var item = e.currentTarget.dataset.item;
+    this.setData({
+      activeModal: "edit_course",
+      editingCourse: {
+        id: item.id,
+        name: item.name || "",
+        categoryType: item.category_type || "boutique",
+        difficultyStars: Number(item.difficulty_stars || 3),
+        description: item.description || ""
+      }
+    });
+  },
+
+  onEditCourseName: function(e) { this.setData({ "editingCourse.name": e.detail.value }); },
+  onEditCourseDesc: function(e) { this.setData({ "editingCourse.description": e.detail.value }); },
+
+  setCourseType: function(e) {
+    var t = e.currentTarget.dataset.type;
+    this.setData({ "editingCourse.categoryType": t });
+  },
+
+  setCourseStars: function(e) {
+    var stars = Number(e.currentTarget.dataset.stars);
+    this.setData({ "editingCourse.difficultyStars": stars });
+  },
+
+  submitUpdateCourse: function() {
+    var that = this;
+    var c = this.data.editingCourse;
+    if (!c.name.trim()) { wx.showToast({ title: "课程名不能为空", icon: "none" }); return; }
+
+    this.setData({ submittingCourse: true });
+    wx.showLoading({ title: "正在保存…" });
+
+    api.request({
+      url: "/api/portal/manager/actions?action=update_course",
+      method: "POST",
+      data: c,
+      success: function(res) {
+        wx.hideLoading();
+        that.setData({ submittingCourse: false });
+        if (res.statusCode === 200 && res.data && res.data.success) {
+          wx.showToast({ title: "已同步更新", icon: "success" });
+          that.tapCourses(); // 重新加载课程列表
+        } else {
+          wx.showToast({ title: (res.data && res.data.error) || "保存失败", icon: "none" });
+        }
+      },
+      fail: function() {
+        wx.hideLoading();
+        that.setData({ submittingCourse: false });
+        wx.showToast({ title: "网络异常", icon: "none" });
+      }
+    });
+  },
+
+  // ── 4. 快速排课加课 ──
+  tapSchedule: function() {
+    this.setData({ activeModal: "create_session" });
+  },
+
+  onSessionCourseChange: function(e) { this.setData({ newSessionCourseIndex: Number(e.detail.value) }); },
+  onSessionCoachChange: function(e) { this.setData({ newSessionCoachIndex: Number(e.detail.value) }); },
+  onSessionRoomChange: function(e) { this.setData({ newSessionRoomIndex: Number(e.detail.value) }); },
+  onSessionDateChange: function(e) { this.setData({ newSessionDate: e.detail.value }); },
+  onSessionStartChange: function(e) { this.setData({ newSessionStartTime: e.detail.value }); },
+  onSessionEndChange: function(e) { this.setData({ newSessionEndTime: e.detail.value }); },
+  onSessionCapacityInput: function(e) { this.setData({ newSessionCapacity: Number(e.detail.value) || 6 }); },
+
+  submitCreateSession: function() {
+    var that = this;
+    var opts = this.data.sessionOptions;
+    if (!opts.courses.length) { wx.showToast({ title: "未获取到课程列表", icon: "none" }); return; }
+
+    var course = opts.courses[this.data.newSessionCourseIndex];
+    var coach = opts.coaches[this.data.newSessionCoachIndex];
+    var room = opts.rooms[this.data.newSessionRoomIndex];
+
+    this.setData({ submittingSession: true });
+    wx.showLoading({ title: "正在排课…" });
+
+    api.request({
+      url: "/api/portal/manager/actions?action=create_session",
+      method: "POST",
+      data: {
+        courseCategoryId: course ? course.id : 1,
+        coachId: coach ? coach.id : null,
+        roomId: room ? room.id : null,
+        sessionDate: this.data.newSessionDate,
+        startTime: this.data.newSessionStartTime,
+        endTime: this.data.newSessionEndTime,
+        capacity: this.data.newSessionCapacity
+      },
+      success: function(res) {
+        wx.hideLoading();
+        that.setData({ submittingSession: false });
+        if (res.statusCode === 200 && res.data && res.data.success) {
+          wx.showModal({
+            title: "排课成功",
+            content: res.data.message + "\n\n小程序前端约课页面已同步上线，学员即可在线选课。",
+            showCancel: false,
+            confirmText: "好的",
+            success: function() {
+              that.closeModal();
+              that.loadDashboard();
+            }
+          });
+        } else {
+          wx.showToast({ title: (res.data && res.data.error) || "排课失败", icon: "none" });
+        }
+      },
+      fail: function() {
+        wx.hideLoading();
+        that.setData({ submittingSession: false });
+        wx.showToast({ title: "网络连接失败", icon: "none" });
+      }
+    });
+  },
+
+  // 其他九宫格
+  tapCoach: function() { wx.navigateTo({ url: "/pages/notes/notes" }); },
+  tapTeam: function() { wx.switchTab({ url: "/pages/brand/brand" }); },
+  tapCards: function() { wx.navigateTo({ url: "/pages/cards/cards" }); },
 
   tapVenue: function() {
     wx.showModal({
