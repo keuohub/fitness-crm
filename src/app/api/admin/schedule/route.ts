@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
   if (!isDate(from) || !isDate(to)) return bad("日期格式应为 YYYY-MM-DD");
   const rows = coachId
     ? await rawSql`
-        SELECT s.*, c.name AS course_name, c.key AS course_key, u.name AS coach_name, r.name AS room_name
+        SELECT s.*, c.name AS course_name, c.key AS course_key, c.category_type, u.name AS coach_name, r.name AS room_name
         FROM class_sessions s
         JOIN course_categories c ON c.id = s.course_category_id
         LEFT JOIN users u ON u.id = s.coach_id
@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
         WHERE s.tenant_id = 1 AND s.session_date BETWEEN ${from} AND ${to} AND s.coach_id = ${coachId}
         ORDER BY s.session_date, s.start_time`
     : await rawSql`
-        SELECT s.*, c.name AS course_name, c.key AS course_key, u.name AS coach_name, r.name AS room_name
+        SELECT s.*, c.name AS course_name, c.key AS course_key, c.category_type, u.name AS coach_name, r.name AS room_name
         FROM class_sessions s
         JOIN course_categories c ON c.id = s.course_category_id
         LEFT JOIN users u ON u.id = s.coach_id

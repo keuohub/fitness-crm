@@ -22,7 +22,14 @@ import {
   Building2,
 } from "lucide-react";
 
-type Course = { id: number; name: string; duration_minutes: number; default_capacity: number; is_active?: number };
+type Course = {
+  id: number;
+  name: string;
+  duration_minutes: number;
+  default_capacity: number;
+  is_active?: number;
+  category_type?: string;
+};
 type Coach = { id: number; name: string };
 type Room = { id: number; name: string; capacity: number };
 type Session = {
@@ -40,6 +47,7 @@ type Session = {
   course_name: string;
   coach_name: string;
   room_name: string | null;
+  category_type?: string;
 };
 type Template = {
   id: number;
@@ -91,6 +99,7 @@ export default function AdminSchedulePage() {
   const { showToast } = useToast();
   const [week, setWeek] = useState(mondayOf(new Date()));
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [templates, setTemplates] = useState<Template[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [coaches, setCoaches] = useState<Coach[]>([]);
@@ -411,6 +420,11 @@ export default function AdminSchedulePage() {
 
   const todayStr = useMemo(() => fmt(new Date()), []);
 
+  const filteredSessions = useMemo(() => {
+    if (categoryFilter === "all") return sessions;
+    return sessions.filter((s) => (s.category_type || "boutique") === categoryFilter);
+  }, [sessions, categoryFilter]);
+
   return (
     <div className="space-y-6">
       {/* Header & Controls */}
@@ -480,12 +494,60 @@ export default function AdminSchedulePage() {
         </div>
       </div>
 
+      {/* Category Tabs & Stats Filter (同步小程序三大分栏) */}
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3 rounded-xl border border-[#E1E5EB] shadow-2xs">
+        <div className="flex items-center gap-1.5 bg-[#F5F7FA] p-1 rounded-lg border border-[#E1E5EB]">
+          {[
+            { id: "all", label: "全部排课", count: sessions.length },
+            {
+              id: "boutique",
+              label: "精品课 (小班器械)",
+              count: sessions.filter((s) => (s.category_type || "boutique") === "boutique").length,
+            },
+            {
+              id: "group",
+              label: "团体课 (超模/瑜伽)",
+              count: sessions.filter((s) => s.category_type === "group").length,
+            },
+            {
+              id: "private",
+              label: "私教课 (1V1)",
+              count: sessions.filter((s) => s.category_type === "private").length,
+            },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setCategoryFilter(tab.id)}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-1.5 ${
+                categoryFilter === tab.id
+                  ? "bg-white text-[#2563EB] shadow-xs font-semibold"
+                  : "text-[#697180] hover:text-[#292D35]"
+              }`}
+            >
+              <span>{tab.label}</span>
+              <span
+                className={`text-[11px] px-1.5 py-0.2 rounded-full font-mono ${
+                  categoryFilter === tab.id
+                    ? "bg-blue-50 text-[#2563EB]"
+                    : "bg-gray-100 text-[#697180]"
+                }`}
+              >
+                {tab.count}
+              </span>
+            </button>
+          ))}
+        </div>
+        <div className="text-xs text-[#697180]">
+          提示：课程分类由课程档案管理，与小程序端“精品课 / 团体课 / 私教课”分栏 100% 实时联动。
+        </div>
+      </div>
+
       {/* Calendar Week Columns Grid */}
       <div className="grid grid-cols-1 md:grid-cols-7 gap-3">
         {weekdays.map((w, i) => {
           const date = addDays(week, i);
           const isToday = date === todayStr;
-          const daySessions = sessions
+          const daySessions = filteredSessions
             .filter((s) => s.session_date === date)
             .sort((a, b) => a.start_time.localeCompare(b.start_time));
 
@@ -578,9 +640,24 @@ export default function AdminSchedulePage() {
                         </div>
                       </div>
 
-                      {/* Course Title */}
-                      <div className="font-medium text-[#292D35] mt-1 text-xs truncate">
-                        {s.course_name}
+                      {/* Course Title & Category Badge */}
+                      <div className="flex items-center justify-between gap-1 mt-1">
+                        <div className="font-semibold text-[#292D35] text-xs truncate">
+                          {s.course_name}
+                        </div>
+                        {s.category_type === "group" ? (
+                          <span className="text-[10px] px-1.5 py-0.2 rounded font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+                            团体课
+                          </span>
+                        ) : s.category_type === "private" ? (
+                          <span className="text-[10px] px-1.5 py-0.2 rounded font-medium bg-amber-50 text-amber-700 border border-amber-200 shrink-0">
+                            私教课
+                          </span>
+                        ) : (
+                          <span className="text-[10px] px-1.5 py-0.2 rounded font-medium bg-blue-50 text-[#2563EB] border border-blue-200 shrink-0">
+                            精品课
+                          </span>
+                        )}
                       </div>
 
                       {/* Coach & Room */}
@@ -702,10 +779,19 @@ export default function AdminSchedulePage() {
                     <option value="">-- 选择课程 --</option>
                     {activeCourses.map((c) => (
                       <option key={c.id} value={c.id}>
-                        {c.name} ({c.duration_minutes}分钟)
+                        {c.name} · {c.category_type === "group" ? "团体课" : c.category_type === "private" ? "私教课" : "精品课"} ({c.duration_minutes}分钟)
                       </option>
                     ))}
                   </select>
+                  {form.courseCategoryId && (
+                    <div className="mt-1 text-[11px] text-[#2563EB]">
+                      对应小程序分栏：
+                      {(() => {
+                        const sel = activeCourses.find((c) => String(c.id) === form.courseCategoryId);
+                        return sel?.category_type === "group" ? "团体课" : sel?.category_type === "private" ? "私教课" : "精品课";
+                      })()}
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -886,10 +972,19 @@ export default function AdminSchedulePage() {
                   >
                     {courses.map((c) => (
                       <option key={c.id} value={c.id}>
-                        {c.name} ({c.duration_minutes}分钟)
+                        {c.name} · {c.category_type === "group" ? "团体课" : c.category_type === "private" ? "私教课" : "精品课"} ({c.duration_minutes}分钟)
                       </option>
                     ))}
                   </select>
+                  {editForm.courseCategoryId && (
+                    <div className="mt-1 text-[11px] text-[#2563EB]">
+                      对应小程序分栏：
+                      {(() => {
+                        const sel = courses.find((c) => String(c.id) === editForm.courseCategoryId);
+                        return sel?.category_type === "group" ? "团体课" : sel?.category_type === "private" ? "私教课" : "精品课";
+                      })()}
+                    </div>
+                  )}
                 </div>
 
                 <div>
