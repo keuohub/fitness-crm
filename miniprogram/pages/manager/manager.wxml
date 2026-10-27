@@ -1,19 +1,24 @@
 <!-- pages/manager/manager.wxml -->
 <view class="mgr-page">
 
-  <!-- 自定义顶部状态栏与导航 -->
+  <!-- 顶部自定义状态栏与全局导航 -->
   <view class="mgr-navbar">
-    <view class="mgr-nav-left" bindtap="goBackMember">
+    <view class="mgr-nav-left" bindtap="{{currentView === 'home' ? 'goBackMember' : 'goHomeView'}}">
       <text class="mgr-nav-back">‹</text>
-      <text class="mgr-nav-back-text">会员端</text>
+      <text class="mgr-nav-back-text">{{currentView === 'home' ? '会员端' : '工作台'}}</text>
     </view>
     <view class="mgr-nav-title">
-      <text class="mgr-nav-brand">徕舞普拉提</text>
+      <text class="mgr-nav-brand">{{navTitle}}</text>
       <text class="mgr-nav-badge">管家端</text>
     </view>
-    <view class="mgr-nav-right"></view>
+    <view class="mgr-nav-right">
+      <view wx:if="{{currentView !== 'home'}}" class="mgr-nav-home-pill" bindtap="goHomeView">
+        主页
+      </view>
+    </view>
   </view>
 
+  <!-- 全局加载与错误 -->
   <view wx:if="{{loading}}" class="mgr-loading">
     <text class="mgr-loading-text">正在同步会馆实时数据…</text>
   </view>
@@ -22,7 +27,10 @@
     <text class="mgr-error-text">{{loadError}}（点击重试）</text>
   </view>
 
-  <block wx:else>
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <!-- 视图 1：主工作台九宫格与实时概览 (currentView === 'home') -->
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <view wx:elif="{{currentView === 'home'}}" class="mgr-view-container">
     <!-- 头部黑金卡片 -->
     <view class="mgr-hero-card">
       <view class="mgr-hero-top">
@@ -35,32 +43,32 @@
       <text class="mgr-hero-desc">全自研SaaS智能中枢 · 约课已打通 · 课后自动结课</text>
     </view>
 
-    <!-- 顶部三大核心实时指标卡 (对标竞品截屏) -->
+    <!-- 顶部三大核心实时指标卡 (点击直达对应全屏工作台) -->
     <view class="mgr-stats-row">
       <!-- 今日预约 -->
-      <view class="mgr-stat-card" bindtap="tapBookings">
+      <view class="mgr-stat-card" bindtap="switchToBookings">
         <text class="mgr-stat-label">今日预约</text>
         <text class="mgr-stat-num">{{todayBookingsCount}}</text>
         <text class="mgr-stat-hint hint-gold">查名单/退课 ›</text>
       </view>
 
       <!-- 新增会员卡 -->
-      <view class="mgr-stat-card" bindtap="tapCards">
-        <text class="mgr-stat-label">新增会员卡</text>
-        <text class="mgr-stat-num">{{todayNewCardsCount}}</text>
-        <text class="mgr-stat-hint hint-green">发卡与扣次 ›</text>
+      <view class="mgr-stat-card" bindtap="switchToCards">
+        <text class="mgr-stat-label">有效会员卡</text>
+        <text class="mgr-stat-num">{{totalCardsCount}}</text>
+        <text class="mgr-stat-hint hint-green">卡项明细 ›</text>
       </view>
 
       <!-- 新增会员 -->
-      <view class="mgr-stat-card" bindtap="tapMembers">
-        <text class="mgr-stat-label">新增会员</text>
-        <text class="mgr-stat-num">{{todayNewMembersCount}}</text>
+      <view class="mgr-stat-card" bindtap="switchToMembers">
+        <text class="mgr-stat-label">在册会员</text>
+        <text class="mgr-stat-num">{{totalMembersCount}}</text>
         <text class="mgr-stat-hint hint-blue">+现场录入 ›</text>
       </view>
     </view>
 
-    <!-- 实时动态通报条 (对标竞品截屏) -->
-    <view class="mgr-ticker-card" bindtap="tapBookings">
+    <!-- 实时动态通报条 -->
+    <view class="mgr-ticker-card" bindtap="switchToBookings">
       <view class="mgr-ticker-left">
         <view class="mgr-ticker-dot {{topActivityStatus === 'cancelled' ? 'dot-red' : 'dot-green'}}"></view>
         <text class="mgr-ticker-text">{{topActivityText}}</text>
@@ -71,58 +79,58 @@
       </view>
     </view>
 
-    <!-- 快捷工具三大按钮 (电脑登录 / 邀请会员 / 签到码) -->
+    <!-- 快捷工具三大按钮 -->
     <view class="mgr-tools-row">
-      <view class="mgr-tool-btn" bindtap="openPcLoginModal">
+      <view class="mgr-tool-btn" bindtap="openPcLogin">
         <view class="mgr-tool-icon-wrap icon-gold">
           <text class="mgr-tool-symbol">🖥</text>
         </view>
         <text class="mgr-tool-name">电脑登录</text>
       </view>
 
-      <view class="mgr-tool-btn" bindtap="openInviteModal">
+      <view class="mgr-tool-btn" bindtap="copyInviteText">
         <view class="mgr-tool-icon-wrap icon-blue">
           <text class="mgr-tool-symbol">🔗</text>
         </view>
         <text class="mgr-tool-name">邀请会员</text>
       </view>
 
-      <view class="mgr-tool-btn" bindtap="openCheckinModal">
+      <view class="mgr-tool-btn" bindtap="openCheckinNotice">
         <view class="mgr-tool-icon-wrap icon-green">
           <text class="mgr-tool-symbol">⚡</text>
         </view>
-        <text class="mgr-tool-name">签到码</text>
+        <text class="mgr-tool-name">自动结课</text>
       </view>
     </view>
 
-    <!-- 九宫格核心业务入口 (3x3 结构，对标竞品截屏) -->
+    <!-- 九宫格核心业务入口 (3x3 结构) -->
     <view class="mgr-grid-card">
       <view class="mgr-grid-head">
         <text class="mgr-grid-title">业务功能中枢</text>
-        <text class="mgr-grid-note">9项核心SaaS功能已打通</text>
+        <text class="mgr-grid-note">9项核心SaaS功能全部打通</text>
       </view>
 
       <view class="mgr-grid-body">
         <!-- 1. 预约 -->
-        <view class="mgr-grid-item" bindtap="tapBookings">
+        <view class="mgr-grid-item" bindtap="switchToBookings">
           <view class="mgr-item-icon-box bg-gold">
             <text class="mgr-item-char">约</text>
           </view>
-          <text class="mgr-item-title">预约</text>
+          <text class="mgr-item-title">预约管理</text>
           <text class="mgr-item-sub">名单与退课</text>
         </view>
 
         <!-- 2. 排课 -->
-        <view class="mgr-grid-item" bindtap="tapSchedule">
+        <view class="mgr-grid-item" bindtap="switchToSchedule">
           <view class="mgr-item-icon-box bg-blue">
             <text class="mgr-item-char">课</text>
           </view>
-          <text class="mgr-item-title">排课</text>
+          <text class="mgr-item-title">排课中心</text>
           <text class="mgr-item-sub">+新增排课</text>
         </view>
 
         <!-- 3. 课程管理 -->
-        <view class="mgr-grid-item" bindtap="tapCourses">
+        <view class="mgr-grid-item" bindtap="switchToCourses">
           <view class="mgr-item-icon-box bg-purple">
             <text class="mgr-item-char">目</text>
           </view>
@@ -135,16 +143,16 @@
           <view class="mgr-item-icon-box bg-green">
             <text class="mgr-item-char">私</text>
           </view>
-          <text class="mgr-item-title">私教</text>
-          <text class="mgr-item-sub">1V1授课</text>
+          <text class="mgr-item-title">私教跟进</text>
+          <text class="mgr-item-sub">训练与手记</text>
         </view>
 
         <!-- 5. 会员 -->
-        <view class="mgr-grid-item" bindtap="tapMembers">
+        <view class="mgr-grid-item" bindtap="switchToMembers">
           <view class="mgr-item-icon-box bg-amber">
             <text class="mgr-item-char">员</text>
           </view>
-          <text class="mgr-item-title">会员</text>
+          <text class="mgr-item-title">会员中心</text>
           <text class="mgr-item-sub">+录新会员</text>
         </view>
 
@@ -153,35 +161,35 @@
           <view class="mgr-item-icon-box bg-slate">
             <text class="mgr-item-char">工</text>
           </view>
-          <text class="mgr-item-title">员工</text>
+          <text class="mgr-item-title">员工导师</text>
           <text class="mgr-item-sub">团队名录</text>
         </view>
 
         <!-- 7. 会员卡 -->
-        <view class="mgr-grid-item" bindtap="tapCards">
+        <view class="mgr-grid-item" bindtap="switchToCards">
           <view class="mgr-item-icon-box bg-orange">
             <text class="mgr-item-char">卡</text>
           </view>
-          <text class="mgr-item-title">会员卡</text>
+          <text class="mgr-item-title">会员卡项</text>
           <text class="mgr-item-sub">卡项明细</text>
         </view>
 
         <!-- 8. 教室 -->
-        <view class="mgr-grid-item" bindtap="tapVenue">
+        <view class="mgr-grid-item" bindtap="switchToVenue">
           <view class="mgr-item-icon-box bg-sky">
             <text class="mgr-item-char">室</text>
           </view>
-          <text class="mgr-item-title">教室</text>
-          <text class="mgr-item-sub">场地席位</text>
+          <text class="mgr-item-title">教室场地</text>
+          <text class="mgr-item-sub">器械席位</text>
         </view>
 
         <!-- 9. 数据统计 -->
-        <view class="mgr-grid-item" bindtap="tapReports">
+        <view class="mgr-grid-item" bindtap="switchToReports">
           <view class="mgr-item-icon-box bg-rose">
             <text class="mgr-item-char">数</text>
           </view>
-          <text class="mgr-item-title">数据统计</text>
-          <text class="mgr-item-sub">经营报表</text>
+          <text class="mgr-item-title">经营报表</text>
+          <text class="mgr-item-sub">数据大盘</text>
         </view>
       </view>
     </view>
@@ -193,140 +201,408 @@
         <text class="mgr-switch-note">随时可在「我的账户」重返管家端</text>
       </view>
     </view>
-  </block>
-
-  <!-- ═══════════ 弹窗与抽屉操作层 ═══════════ -->
-
-  <!-- 弹窗 1：电脑登录 -->
-  <view wx:if="{{activeModal === 'pc'}}" class="mgr-modal-mask" bindtap="closeModal">
-    <view class="mgr-modal-card" catchtap="true">
-      <view class="mgr-modal-head">
-        <text class="mgr-modal-title">电脑端管理后台</text>
-        <view class="mgr-modal-close" bindtap="closeModal">×</view>
-      </view>
-      <text class="mgr-modal-desc">在电脑浏览器打开以下网址，使用手机号即可直接登录管理中枢：</text>
-      <view class="mgr-modal-code">https://crm.laiwupilates.com/admin</view>
-      <button class="mgr-modal-action-btn" bindtap="copyPcUrl">复制电脑端网址</button>
-    </view>
   </view>
 
-  <!-- 弹窗 2：邀请会员 -->
-  <view wx:if="{{activeModal === 'invite'}}" class="mgr-modal-mask" bindtap="closeModal">
-    <view class="mgr-modal-card" catchtap="true">
-      <view class="mgr-modal-head">
-        <text class="mgr-modal-title">邀请会员在线约课</text>
-        <view class="mgr-modal-close" bindtap="closeModal">×</view>
+
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <!-- 视图 2：预约管理全屏工作台 (currentView === 'bookings') -->
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <view wx:elif="{{currentView === 'bookings'}}" class="mgr-view-container">
+    <!-- 日期选择水平滑块 -->
+    <view class="mgr-sub-header">
+      <view class="mgr-sub-title-row">
+        <text class="mgr-sub-view-title">排课日程与预约名单</text>
+        <picker mode="date" value="{{selectedBookingDate}}" bindchange="onBookingDatePick">
+          <view class="mgr-date-pick-badge">日历选期 ›</view>
+        </picker>
       </view>
-      <text class="mgr-modal-desc">会员可在微信中直接搜索小程序【徕舞普拉提】或识别会馆太阳码进行约课：</text>
-      <view class="mgr-modal-quote">
-        • 精品课 / 团体课 / 私教课 分类清晰
-        <br />• 真实封面图与星级难度
-        <br />• 预约后到课自动扣次，无需排队核销
-      </view>
-      <button class="mgr-modal-action-btn" bindtap="copyInviteText">复制微信分享文案</button>
+      <text class="mgr-sub-view-sub">点击场次查看预约学员，可随时帮学员取消退还课时</text>
     </view>
-  </view>
 
-  <!-- 弹窗 3：签到码与下课结课规则 -->
-  <view wx:if="{{activeModal === 'checkin'}}" class="mgr-modal-mask" bindtap="closeModal">
-    <view class="mgr-modal-card" catchtap="true">
-      <view class="mgr-modal-head">
-        <text class="mgr-modal-title">智能结课与消课说明</text>
-        <view class="mgr-modal-close" bindtap="closeModal">×</view>
+    <!-- 7 天水平日期滑块 -->
+    <scroll-view scroll-x class="mgr-date-ribbon" enable-flex="true">
+      <view
+        wx:for="{{dateTabs}}"
+        wx:key="date"
+        class="mgr-date-tab {{selectedBookingDate === item.date ? 'tab-active' : ''}}"
+        bindtap="onSelectDateTab"
+        data-date="{{item.date}}"
+      >
+        <text class="mgr-tab-day">{{item.dayLabel}}</text>
+        <text class="mgr-tab-date">{{item.displayDate}}</text>
+        <view wx:if="{{selectedBookingDate === item.date}}" class="mgr-tab-indicator"></view>
       </view>
-      <view class="mgr-modal-notice">
-        <text class="mgr-notice-strong">已启用下课自动结课引擎：\n</text>
-        <text class="mgr-notice-text">会员预约课程后，如在课前未主动取消，课程结束后系统将自动视为已到课并自动扣减课时。\n\n教练与管家无需在课后手动逐一勾选消课，完全解放前台前置时间。</text>
-      </view>
-      <button class="mgr-modal-action-btn" bindtap="closeModal">我知道了</button>
-    </view>
-  </view>
+    </scroll-view>
 
-  <!-- 抽屉 4：【实操】今日排课与预约名单（带退课按钮） -->
-  <view wx:if="{{activeModal === 'bookings'}}" class="mgr-modal-mask" bindtap="closeModal">
-    <view class="mgr-modal-card-lg" catchtap="true">
-      <view class="mgr-modal-head">
-        <view>
-          <text class="mgr-modal-title">今日预约名单</text>
-          <text class="mgr-modal-subtitle">({{bookingSessions.length}} 节课 · 点击可代客退课)</text>
-        </view>
-        <view class="mgr-modal-close" bindtap="closeModal">×</view>
+    <view wx:if="{{loadingBookings}}" class="mgr-inner-loading">正在同步所选日期学员名单…</view>
+
+    <block wx:else>
+      <view wx:if="{{bookingSessions.length === 0}}" class="mgr-empty-card">
+        <text class="mgr-empty-title">该日期暂无排课场次</text>
+        <text class="mgr-empty-desc">当前日期（{{selectedBookingDate}}）尚未发布课程</text>
+        <view class="mgr-empty-action-btn" bindtap="switchToSchedule">立即去排课</view>
       </view>
 
-      <view wx:if="{{loadingBookings}}" class="mgr-inner-loading">正在查询学员名单…</view>
-
-      <scroll-view scroll-y class="mgr-session-scroll" wx:else>
-        <block wx:if="{{bookingSessions.length === 0}}">
-          <view class="mgr-session-empty">今日暂无排课场次</view>
-        </block>
-        <block wx:else>
-          <view class="mgr-session-item" wx:for="{{bookingSessions}}" wx:key="id">
-            <view class="mgr-session-header">
-              <text class="mgr-session-time">{{item.start_time}} - {{item.end_time}}</text>
-              <text class="mgr-session-badge">{{item.room_name}}</text>
-            </view>
-            <view class="mgr-session-main">
-              <text class="mgr-session-name">{{item.course_name}}</text>
-              <text class="mgr-session-coach">导师：{{item.coach_name}}</text>
-            </view>
-            <view class="mgr-session-status-row">
-              <text class="mgr-session-booked">已约 {{item.booked_count}} / {{item.capacity}} 席</text>
-            </view>
-
-            <!-- 实际预约该节课的学员列表 -->
-            <view class="mgr-attendee-section">
-              <view class="mgr-attendee-head">已约学员名单：</view>
-              <block wx:if="{{!item.attendees || item.attendees.length === 0}}">
-                <text class="mgr-attendee-empty">暂无学员预约此课程</text>
-              </block>
-              <block wx:else>
-                <view class="mgr-attendee-row" wx:for="{{item.attendees}}" wx:for-item="att" wx:key="id">
-                  <view class="mgr-att-info">
-                    <text class="mgr-att-name">{{att.member_name}}</text>
-                    <text class="mgr-att-phone">{{att.member_phone || att.member_code || '会员'}}</text>
-                  </view>
-                  <view
-                    class="mgr-att-cancel-btn"
-                    bindtap="cancelBookingAttendee"
-                    data-id="{{att.id}}"
-                    data-name="{{att.member_name}}"
-                  >
-                    帮TA取消
-                  </view>
-                </view>
-              </block>
-            </view>
+      <!-- 场次卡片列表 -->
+      <view wx:for="{{bookingSessions}}" wx:key="id" class="mgr-session-card">
+        <view class="mgr-card-top-bar">
+          <view class="mgr-session-time-badge">
+            <text class="mgr-time-val">{{item.start_time}} - {{item.end_time}}</text>
           </view>
-        </block>
-      </scroll-view>
+          <text class="mgr-room-tag">{{item.room_name}}</text>
+        </view>
 
-      <button class="mgr-modal-action-btn" bindtap="closeModal">关闭</button>
-    </view>
+        <view class="mgr-session-name-row">
+          <text class="mgr-session-title">{{item.course_name}}</text>
+          <text class="mgr-coach-name">导师：{{item.coach_name}}</text>
+        </view>
+
+        <view class="mgr-capacity-bar-wrap">
+          <view class="mgr-capacity-text-row">
+            <text class="mgr-cap-label">预约席位：</text>
+            <text class="mgr-cap-val {{item.booked_count >= item.capacity ? 'text-full' : ''}}">
+              {{item.booked_count}} / {{item.capacity}} 席 {{item.booked_count >= item.capacity ? '(已满额)' : ''}}
+            </text>
+          </view>
+        </view>
+
+        <!-- 学员列表 -->
+        <view class="mgr-attendees-box">
+          <view class="mgr-attendees-header">已预约学员名单：</view>
+          <block wx:if="{{!item.attendees || item.attendees.length === 0}}">
+            <view class="mgr-attendee-none">暂无学员预约本场课程</view>
+          </block>
+          <block wx:else>
+            <view
+              wx:for="{{item.attendees}}"
+              wx:for-item="att"
+              wx:key="id"
+              class="mgr-attendee-cell"
+            >
+              <view class="mgr-att-left">
+                <text class="mgr-att-avatar-circle">{{att.member_name[0]}}</text>
+                <view class="mgr-att-text-col">
+                  <text class="mgr-att-name">{{att.member_name}}</text>
+                  <text class="mgr-att-meta">{{att.member_phone || att.member_code || '会员'}}</text>
+                </view>
+              </view>
+              <view
+                class="mgr-att-cancel-pill"
+                bindtap="cancelBookingAttendee"
+                data-id="{{att.id}}"
+                data-name="{{att.member_name}}"
+              >
+                代客取消
+              </view>
+            </view>
+          </block>
+        </view>
+      </view>
+    </block>
   </view>
 
-  <!-- 抽屉 5：【实操】现场录入新会员表单 -->
-  <view wx:if="{{activeModal === 'create_member'}}" class="mgr-modal-mask" bindtap="closeModal">
-    <view class="mgr-modal-card" catchtap="true">
-      <view class="mgr-modal-head">
-        <text class="mgr-modal-title">现场录入新会员</text>
-        <view class="mgr-modal-close" bindtap="closeModal">×</view>
-      </view>
-      <text class="mgr-modal-desc">录入后将自动生成会员档案、分配会员编号，并自动开通微信小程序约课通道：</text>
 
-      <view class="mgr-form-group">
-        <text class="mgr-form-label">会员姓名</text>
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <!-- 视图 3：排课中心全屏工作台 (currentView === 'schedule') -->
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <view wx:elif="{{currentView === 'schedule'}}" class="mgr-view-container">
+    <view class="mgr-sub-header">
+      <view class="mgr-sub-title-row">
+        <text class="mgr-sub-view-title">排课中心</text>
+        <view class="mgr-date-pick-badge" bindtap="toggleScheduleForm">
+          {{showScheduleForm ? '收起表单 ▲' : '+ 快速发布排课 ▼'}}
+        </view>
+      </view>
+      <text class="mgr-sub-view-sub">发布排课后，前端会员端约课页面实时同步上线</text>
+    </view>
+
+    <!-- 排课表单：完全在标准文档流中，100%原生流畅滚动，决无遮罩穿透！ -->
+    <view wx:if="{{showScheduleForm}}" class="mgr-form-card">
+      <view class="mgr-form-card-title">发布新排课场次</view>
+
+      <!-- 上课日期 -->
+      <view class="mgr-field-group">
+        <text class="mgr-field-label">上课日期</text>
+        <picker mode="date" value="{{newSessionDate}}" bindchange="onSessionDateChange">
+          <view class="mgr-field-picker">{{newSessionDate}} ›</view>
+        </picker>
+      </view>
+
+      <!-- 课程选择 -->
+      <view class="mgr-field-group">
+        <text class="mgr-field-label">选择课程</text>
+        <picker
+          range="{{sessionOptions.courses}}"
+          range-key="name"
+          value="{{newSessionCourseIndex}}"
+          bindchange="onSessionCourseChange"
+        >
+          <view class="mgr-field-picker">
+            {{sessionOptions.courses[newSessionCourseIndex].name || '请选择课程'}} ›
+          </view>
+        </picker>
+      </view>
+
+      <!-- 导师选择 -->
+      <view class="mgr-field-group">
+        <text class="mgr-field-label">授课导师</text>
+        <picker
+          range="{{sessionOptions.coaches}}"
+          range-key="name"
+          value="{{newSessionCoachIndex}}"
+          bindchange="onSessionCoachChange"
+        >
+          <view class="mgr-field-picker">
+            {{sessionOptions.coaches[newSessionCoachIndex].name || '请选择授课导师'}} ›
+          </view>
+        </picker>
+      </view>
+
+      <!-- 教室选择 -->
+      <view class="mgr-field-group">
+        <text class="mgr-field-label">上课教室</text>
+        <picker
+          range="{{sessionOptions.rooms}}"
+          range-key="name"
+          value="{{newSessionRoomIndex}}"
+          bindchange="onSessionRoomChange"
+        >
+          <view class="mgr-field-picker">
+            {{sessionOptions.rooms[newSessionRoomIndex].name || '请选择教室'}} ›
+          </view>
+        </picker>
+      </view>
+
+      <!-- 时间区间 -->
+      <view class="mgr-time-row">
+        <view class="mgr-field-group flex-1">
+          <text class="mgr-field-label">开始时间</text>
+          <picker mode="time" value="{{newSessionStartTime}}" bindchange="onSessionStartChange">
+            <view class="mgr-field-picker">{{newSessionStartTime}} ›</view>
+          </picker>
+        </view>
+        <view class="mgr-field-group flex-1">
+          <text class="mgr-field-label">结束时间</text>
+          <picker mode="time" value="{{newSessionEndTime}}" bindchange="onSessionEndChange">
+            <view class="mgr-field-picker">{{newSessionEndTime}} ›</view>
+          </picker>
+        </view>
+      </view>
+
+      <!-- 席位上限 -->
+      <view class="mgr-field-group">
+        <text class="mgr-field-label">席位上限 (人)</text>
         <input
-          class="mgr-form-input"
+          class="mgr-field-input"
+          type="number"
+          value="{{newSessionCapacity}}"
+          bindinput="onSessionCapacityInput"
+          placeholder="如：6"
+        />
+      </view>
+
+      <button
+        class="mgr-primary-btn"
+        bindtap="submitCreateSession"
+        loading="{{submittingSession}}"
+        disabled="{{submittingSession}}"
+      >
+        立即发布排课 (学员端同步上线)
+      </button>
+    </view>
+
+    <!-- 下方已有排课预览 -->
+    <view class="mgr-section-headline">
+      <text class="mgr-headline-text">已有排课场次（{{newSessionDate}}）</text>
+    </view>
+
+    <view wx:if="{{loadingScheduleSessions}}" class="mgr-inner-loading">正在读取场次…</view>
+    <block wx:else>
+      <view wx:if="{{scheduleSessions.length === 0}}" class="mgr-empty-card-sm">
+        <text class="mgr-empty-text">该日期暂未排课，点击上方表单即可发布</text>
+      </view>
+      <view wx:for="{{scheduleSessions}}" wx:key="id" class="mgr-schedule-preview-card">
+        <view class="mgr-sch-top">
+          <text class="mgr-sch-time">{{item.start_time}} - {{item.end_time}}</text>
+          <text class="mgr-sch-room">{{item.room_name}}</text>
+        </view>
+        <view class="mgr-sch-body">
+          <text class="mgr-sch-name">{{item.course_name}}</text>
+          <text class="mgr-sch-coach">导师：{{item.coach_name}}</text>
+        </view>
+        <view class="mgr-sch-foot">
+          <text class="mgr-sch-cap">席位：{{item.booked_count}} / {{item.capacity}} 人</text>
+          <text class="mgr-sch-status">{{item.status === 'open' ? '开放预约中' : item.status}}</text>
+        </view>
+      </view>
+    </block>
+  </view>
+
+
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <!-- 视图 4：课程管理全屏工作台 (currentView === 'courses') -->
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <view wx:elif="{{currentView === 'courses'}}" class="mgr-view-container">
+    <view class="mgr-sub-header">
+      <view class="mgr-sub-title-row">
+        <text class="mgr-sub-view-title">全会馆核心课程与星级</text>
+      </view>
+      <text class="mgr-sub-view-sub">点击任一课程即可实时修改名称、分类、星级难度及简介</text>
+    </view>
+
+    <!-- 课程编辑展开卡 -->
+    <view wx:if="{{editingCourse.id > 0}}" class="mgr-form-card">
+      <view class="mgr-form-card-head">
+        <text class="mgr-form-card-title">正在编辑：{{editingCourse.name}}</text>
+        <text class="mgr-form-close-text" bindtap="cancelEditCourse">取消</text>
+      </view>
+
+      <view class="mgr-field-group">
+        <text class="mgr-field-label">课程名称</text>
+        <input
+          class="mgr-field-input"
+          value="{{editingCourse.name}}"
+          bindinput="onEditCourseName"
+        />
+      </view>
+
+      <view class="mgr-field-group">
+        <text class="mgr-field-label">课程类别 (前端分类对应)</text>
+        <view class="mgr-pill-row">
+          <view
+            class="mgr-type-pill {{editingCourse.categoryType === 'boutique' ? 'pill-active' : ''}}"
+            bindtap="setCourseType"
+            data-type="boutique"
+          >
+            精品课
+          </view>
+          <view
+            class="mgr-type-pill {{editingCourse.categoryType === 'group' ? 'pill-active' : ''}}"
+            bindtap="setCourseType"
+            data-type="group"
+          >
+            团体课
+          </view>
+          <view
+            class="mgr-type-pill {{editingCourse.categoryType === 'private' ? 'pill-active' : ''}}"
+            bindtap="setCourseType"
+            data-type="private"
+          >
+            私教课
+          </view>
+        </view>
+      </view>
+
+      <view class="mgr-field-group">
+        <text class="mgr-field-label">难度星级评级</text>
+        <view class="mgr-stars-picker">
+          <text
+            class="mgr-star-char {{editingCourse.difficultyStars >= 1 ? 'star-gold' : ''}}"
+            bindtap="setCourseStars"
+            data-stars="1"
+          >★</text>
+          <text
+            class="mgr-star-char {{editingCourse.difficultyStars >= 2 ? 'star-gold' : ''}}"
+            bindtap="setCourseStars"
+            data-stars="2"
+          >★</text>
+          <text
+            class="mgr-star-char {{editingCourse.difficultyStars >= 3 ? 'star-gold' : ''}}"
+            bindtap="setCourseStars"
+            data-stars="3"
+          >★</text>
+          <text
+            class="mgr-star-char {{editingCourse.difficultyStars >= 4 ? 'star-gold' : ''}}"
+            bindtap="setCourseStars"
+            data-stars="4"
+          >★</text>
+          <text
+            class="mgr-star-char {{editingCourse.difficultyStars >= 5 ? 'star-gold' : ''}}"
+            bindtap="setCourseStars"
+            data-stars="5"
+          >★</text>
+          <text class="mgr-stars-count-text">{{editingCourse.difficultyStars}} 星</text>
+        </view>
+      </view>
+
+      <view class="mgr-field-group">
+        <text class="mgr-field-label">课程简介</text>
+        <textarea
+          class="mgr-field-textarea"
+          value="{{editingCourse.description}}"
+          bindinput="onEditCourseDesc"
+          placeholder="输入塑形亮点、受众人群及训练效益"
+        />
+      </view>
+
+      <button
+        class="mgr-primary-btn"
+        bindtap="submitUpdateCourse"
+        loading="{{submittingCourse}}"
+        disabled="{{submittingCourse}}"
+      >
+        保存修改并同步会员端
+      </button>
+    </view>
+
+    <!-- 课程列表 -->
+    <view wx:if="{{loadingCourses}}" class="mgr-inner-loading">正在读取课程列表…</view>
+    <block wx:else>
+      <view
+        wx:for="{{coursesList}}"
+        wx:key="id"
+        class="mgr-course-list-card"
+        bindtap="openEditCourse"
+        data-item="{{item}}"
+      >
+        <view class="mgr-course-card-top">
+          <text class="mgr-course-name">{{item.name}}</text>
+          <text class="mgr-course-tag">
+            {{item.category_type === 'boutique' ? '精品课' : item.category_type === 'group' ? '团体课' : '私教课'}}
+          </text>
+        </view>
+        <view class="mgr-course-stars-row">
+          <text class="mgr-course-stars-text">难度星级：★ {{item.difficulty_stars}} 星</text>
+        </view>
+        <text class="mgr-course-desc-text">{{item.description || '暂无简介，点击可编辑'}}</text>
+        <view class="mgr-course-edit-hint">点击编辑该课程 ›</view>
+      </view>
+    </block>
+  </view>
+
+
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <!-- 视图 5：会员中心全屏工作台 (currentView === 'members') -->
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <view wx:elif="{{currentView === 'members'}}" class="mgr-view-container">
+    <view class="mgr-sub-header">
+      <view class="mgr-sub-title-row">
+        <text class="mgr-sub-view-title">会员中心</text>
+        <view class="mgr-date-pick-badge" bindtap="toggleNewMemberCard">
+          {{showNewMemberCard ? '收起录入 ▲' : '+ 现场录入会员 ▼'}}
+        </view>
+      </view>
+      <text class="mgr-sub-view-sub">录入后将自动分配会员编号并开通微信约课权限</text>
+    </view>
+
+    <!-- 现场录入新会员表单卡片 -->
+    <view wx:if="{{showNewMemberCard}}" class="mgr-form-card">
+      <view class="mgr-form-card-title">现场录入新会员</view>
+
+      <view class="mgr-field-group">
+        <text class="mgr-field-label">会员姓名</text>
+        <input
+          class="mgr-field-input"
           placeholder="如：张雨馨"
           value="{{newMemberName}}"
           bindinput="onMemberNameInput"
         />
       </view>
 
-      <view class="mgr-form-group">
-        <text class="mgr-form-label">手机号码 (微信绑定位)</text>
+      <view class="mgr-field-group">
+        <text class="mgr-field-label">手机号码 (微信绑定位)</text>
         <input
-          class="mgr-form-input"
+          class="mgr-field-input"
           type="number"
           maxlength="11"
           placeholder="输入11位手机号"
@@ -336,252 +612,165 @@
       </view>
 
       <button
-        class="mgr-modal-action-btn"
+        class="mgr-primary-btn"
         bindtap="submitCreateMember"
         loading="{{submittingMember}}"
         disabled="{{submittingMember}}"
       >
-        确认录入并开通约课
+        确认录入并开通约课通道
       </button>
     </view>
+
+    <!-- 搜索栏 -->
+    <view class="mgr-search-bar-wrap">
+      <input
+        class="mgr-search-input"
+        placeholder="搜索会员姓名 / 手机号 / 编号…"
+        value="{{memberSearchKeyword}}"
+        bindinput="onMemberSearchInput"
+        bindconfirm="doSearchMembers"
+      />
+      <view class="mgr-search-btn" bindtap="doSearchMembers">搜索</view>
+    </view>
+
+    <!-- 会员列表 -->
+    <view wx:if="{{loadingMembers}}" class="mgr-inner-loading">正在查询在册会员…</view>
+    <block wx:else>
+      <view wx:if="{{membersList.length === 0}}" class="mgr-empty-card-sm">
+        <text class="mgr-empty-text">未找到符合条件的会员</text>
+      </view>
+      <view wx:for="{{membersList}}" wx:key="id" class="mgr-member-card">
+        <view class="mgr-member-card-left">
+          <text class="mgr-member-avatar-circle">{{item.name[0]}}</text>
+          <view class="mgr-member-info">
+            <view class="mgr-member-name-row">
+              <text class="mgr-member-name">{{item.name}}</text>
+              <text class="mgr-member-code-badge">{{item.member_code}}</text>
+            </view>
+            <text class="mgr-member-phone">{{item.phone}}</text>
+          </view>
+        </view>
+        <view class="mgr-member-card-right">
+          <text class="mgr-member-cards-num">{{item.active_cards_count}} 张有效卡</text>
+          <text class="mgr-member-status-tag">{{item.status === 'active' ? '正常在籍' : item.status}}</text>
+        </view>
+      </view>
+    </block>
   </view>
 
-  <!-- 抽屉 6：【实操】课程管理列表（点击编辑课程） -->
-  <view wx:if="{{activeModal === 'courses'}}" class="mgr-modal-mask" bindtap="closeModal">
-    <view class="mgr-modal-card-lg" catchtap="true">
-      <view class="mgr-modal-head">
-        <view>
-          <text class="mgr-modal-title">课程管理与维护</text>
-          <text class="mgr-modal-subtitle">(点击任一课程可实时修改星级与简介)</text>
-        </view>
-        <view class="mgr-modal-close" bindtap="closeModal">×</view>
+
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <!-- 视图 6：会员卡项全屏工作台 (currentView === 'cards') -->
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <view wx:elif="{{currentView === 'cards'}}" class="mgr-view-container">
+    <view class="mgr-sub-header">
+      <view class="mgr-sub-title-row">
+        <text class="mgr-sub-view-title">会员卡与划卡资产</text>
       </view>
-
-      <view wx:if="{{loadingCourses}}" class="mgr-inner-loading">正在读取会馆课程…</view>
-
-      <scroll-view scroll-y class="mgr-session-scroll" wx:else>
-        <view
-          class="mgr-course-manage-item"
-          wx:for="{{coursesList}}"
-          wx:key="id"
-          bindtap="openEditCourse"
-          data-item="{{item}}"
-        >
-          <view class="mgr-course-top-row">
-            <text class="mgr-course-item-name">{{item.name}}</text>
-            <text class="mgr-course-item-type">
-              {{item.category_type === 'boutique' ? '精品课' : item.category_type === 'group' ? '团体课' : '私教课'}}
-            </text>
-          </view>
-          <view class="mgr-course-stars-row">
-            <text class="mgr-course-stars-label">难度星级：</text>
-            <text class="mgr-course-stars">★ {{item.difficulty_stars}} 星</text>
-          </view>
-          <text class="mgr-course-item-desc">{{item.description || '暂无简介，点击可补齐'}}</text>
-          <view class="mgr-course-edit-link">点击编辑详情 ›</view>
-        </view>
-      </scroll-view>
-
-      <button class="mgr-modal-action-btn" bindtap="closeModal">关闭</button>
+      <text class="mgr-sub-view-sub">下课自动扣次结课，保障会员课时资产账目严密</text>
     </view>
+
+    <view wx:if="{{loadingCards}}" class="mgr-inner-loading">正在同步会馆卡项明细…</view>
+    <block wx:else>
+      <view wx:if="{{cardsList.length === 0}}" class="mgr-empty-card-sm">
+        <text class="mgr-empty-text">暂无有效会员卡记录</text>
+      </view>
+      <view wx:for="{{cardsList}}" wx:key="id" class="mgr-card-item">
+        <view class="mgr-card-item-top">
+          <text class="mgr-card-type-name">{{item.card_name}}</text>
+          <text class="mgr-card-status-badge">{{item.status === 'active' ? '有效生效中' : item.status}}</text>
+        </view>
+        <view class="mgr-card-member-row">
+          <text class="mgr-card-member-name">{{item.member_name}}</text>
+          <text class="mgr-card-member-phone">{{item.member_phone}}</text>
+        </view>
+        <view class="mgr-card-times-row">
+          <text class="mgr-times-label">剩余课时：</text>
+          <text class="mgr-times-val">{{item.remaining_count}} / {{item.total_count}} 次</text>
+        </view>
+        <view class="mgr-card-date-row">
+          <text class="mgr-date-range">有效期：{{item.start_date || '长期'}} 至 {{item.end_date || '不限期'}}</text>
+        </view>
+      </view>
+    </block>
   </view>
 
-  <!-- 抽屉 7：【实操】修改单门课程详情（星级、名称、简介） -->
-  <view wx:if="{{activeModal === 'edit_course'}}" class="mgr-modal-mask" bindtap="closeModal">
-    <view class="mgr-modal-card" catchtap="true">
-      <view class="mgr-modal-head">
-        <text class="mgr-modal-title">编辑课程设置</text>
-        <view class="mgr-modal-close" bindtap="closeModal">×</view>
-      </view>
 
-      <view class="mgr-form-group">
-        <text class="mgr-form-label">课程名称</text>
-        <input
-          class="mgr-form-input"
-          value="{{editingCourse.name}}"
-          bindinput="onEditCourseName"
-        />
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <!-- 视图 7：教室场地全屏工作台 (currentView === 'venue') -->
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <view wx:elif="{{currentView === 'venue'}}" class="mgr-view-container">
+    <view class="mgr-sub-header">
+      <view class="mgr-sub-title-row">
+        <text class="mgr-sub-view-title">教室与器械设备</text>
       </view>
-
-      <view class="mgr-form-group">
-        <text class="mgr-form-label">所属分类</text>
-        <view class="mgr-type-selector">
-          <view
-            class="mgr-type-opt {{editingCourse.categoryType === 'boutique' ? 'type-active' : ''}}"
-            bindtap="setCourseType"
-            data-type="boutique"
-          >
-            精品课
-          </view>
-          <view
-            class="mgr-type-opt {{editingCourse.categoryType === 'group' ? 'type-active' : ''}}"
-            bindtap="setCourseType"
-            data-type="group"
-          >
-            团体课
-          </view>
-          <view
-            class="mgr-type-opt {{editingCourse.categoryType === 'private' ? 'type-active' : ''}}"
-            bindtap="setCourseType"
-            data-type="private"
-          >
-            私教课
-          </view>
-        </view>
-      </view>
-
-      <view class="mgr-form-group">
-        <text class="mgr-form-label">难度星级评级</text>
-        <view class="mgr-stars-picker">
-          <text
-            class="mgr-star-btn {{editingCourse.difficultyStars >= 1 ? 'star-gold' : ''}}"
-            bindtap="setCourseStars"
-            data-stars="1"
-          >★</text>
-          <text
-            class="mgr-star-btn {{editingCourse.difficultyStars >= 2 ? 'star-gold' : ''}}"
-            bindtap="setCourseStars"
-            data-stars="2"
-          >★</text>
-          <text
-            class="mgr-star-btn {{editingCourse.difficultyStars >= 3 ? 'star-gold' : ''}}"
-            bindtap="setCourseStars"
-            data-stars="3"
-          >★</text>
-          <text
-            class="mgr-star-btn {{editingCourse.difficultyStars >= 4 ? 'star-gold' : ''}}"
-            bindtap="setCourseStars"
-            data-stars="4"
-          >★</text>
-          <text
-            class="mgr-star-btn {{editingCourse.difficultyStars >= 5 ? 'star-gold' : ''}}"
-            bindtap="setCourseStars"
-            data-stars="5"
-          >★</text>
-          <text class="mgr-stars-value-text">{{editingCourse.difficultyStars}} 星难度</text>
-        </view>
-      </view>
-
-      <view class="mgr-form-group">
-        <text class="mgr-form-label">课程简介 (会员约课时可见)</text>
-        <textarea
-          class="mgr-form-textarea"
-          value="{{editingCourse.description}}"
-          bindinput="onEditCourseDesc"
-          placeholder="填写课程简介、塑形亮点与适用人群"
-        />
-      </view>
-
-      <button
-        class="mgr-modal-action-btn"
-        bindtap="submitUpdateCourse"
-        loading="{{submittingCourse}}"
-        disabled="{{submittingCourse}}"
-      >
-        保存课程设置并同步小程序
-      </button>
+      <text class="mgr-sub-view-sub">系统排课自动依据教室容量防超约，保障每位会员的专属器械</text>
     </view>
+
+    <view wx:if="{{loadingVenue}}" class="mgr-inner-loading">正在读取教室设施…</view>
+    <block wx:else>
+      <view wx:for="{{venueRooms}}" wx:key="id" class="mgr-room-card">
+        <view class="mgr-room-card-top">
+          <text class="mgr-room-name">{{item.name}}</text>
+          <text class="mgr-room-cap-badge">席位上限：{{item.capacity}} 人</text>
+        </view>
+        <view class="mgr-room-equipment-box">
+          <text class="mgr-equip-label">配备器械：</text>
+          <text class="mgr-equip-desc">{{item.equipment_desc}}</text>
+        </view>
+        <view class="mgr-room-rule-hint">
+          • 约课防超约：当达到 {{item.capacity}} 人时自动截约
+          <br />• 课后自动结课：自动完成消课扣次
+        </view>
+      </view>
+    </block>
   </view>
 
-  <!-- 抽屉 8：【实操】快速新增排课表单 -->
-  <view wx:if="{{activeModal === 'create_session'}}" class="mgr-modal-mask" bindtap="closeModal">
-    <view class="mgr-modal-card-lg" catchtap="true">
-      <view class="mgr-modal-head">
-        <text class="mgr-modal-title">快速发布新排课</text>
-        <view class="mgr-modal-close" bindtap="closeModal">×</view>
+
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <!-- 视图 8：经营报表全屏工作台 (currentView === 'reports') -->
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <view wx:elif="{{currentView === 'reports'}}" class="mgr-view-container">
+    <view class="mgr-sub-header">
+      <view class="mgr-sub-title-row">
+        <text class="mgr-sub-view-title">会馆经营数据大盘</text>
+      </view>
+      <text class="mgr-sub-view-sub">实时统计入会、发卡、出勤与排课情况</text>
+    </view>
+
+    <view wx:if="{{loadingReports}}" class="mgr-inner-loading">正在聚合经营数据…</view>
+    <block wx:else>
+      <view class="mgr-reports-grid">
+        <view class="mgr-rep-card">
+          <text class="mgr-rep-label">在册会员总数</text>
+          <text class="mgr-rep-num text-gold">{{reportData.active_members || 0}}</text>
+          <text class="mgr-rep-sub">均开通小程序约课</text>
+        </view>
+        <view class="mgr-rep-card">
+          <text class="mgr-rep-label">在籍会员卡</text>
+          <text class="mgr-rep-num text-green">{{reportData.active_cards || 0}}</text>
+          <text class="mgr-rep-sub">有效卡项资产</text>
+        </view>
+        <view class="mgr-rep-card">
+          <text class="mgr-rep-label">累计结课课时</text>
+          <text class="mgr-rep-num text-blue">{{reportData.total_attended || 0}}</text>
+          <text class="mgr-rep-sub">系统自动消课扣减</text>
+        </view>
+        <view class="mgr-rep-card">
+          <text class="mgr-rep-label">未来已发布排课</text>
+          <text class="mgr-rep-num text-orange">{{reportData.upcoming_sessions || 0}}</text>
+          <text class="mgr-rep-sub">开放学员在线预约</text>
+        </view>
       </view>
 
-      <scroll-view scroll-y class="mgr-form-scroll">
-        <!-- 排课日期 -->
-        <view class="mgr-form-group">
-          <text class="mgr-form-label">上课日期</text>
-          <picker mode="date" value="{{newSessionDate}}" bindchange="onSessionDateChange">
-            <view class="mgr-picker-val">{{newSessionDate}} ›</view>
-          </picker>
-        </view>
-
-        <!-- 课程选择 -->
-        <view class="mgr-form-group">
-          <text class="mgr-form-label">选择课程</text>
-          <picker
-            range="{{sessionOptions.courses}}"
-            range-key="name"
-            value="{{newSessionCourseIndex}}"
-            bindchange="onSessionCourseChange"
-          >
-            <view class="mgr-picker-val">
-              {{sessionOptions.courses[newSessionCourseIndex].name || '请选择课程'}} ›
-            </view>
-          </picker>
-        </view>
-
-        <!-- 导师选择 -->
-        <view class="mgr-form-group">
-          <text class="mgr-form-label">授课导师</text>
-          <picker
-            range="{{sessionOptions.coaches}}"
-            range-key="name"
-            value="{{newSessionCoachIndex}}"
-            bindchange="onSessionCoachChange"
-          >
-            <view class="mgr-picker-val">
-              {{sessionOptions.coaches[newSessionCoachIndex].name || '请选择授课导师'}} ›
-            </view>
-          </picker>
-        </view>
-
-        <!-- 教室选择 -->
-        <view class="mgr-form-group">
-          <text class="mgr-form-label">上课教室</text>
-          <picker
-            range="{{sessionOptions.rooms}}"
-            range-key="name"
-            value="{{newSessionRoomIndex}}"
-            bindchange="onSessionRoomChange"
-          >
-            <view class="mgr-picker-val">
-              {{sessionOptions.rooms[newSessionRoomIndex].name || '请选择教室'}} ›
-            </view>
-          </picker>
-        </view>
-
-        <!-- 上课时间段 -->
-        <view class="mgr-form-row">
-          <view class="mgr-form-group flex-1">
-            <text class="mgr-form-label">开始时间</text>
-            <picker mode="time" value="{{newSessionStartTime}}" bindchange="onSessionStartChange">
-              <view class="mgr-picker-val">{{newSessionStartTime}}</view>
-            </picker>
-          </view>
-          <view class="mgr-form-group flex-1">
-            <text class="mgr-form-label">结束时间</text>
-            <picker mode="time" value="{{newSessionEndTime}}" bindchange="onSessionEndChange">
-              <view class="mgr-picker-val">{{newSessionEndTime}}</view>
-            </picker>
-          </view>
-        </view>
-
-        <!-- 人数上限 -->
-        <view class="mgr-form-group">
-          <text class="mgr-form-label">席位上限 (人)</text>
-          <input
-            class="mgr-form-input"
-            type="number"
-            value="{{newSessionCapacity}}"
-            bindinput="onSessionCapacityInput"
-          />
-        </view>
-      </scroll-view>
-
-      <button
-        class="mgr-modal-action-btn"
-        bindtap="submitCreateSession"
-        loading="{{submittingSession}}"
-        disabled="{{submittingSession}}"
-      >
-        立即发布排课 (学员端同步上线)
-      </button>
-    </view>
+      <view class="mgr-engine-card">
+        <view class="mgr-engine-title">智能结课引擎运行状态</view>
+        <view class="mgr-engine-badge">正常运行中</view>
+        <text class="mgr-engine-desc">
+          学员预约后若未在课前主动取消，课程结束后系统自动判定为已上课并自动扣减课时资产。无需教练或前台课后手工勾选消课。
+        </text>
+      </view>
+    </block>
   </view>
 
 </view>

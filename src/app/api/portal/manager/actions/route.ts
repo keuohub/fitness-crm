@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
 
   // 1. 获取某天的场次以及每个场次下的详细预约学员名单
   if (action === "bookings") {
-    const date = u.searchParams.get("date") || new Date().toISOString().slice(0, 10);
+    const date = u.searchParams.get("date") || new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
     const sessions = await rawSql`
       SELECT
         cs.id,
@@ -111,6 +111,77 @@ export async function GET(request: NextRequest) {
     const roomList = await rawSql`SELECT id, name, capacity FROM rooms ORDER BY id ASC`.catch(() => []);
     const courses = await rawSql`SELECT id, name, category_type FROM course_categories ORDER BY id ASC`.catch(() => []);
     return NextResponse.json({ coaches, rooms: roomList, courses });
+  }
+
+  // 4. 获取会员列表 (支持搜索)
+  if (action === "members") {
+    const q = String(u.searchParams.get("q") || "").trim();
+    const list = q
+      ? await rawSql`
+          SELECT m.id, m.name, m.phone, m.member_code, m.status, m.joined_at, m.portal_enabled,
+                 COALESCE((SELECT count(*) FROM member_cards mc WHERE mc.member_id = m.id AND mc.status = 'active'), 0)::int as active_cards_count
+          FROM members m
+          WHERE m.status != 'archived'
+            AND (m.name ILIKE ${'%' + q + '%'} OR m.phone ILIKE ${'%' + q + '%'} OR m.member_code ILIKE ${'%' + q + '%'})
+          ORDER BY m.id DESC
+          LIMIT 40
+        `.catch(() => [])
+      : await rawSql`
+          SELECT m.id, m.name, m.phone, m.member_code, m.status, m.joined_at, m.portal_enabled,
+                 COALESCE((SELECT count(*) FROM member_cards mc WHERE mc.member_id = m.id AND mc.status = 'active'), 0)::int as active_cards_count
+          FROM members m
+          WHERE m.status != 'archived'
+          ORDER BY m.id DESC
+          LIMIT 40
+        `.catch(() => []);
+    return NextResponse.json({ members: list });
+  }
+
+  // 5. 获取会员卡明细
+  if (action === "cards") {
+    const list = await rawSql`
+      SELECT mc.id, mc.member_id, mc.remaining_count, mc.total_count,
+             mc.valid_from as start_date, mc.valid_until as end_date, mc.status,
+             ct.name as card_name, ct.category as card_category, m.name as member_name, m.phone as member_phone
+      FROM member_cards mc
+      JOIN card_types ct ON mc.card_type_id = ct.id
+      JOIN members m ON mc.member_id = m.id
+      ORDER BY mc.id DESC
+      LIMIT 30
+    `.catch((err) => {
+      console.error("Fetch cards error:", err);
+      return [];
+    });
+    return NextResponse.json({ cards: list });
+  }
+
+  // 6. 教室与场地设备明细
+  if (action === "venue") {
+    const roomList = await rawSql`
+      SELECT r.id, r.name, r.capacity,
+             CASE
+               WHEN r.name LIKE '%器械%' THEN '普拉提重力核心床 (Reformer) 6 台'
+               WHEN r.name LIKE '%超模%' OR r.name LIKE '%垫上%' THEN '稳踏椅 / 弧形桶 / 塑形小球魔力圈'
+               WHEN r.name LIKE '%私教%' THEN '凯迪拉克多功能高床 / 梯桶 / 脊柱矫正器'
+               ELSE '专业普拉提塑形训练设备'
+             END as equipment_desc
+      FROM rooms r
+      ORDER BY r.id ASC
+    `.catch(() => []);
+    return NextResponse.json({ rooms: roomList });
+  }
+
+  // 7. 经营数据与报表概览
+  if (action === "reports") {
+    const [report] = await rawSql`
+      SELECT
+        (SELECT count(*)::int FROM members WHERE status = 'active') as active_members,
+        (SELECT count(*)::int FROM member_cards WHERE status = 'active') as active_cards,
+        (SELECT count(*)::int FROM bookings WHERE status = 'attended') as total_attended,
+        (SELECT count(*)::int FROM bookings b JOIN class_sessions cs ON b.session_id = cs.id WHERE cs.session_date = to_char(CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Shanghai', 'YYYY-MM-DD') AND b.status IN ('booked', 'attended')) as today_bookings,
+        (SELECT count(*)::int FROM class_sessions WHERE session_date >= to_char(CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Shanghai', 'YYYY-MM-DD')) as upcoming_sessions
+    `.catch(() => [{}]);
+    return NextResponse.json({ report });
   }
 
   return bad("未知 action");

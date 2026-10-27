@@ -43,32 +43,40 @@ export async function GET(request: NextRequest) {
   const [
     todayBookingsRes,
     todayCardsRes,
+    totalCardsRes,
     todayMembersRes,
     recentActivitiesRes,
     allMembersRes,
     todaySessionsRes,
   ] = await Promise.all([
-    // 今日预约数
+    // 今日预约数 (按北京时间)
     rawSql`
       SELECT count(*)::int as count
       FROM bookings b
       JOIN class_sessions cs ON b.session_id = cs.id
-      WHERE cs.session_date = to_char(CURRENT_DATE, 'YYYY-MM-DD')
+      WHERE cs.session_date = to_char(CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Shanghai', 'YYYY-MM-DD')
         AND b.status IN ('booked', 'attended')
     `.catch(() => [{ count: 0 }]),
 
-    // 今日新增会员卡
+    // 今日新增会员卡 (按北京时间)
     rawSql`
       SELECT count(*)::int as count
       FROM member_cards
-      WHERE created_at >= CURRENT_DATE
+      WHERE created_at >= (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Shanghai')::date
     `.catch(() => [{ count: 0 }]),
 
-    // 今日新增会员
+    // 有效会员卡总数
+    rawSql`
+      SELECT count(*)::int as count
+      FROM member_cards
+      WHERE status = 'active'
+    `.catch(() => [{ count: 0 }]),
+
+    // 今日新增会员 (按北京时间)
     rawSql`
       SELECT count(*)::int as count
       FROM members
-      WHERE created_at >= CURRENT_DATE
+      WHERE created_at >= (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Shanghai')::date
     `.catch(() => [{ count: 0 }]),
 
     // 动态通报条 (最新 6 条预约/取消/出勤动态)
@@ -117,7 +125,7 @@ export async function GET(request: NextRequest) {
       LEFT JOIN course_categories c ON cs.course_category_id = c.id
       LEFT JOIN team_members tm ON cs.coach_id = tm.id
       LEFT JOIN rooms r ON cs.room_id = r.id
-      WHERE cs.session_date = to_char(CURRENT_DATE, 'YYYY-MM-DD')
+      WHERE cs.session_date = to_char(CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Shanghai', 'YYYY-MM-DD')
       ORDER BY cs.start_time ASC
     `.catch(() => []),
   ]);
@@ -127,6 +135,7 @@ export async function GET(request: NextRequest) {
     managerRole: managerCheck?.role || (member.name === "小桥" ? "owner" : "coach"),
     todayBookingsCount: Number(todayBookingsRes[0]?.count || 0),
     todayNewCardsCount: Number(todayCardsRes[0]?.count || 0),
+    totalCardsCount: Number(totalCardsRes[0]?.count || 0),
     todayNewMembersCount: Number(todayMembersRes[0]?.count || 0),
     totalMembersCount: Number(allMembersRes[0]?.total || 0),
     portalEnabledCount: Number(allMembersRes[0]?.portal_count || 0),
