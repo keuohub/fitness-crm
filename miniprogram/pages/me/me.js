@@ -24,7 +24,9 @@ Page({
     courseCounts: [],
     latestTrainingDate: "",
     latestReply: null,
-    updatingAvatar: false
+    updatingAvatar: false,
+    isManager: false,
+    managerRole: ""
   },
 
   onLoad: function() {
@@ -88,7 +90,9 @@ Page({
             joinDaysText: joinDays === null ? "—" : (joinDays + " 天"),
             totalHours: Number(m.totalHours || 0),
             courseCounts: Array.isArray(m.courseCounts) ? m.courseCounts : [],
-            latestTrainingDate: m.lastTrainingDate ? format.formatShortDate(m.lastTrainingDate) : ""
+            latestTrainingDate: m.lastTrainingDate ? format.formatShortDate(m.lastTrainingDate) : "",
+            isManager: Boolean(m.isManager),
+            managerRole: m.managerRole || ""
           });
           if (m.memberName) wx.setStorageSync("memberName", m.memberName);
         } else if (res.statusCode === 401) {
@@ -185,6 +189,10 @@ Page({
 
   goBooking: function() {
     wx.navigateTo({ url: "/pages/booking/booking" });
+  },
+
+  goManager: function() {
+    wx.navigateTo({ url: "/pages/manager/manager" });
   },
 
   goNotes: function() {

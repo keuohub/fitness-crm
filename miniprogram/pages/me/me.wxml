@@ -47,6 +47,19 @@
       </view>
     </view>
 
+    <!-- 管理人员专享入口 (仅具备管理权限时展示) -->
+    <view wx:if="{{isManager}}" class="me-manager-entrance" bindtap="goManager">
+      <view class="me-manager-main">
+        <view class="me-manager-badge">管家权限已激活</view>
+        <text class="me-manager-title">进入手机端管家工作台</text>
+        <text class="me-manager-desc">今日预约 · 排课管理 · 课程修改 · 会员CRM</text>
+      </view>
+      <view class="me-manager-btn">
+        <text class="me-manager-btn-text">管理端</text>
+        <text class="me-manager-arrow">›</text>
+      </view>
+    </view>
+
     <!-- 01 训练资产 -->
     <view class="me-section">
       <view class="me-section-head">

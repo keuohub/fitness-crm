@@ -174,6 +174,25 @@ export async function GET(request: NextRequest) {
 
   const stage = getMemberStage(totalHours);
 
+  // 检查是否具备管家端/管理权限 (小桥 / 教练 / 馆长)
+  const [managerCheck] = await rawSql`
+    SELECT u.role, u.is_coach
+    FROM users u
+    WHERE (u.email = ${member.phone} OR u.name = ${member.name})
+      AND u.status = 'active'
+    LIMIT 1
+  `.catch(() => []);
+
+  const isManager = Boolean(
+    managerCheck?.role === "owner" ||
+    managerCheck?.role === "admin" ||
+    managerCheck?.role === "coach" ||
+    Number(managerCheck?.is_coach) === 1 ||
+    member.phone === "15271754857" ||
+    member.name === "小桥"
+  );
+  const managerRole = managerCheck?.role || (member.name === "小桥" ? "owner" : null);
+
   const response = NextResponse.json({
     memberId: member.id,
     memberName: member.name,
@@ -194,6 +213,8 @@ export async function GET(request: NextRequest) {
     photoCount,
 
     stage,
+    isManager,
+    managerRole,
   });
   response.headers.set("Cache-Control", "private, no-store");
   return response;

@@ -1,0 +1,297 @@
+<!-- pages/manager/manager.wxml -->
+<view class="mgr-page">
+
+  <!-- 自定义顶部状态栏与导航 -->
+  <view class="mgr-navbar">
+    <view class="mgr-nav-left" bindtap="goBackMember">
+      <text class="mgr-nav-back">‹</text>
+      <text class="mgr-nav-back-text">会员端</text>
+    </view>
+    <view class="mgr-nav-title">
+      <text class="mgr-nav-brand">徕舞普拉提</text>
+      <text class="mgr-nav-badge">管家端</text>
+    </view>
+    <view class="mgr-nav-right"></view>
+  </view>
+
+  <view wx:if="{{loading}}" class="mgr-loading">
+    <text class="mgr-loading-text">正在同步会馆实时数据…</text>
+  </view>
+
+  <view wx:elif="{{loadError}}" class="mgr-error" bindtap="loadDashboard">
+    <text class="mgr-error-text">{{loadError}}（点击重试）</text>
+  </view>
+
+  <block wx:else>
+    <!-- 头部黑金卡片 -->
+    <view class="mgr-hero-card">
+      <view class="mgr-hero-top">
+        <view class="mgr-hero-brand-wrap">
+          <text class="mgr-hero-title">徕舞普拉提女子塑形</text>
+          <text class="mgr-hero-tag">智能工作台</text>
+        </view>
+        <text class="mgr-hero-date">{{todayDateStr}}</text>
+      </view>
+      <text class="mgr-hero-desc">全自研SaaS智能中枢 · 约课已打通 · 课后自动结课</text>
+    </view>
+
+    <!-- 顶部三大核心实时指标卡 (对标竞品截屏) -->
+    <view class="mgr-stats-row">
+      <!-- 今日预约 -->
+      <view class="mgr-stat-card" bindtap="tapBookings">
+        <text class="mgr-stat-label">今日预约</text>
+        <text class="mgr-stat-num">{{todayBookingsCount}}</text>
+        <text class="mgr-stat-hint hint-gold">点击查名单 ›</text>
+      </view>
+
+      <!-- 新增会员卡 -->
+      <view class="mgr-stat-card" bindtap="tapCards">
+        <text class="mgr-stat-label">新增会员卡</text>
+        <text class="mgr-stat-num">{{todayNewCardsCount}}</text>
+        <text class="mgr-stat-hint hint-green">发卡与扣次 ›</text>
+      </view>
+
+      <!-- 新增会员 -->
+      <view class="mgr-stat-card" bindtap="tapMembers">
+        <text class="mgr-stat-label">新增会员</text>
+        <text class="mgr-stat-num">{{todayNewMembersCount}}</text>
+        <text class="mgr-stat-hint hint-blue">会员CRM ›</text>
+      </view>
+    </view>
+
+    <!-- 实时动态通报条 (对标竞品截屏) -->
+    <view class="mgr-ticker-card" bindtap="tapBookings">
+      <view class="mgr-ticker-left">
+        <view class="mgr-ticker-dot {{topActivityStatus === 'cancelled' ? 'dot-red' : 'dot-green'}}"></view>
+        <text class="mgr-ticker-text">{{topActivityText}}</text>
+      </view>
+      <view class="mgr-ticker-right">
+        <text class="mgr-ticker-time">{{topActivityTime}}</text>
+        <text class="mgr-ticker-arrow">›</text>
+      </view>
+    </view>
+
+    <!-- 快捷工具三大按钮 (电脑登录 / 邀请会员 / 签到码) -->
+    <view class="mgr-tools-row">
+      <view class="mgr-tool-btn" bindtap="openPcLoginModal">
+        <view class="mgr-tool-icon-wrap icon-gold">
+          <text class="mgr-tool-symbol">🖥</text>
+        </view>
+        <text class="mgr-tool-name">电脑登录</text>
+      </view>
+
+      <view class="mgr-tool-btn" bindtap="openInviteModal">
+        <view class="mgr-tool-icon-wrap icon-blue">
+          <text class="mgr-tool-symbol">🔗</text>
+        </view>
+        <text class="mgr-tool-name">邀请会员</text>
+      </view>
+
+      <view class="mgr-tool-btn" bindtap="openCheckinModal">
+        <view class="mgr-tool-icon-wrap icon-green">
+          <text class="mgr-tool-symbol">⚡</text>
+        </view>
+        <text class="mgr-tool-name">签到码</text>
+      </view>
+    </view>
+
+    <!-- 九宫格核心业务入口 (3x3 结构，对标竞品截屏) -->
+    <view class="mgr-grid-card">
+      <view class="mgr-grid-head">
+        <text class="mgr-grid-title">业务功能中枢</text>
+        <text class="mgr-grid-note">9项核心SaaS功能全部打通</text>
+      </view>
+
+      <view class="mgr-grid-body">
+        <!-- 1. 预约 -->
+        <view class="mgr-grid-item" bindtap="tapBookings">
+          <view class="mgr-item-icon-box bg-gold">
+            <text class="mgr-item-char">约</text>
+          </view>
+          <text class="mgr-item-title">预约</text>
+          <text class="mgr-item-sub">实时名单</text>
+        </view>
+
+        <!-- 2. 排课 -->
+        <view class="mgr-grid-item" bindtap="tapSchedule">
+          <view class="mgr-item-icon-box bg-blue">
+            <text class="mgr-item-char">课</text>
+          </view>
+          <text class="mgr-item-title">排课</text>
+          <text class="mgr-item-sub">周课日历</text>
+        </view>
+
+        <!-- 3. 课程管理 -->
+        <view class="mgr-grid-item" bindtap="tapCourses">
+          <view class="mgr-item-icon-box bg-purple">
+            <text class="mgr-item-char">目</text>
+          </view>
+          <text class="mgr-item-title">课程管理</text>
+          <text class="mgr-item-sub">分类星级</text>
+        </view>
+
+        <!-- 4. 私教 -->
+        <view class="mgr-grid-item" bindtap="tapCoach">
+          <view class="mgr-item-icon-box bg-green">
+            <text class="mgr-item-char">私</text>
+          </view>
+          <text class="mgr-item-title">私教</text>
+          <text class="mgr-item-sub">1V1授课</text>
+        </view>
+
+        <!-- 5. 会员 -->
+        <view class="mgr-grid-item" bindtap="tapMembers">
+          <view class="mgr-item-icon-box bg-amber">
+            <text class="mgr-item-char">员</text>
+          </view>
+          <text class="mgr-item-title">会员</text>
+          <text class="mgr-item-sub">档案CRM</text>
+        </view>
+
+        <!-- 6. 员工 -->
+        <view class="mgr-grid-item" bindtap="tapTeam">
+          <view class="mgr-item-icon-box bg-slate">
+            <text class="mgr-item-char">工</text>
+          </view>
+          <text class="mgr-item-title">员工</text>
+          <text class="mgr-item-sub">团队权限</text>
+        </view>
+
+        <!-- 7. 会员卡 -->
+        <view class="mgr-grid-item" bindtap="tapCards">
+          <view class="mgr-item-icon-box bg-orange">
+            <text class="mgr-item-char">卡</text>
+          </view>
+          <text class="mgr-item-title">会员卡</text>
+          <text class="mgr-item-sub">扣次延期</text>
+        </view>
+
+        <!-- 8. 教室 -->
+        <view class="mgr-grid-item" bindtap="tapVenue">
+          <view class="mgr-item-icon-box bg-sky">
+            <text class="mgr-item-char">室</text>
+          </view>
+          <text class="mgr-item-title">教室</text>
+          <text class="mgr-item-sub">场地席位</text>
+        </view>
+
+        <!-- 9. 数据统计 -->
+        <view class="mgr-grid-item" bindtap="tapReports">
+          <view class="mgr-item-icon-box bg-rose">
+            <text class="mgr-item-char">数</text>
+          </view>
+          <text class="mgr-item-title">数据统计</text>
+          <text class="mgr-item-sub">经营报表</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 底部操作：一键切回会员端 -->
+    <view class="mgr-footer-section">
+      <view class="mgr-switch-btn" bindtap="goBackMember">
+        <text class="mgr-switch-text">切回会员端视图</text>
+        <text class="mgr-switch-note">随时可在「我的账户」重返管家端</text>
+      </view>
+    </view>
+  </block>
+
+  <!-- 弹窗 1：电脑登录 -->
+  <view wx:if="{{activeModal === 'pc'}}" class="mgr-modal-mask" bindtap="closeModal">
+    <view class="mgr-modal-card" catchtap="true">
+      <view class="mgr-modal-head">
+        <text class="mgr-modal-title">电脑端管理后台</text>
+        <view class="mgr-modal-close" bindtap="closeModal">×</view>
+      </view>
+      <text class="mgr-modal-desc">在电脑浏览器打开以下网址，使用手机号即可直接登录管理中枢：</text>
+      <view class="mgr-modal-code">https://crm.laiwupilates.com/admin</view>
+      <button class="mgr-modal-action-btn" bindtap="copyPcUrl">复制电脑端网址</button>
+    </view>
+  </view>
+
+  <!-- 弹窗 2：邀请会员 -->
+  <view wx:if="{{activeModal === 'invite'}}" class="mgr-modal-mask" bindtap="closeModal">
+    <view class="mgr-modal-card" catchtap="true">
+      <view class="mgr-modal-head">
+        <text class="mgr-modal-title">邀请会员在线约课</text>
+        <view class="mgr-modal-close" bindtap="closeModal">×</view>
+      </view>
+      <text class="mgr-modal-desc">会员可在微信中直接搜索小程序【徕舞普拉提】或识别会馆太阳码进行约课：</text>
+      <view class="mgr-modal-quote">
+        • 精品课 / 团体课 / 私教课 分类清晰
+        <br />• 真实封面图与星级难度
+        <br />• 预约后到课自动扣次，无需排队核销
+      </view>
+      <button class="mgr-modal-action-btn" bindtap="copyInviteText">复制微信分享文案</button>
+    </view>
+  </view>
+
+  <!-- 弹窗 3：签到码与下课结课规则 -->
+  <view wx:if="{{activeModal === 'checkin'}}" class="mgr-modal-mask" bindtap="closeModal">
+    <view class="mgr-modal-card" catchtap="true">
+      <view class="mgr-modal-head">
+        <text class="mgr-modal-title">智能结课与消课说明</text>
+        <view class="mgr-modal-close" bindtap="closeModal">×</view>
+      </view>
+      <view class="mgr-modal-notice">
+        <text class="mgr-notice-strong">已启用下课自动结课引擎：\n</text>
+        <text class="mgr-notice-text">会员预约课程后，如在课前未主动取消，课程结束后系统将自动视为已到课并自动扣减课时。\n\n教练与管家无需在课后手动逐一勾选消课，完全解放前台前置时间。</text>
+      </view>
+      <button class="mgr-modal-action-btn" bindtap="closeModal">我知道了</button>
+    </view>
+  </view>
+
+  <!-- 弹窗 4：今日预约详细名单 -->
+  <view wx:if="{{activeModal === 'bookings'}}" class="mgr-modal-mask" bindtap="closeModal">
+    <view class="mgr-modal-card-lg" catchtap="true">
+      <view class="mgr-modal-head">
+        <text class="mgr-modal-title">今日排课与预约名单 ({{todaySessions.length}}场)</text>
+        <view class="mgr-modal-close" bindtap="closeModal">×</view>
+      </view>
+
+      <scroll-view scroll-y class="mgr-session-scroll">
+        <block wx:if="{{todaySessions.length === 0}}">
+          <view class="mgr-session-empty">今日暂无排课场次</view>
+        </block>
+        <block wx:else>
+          <view class="mgr-session-item" wx:for="{{todaySessions}}" wx:key="id">
+            <view class="mgr-session-header">
+              <text class="mgr-session-time">{{item.startTime}} - {{item.endTime}}</text>
+              <text class="mgr-session-badge">{{item.roomName}}</text>
+            </view>
+            <view class="mgr-session-main">
+              <text class="mgr-session-name">{{item.courseName}}</text>
+              <text class="mgr-session-coach">导师：{{item.coachName}}</text>
+            </view>
+            <view class="mgr-session-status-row">
+              <text class="mgr-session-booked">已约 {{item.bookedCount}} / {{item.capacity}} 席</text>
+              <text class="mgr-session-tag {{item.bookedCount >= item.capacity ? 'tag-full' : 'tag-open'}}">
+                {{item.bookedCount >= item.capacity ? '已约满' : '可预约'}}
+              </text>
+            </view>
+          </view>
+        </block>
+      </scroll-view>
+
+      <button class="mgr-modal-action-btn" bindtap="closeModal">关闭</button>
+    </view>
+  </view>
+
+  <!-- 弹窗 5：课程分类与星级 -->
+  <view wx:if="{{activeModal === 'courses'}}" class="mgr-modal-mask" bindtap="closeModal">
+    <view class="mgr-modal-card" catchtap="true">
+      <view class="mgr-modal-head">
+        <text class="mgr-modal-title">课程管理与分类体系</text>
+        <view class="mgr-modal-close" bindtap="closeModal">×</view>
+      </view>
+      <view class="mgr-modal-desc">
+        小程序前端已打通三大课程类目：
+        <br /><br />
+        <strong>1. 精品课：</strong>小班器械（4-6人），高难度塑形，3-5星级难度
+        <br /><strong>2. 团体课：</strong>维密塑形与瑜伽拉伸，2-4星级难度
+        <br /><strong>3. 私教课：</strong>1V1定制体态雕塑，全星级覆盖
+      </view>
+      <button class="mgr-modal-action-btn" bindtap="closeModal">我知道了</button>
+    </view>
+  </view>
+
+</view>

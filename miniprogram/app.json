@@ -8,6 +8,7 @@
     "pages/notes/notes",
     "pages/feedback/feedback",
     "pages/booking/booking",
+    "pages/manager/manager",
     "pages/login/login"
   ],
   "tabBar": {
