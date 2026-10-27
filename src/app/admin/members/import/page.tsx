@@ -25,7 +25,7 @@ const HEADER_ALIASES: Record<string, string[]> = {
   memberCode: ["会员编号", "卡号", "编号", "membercode", "code"],
   gender: ["性别", "gender"],
   birthday: ["生日", "birthday"],
-  joinedAt: ["入会日期", "入会时间", "joinedat", "joindate"],
+  joinedAt: ["入会日期", "入会时间", "joinedat", "joindate", "相伴天数", "来时路天数", "天数", "相伴日子"],
   mentorName: ["带教导师", "导师", "mentorname", "mentor"],
   notes: ["备注", "notes", "note"],
   cardName: ["卡名", "卡种", "卡类型", "cardname", "cardtype"],
@@ -162,8 +162,9 @@ export default function MembersImportPage() {
       "\uFEFF" +
       "姓名,手机号,性别,生日,入会日期,带教导师,备注,卡名,总次数,剩余次数,生效日,到期日,有效天数\n" +
       "王小华,13800000001,女,,2022-03-15,小桥,老会员陪伴多年,,,,,\n" +
-      "李美云,13800000002,女,,,何老师,约3年老会员（卡名留空不绑卡只记相伴）,,,,,\n" +
-      "赵晴,13800000003,女,,,翠翠,上了2年,普拉提次卡,10,8,2026-10-01,2027-04-01,180\n";
+      "李美云,13800000002,女,,,何老师,大概来了820天（卡名留空只记相伴）,,,,,\n" +
+      "周芳,13800000003,女,,,翠翠,600天老会员（精确具体天数）,,,,,\n" +
+      "赵晴,13800000004,女,,,汪老师,来了300天,普拉提次卡,10,8,2026-10-01,2027-04-01,180\n";
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -210,10 +211,10 @@ export default function MembersImportPage() {
           </div>
 
           <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 8, padding: "12px 14px", marginBottom: 14, fontSize: 12.5, color: "#475569", lineHeight: 1.7 }}>
-            <div style={{ fontWeight: 600, color: "#1E293B", marginBottom: 4 }}>相伴来时路与开卡说明：</div>
+            <div style={{ fontWeight: 600, color: "#1E293B", marginBottom: 4 }}>相伴来时路与具体天数规则：</div>
             <div>1. <strong>卡与人完全解绑</strong>：以前上过的老卡不需要录入。「卡名」一列直接留空，系统只建立会员档案，不绑定任何废卡，完全不影响会员在小程序查看相伴经历。</div>
-            <div>2. <strong>智能推算相伴天数</strong>：若记不清具体几月几号入会，「入会日期」可留空，直接在「备注」里写「约3年」、「上了2年」、「2021老会员」、「1年半」等，系统会自动反推起始日。</div>
-            <div>3. <strong>每日自然累加</strong>：一旦录入起始日，会员端每天打开小程序，相伴天数都会自然 +1 天（如相伴 730 天、陪伴第 3 年），无需人工每天跑数据更新。</div>
+            <div>2. <strong>直接填具体天数，绝不含糊</strong>：在「备注」或「相伴天数」列里直接写具体天数（如「820天」、「大概来了800天」、「相伴600天」或纯数字「820」），系统会自动对齐起始日。小程序端绝不显示飘忽的「约3年」「上了一年半」，而是精确呈现震撼的「相伴自律 820 天」，仪式感十足，极适合发朋友圈。</div>
+            <div>3. <strong>每日自然累加</strong>：一旦录入起始日，会员端每天打开小程序，相伴天数都会自然 +1 天（今天 820 天，明天自动变成 821 天），无需人工每天跑数据更新。</div>
           </div>
 
           <textarea

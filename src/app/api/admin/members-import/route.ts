@@ -38,7 +38,7 @@ function toDate(v: string): string {
 }
 
 // 智能推算入会起始日（来时路）
-// 支持明确日期、具体年份、或从备注自然语言提取："约2年"、"3年老会员"、"2022年来的"、"1年半"、"半年"等
+// 优先识别具体天数（如"820天"、"大概800天"、"相伴600天"或纯数字"820"），保证小程序端今天精准呈现该天数，且后续每天自然+1天
 function deduceJoinedAt(rawJoined: string, notes: string): { date: string; inferred: boolean; label?: string } {
   const todayStr = new Date().toISOString().slice(0, 10);
   const now = new Date();
@@ -47,19 +47,41 @@ function deduceJoinedAt(rawJoined: string, notes: string): { date: string; infer
   const explicit = toDate(rawJoined);
   if (explicit) return { date: explicit, inferred: false };
 
-  // 2. 年月 (如 2023-05, 2023.5) 或单纯年份 (如 2022)
-  const ymMatch = rawJoined.replace(/[./]/g, "-").trim().match(/^(\d{4})(?:-(\d{1,2}))?$/);
+  // 2. 年月 (如 2023-05, 2023.5)
+  const ymMatch = rawJoined.replace(/[./]/g, "-").trim().match(/^(\d{4})-(\d{1,2})$/);
   if (ymMatch) {
     const y = ymMatch[1];
-    const m = ymMatch[2] ? String(ymMatch[2]).padStart(2, "0") : "01";
-    return { date: `${y}-${m}-01`, inferred: true, label: `${y}年` };
+    const m = String(ymMatch[2]).padStart(2, "0");
+    return { date: `${y}-${m}-01`, inferred: true, label: `${y}年${m}月` };
   }
 
-  // 3. 扫描文本（合并入会日期与备注）
+  // 3. 纯数字判断：若是 2010-当前年份 视为年份(如 2022)；其他正整数(如 820, 500, 300) 视为具体相伴天数！
+  const pureNum = rawJoined.trim().match(/^(\d+)$/);
+  if (pureNum) {
+    const n = parseInt(pureNum[1], 10);
+    if (n >= 2010 && n <= now.getFullYear()) {
+      return { date: `${n}-01-01`, inferred: true, label: `${n}年` };
+    } else if (n > 0 && n <= 15000) {
+      const pastTime = new Date(now.getTime() - (n - 1) * 86400000);
+      return { date: pastTime.toISOString().slice(0, 10), inferred: true, label: `${n}天` };
+    }
+  }
+
+  // 4. 扫描文本（合并入会日期与备注）
   const text = `${rawJoined} ${notes}`.trim();
   if (!text) return { date: todayStr, inferred: false };
 
-  // 3.1 识别年份：如 "2021年", "2022老会员", "2020年来莱芜", "2023开卡"
+  // 4.0 核心优先：识别具体天数（如 "820天", "大概800天", "来了750天", "相伴600天"）
+  const dayMatch = text.match(/(?:约|大概|上了|练了|相伴|已有|来了|天数)?\s*(\d+)\s*天/);
+  if (dayMatch) {
+    const days = parseInt(dayMatch[1], 10);
+    if (days > 0 && days <= 15000) {
+      const pastTime = new Date(now.getTime() - (days - 1) * 86400000);
+      return { date: pastTime.toISOString().slice(0, 10), inferred: true, label: `${days}天` };
+    }
+  }
+
+  // 4.1 识别具体年份：如 "2021年", "2022老会员", "2020年来莱芜"
   const yearInText = text.match(/(20\d{2})\s*年?/);
   if (yearInText) {
     const y = parseInt(yearInText[1], 10);
@@ -68,37 +90,39 @@ function deduceJoinedAt(rawJoined: string, notes: string): { date: string; infer
     }
   }
 
-  // 3.2 识别具体年数带半：如 "1年半", "2年半", "3年半"
+  // 4.2 识别年数并换算为具体天数（避免模糊描述，小程序端均以具体天数呈现）
   const halfYearMatch = text.match(/(\d+)\s*年半/);
   if (halfYearMatch) {
     const years = parseFloat(halfYearMatch[1]) + 0.5;
-    const pastTime = new Date(now.getTime() - years * 365.25 * 86400000);
-    return { date: pastTime.toISOString().slice(0, 10), inferred: true, label: `约${years}年` };
+    const days = Math.round(years * 365);
+    const pastTime = new Date(now.getTime() - (days - 1) * 86400000);
+    return { date: pastTime.toISOString().slice(0, 10), inferred: true, label: `${days}天` };
   }
 
-  // 3.3 识别 "半年"
   if (/半年/.test(text)) {
-    const pastTime = new Date(now.getTime() - 182.5 * 86400000);
-    return { date: pastTime.toISOString().slice(0, 10), inferred: true, label: "约半年" };
+    const days = 182;
+    const pastTime = new Date(now.getTime() - (days - 1) * 86400000);
+    return { date: pastTime.toISOString().slice(0, 10), inferred: true, label: `${days}天` };
   }
 
-  // 3.4 识别通用年数：如 "约3年", "上了2年", "3年老会员", "练习4年", "大概2年", "2.5年"
   const yearMatch = text.match(/(?:约|大概|上了|练了|相伴|已有|会员)?\s*(\d+(?:\.\d+)?)\s*年/);
   if (yearMatch) {
     const years = parseFloat(yearMatch[1]);
     if (years > 0 && years <= 30) {
-      const pastTime = new Date(now.getTime() - years * 365.25 * 86400000);
-      return { date: pastTime.toISOString().slice(0, 10), inferred: true, label: `约${years}年` };
+      const days = Math.round(years * 365);
+      const pastTime = new Date(now.getTime() - (days - 1) * 86400000);
+      return { date: pastTime.toISOString().slice(0, 10), inferred: true, label: `${days}天` };
     }
   }
 
-  // 3.5 识别月份：如 "约6个月", "8个月", "大概10个月"
+  // 4.3 识别月份并换算为具体天数
   const monthMatch = text.match(/(?:约|大概|上了|练了)?\s*(\d+)\s*个?月/);
   if (monthMatch) {
     const months = parseInt(monthMatch[1], 10);
     if (months > 0 && months < 120) {
-      const pastTime = new Date(now.getTime() - months * 30.5 * 86400000);
-      return { date: pastTime.toISOString().slice(0, 10), inferred: true, label: `约${months}个月` };
+      const days = Math.round(months * 30.5);
+      const pastTime = new Date(now.getTime() - (days - 1) * 86400000);
+      return { date: pastTime.toISOString().slice(0, 10), inferred: true, label: `${days}天` };
     }
   }
 
