@@ -8,6 +8,9 @@
     "pages/notes/notes",
     "pages/feedback/feedback",
     "pages/booking/booking",
+    "pages/growth/growth",
+    "pages/legal/privacy",
+    "pages/legal/terms",
     "pages/manager/manager",
     "pages/login/login"
   ],

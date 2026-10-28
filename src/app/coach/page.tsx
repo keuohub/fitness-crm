@@ -19,6 +19,7 @@ export default function CoachPage(){
   const [roster,setRoster]=useState<Roster[]>([]);
   const [notes,setNotes]=useState<Record<number,string>>({});
   const [noteDraft,setNoteDraft]=useState<Record<number,string>>({});
+  const [measure,setMeasure]=useState<Record<number,{weight:string;waist:string}>>({});
 
   useEffect(()=>{ const t=localStorage.getItem("coachToken")||""; const n=localStorage.getItem("coachName")||""; setToken(t); setName(n); },[]);
 
@@ -70,6 +71,14 @@ export default function CoachPage(){
       setMsg(d.duplicate?"已处理过，未重复扣次":`已标记${status==="attended"?"到课":"未到"}，剩余 ${d.remainingCount ?? "-"}`);
       if(selected) await openSession(selected);
       await loadSessions();
+    }catch(e:any){setMsg(e.message);}
+  };
+
+  const saveMeasure=async(memberId:number)=>{
+    const m=measure[memberId]||{weight:"",waist:""};
+    try{
+      await api("/api/coach/measurements",{method:"POST",body:JSON.stringify({memberId,weightKg:m.weight,waistCm:m.waist})});
+      setMsg("体围已记入会员成长档案");
     }catch(e:any){setMsg(e.message);}
   };
 
@@ -126,6 +135,11 @@ export default function CoachPage(){
           <button onClick={()=>checkIn(r.booking_id,"attended")} style={{padding:"7px 14px",borderRadius:6,border:"none",background:"#0D0C0F",color:"#F6E6DA",fontSize:12}}>到课</button>
           <button onClick={()=>checkIn(r.booking_id,"no_show")} style={{padding:"7px 14px",borderRadius:6,border:"1px solid #E0C9C5",background:"#FDF2F1",color:"#8A1F17",fontSize:12}}>未到</button>
         </div>}
+        <div style={{display:"flex",gap:6,marginTop:8,alignItems:"center"}}>
+          <input value={(measure[r.member_id]||{}).weight||""} onChange={e=>setMeasure({...measure,[r.member_id]:{weight:e.target.value,waist:(measure[r.member_id]||{}).waist||""}})} placeholder="体重kg" style={{width:72,padding:"6px 8px",borderRadius:6,border:"1px solid #D1C7C1",fontSize:12}}/>
+          <input value={(measure[r.member_id]||{}).waist||""} onChange={e=>setMeasure({...measure,[r.member_id]:{weight:(measure[r.member_id]||{}).weight||"",waist:e.target.value}})} placeholder="腰围" style={{width:72,padding:"6px 8px",borderRadius:6,border:"1px solid #D1C7C1",fontSize:12}}/>
+          <button onClick={()=>saveMeasure(r.member_id)} style={{padding:"6px 10px",borderRadius:6,border:"1px solid #D1C7C1",background:"#fff",fontSize:12}}>记体围</button>
+        </div>
         {r.attendance_status && <div style={{marginTop:10}}>
           {notes[r.member_id] && <div style={{fontSize:12,color:"#6D645D",background:"#FAF7F5",padding:"8px 10px",borderRadius:6,marginBottom:8}}>{notes[r.member_id]}</div>}
           <textarea value={noteDraft[r.member_id]||""} onChange={e=>setNoteDraft({...noteDraft,[r.member_id]:e.target.value})} placeholder="课后 60 秒记录：今天练了什么、身体反应、下次注意" style={{width:"100%",minHeight:60,padding:"8px 10px",borderRadius:6,border:"1px solid #D1C7C1",fontSize:12,boxSizing:"border-box"}}/>

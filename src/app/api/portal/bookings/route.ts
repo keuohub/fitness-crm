@@ -4,6 +4,7 @@ import { rawSql } from "@/db";
 import { autoSettleFinishedBookings } from "@/lib/booking-settle";
 import { sweepCardLifecycle } from "@/lib/card-lifecycle";
 import { shanghaiToday } from "@/lib/shanghai-date";
+import { ensureWaitlistIndex } from "@/lib/waitlist";
 
 const bad = (msg: string, status = 400) => NextResponse.json({ error: msg }, { status });
 const today = () => shanghaiToday();
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest) {
     LEFT JOIN users u2 ON u2.id = s.coach_id
     LEFT JOIN rooms r ON r.id = s.room_id
     WHERE b.tenant_id = 1 AND b.member_id = ${memberId}
-      AND (${scope !== "upcoming"} OR (b.status = 'booked' AND s.session_date >= ${today()}))
+      AND (${scope !== "upcoming"} OR (b.status IN ('booked', 'waitlisted') AND s.session_date >= ${today()}))
     ORDER BY s.session_date DESC, s.start_time DESC LIMIT 100`;
   const response = NextResponse.json({ bookings: rows });
   response.headers.set("Cache-Control", "private, no-store");
@@ -45,6 +46,7 @@ export async function POST(request: NextRequest) {
   const memberId = await getPortalMemberId(request);
   if (!memberId) return bad("未登录", 401);
   await sweepCardLifecycle().catch((err) => console.error("[bookings] card sweep", err));
+  await ensureWaitlistIndex().catch((err) => console.error("[bookings] waitlist index", err));
   const body = await request.json();
   const sessionId = Number(body.sessionId);
   if (!sessionId) return bad("缺少 sessionId");
@@ -170,7 +172,33 @@ export async function POST(request: NextRequest) {
         SELECT * FROM bookings WHERE tenant_id = 1 AND member_id = ${memberId}
           AND session_id = ${sessionId} AND status = 'booked' LIMIT 1`;
       if (again) return NextResponse.json({ booking: again, duplicate: true }, { status: 200 });
-      return bad("名额已满", 409);
+      if (body.waitlist) {
+        const [waiting] = await rawSql`
+          SELECT * FROM bookings WHERE tenant_id = 1 AND member_id = ${memberId}
+            AND session_id = ${sessionId} AND status = 'waitlisted' LIMIT 1`;
+        if (waiting) return NextResponse.json({ booking: waiting, waitlisted: true, duplicate: true }, { status: 200 });
+        try {
+          const [created] = await rawSql`
+            INSERT INTO bookings (tenant_id, session_id, member_id, status, idempotency_key)
+            VALUES (1, ${sessionId}, ${memberId}, 'waitlisted', ${key})
+            RETURNING *`;
+          const [{ n }] = await rawSql`
+            SELECT COUNT(*)::int AS n FROM bookings
+            WHERE tenant_id = 1 AND session_id = ${sessionId} AND status = 'waitlisted'`;
+          return NextResponse.json({ booking: created, waitlisted: true, position: Number(n) }, { status: 201 });
+        } catch (err) {
+          const msg = String((err as { message?: string })?.message || "");
+          if (msg.includes("uniq_waitlist_booking")) {
+            const [waitingAgain] = await rawSql`
+              SELECT * FROM bookings WHERE tenant_id = 1 AND member_id = ${memberId}
+                AND session_id = ${sessionId} AND status = 'waitlisted' LIMIT 1`;
+            if (waitingAgain) return NextResponse.json({ booking: waitingAgain, waitlisted: true, duplicate: true }, { status: 200 });
+          }
+          console.error("[portal/bookings] waitlist", err);
+          return bad("候补失败，请重试", 500);
+        }
+      }
+      return bad("名额已满，可以候补", 409);
     }
     const booking = rows[0];
     return NextResponse.json({

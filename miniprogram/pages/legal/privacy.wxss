@@ -1,0 +1,4 @@
+.legal { height: 100vh; background: #F6E6DA; padding: 32rpx; box-sizing: border-box; }
+.h1 { display: block; font-size: 40rpx; margin-bottom: 16rpx; }
+.h2 { display: block; font-size: 30rpx; margin: 24rpx 0 8rpx; }
+.p { display: block; font-size: 26rpx; line-height: 1.7; color: #3A3330; }

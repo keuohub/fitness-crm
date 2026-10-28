@@ -126,6 +126,12 @@ export default function AdminSidebar({
       active: pathname.startsWith("/admin/transformation"),
     },
     {
+      title: "成长记录",
+      href: "/admin/growth",
+      icon: ClipboardCheck,
+      active: pathname.startsWith("/admin/growth"),
+    },
+    {
       title: "4. 我的账户",
       href: "/admin/members",
       icon: Users,

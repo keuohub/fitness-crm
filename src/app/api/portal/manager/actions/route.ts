@@ -7,6 +7,7 @@ import { memberHasStaffAccess } from "@/lib/staff-access";
 import { shanghaiToday } from "@/lib/shanghai-date";
 import { normalizePhone } from "@/lib/member-import";
 import { generatePortalCode, generateLoginPin } from "@/lib/auth/member-credentials";
+import { releaseBooking } from "@/lib/waitlist";
 
 export const dynamic = "force-dynamic";
 
@@ -120,25 +121,12 @@ export async function POST(request: NextRequest) {
     const [booking] = await rawSql`SELECT * FROM bookings WHERE id = ${bookingId}`;
     if (!booking) return bad("预约不存在", 404);
     if (booking.status === "cancelled") return NextResponse.json({ success: true, message: "已是取消状态" });
-    if (booking.status !== "booked") return bad("已签到或已结束的预约不能在这里取消，避免把名额和课时算错", 409);
+    if (!["booked", "waitlisted"].includes(booking.status)) return bad("已签到或已结束的预约不能在这里取消，避免把名额和课时算错", 409);
 
-    const rows = await rawSql`
-      WITH updated AS (
-        UPDATE bookings
-        SET status = 'cancelled', cancelled_at = NOW(), cancel_reason = ${body.reason || "管家端手机取消"}, updated_at = NOW()
-        WHERE id = ${bookingId} AND tenant_id = 1 AND status = 'booked'
-        RETURNING session_id
-      ), released AS (
-        UPDATE class_sessions
-        SET booked_count = GREATEST(booked_count - 1, 0), updated_at = NOW()
-        WHERE id IN (SELECT session_id FROM updated)
-        RETURNING id
-      )
-      SELECT session_id FROM updated
-    `;
-    if (!rows.length) return bad("预约状态已变化，请刷新后再试", 409);
-
-    return NextResponse.json({ success: true, message: "预约已取消，席位已释放" });
+    const result = await releaseBooking({ bookingId, reason: body.reason || "管家端手机取消" });
+    if (!result.ok) return bad(result.error, result.status);
+    const message = result.promoted ? "预约已取消，候补的第一位已补上" : "预约已取消，席位已释放";
+    return NextResponse.json({ success: true, message, promoted: result.promoted });
   }
 
   // 2. 现场录入新会员

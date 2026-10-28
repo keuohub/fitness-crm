@@ -81,9 +81,9 @@
               <view class="bk-stars">
                 <text wx:for="{{item.starsList}}" wx:key="*this" class="bk-star {{item ? 'bk-star-gold' : 'bk-star-gray'}}">★</text>
               </view>
-              <text class="bk-remain-tag {{item.remaining === 0 ? 'bk-remain-full' : ''}}">
-                {{item.remaining === 0 ? '人数已满' : '还可预约 ' + item.remaining + ' 人'}}
-              </text>
+            <text class="bk-remain-tag {{item.remaining === 0 ? 'bk-remain-full' : ''}}">
+              {{item.remaining === 0 ? (item.waitlistCount ? '已满 · 候补 ' + item.waitlistCount + ' 人' : '人数已满，可候补') : '还可预约 ' + item.remaining + ' 人'}}
+            </text>
             </view>
 
             <view class="bk-card-coach-row">
@@ -99,11 +99,14 @@
             <view wx:if="{{item.bookedByMe}}" class="bk-btn bk-btn-booked" data-id="{{item.bookingId}}" bindtap="cancel">
               <text class="bk-btn-text">已预约</text>
             </view>
+            <view wx:elif="{{item.waitlistedByMe}}" class="bk-btn bk-btn-booked" data-id="{{item.bookingId}}" bindtap="cancel">
+              <text class="bk-btn-text">退出候补</text>
+            </view>
             <view wx:elif="{{item.isEnded}}" class="bk-btn bk-btn-disabled">
               <text class="bk-btn-text">已开课</text>
             </view>
-            <view wx:elif="{{item.remaining <= 0}}" class="bk-btn bk-btn-disabled">
-              <text class="bk-btn-text">已满</text>
+            <view wx:elif="{{item.remaining <= 0}}" class="bk-btn bk-btn-primary" data-id="{{item.id}}" data-waitlist="1" bindtap="reserve">
+              <text class="bk-btn-text">候补</text>
             </view>
             <view wx:else class="bk-btn bk-btn-primary" data-id="{{item.id}}" bindtap="reserve">
               <text class="bk-btn-text">预约</text>
@@ -120,10 +123,10 @@
         </view>
         <view wx:for="{{myBookings}}" wx:key="id" class="bk-my-card">
           <view class="bk-my-main">
-            <text class="bk-my-course">{{item.courseName}}</text>
+            <text class="bk-my-course">{{item.courseName}}{{item.waitlisted ? ' · 候补' : ''}}</text>
             <text class="bk-my-meta">{{item.date}} · {{item.time}} · {{item.coachName}}</text>
           </view>
-          <view class="bk-my-cancel" data-id="{{item.id}}" bindtap="cancel">取消预约</view>
+          <view class="bk-my-cancel" data-id="{{item.id}}" bindtap="cancel">{{item.waitlisted ? '退出候补' : '取消预约'}}</view>
         </view>
       </view>
 

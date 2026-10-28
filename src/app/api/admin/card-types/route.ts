@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/admin-session";
+import { requireCatalogEditor } from "@/lib/auth/catalog-access";
 import { db, rawSql } from "@/db";
 import { cardTypes, cardTypeCourses } from "@/db/schema";
 import { asc, eq } from "drizzle-orm";
@@ -34,7 +35,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  if (!(await requireAdmin(request))) return bad("需要管理员登录", 401);
+  const denied = await requireCatalogEditor(request);
+  if (denied) return denied;
   const body = await request.json();
   const name = String(body.name || "").trim();
   const category = String(body.category || "").trim();
@@ -78,7 +80,8 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  if (!(await requireAdmin(request))) return bad("需要管理员登录", 401);
+  const denied = await requireCatalogEditor(request);
+  if (denied) return denied;
   const body = await request.json();
   const id = Number(body.id);
   if (!id) return bad("缺少 id");
@@ -128,7 +131,8 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  if (!(await requireAdmin(request))) return bad("需要管理员登录", 401);
+  const denied = await requireCatalogEditor(request);
+  if (denied) return denied;
   const id = Number(new URL(request.url).searchParams.get("id"));
   if (!id) return bad("缺少 id");
   const [existing] = await db.select().from(cardTypes).where(eq(cardTypes.id, id));
