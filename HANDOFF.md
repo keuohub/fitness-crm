@@ -953,3 +953,23 @@ API：`PATCH /api/admin/member-cards` 现在支持 `freeze / unfreeze / adjust /
 3. **现场为学员「一键开卡/发卡」(`issue_card`)**：
    - 现场录入会员成功后，弹窗引导一键直达开卡；会员中心每位在册学员卡片均增加 `[+发卡]` 快捷胶囊。
    - 联动数据库有效卡种模版（`card_types`），支持次卡（支持微调总次数）与期限卡，自动计算有效期，完整写入 `member_cards` 并记录 `card_transactions` 真实入账流水。
+
+### 4. 2026-10-28 线上云托管（CloudRun crm-049）全量发布生效与小程序 1.3.8 提审完成
+
+#### 线上生产后端（crm-049）实测全通
+- 微信云托管正式部署版本：`crm-049`（基于 GitHub `main` 分支提交 `02259d5`）。
+- 线上真机生产接口实测（`https://crm-330905-9-1509862887.sh.run.tcloudbase.com`）：
+  - `GET /api/portal/manager/dashboard`：HTTP 200，真实有效卡数 6，开通约课会员 271。
+  - `GET /api/portal/manager/actions?action=members`：HTTP 200，手机号脱敏（后4位）。
+  - `GET /api/portal/manager/actions?action=cards`：HTTP 200，在册会员卡真实读取。
+  - `GET /api/portal/manager/actions?action=venue`：HTTP 200。
+  - `GET /api/portal/manager/actions?action=reports`：HTTP 200。
+  - `GET /api/portal/manager/actions?action=options`：HTTP 200，教练名录与 users 表完全归一对齐。
+  - `POST /api/portal/manager/actions?action=create_course`：HTTP 200，线上建课成功。
+  - `POST /api/portal/manager/actions?action=update_session`：HTTP 400，教练与场地时段冲突强拦截保护生效。
+- **P0-1（线上后端 ≠ 工作区代码）彻底解决并闭环**。
+
+#### 小程序 1.3.8 微信官方提审与体验版就绪
+- 小程序版本：`1.3.8`（包体积 283.6 KB）。
+- 提交审核时间：`2026-10-28 17:07:21`，当前状态：**【审核中】**。
+- 当前体验版：已锁定为 `1.3.8`，主理人与店内教练手机扫码即可体验完整功能。
