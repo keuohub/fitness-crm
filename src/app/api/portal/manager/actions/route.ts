@@ -3,6 +3,10 @@ import { db, rawSql } from "@/db";
 import { members, classSessions, bookings, courseCategories, rooms, teamMembers } from "@/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { getPortalMemberId } from "@/lib/auth/member-session";
+import { memberHasStaffAccess } from "@/lib/staff-access";
+import { shanghaiToday } from "@/lib/shanghai-date";
+import { normalizePhone } from "@/lib/member-import";
+import { generatePortalCode, generateLoginPin } from "@/lib/auth/member-credentials";
 
 export const dynamic = "force-dynamic";
 
@@ -16,24 +20,8 @@ async function checkManagerAuth(request: NextRequest) {
   const [member] = await db.select().from(members).where(eq(members.id, memberId));
   if (!member) return null;
 
-  const [managerCheck] = await rawSql`
-    SELECT u.role, u.is_coach
-    FROM users u
-    WHERE (u.email = ${member.phone} OR u.name = ${member.name})
-      AND u.status = 'active'
-    LIMIT 1
-  `.catch(() => []);
-
-  const isManager = Boolean(
-    managerCheck?.role === "owner" ||
-    managerCheck?.role === "admin" ||
-    managerCheck?.role === "coach" ||
-    Number(managerCheck?.is_coach) === 1 ||
-    member.phone === "15271754857" ||
-    member.name === "小桥"
-  );
-
-  return isManager ? member : null;
+  const staff = await memberHasStaffAccess(member);
+  return staff.allowed ? member : null;
 }
 
 export async function GET(request: NextRequest) {
@@ -45,7 +33,7 @@ export async function GET(request: NextRequest) {
 
   // 1. 获取某天的场次以及每个场次下的详细预约学员名单
   if (action === "bookings") {
-    const date = u.searchParams.get("date") || new Date().toISOString().slice(0, 10);
+    const date = u.searchParams.get("date") || shanghaiToday();
     const sessions = await rawSql`
       SELECT
         cs.id,
@@ -56,11 +44,11 @@ export async function GET(request: NextRequest) {
         cs.booked_count,
         cs.status,
         COALESCE(c.name, cs.title) as course_name,
-        COALESCE(tm.name, '专业导师') as coach_name,
+        COALESCE(coach_user.name, '专业导师') as coach_name,
         COALESCE(r.name, '主操房') as room_name
       FROM class_sessions cs
       LEFT JOIN course_categories c ON cs.course_category_id = c.id
-      LEFT JOIN team_members tm ON cs.coach_id = tm.id
+      LEFT JOIN users coach_user ON cs.coach_id = coach_user.id
       LEFT JOIN rooms r ON cs.room_id = r.id
       WHERE cs.session_date = ${date}
       ORDER BY cs.start_time ASC
@@ -132,19 +120,23 @@ export async function POST(request: NextRequest) {
     const [booking] = await rawSql`SELECT * FROM bookings WHERE id = ${bookingId}`;
     if (!booking) return bad("预约不存在", 404);
     if (booking.status === "cancelled") return NextResponse.json({ success: true, message: "已是取消状态" });
+    if (booking.status !== "booked") return bad("已签到或已结束的预约不能在这里取消，避免把名额和课时算错", 409);
 
-    // 更新预约状态为取消并扣减已约数
-    await rawSql`
-      UPDATE bookings
-      SET status = 'cancelled', cancelled_at = NOW(), cancel_reason = ${body.reason || "管家端手机取消"}, updated_at = NOW()
-      WHERE id = ${bookingId}
+    const rows = await rawSql`
+      WITH updated AS (
+        UPDATE bookings
+        SET status = 'cancelled', cancelled_at = NOW(), cancel_reason = ${body.reason || "管家端手机取消"}, updated_at = NOW()
+        WHERE id = ${bookingId} AND tenant_id = 1 AND status = 'booked'
+        RETURNING session_id
+      ), released AS (
+        UPDATE class_sessions
+        SET booked_count = GREATEST(booked_count - 1, 0), updated_at = NOW()
+        WHERE id IN (SELECT session_id FROM updated)
+        RETURNING id
+      )
+      SELECT session_id FROM updated
     `;
-
-    await rawSql`
-      UPDATE class_sessions
-      SET booked_count = GREATEST(booked_count - 1, 0), updated_at = NOW()
-      WHERE id = ${booking.session_id}
-    `;
+    if (!rows.length) return bad("预约状态已变化，请刷新后再试", 409);
 
     return NextResponse.json({ success: true, message: "预约已取消，席位已释放" });
   }
@@ -152,25 +144,40 @@ export async function POST(request: NextRequest) {
   // 2. 现场录入新会员
   if (action === "create_member") {
     const name = String(body.name || "").trim();
-    const phone = String(body.phone || "").trim();
-    if (!name || !phone) return bad("请填写会员姓名和手机号");
-    if (!/^1\d{10}$/.test(phone)) return bad("手机号格式不正确");
+    const phoneParsed = normalizePhone(String(body.phone || ""));
+    const phone = phoneParsed.phone;
+    if (!name || !phone) return bad(phoneParsed.error || "请填写会员姓名和手机号");
 
-    // 检查手机号是否已存在
-    const [exist] = await rawSql`SELECT id, name FROM members WHERE phone = ${phone} LIMIT 1`.catch(() => []);
+    const [exist] = await rawSql`
+      SELECT id, name FROM members
+      WHERE regexp_replace(COALESCE(phone, ''), '\\D', '', 'g') = ${phone}
+      LIMIT 1
+    `.catch(() => []);
     if (exist) return bad(`手机号已被会员【${exist.name}】使用`);
 
     // 自动分配下一个会员卡号 LWxxxx
     const [maxIdRow] = await rawSql`SELECT MAX(id) as max_id FROM members`.catch(() => [{ max_id: 100 }]);
     const nextCode = `LW${String((maxIdRow?.max_id || 100) + 1).padStart(4, "0")}`;
 
+    let portalCode = "";
+    for (let t = 0; t < 20; t++) {
+      const c = generatePortalCode();
+      const [dup] = await rawSql`SELECT id FROM members WHERE portal_code = ${c} LIMIT 1`;
+      if (!dup) { portalCode = c; break; }
+    }
+    if (!portalCode) return bad("邀请码生成失败，请重试");
+    const loginPin = generateLoginPin();
     const [newMem] = await rawSql`
-      INSERT INTO members (name, phone, member_code, status, portal_enabled, joined_at, created_at, updated_at)
-      VALUES (${name}, ${phone}, ${nextCode}, 'active', 1, CURRENT_DATE, NOW(), NOW())
-      RETURNING id, name, phone, member_code
+      INSERT INTO members (tenant_id, name, phone, member_code, portal_code, login_pin, status, portal_enabled, joined_at, created_at, updated_at)
+      VALUES (1, ${name}, ${phone}, ${nextCode}, ${portalCode}, ${loginPin}, 'active', 1, ${shanghaiToday()}, NOW(), NOW())
+      RETURNING id, name, phone, member_code, portal_code, login_pin
     `;
 
-    return NextResponse.json({ success: true, member: newMem, message: `会员【${name}】录入成功，卡号 ${nextCode}` });
+    return NextResponse.json({
+      success: true,
+      member: newMem,
+      message: `会员【${name}】录入成功。邀请码 ${portalCode}，登录 PIN ${loginPin}`,
+    });
   }
 
   // 3. 修改课程信息（名称、分类、星级、简介）

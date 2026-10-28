@@ -3,6 +3,8 @@ import { db, rawSql } from "@/db";
 import { members, classSessions, bookings, memberCards, courseCategories } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { getPortalMemberId } from "@/lib/auth/member-session";
+import { memberHasStaffAccess } from "@/lib/staff-access";
+import { shanghaiToday } from "@/lib/shanghai-date";
 
 export const dynamic = "force-dynamic";
 
@@ -18,26 +20,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "会员不存在" }, { status: 404 });
   }
 
-  const [managerCheck] = await rawSql`
-    SELECT u.id, u.role, u.is_coach
-    FROM users u
-    WHERE (u.email = ${member.phone} OR u.name = ${member.name})
-      AND u.status = 'active'
-    LIMIT 1
-  `.catch(() => []);
-
-  const isManager = Boolean(
-    managerCheck?.role === "owner" ||
-    managerCheck?.role === "admin" ||
-    managerCheck?.role === "coach" ||
-    Number(managerCheck?.is_coach) === 1 ||
-    member.phone === "15271754857" ||
-    member.name === "小桥"
-  );
-
-  if (!isManager) {
+  const staff = await memberHasStaffAccess(member);
+  if (!staff.allowed) {
     return NextResponse.json({ error: "暂无管理权限" }, { status: 403 });
   }
+  const today = shanghaiToday();
 
   // 2. 真实并行查询核心看板数据
   const [
@@ -53,7 +40,7 @@ export async function GET(request: NextRequest) {
       SELECT count(*)::int as count
       FROM bookings b
       JOIN class_sessions cs ON b.session_id = cs.id
-      WHERE cs.session_date = to_char(CURRENT_DATE, 'YYYY-MM-DD')
+      WHERE cs.session_date = ${today}
         AND b.status IN ('booked', 'attended')
     `.catch(() => [{ count: 0 }]),
 
@@ -61,14 +48,14 @@ export async function GET(request: NextRequest) {
     rawSql`
       SELECT count(*)::int as count
       FROM member_cards
-      WHERE created_at >= CURRENT_DATE
+      WHERE (created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Shanghai')::date = ${today}::date
     `.catch(() => [{ count: 0 }]),
 
     // 今日新增会员
     rawSql`
       SELECT count(*)::int as count
       FROM members
-      WHERE created_at >= CURRENT_DATE
+      WHERE (created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Shanghai')::date = ${today}::date
     `.catch(() => [{ count: 0 }]),
 
     // 动态通报条 (最新 6 条预约/取消/出勤动态)
@@ -111,20 +98,20 @@ export async function GET(request: NextRequest) {
         cs.booked_count,
         cs.status as session_status,
         COALESCE(c.name, cs.title) as course_name,
-        COALESCE(tm.name, '专业导师') as coach_name,
+        COALESCE(coach_user.name, '专业导师') as coach_name,
         COALESCE(r.name, '主操房') as room_name
       FROM class_sessions cs
       LEFT JOIN course_categories c ON cs.course_category_id = c.id
-      LEFT JOIN team_members tm ON cs.coach_id = tm.id
+      LEFT JOIN users coach_user ON cs.coach_id = coach_user.id
       LEFT JOIN rooms r ON cs.room_id = r.id
-      WHERE cs.session_date = to_char(CURRENT_DATE, 'YYYY-MM-DD')
+      WHERE cs.session_date = ${today}
       ORDER BY cs.start_time ASC
     `.catch(() => []),
   ]);
 
   const response = NextResponse.json({
     managerName: member.name,
-    managerRole: managerCheck?.role || (member.name === "小桥" ? "owner" : "coach"),
+    managerRole: staff.role || "coach",
     todayBookingsCount: Number(todayBookingsRes[0]?.count || 0),
     todayNewCardsCount: Number(todayCardsRes[0]?.count || 0),
     todayNewMembersCount: Number(todayMembersRes[0]?.count || 0),

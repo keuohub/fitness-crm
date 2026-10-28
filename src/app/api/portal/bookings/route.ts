@@ -2,15 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getPortalMemberId } from "@/lib/auth/member-session";
 import { rawSql } from "@/db";
 import { autoSettleFinishedBookings } from "@/lib/booking-settle";
+import { sweepCardLifecycle } from "@/lib/card-lifecycle";
+import { shanghaiToday } from "@/lib/shanghai-date";
 
 const bad = (msg: string, status = 400) => NextResponse.json({ error: msg }, { status });
-const today = () => new Date().toISOString().slice(0, 10);
-function addDays(date: string, days: number) {
-  const [y, m, d] = date.split("-").map(Number);
-  const dt = new Date(Date.UTC(y, m - 1, d));
-  dt.setUTCDate(dt.getUTCDate() + days);
-  return dt.toISOString().slice(0, 10);
-}
+const today = () => shanghaiToday();
 function sessionStart(date: string, time: string) {
   return new Date(`${date}T${time}:00+08:00`).getTime();
 }
@@ -48,6 +44,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const memberId = await getPortalMemberId(request);
   if (!memberId) return bad("未登录", 401);
+  await sweepCardLifecycle().catch((err) => console.error("[bookings] card sweep", err));
   const body = await request.json();
   const sessionId = Number(body.sessionId);
   if (!sessionId) return bad("缺少 sessionId");
@@ -73,8 +70,8 @@ export async function POST(request: NextRequest) {
     JOIN class_sessions s ON s.id = ${sessionId}
     WHERE mc.tenant_id = 1 AND mc.member_id = ${memberId}
       AND mc.status = 'active'
-      AND (mc.valid_from IS NULL OR mc.valid_from::date <= CURRENT_DATE)
-      AND (mc.valid_until IS NULL OR mc.valid_until::date >= CURRENT_DATE)
+      AND (mc.valid_from IS NULL OR BTRIM(mc.valid_from) = '' OR LEFT(mc.valid_from, 10) <= ${today()})
+      AND (mc.valid_until IS NULL OR BTRIM(mc.valid_until) = '' OR LEFT(mc.valid_until, 10) >= ${today()})
       AND (ct.category = 'period' OR mc.remaining_count > 0)
       AND (
         EXISTS (
@@ -100,8 +97,8 @@ export async function POST(request: NextRequest) {
       FROM member_cards mc JOIN card_types ct ON ct.id = mc.card_type_id
       WHERE mc.tenant_id = 1 AND mc.member_id = ${memberId}
         AND mc.status = 'active'
-        AND (mc.valid_from IS NULL OR mc.valid_from::date <= CURRENT_DATE)
-        AND (mc.valid_until IS NULL OR mc.valid_until::date >= CURRENT_DATE)
+        AND (mc.valid_from IS NULL OR BTRIM(mc.valid_from) = '' OR LEFT(mc.valid_from, 10) <= ${today()})
+        AND (mc.valid_until IS NULL OR BTRIM(mc.valid_until) = '' OR LEFT(mc.valid_until, 10) >= ${today()})
         AND (ct.category = 'period' OR mc.remaining_count > 0)
       LIMIT 1`;
 

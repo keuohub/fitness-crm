@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/admin-session";
 import { rawSql } from "@/db";
+import { shanghaiToday } from "@/lib/shanghai-date";
 const bad = (msg: string, status = 400) => NextResponse.json({ error: msg }, { status });
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => shanghaiToday();
 const isDate = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s);
 
 export async function GET(request: NextRequest) {

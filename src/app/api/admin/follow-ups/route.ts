@@ -1,19 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/admin-session";
 import { rawSql } from "@/db";
+import { addCalendarDays, shanghaiToday } from "@/lib/shanghai-date";
 
-function addDays(date: string, days: number) {
-  const [y, m, d] = date.split("-").map(Number);
-  const dt = new Date(Date.UTC(y, m - 1, d));
-  dt.setUTCDate(dt.getUTCDate() + days);
-  return dt.toISOString().slice(0, 10);
-}
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => shanghaiToday();
 
 export async function GET(request: NextRequest) {
   if (!(await requireAdmin(request))) return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
   const t = today();
-  const in30 = addDays(t, 30);
+  const in30 = addCalendarDays(t, 30);
 
   const lowBalance = await rawSql`
     SELECT mc.id AS card_id, mc.member_id, mc.remaining_count, mc.valid_until,
@@ -45,7 +40,7 @@ export async function GET(request: NextRequest) {
     LEFT JOIN class_sessions s ON s.id = a.session_id
     WHERE m.tenant_id = 1 AND m.status <> 'archived'
     GROUP BY m.id, m.name, m.phone
-    HAVING MAX(s.session_date) IS NULL OR MAX(s.session_date) < ${addDays(t, -30)}
+    HAVING MAX(s.session_date) IS NULL OR MAX(s.session_date) < ${addCalendarDays(t, -30)}
     ORDER BY MAX(s.session_date) NULLS FIRST LIMIT 100`;
 
   const birthRows = await rawSql`
