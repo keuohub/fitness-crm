@@ -178,9 +178,10 @@ Page({
     return { title: "徕舞女子塑形 · 身体掌权，终生优雅" };
   },
   onShareAppMessage: function() {
-    var star = this.data.currentStar || this.data.starsList[0];
+    var star = this.data.currentStar || (this.data.starsList && this.data.starsList[0]);
+    var title = star && star.name ? ("徕舞之星 · " + star.name + " 的蜕变姿态") : "徕舞之星 · 真实学员蜕变姿态";
     return {
-      title: "徕舞之星 · " + star.name + " 的蜕变姿态",
+      title: title,
       path: "/pages/stars/stars"
     };
   }

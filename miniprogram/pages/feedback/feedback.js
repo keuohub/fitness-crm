@@ -175,7 +175,7 @@ Page({
 
   onShow: function() {
     if (typeof this.getTabBar === "function" && this.getTabBar()) {
-      this.getTabBar().setData({ selected: 1, hidden: false });
+      this.getTabBar().setData({ hidden: true });
     }
 
     var currentMemberId = Number(wx.getStorageSync("memberId") || 0);
@@ -214,7 +214,7 @@ Page({
   onShareAppMessage: function() {
     return {
       title: "小桥的来信 · 徕舞私享手札",
-      path: "/pages/stars/stars"
+      path: "/pages/feedback/feedback"
     };
   },
 

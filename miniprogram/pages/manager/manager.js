@@ -30,6 +30,7 @@ Page({
     selectedBookingDate: "",
     bookingSessions: [],
     loadingBookings: false,
+    errorBookings: "",
 
     // ── 排课中心 (schedule) ──
     showScheduleForm: true,
@@ -48,10 +49,12 @@ Page({
     submittingSession: false,
     scheduleSessions: [],
     loadingScheduleSessions: false,
+    errorScheduleSessions: "",
 
     // ── 课程管理 (courses) ──
     coursesList: [],
     loadingCourses: false,
+    errorCourses: "",
     editingCourse: {
       id: 0,
       name: "",
@@ -68,19 +71,24 @@ Page({
     submittingMember: false,
     memberSearchKeyword: "",
     membersList: [],
+    totalMembersDb: 0,
     loadingMembers: false,
+    errorMembers: "",
 
     // ── 会员卡项 (cards) ──
     cardsList: [],
     loadingCards: false,
+    errorCards: "",
 
     // ── 教室场地 (venue) ──
     venueRooms: [],
     loadingVenue: false,
+    errorVenue: "",
 
-    // ── 经营数据 (reports) ──
+    // ── 经营报表 (reports) ──
     reportData: {},
-    loadingReports: false
+    loadingReports: false,
+    errorReports: ""
   },
 
   onLoad: function() {
@@ -133,7 +141,6 @@ Page({
     var tabs = [];
     var daysName = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
     var base = new Date();
-    // 包含昨天、今天、明天，以及后续 4 天
     for (var i = -1; i <= 5; i++) {
       var d = new Date(base.getTime() + i * 86400 * 1000);
       var y = d.getFullYear();
@@ -233,7 +240,7 @@ Page({
     wx.switchTab({ url: "/pages/brand/brand" });
   },
 
-  // ── 主工作台数据加载 ──
+  // ── 主工作台数据加载 (P0-7 修复：取真实 totalCardsCount，删除 || 5 假数据) ──
   loadDashboard: function(done) {
     var that = this;
     var cb = typeof done === "function" ? done : function() {};
@@ -260,11 +267,11 @@ Page({
             loadError: "",
             managerName: d.managerName || "馆长",
             managerRole: d.managerRole || "owner",
-            todayBookingsCount: d.todayBookingsCount || 0,
-            totalCardsCount: d.todayNewCardsCount || 5,
-            todayNewMembersCount: d.todayNewMembersCount || 0,
-            totalMembersCount: d.totalMembersCount || 0,
-            portalEnabledCount: d.portalEnabledCount || 0,
+            todayBookingsCount: Number(d.todayBookingsCount || 0),
+            totalCardsCount: Number(d.totalCardsCount != null ? d.totalCardsCount : d.todayNewCardsCount || 0),
+            todayNewMembersCount: Number(d.todayNewMembersCount || 0),
+            totalMembersCount: Number(d.totalMembersCount || 0),
+            portalEnabledCount: Number(d.portalEnabledCount || 0),
             recentActivities: d.recentActivities || [],
             topActivityText: topText,
             topActivityStatus: topStatus,
@@ -274,17 +281,18 @@ Page({
           that.setData({ loading: false });
           wx.showModal({
             title: "权限受限",
-            content: "当前手机号未开通会馆管家权限，仅供会馆导师与馆长使用。",
+            content: "当前登录账号未开通会馆管家权限，仅供会馆导师与主理人使用。",
             showCancel: false,
             confirmText: "返回",
             success: function() { wx.switchTab({ url: "/pages/me/me" }); }
           });
         } else {
-          that.setData({ loading: false, loadError: "加载失败，请下拉刷新" });
+          var errMsg = (res.data && res.data.error) || "加载失败，请下拉刷新";
+          that.setData({ loading: false, loadError: errMsg });
         }
       },
       fail: function() {
-        that.setData({ loading: false, loadError: "网络连接失败，请重试" });
+        that.setData({ loading: false, loadError: "网络连接失败，请下拉重试" });
       },
       complete: cb
     });
@@ -333,14 +341,14 @@ Page({
   openCheckinNotice: function() {
     wx.showModal({
       title: "智能结课消课机制",
-      content: "全自研SaaS智能结课引擎已激活：\n\n• 会员预约课程后，如在开课前未主动退课，课程结束后系统自动判定为已出勤，自动从会员卡扣减对应课时。\n• 前台与授课导师无需在下课后手动逐一打钩划卡，课消资产全自动核销对齐。",
+      content: "全自研SaaS智能结课引擎已激活：\n\n• 会员预约课程后，如在开课前未主动退课，课程结束后系统自动判定为已出勤，自动从会员卡扣减对应课时。\n• 前台与授课导师无需在下课后手动逐一打钩划卡，课消资产全自动核销对齐。\n• 若会员无有效匹配卡，系统将自动标记为待补卡结算，绝不漏扣也不白送。",
       showCancel: false,
       confirmText: "我知道了"
     });
   },
 
   // ════════════════════════════════════════════════════════════
-  // 1. 预约管理逻辑 (Bookings)
+  // 1. 预约管理逻辑 (Bookings, P0-3 校验与文案修复)
   // ════════════════════════════════════════════════════════════
   onSelectDateTab: function(e) {
     var date = e.currentTarget.dataset.date;
@@ -355,10 +363,18 @@ Page({
     this.fetchBookings(date);
   },
 
+  retryBookings: function() {
+    this.fetchBookings(this.data.selectedBookingDate);
+  },
+
+  retryScheduleSessions: function() {
+    this.fetchScheduleSessions(this.data.newSessionDate);
+  },
+
   fetchBookings: function(date, done) {
     var that = this;
     var cb = typeof done === "function" ? done : function() {};
-    this.setData({ loadingBookings: true });
+    this.setData({ loadingBookings: true, errorBookings: "" });
 
     api.request({
       url: "/api/portal/manager/actions?action=bookings&date=" + (date || this.data.selectedBookingDate),
@@ -366,14 +382,18 @@ Page({
         if (res.statusCode === 200 && res.data) {
           that.setData({
             bookingSessions: res.data.sessions || [],
-            loadingBookings: false
+            loadingBookings: false,
+            errorBookings: ""
           });
         } else {
-          that.setData({ loadingBookings: false });
+          var err = (res.data && res.data.error) || ("获取预约失败 (HTTP " + res.statusCode + ")");
+          that.setData({ loadingBookings: false, errorBookings: err });
+          wx.showToast({ title: err, icon: "none" });
         }
       },
       fail: function() {
-        that.setData({ loadingBookings: false });
+        that.setData({ loadingBookings: false, errorBookings: "网络连接失败，请重试" });
+        wx.showToast({ title: "网络连接异常", icon: "none" });
       },
       complete: cb
     });
@@ -386,7 +406,7 @@ Page({
 
     wx.showModal({
       title: "取消预约确认",
-      content: "确定要代学员【" + memberName + "】取消本节课程吗？取消后该席位将立刻释放给其他学员，学员课时将全额自动返还。",
+      content: "确定要代学员【" + memberName + "】取消本节课程吗？取消后该席位将立刻释放给其他学员，学员预约额度将恢复。",
       confirmColor: "#DC2626",
       confirmText: "确认取消",
       cancelText: "保留",
@@ -400,7 +420,7 @@ Page({
           success: function(res) {
             wx.hideLoading();
             if (res.statusCode === 200 && res.data && res.data.success) {
-              wx.showToast({ title: "已取消并返还课时", icon: "success" });
+              wx.showToast({ title: res.data.message || "已取消并释放席位", icon: "success" });
               that.fetchBookings(that.data.selectedBookingDate);
               that.loadDashboard();
             } else {
@@ -417,7 +437,7 @@ Page({
   },
 
   // ════════════════════════════════════════════════════════════
-  // 2. 排课中心逻辑 (Schedule)
+  // 2. 排课中心逻辑 (Schedule, P0-10 校验与取消场次入口)
   // ════════════════════════════════════════════════════════════
   toggleScheduleForm: function() {
     this.setData({ showScheduleForm: !this.data.showScheduleForm });
@@ -444,7 +464,7 @@ Page({
   fetchScheduleSessions: function(date, done) {
     var that = this;
     var cb = typeof done === "function" ? done : function() {};
-    this.setData({ loadingScheduleSessions: true });
+    this.setData({ loadingScheduleSessions: true, errorScheduleSessions: "" });
 
     api.request({
       url: "/api/portal/manager/actions?action=bookings&date=" + (date || this.data.newSessionDate),
@@ -452,14 +472,18 @@ Page({
         if (res.statusCode === 200 && res.data) {
           that.setData({
             scheduleSessions: res.data.sessions || [],
-            loadingScheduleSessions: false
+            loadingScheduleSessions: false,
+            errorScheduleSessions: ""
           });
         } else {
-          that.setData({ loadingScheduleSessions: false });
+          var err = (res.data && res.data.error) || ("获取排课失败 (HTTP " + res.statusCode + ")");
+          that.setData({ loadingScheduleSessions: false, errorScheduleSessions: err });
+          wx.showToast({ title: err, icon: "none" });
         }
       },
       fail: function() {
-        that.setData({ loadingScheduleSessions: false });
+        that.setData({ loadingScheduleSessions: false, errorScheduleSessions: "网络连接失败" });
+        wx.showToast({ title: "网络连接失败", icon: "none" });
       },
       complete: cb
     });
@@ -467,7 +491,14 @@ Page({
 
   onSessionCourseChange: function(e) { this.setData({ newSessionCourseIndex: Number(e.detail.value) }); },
   onSessionCoachChange: function(e) { this.setData({ newSessionCoachIndex: Number(e.detail.value) }); },
-  onSessionRoomChange: function(e) { this.setData({ newSessionRoomIndex: Number(e.detail.value) }); },
+  onSessionRoomChange: function(e) {
+    var idx = Number(e.detail.value);
+    var r = this.data.sessionOptions.rooms[idx];
+    this.setData({
+      newSessionRoomIndex: idx,
+      newSessionCapacity: r && r.capacity ? Number(r.capacity) : 6
+    });
+  },
   onSessionDateChange: function(e) {
     var d = e.detail.value;
     this.setData({ newSessionDate: d });
@@ -512,7 +543,13 @@ Page({
           that.fetchScheduleSessions(that.data.newSessionDate);
           that.loadDashboard();
         } else {
-          wx.showToast({ title: (res.data && res.data.error) || "排课发布失败", icon: "none" });
+          var err = (res.data && res.data.error) || "排课发布失败";
+          wx.showModal({
+            title: "排课冲突提醒",
+            content: err,
+            showCancel: false,
+            confirmText: "知道了"
+          });
         }
       },
       fail: function() {
@@ -523,24 +560,67 @@ Page({
     });
   },
 
+  // 取消排课场次 (P0-10)
+  cancelSessionItem: function(e) {
+    var that = this;
+    var sessionId = e.currentTarget.dataset.id;
+    var title = e.currentTarget.dataset.title;
+
+    wx.showModal({
+      title: "取消排课场次确认",
+      content: "确定取消该场【" + title + "】排课吗？取消后该场已有的所有学员预约将同步取消并释放席位。",
+      confirmColor: "#DC2626",
+      confirmText: "确认取消",
+      cancelText: "保留",
+      success: function(sm) {
+        if (!sm.confirm) return;
+        wx.showLoading({ title: "正在取消排课…" });
+        api.request({
+          url: "/api/portal/manager/actions?action=cancel_session",
+          method: "POST",
+          data: { sessionId: sessionId, reason: "管家在小程序端取消排课" },
+          success: function(res) {
+            wx.hideLoading();
+            if (res.statusCode === 200 && res.data && res.data.success) {
+              wx.showToast({ title: "场次已取消", icon: "success" });
+              that.fetchScheduleSessions(that.data.newSessionDate);
+              that.loadDashboard();
+            } else {
+              wx.showToast({ title: (res.data && res.data.error) || "取消失败", icon: "none" });
+            }
+          },
+          fail: function() {
+            wx.hideLoading();
+            wx.showToast({ title: "网络连接失败", icon: "none" });
+          }
+        });
+      }
+    });
+  },
+
   // ════════════════════════════════════════════════════════════
   // 3. 课程管理逻辑 (Courses)
   // ════════════════════════════════════════════════════════════
   fetchCourses: function(done) {
     var that = this;
     var cb = typeof done === "function" ? done : function() {};
-    this.setData({ loadingCourses: true });
+    this.setData({ loadingCourses: true, errorCourses: "" });
 
     api.request({
       url: "/api/portal/manager/actions?action=courses",
       success: function(res) {
         if (res.statusCode === 200 && res.data) {
-          that.setData({ coursesList: res.data.courses || [], loadingCourses: false });
+          that.setData({ coursesList: res.data.courses || [], loadingCourses: false, errorCourses: "" });
         } else {
-          that.setData({ loadingCourses: false });
+          var err = (res.data && res.data.error) || ("获取课程失败 (HTTP " + res.statusCode + ")");
+          that.setData({ loadingCourses: false, errorCourses: err });
+          wx.showToast({ title: err, icon: "none" });
         }
       },
-      fail: function() { that.setData({ loadingCourses: false }); },
+      fail: function() {
+        that.setData({ loadingCourses: false, errorCourses: "网络连接异常" });
+        wx.showToast({ title: "网络连接异常", icon: "none" });
+      },
       complete: cb
     });
   },
@@ -610,7 +690,7 @@ Page({
   },
 
   // ════════════════════════════════════════════════════════════
-  // 4. 会员中心逻辑 (Members)
+  // 4. 会员中心逻辑 (Members, P0-8 专属邀请码与PIN回显)
   // ════════════════════════════════════════════════════════════
   toggleNewMemberCard: function() {
     this.setData({ showNewMemberCard: !this.data.showNewMemberCard });
@@ -627,19 +707,29 @@ Page({
   fetchMembers: function(q, done) {
     var that = this;
     var cb = typeof done === "function" ? done : function() {};
-    this.setData({ loadingMembers: true });
+    this.setData({ loadingMembers: true, errorMembers: "" });
 
     var query = q ? "&q=" + encodeURIComponent(q) : "";
     api.request({
       url: "/api/portal/manager/actions?action=members" + query,
       success: function(res) {
         if (res.statusCode === 200 && res.data) {
-          that.setData({ membersList: res.data.members || [], loadingMembers: false });
+          that.setData({
+            membersList: res.data.members || [],
+            totalMembersDb: res.data.total || (res.data.members ? res.data.members.length : 0),
+            loadingMembers: false,
+            errorMembers: ""
+          });
         } else {
-          that.setData({ loadingMembers: false });
+          var err = (res.data && res.data.error) || ("获取会员失败 (HTTP " + res.statusCode + ")");
+          that.setData({ loadingMembers: false, errorMembers: err });
+          wx.showToast({ title: err, icon: "none" });
         }
       },
-      fail: function() { that.setData({ loadingMembers: false }); },
+      fail: function() {
+        that.setData({ loadingMembers: false, errorMembers: "网络连接失败，请重试" });
+        wx.showToast({ title: "网络连接失败", icon: "none" });
+      },
       complete: cb
     });
   },
@@ -663,11 +753,13 @@ Page({
         wx.hideLoading();
         that.setData({ submittingMember: false });
         if (res.statusCode === 200 && res.data && res.data.success) {
+          var portalCode = res.data.portalCode || "已开通";
+          var loginPin = res.data.loginPin || phone.slice(-4);
           wx.showModal({
             title: "录入成功",
-            content: res.data.message + "\n\n已自动激活该会员小程序约课权限，手机号即可直接登录约课。",
+            content: "会员【" + name + "】已建档并开通约课通道！\n\n专属邀请码：" + portalCode + "\n登录验证码：" + loginPin + "\n\n会员在小程序「登录」页输入此邀请码与验证码即可直接登录约课。",
             showCancel: false,
-            confirmText: "知道了",
+            confirmText: "我知道了",
             success: function() {
               that.setData({
                 showNewMemberCard: false,
@@ -679,7 +771,13 @@ Page({
             }
           });
         } else {
-          wx.showToast({ title: (res.data && res.data.error) || "录入失败", icon: "none" });
+          var err = (res.data && res.data.error) || "录入失败";
+          wx.showModal({
+            title: "录入提示",
+            content: err,
+            showCancel: false,
+            confirmText: "知道了"
+          });
         }
       },
       fail: function() {
@@ -691,23 +789,28 @@ Page({
   },
 
   // ════════════════════════════════════════════════════════════
-  // 5. 会员卡项逻辑 (Cards)
+  // 5. 会员卡项逻辑 (Cards, P1-3 错误显式提示)
   // ════════════════════════════════════════════════════════════
   fetchCards: function(done) {
     var that = this;
     var cb = typeof done === "function" ? done : function() {};
-    this.setData({ loadingCards: true });
+    this.setData({ loadingCards: true, errorCards: "" });
 
     api.request({
       url: "/api/portal/manager/actions?action=cards",
       success: function(res) {
         if (res.statusCode === 200 && res.data) {
-          that.setData({ cardsList: res.data.cards || [], loadingCards: false });
+          that.setData({ cardsList: res.data.cards || [], loadingCards: false, errorCards: "" });
         } else {
-          that.setData({ loadingCards: false });
+          var err = (res.data && res.data.error) || ("获取卡项失败 (HTTP " + res.statusCode + ")");
+          that.setData({ loadingCards: false, errorCards: err });
+          wx.showToast({ title: err, icon: "none" });
         }
       },
-      fail: function() { that.setData({ loadingCards: false }); },
+      fail: function() {
+        that.setData({ loadingCards: false, errorCards: "网络连接失败" });
+        wx.showToast({ title: "网络连接失败", icon: "none" });
+      },
       complete: cb
     });
   },
@@ -718,18 +821,23 @@ Page({
   fetchVenue: function(done) {
     var that = this;
     var cb = typeof done === "function" ? done : function() {};
-    this.setData({ loadingVenue: true });
+    this.setData({ loadingVenue: true, errorVenue: "" });
 
     api.request({
       url: "/api/portal/manager/actions?action=venue",
       success: function(res) {
         if (res.statusCode === 200 && res.data) {
-          that.setData({ venueRooms: res.data.rooms || [], loadingVenue: false });
+          that.setData({ venueRooms: res.data.rooms || [], loadingVenue: false, errorVenue: "" });
         } else {
-          that.setData({ loadingVenue: false });
+          var err = (res.data && res.data.error) || ("获取教室失败 (HTTP " + res.statusCode + ")");
+          that.setData({ loadingVenue: false, errorVenue: err });
+          wx.showToast({ title: err, icon: "none" });
         }
       },
-      fail: function() { that.setData({ loadingVenue: false }); },
+      fail: function() {
+        that.setData({ loadingVenue: false, errorVenue: "网络连接失败" });
+        wx.showToast({ title: "网络连接失败", icon: "none" });
+      },
       complete: cb
     });
   },
@@ -740,18 +848,23 @@ Page({
   fetchReports: function(done) {
     var that = this;
     var cb = typeof done === "function" ? done : function() {};
-    this.setData({ loadingReports: true });
+    this.setData({ loadingReports: true, errorReports: "" });
 
     api.request({
       url: "/api/portal/manager/actions?action=reports",
       success: function(res) {
         if (res.statusCode === 200 && res.data) {
-          that.setData({ reportData: res.data.report || {}, loadingReports: false });
+          that.setData({ reportData: res.data.report || {}, loadingReports: false, errorReports: "" });
         } else {
-          that.setData({ loadingReports: false });
+          var err = (res.data && res.data.error) || ("获取报表失败 (HTTP " + res.statusCode + ")");
+          that.setData({ loadingReports: false, errorReports: err });
+          wx.showToast({ title: err, icon: "none" });
         }
       },
-      fail: function() { that.setData({ loadingReports: false }); },
+      fail: function() {
+        that.setData({ loadingReports: false, errorReports: "网络连接失败" });
+        wx.showToast({ title: "网络连接失败", icon: "none" });
+      },
       complete: cb
     });
   }

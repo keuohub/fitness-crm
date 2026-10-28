@@ -20,7 +20,7 @@ Page({
   }
 ,
   onShareAppMessage: function() {
-    return { title: "徕舞女子塑形 · 我的课后手札", path: "/pages/brand/brand" };
+    return { title: "徕舞女子塑形 · 我的课后手札", path: "/pages/notes/notes" };
   },
   onShareTimeline: function() {
     return { title: "徕舞女子塑形 · 身体掌权，终生优雅" };

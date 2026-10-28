@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getPortalMemberId } from "@/lib/auth/member-session";
 import { rawSql } from "@/db";
 import { autoSettleFinishedBookings } from "@/lib/booking-settle";
+import { sendSubscribeMessage } from "@/lib/wechat/subscribe";
 
 const bad = (msg: string, status = 400) => NextResponse.json({ error: msg }, { status });
-const today = () => new Date().toISOString().slice(0, 10);
+// 严格按北京时间 (Asia/Shanghai UTC+8) 计算日期，消除跨日偏差
+const beijingToday = () => new Date(Date.now() + 8 * 3600_000).toISOString().slice(0, 10);
 function addDays(date: string, days: number) {
   const [y, m, d] = date.split("-").map(Number);
   const dt = new Date(Date.UTC(y, m - 1, d));
@@ -22,9 +24,6 @@ async function settings() {
 export async function GET(request: NextRequest) {
   const memberId = await getPortalMemberId(request);
   if (!memberId) return bad("未登录", 401);
-  
-  // 触发一次后台自动结课消课（下课后自动扣除）
-  autoSettleFinishedBookings().catch((err) => console.error("[bookings] autoSettle error:", err));
 
   const u = new URL(request.url);
   const scope = u.searchParams.get("scope") || "all";
@@ -38,7 +37,7 @@ export async function GET(request: NextRequest) {
     LEFT JOIN users u2 ON u2.id = s.coach_id
     LEFT JOIN rooms r ON r.id = s.room_id
     WHERE b.tenant_id = 1 AND b.member_id = ${memberId}
-      AND (${scope !== "upcoming"} OR (b.status = 'booked' AND s.session_date >= ${today()}))
+      AND (${scope !== "upcoming"} OR (b.status = 'booked' AND s.session_date >= ${beijingToday()}))
     ORDER BY s.session_date DESC, s.start_time DESC LIMIT 100`;
   const response = NextResponse.json({ bookings: rows });
   response.headers.set("Cache-Control", "private, no-store");
@@ -73,8 +72,8 @@ export async function POST(request: NextRequest) {
     JOIN class_sessions s ON s.id = ${sessionId}
     WHERE mc.tenant_id = 1 AND mc.member_id = ${memberId}
       AND mc.status = 'active'
-      AND (mc.valid_from IS NULL OR mc.valid_from::date <= CURRENT_DATE)
-      AND (mc.valid_until IS NULL OR mc.valid_until::date >= CURRENT_DATE)
+      AND (mc.valid_from IS NULL OR mc.valid_from::date <= (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Shanghai')::date)
+      AND (mc.valid_until IS NULL OR mc.valid_until::date >= (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Shanghai')::date)
       AND (ct.category = 'period' OR mc.remaining_count > 0)
       AND (
         EXISTS (
@@ -100,8 +99,8 @@ export async function POST(request: NextRequest) {
       FROM member_cards mc JOIN card_types ct ON ct.id = mc.card_type_id
       WHERE mc.tenant_id = 1 AND mc.member_id = ${memberId}
         AND mc.status = 'active'
-        AND (mc.valid_from IS NULL OR mc.valid_from::date <= CURRENT_DATE)
-        AND (mc.valid_until IS NULL OR mc.valid_until::date >= CURRENT_DATE)
+        AND (mc.valid_from IS NULL OR mc.valid_from::date <= (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Shanghai')::date)
+        AND (mc.valid_until IS NULL OR mc.valid_until::date >= (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Shanghai')::date)
         AND (ct.category = 'period' OR mc.remaining_count > 0)
       LIMIT 1`;
 
@@ -145,6 +144,7 @@ export async function POST(request: NextRequest) {
   const start = sessionStart(session.session_date, session.start_time);
   const now = Date.now();
   if (start <= now) return bad("该课程已经开课，无法预约", 409);
+  if (start - now < 2 * 3600_000) return bad("距开课不足 2 小时，已截止线上预约，如需预约请联系前台", 409);
   if (start > now + advanceDays * 86400_000) return bad(`最多提前 ${advanceDays} 天预约`, 409);
 
   const [{ n }] = await rawSql`
@@ -176,6 +176,28 @@ export async function POST(request: NextRequest) {
       return bad("名额已满", 409);
     }
     const booking = rows[0];
+
+    // 触发微信预约成功订阅消息（未配置模板则自动静默跳过）
+    (async () => {
+      try {
+        const [m] = await rawSql`SELECT openid, name FROM members WHERE id = ${memberId} LIMIT 1`;
+        if (m?.openid) {
+          await sendSubscribeMessage({
+            openid: m.openid,
+            templateKey: "booking_success",
+            page: "pages/schedule/schedule",
+            data: {
+              thing1: { value: String(session.title || "普拉提课程").slice(0, 20) },
+              time2: { value: `${session.session_date} ${session.start_time}` },
+              name3: { value: String(m.name || "学员").slice(0, 10) }
+            }
+          });
+        }
+      } catch (e) {
+        // 订阅消息失败绝不阻塞预约响应
+      }
+    })();
+
     return NextResponse.json({
       booking,
       remaining: Math.max(0, Number(booking.capacity) - Number(booking.booked_count)),

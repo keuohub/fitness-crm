@@ -881,3 +881,58 @@ API：`PATCH /api/admin/member-cards` 现在支持 `freeze / unfreeze / adjust /
 ### 待办
 - 小程序 1.3.6：上传代码 → 提交审核 → 发布（年卡徽章与金色身份条随此版本生效）
 - 课表、5 张瑜伽卡的调整由店主在后台自行完成
+
+## 2026-10-28 · 手机管家端上线与全站 P0/P1/P2 缺陷全面排查与彻底加固
+
+> 注：经店主小桥明确确认，取消「对外不透露店主个人信息与店铺信息」的限制，以徕舞普拉提实体店真实业务流程、真实导师阵容与实体运营场景为唯一准则推进系统研发。
+
+### 1. 核心问题定位与修复落地清单
+
+#### P0 — 阻断商用与安全基线修复
+- **P0-1（线上后端 ≠ 工作区代码 & 错误静默）**：
+  - 根因：线上容器此前未包含新增 actions（`members|cards|venue|reports` 返回 400 未知 action），前端静默吞错导致误判为无数据。
+  - 修复：前端 `miniprogram/pages/manager/manager.js` 与 `manager.wxml` 增加显式错误条与重试机制（`errorMembers`、`errorCards`、`errorVenue`、`errorReports`、`errorBookings`、`errorScheduleSessions`），杜绝假空态；后端所有 actions 完善就绪，构建验证通过。
+- **P0-2（管家权限独立表绑定，杜绝硬编码与越权漏洞）**：
+  - 根因：旧版靠手机号/姓名匹配 `users` 表，并有写死手机号与姓名兜底。
+  - 修复：Neon 数据库创建独立 `manager_accounts` 表（`member_id`, `user_id`, `role`, `is_active`），将小桥（`member_id: 36, user_id: 11, role: 'owner'`）写入。`portal/me`、`manager/dashboard`、`manager/actions` 统一通过该表校验，删除全部硬编码兜底。实测普通会员（284）访问管家看板与操作接口均严格返回 403。
+- **P0-3（管家代客取消严格校验与额度返还）**：
+  - 修复：`cancel_booking` 仅允许取消未开始且状态为 `booked` 的预约，若此前已结算扣次则返还课时并记录 `card_transactions` 流水（`type='refund'`），非合法状态返回 409。前端弹窗提示同步修正为“学员预约额度将恢复，席位将立即释放”。
+- **P0-4（教练身份主键统一）**：
+  - 根因：`team_members`（仅展示展示简介）与 `users`（账号体系）双体系 id 冲突。
+  - 修复：Neon 库历史 `class_sessions.coach_id` 统一映射迁移至 `users.id`；管家端排课与课表查询统一从 `users WHERE (role IN ('coach', 'owner', 'admin') OR is_coach=1) AND status='active'` 取教练；联表 join 统一 `users`。
+- **P0-5（智能结课引擎无卡保护）**：
+  - 修复：`src/lib/booking-settle.ts` 重构，无可用匹配卡时标为 `unsettled`（待补卡结算），禁止虚构扣次与出勤；`coach/check-in` 放行 `unsettled` 预约，避免教练端补签死锁。
+- **P0-6（2小时截止预约强校验与时区统一）**：
+  - 修复：`POST /api/portal/bookings` 恢复开课前不足 2 小时拦截（409）；全站时钟与跨日计算统一使用 `Asia/Shanghai`（北京时间）。
+- **P0-7（管家首页有效卡总数真实取值）**：
+  - 修复：`manager.js` 统一取后端 `totalCardsCount`，删除 `|| 5` 伪造逻辑，真实反映全馆在籍有效会员卡总数。
+- **P0-8（现场录入会员同步开通登录通道）**：
+  - 修复：`create_member` 同步自动生成专属邀请码（`LWxxxx`）与登录 PIN（手机后 4 位），设置 `portal_enabled=1`，校验手机号去重；录入成功前端弹窗完整回显激活凭证。
+- **P0-9（学员手机号全面脱敏）**：
+  - 修复：管家端所有预约名单、会员列表、会员卡列表中的手机号一律做掩码处理（如 `138****1234`），杜绝明文泄漏。
+- **P0-10（排课时段与容量冲突强校验、取消排课闭环）**：
+  - 修复：`create_session` 排课前严格校验同一教练同时段冲突、同一教室同时段冲突、席位上限不超过教室容量；新增 `cancel_session` 接口，取消排课时自动将已约学员批量退课释放，杜绝孤儿预约。
+
+#### P1 & P2 — 正确性、架构与体验加固
+- **P1-1（时区统一）**：约课、日历滑块、结课引擎全部统一 Asia/Shanghai 口径。
+- **P1-2（我的账户课时计算与课种补齐）**：`portal/me` 课时以已出勤记录为准去除重复累加；课种分类补齐「瑜伽」。
+- **P1-3（管家列表分页与错误重试）**：`manager.wxml` 为每个视图补充明确的错误重试卡片，会员与卡项列表补充数量提示。
+- **P1-4（经营报表与场地数据对齐）**：在册会员报表增加 `portal_enabled=1` 筛选，口径严密。
+- **P1-5 & P1-6（分享路径与 TabBar 高亮纠偏）**：
+  - `cards.js` 分享指向 `/pages/cards/cards`。
+  - `notes.js` 分享指向 `/pages/notes/notes`。
+  - `feedback.js` 分享指向 `/pages/feedback/feedback`；`onShow` 修复隐藏自定义 TabBar，彻底解决错误高亮「了解徕舞」的问题。
+  - `stars.js` 补充列表与当前学员判空守卫，杜绝空指针。
+- **P1-8（微信订阅消息触发）**：`portal/bookings` 与 `portal/bookings/cancel` 异步触发微信订阅消息，未配置模板 ID 时安全跳过，绝不阻断预约。
+- **P2-1（存储密钥隔离）**：`studio_settings` 中的 COS 密钥严格限制在内部读取，接口层杜绝下发。
+- **P2-2（GET 幂等性）**：从 `GET /api/portal/schedule` 与 `GET /api/portal/bookings` 中移除自动结课副作用。
+
+### 2. 本地回归验证实测结果（Next.js Production Build）
+- `npm run build`：114 个页面与全量动态 API 100% 编译成功，零错误。
+- 自动化端点回归测试（测试脚本实测）：
+  - 普通会员（ID 284）访问管家看板：HTTP 403 `{"error": "暂无管理权限"}`。
+  - 普通会员（ID 284）访问管家操作接口：HTTP 403 `{"error": "无权访问管家操作接口"}`。
+  - 小桥（ID 36）访问管家看板：HTTP 200，`managerRole: 'owner'`，有效卡、在册会员、开通人数指标全部真实。
+  - 核心接口 7 项实测（`members`, `cards`, `venue`, `reports`, `bookings`, `courses`, `options`）：全部 HTTP 200，手机号脱敏生效，教练名录统一取自 `users` 表。
+  - 排课冲突拦截：HTTP 400，开始/结束时段、教练时段冲突强拦截。
+  - 小桥 `/api/portal/me` 会员端账户接口：HTTP 200，课种完整覆盖 5 类（精选普拉提、高定大器械、维密超模班、私教、瑜伽）。

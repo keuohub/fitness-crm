@@ -12,30 +12,21 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "未登录" }, { status: 401 });
   }
 
-  // 1. 验证是否具备管理端权限 (小桥 / 教练 / 馆长)
+  // 1. 验证是否具备管理端权限（通过独立 manager_accounts 权限表严格绑定，杜绝硬编码）
   const [member] = await db.select().from(members).where(eq(members.id, memberId));
   if (!member) {
     return NextResponse.json({ error: "会员不存在" }, { status: 404 });
   }
 
-  const [managerCheck] = await rawSql`
-    SELECT u.id, u.role, u.is_coach
-    FROM users u
-    WHERE (u.email = ${member.phone} OR u.name = ${member.name})
-      AND u.status = 'active'
+  const [managerAccount] = await rawSql`
+    SELECT ma.role, ma.user_id
+    FROM manager_accounts ma
+    WHERE ma.member_id = ${member.id}
+      AND ma.is_active = 1
     LIMIT 1
   `.catch(() => []);
 
-  const isManager = Boolean(
-    managerCheck?.role === "owner" ||
-    managerCheck?.role === "admin" ||
-    managerCheck?.role === "coach" ||
-    Number(managerCheck?.is_coach) === 1 ||
-    member.phone === "15271754857" ||
-    member.name === "小桥"
-  );
-
-  if (!isManager) {
+  if (!managerAccount) {
     return NextResponse.json({ error: "暂无管理权限" }, { status: 403 });
   }
 
@@ -119,10 +110,11 @@ export async function GET(request: NextRequest) {
         cs.booked_count,
         cs.status as session_status,
         COALESCE(c.name, cs.title) as course_name,
-        COALESCE(tm.name, '专业导师') as coach_name,
+        COALESCE(u.name, tm.name, '专业导师') as coach_name,
         COALESCE(r.name, '主操房') as room_name
       FROM class_sessions cs
       LEFT JOIN course_categories c ON cs.course_category_id = c.id
+      LEFT JOIN users u ON cs.coach_id = u.id
       LEFT JOIN team_members tm ON cs.coach_id = tm.id
       LEFT JOIN rooms r ON cs.room_id = r.id
       WHERE cs.session_date = to_char(CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Shanghai', 'YYYY-MM-DD')
@@ -132,7 +124,7 @@ export async function GET(request: NextRequest) {
 
   const response = NextResponse.json({
     managerName: member.name,
-    managerRole: managerCheck?.role || (member.name === "小桥" ? "owner" : "coach"),
+    managerRole: managerAccount.role,
     todayBookingsCount: Number(todayBookingsRes[0]?.count || 0),
     todayNewCardsCount: Number(todayCardsRes[0]?.count || 0),
     totalCardsCount: Number(totalCardsRes[0]?.count || 0),

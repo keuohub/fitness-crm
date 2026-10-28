@@ -235,7 +235,9 @@
     </scroll-view>
 
     <view wx:if="{{loadingBookings}}" class="mgr-inner-loading">正在同步所选日期学员名单…</view>
-
+    <view wx:elif="{{errorBookings}}" class="mgr-error-card" bindtap="retryBookings">
+      <text class="mgr-error-card-text">{{errorBookings}}（点击重试）</text>
+    </view>
     <block wx:else>
       <view wx:if="{{bookingSessions.length === 0}}" class="mgr-empty-card">
         <text class="mgr-empty-title">该日期暂无排课场次</text>
@@ -417,6 +419,9 @@
     </view>
 
     <view wx:if="{{loadingScheduleSessions}}" class="mgr-inner-loading">正在读取场次…</view>
+    <view wx:elif="{{errorScheduleSessions}}" class="mgr-error-card" bindtap="retryScheduleSessions">
+      <text class="mgr-error-card-text">{{errorScheduleSessions}}（点击重试）</text>
+    </view>
     <block wx:else>
       <view wx:if="{{scheduleSessions.length === 0}}" class="mgr-empty-card-sm">
         <text class="mgr-empty-text">该日期暂未排课，点击上方表单即可发布</text>
@@ -547,6 +552,9 @@
 
     <!-- 课程列表 -->
     <view wx:if="{{loadingCourses}}" class="mgr-inner-loading">正在读取课程列表…</view>
+    <view wx:elif="{{errorCourses}}" class="mgr-error-card" bindtap="fetchCourses">
+      <text class="mgr-error-card-text">{{errorCourses}}（点击重试）</text>
+    </view>
     <block wx:else>
       <view
         wx:for="{{coursesList}}"
@@ -635,6 +643,9 @@
 
     <!-- 会员列表 -->
     <view wx:if="{{loadingMembers}}" class="mgr-inner-loading">正在查询在册会员…</view>
+    <view wx:elif="{{errorMembers}}" class="mgr-error-card" bindtap="doSearchMembers">
+      <text class="mgr-error-card-text">{{errorMembers}}（点击重试）</text>
+    </view>
     <block wx:else>
       <view wx:if="{{membersList.length === 0}}" class="mgr-empty-card-sm">
         <text class="mgr-empty-text">未找到符合条件的会员</text>
@@ -655,6 +666,9 @@
           <text class="mgr-member-status-tag">{{item.status === 'active' ? '正常在籍' : item.status}}</text>
         </view>
       </view>
+      <view wx:if="{{membersList.length > 0}}" class="mgr-list-footnote">
+        <text>当前展示前 {{membersList.length}} 位会员{{totalMembersDb > 0 ? '（共 ' + totalMembersDb + ' 位）' : ''}}，如需精准查找可在上方搜索</text>
+      </view>
     </block>
   </view>
 
@@ -671,6 +685,9 @@
     </view>
 
     <view wx:if="{{loadingCards}}" class="mgr-inner-loading">正在同步会馆卡项明细…</view>
+    <view wx:elif="{{errorCards}}" class="mgr-error-card" bindtap="fetchCards">
+      <text class="mgr-error-card-text">{{errorCards}}（点击重试）</text>
+    </view>
     <block wx:else>
       <view wx:if="{{cardsList.length === 0}}" class="mgr-empty-card-sm">
         <text class="mgr-empty-text">暂无有效会员卡记录</text>
@@ -692,6 +709,9 @@
           <text class="mgr-date-range">有效期：{{item.start_date || '长期'}} 至 {{item.end_date || '不限期'}}</text>
         </view>
       </view>
+      <view wx:if="{{cardsList.length > 0}}" class="mgr-list-footnote">
+        <text>当前展示最近 {{cardsList.length}} 张有效会员卡</text>
+      </view>
     </block>
   </view>
 
@@ -708,6 +728,9 @@
     </view>
 
     <view wx:if="{{loadingVenue}}" class="mgr-inner-loading">正在读取教室设施…</view>
+    <view wx:elif="{{errorVenue}}" class="mgr-error-card" bindtap="fetchVenue">
+      <text class="mgr-error-card-text">{{errorVenue}}（点击重试）</text>
+    </view>
     <block wx:else>
       <view wx:for="{{venueRooms}}" wx:key="id" class="mgr-room-card">
         <view class="mgr-room-card-top">
@@ -739,6 +762,9 @@
     </view>
 
     <view wx:if="{{loadingReports}}" class="mgr-inner-loading">正在聚合经营数据…</view>
+    <view wx:elif="{{errorReports}}" class="mgr-error-card" bindtap="fetchReports">
+      <text class="mgr-error-card-text">{{errorReports}}（点击重试）</text>
+    </view>
     <block wx:else>
       <view class="mgr-reports-grid">
         <view class="mgr-rep-card">

@@ -20,6 +20,7 @@ function getMemberBaseline(member: any, key: string): number {
   if (key === "equipment") return Number(member.hoursEquipment || 0);
   if (key === "fat_burn") return Number(member.hoursFatBurn || 0);
   if (key === "private") return Number(member.hoursPrivate || 0);
+  if (key === "yoga") return Number(member.hoursYoga || 0);
   return 0;
 }
 
@@ -103,9 +104,10 @@ export async function GET(request: NextRequest) {
       if (seenKeys.has(key)) continue;
       seenKeys.add(key);
       const baselineCount = getMemberBaseline(member, key);
-      const dynamicBooking = bookingCountsMap.get(key) || 0;
-      const dynamicTraining = trainingCountsMap.get(key) || 0;
-      const count = baselineCount + dynamicBooking + dynamicTraining;
+      const attendedCount = bookingCountsMap.get(key) || 0;
+      // 课时以单一事实来源计算：以考勤出勤/已结课为准，加历史导入基线；手工录入记录只补计未关联约课的差额，杜绝三路相加重复累加
+      const standaloneTraining = Math.max(0, (trainingCountsMap.get(key) || 0) - attendedCount);
+      const count = baselineCount + attendedCount + standaloneTraining;
 
       courseCounts.push({
         key,
@@ -115,22 +117,23 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // 兜底保障：四大核心课程即使后台未显式配置，也确保展示
+  // 兜底保障：五大核心课程即使后台未显式配置，也确保展示（补齐瑜伽）
   const standardCategories = [
     { key: "pilates", label: "精品普拉提" },
     { key: "equipment", label: "高定大器械" },
     { key: "fat_burn", label: "维密超模班" },
     { key: "private", label: "私教课" },
+    { key: "yoga", label: "瑜伽" },
   ];
   for (const sc of standardCategories) {
     if (!seenKeys.has(sc.key)) {
       const baselineCount = getMemberBaseline(member, sc.key);
-      const dynamicBooking = bookingCountsMap.get(sc.key) || 0;
-      const dynamicTraining = trainingCountsMap.get(sc.key) || 0;
+      const attendedCount = bookingCountsMap.get(sc.key) || 0;
+      const standaloneTraining = Math.max(0, (trainingCountsMap.get(sc.key) || 0) - attendedCount);
       courseCounts.push({
         key: sc.key,
         label: sc.label,
-        count: baselineCount + dynamicBooking + dynamicTraining,
+        count: baselineCount + attendedCount + standaloneTraining,
       });
     }
   }
@@ -174,24 +177,17 @@ export async function GET(request: NextRequest) {
 
   const stage = getMemberStage(totalHours);
 
-  // 检查是否具备管家端/管理权限 (小桥 / 教练 / 馆长)
-  const [managerCheck] = await rawSql`
-    SELECT u.role, u.is_coach
-    FROM users u
-    WHERE (u.email = ${member.phone} OR u.name = ${member.name})
-      AND u.status = 'active'
+  // 检查是否具备管家端/管理权限（通过独立 manager_accounts 权限表严格绑定，杜绝硬编码）
+  const [managerAccount] = await rawSql`
+    SELECT ma.role, ma.user_id
+    FROM manager_accounts ma
+    WHERE ma.member_id = ${member.id}
+      AND ma.is_active = 1
     LIMIT 1
   `.catch(() => []);
 
-  const isManager = Boolean(
-    managerCheck?.role === "owner" ||
-    managerCheck?.role === "admin" ||
-    managerCheck?.role === "coach" ||
-    Number(managerCheck?.is_coach) === 1 ||
-    member.phone === "15271754857" ||
-    member.name === "小桥"
-  );
-  const managerRole = managerCheck?.role || (member.name === "小桥" ? "owner" : null);
+  const isManager = Boolean(managerAccount);
+  const managerRole = managerAccount?.role || null;
 
   const response = NextResponse.json({
     memberId: member.id,

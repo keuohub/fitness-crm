@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPortalMemberId } from "@/lib/auth/member-session";
 import { rawSql } from "@/db";
+import { sendSubscribeMessage } from "@/lib/wechat/subscribe";
 const bad = (msg: string, status = 400) => NextResponse.json({ error: msg }, { status });
 function sessionStart(date: string, time: string) {
   return new Date(`${date}T${time}:00+08:00`).getTime();
@@ -50,5 +51,24 @@ export async function POST(request: NextRequest) {
     if (again?.status === "cancelled") return NextResponse.json({ booking: again, duplicate: true }, { status: 200 });
     return bad("取消失败", 409);
   }
+
+  // 异步触发取消预约订阅消息（未配模板则安全跳过）
+  (async () => {
+    try {
+      const [m] = await rawSql`SELECT openid FROM members WHERE id = ${memberId} LIMIT 1`;
+      if (m?.openid) {
+        await sendSubscribeMessage({
+          openid: m.openid,
+          templateKey: "booking_cancel",
+          page: "pages/schedule/schedule",
+          data: {
+            thing1: { value: "普拉提预约取消" },
+            time2: { value: `${booking.session_date} ${booking.start_time}` }
+          }
+        });
+      }
+    } catch (e) {}
+  })();
+
   return NextResponse.json({ booking: rows[0] });
 }

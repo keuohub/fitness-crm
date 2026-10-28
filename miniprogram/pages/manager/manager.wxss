@@ -113,6 +113,29 @@ page {
   color: #78716C;
 }
 
+.mgr-error-card {
+  margin: 24rpx 0;
+  padding: 32rpx 24rpx;
+  background: #FFF7ED;
+  border: 1rpx solid #FDBA74;
+  border-radius: 16rpx;
+  text-align: center;
+}
+
+.mgr-error-card-text {
+  font-size: 24rpx;
+  color: #C2410C;
+  line-height: 1.5;
+}
+
+.mgr-list-footnote {
+  padding: 30rpx 20rpx 40rpx;
+  text-align: center;
+  font-size: 22rpx;
+  color: #A8A29E;
+  line-height: 1.5;
+}
+
 .mgr-view-container {
   width: 100%;
 }

@@ -24,13 +24,13 @@ export async function POST(request: NextRequest) {
   if (existingAtt) {
     return NextResponse.json({ attendance: existingAtt, duplicate: true, card: null }, { status: 200 });
   }
-  if (booking.status !== "booked") return bad("该预约已处理", 409);
+  if (!["booked", "unsettled"].includes(booking.status)) return bad("该预约已结课或已取消", 409);
 
   try {
     const rows = await rawSql`
       WITH booking_ok AS (
         SELECT id, session_id, member_id FROM bookings
-        WHERE id = ${bookingId} AND tenant_id = 1 AND status = 'booked'
+        WHERE id = ${bookingId} AND tenant_id = 1 AND status IN ('booked', 'unsettled')
       ), candidate AS (
         SELECT mc.id, mc.remaining_count, ct.category,
                COALESCE((SELECT COUNT(*)::int FROM card_type_courses ctc_cnt WHERE ctc_cnt.card_type_id = ct.id), 0) AS course_scope

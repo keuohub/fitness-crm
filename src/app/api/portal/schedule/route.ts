@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPortalMemberId } from "@/lib/auth/member-session";
 import { rawSql } from "@/db";
-import { autoSettleFinishedBookings } from "@/lib/booking-settle";
 
-const today = () => new Date().toISOString().slice(0, 10);
+// 严格按北京时间 (Asia/Shanghai UTC+8) 计算当前日期
+const beijingToday = () => new Date(Date.now() + 8 * 3600_000).toISOString().slice(0, 10);
 function addDays(date: string, days: number) {
   const [y, m, d] = date.split("-").map(Number);
   const dt = new Date(Date.UTC(y, m - 1, d));
@@ -16,12 +16,9 @@ export async function GET(request: NextRequest) {
   const memberId = await getPortalMemberId(request);
   if (!memberId) return NextResponse.json({ error: "未登录" }, { status: 401 });
   const u = new URL(request.url);
-  const from = u.searchParams.get("from") || today();
+  const from = u.searchParams.get("from") || beijingToday();
   const to = u.searchParams.get("to") || addDays(from, 7);
   if (!isDate(from) || !isDate(to)) return NextResponse.json({ error: "日期格式错误" }, { status: 400 });
-
-  // 触发一次后台自动结课消课（下课后自动扣除）
-  autoSettleFinishedBookings().catch((err) => console.error("[schedule] autoSettle error:", err));
 
   const sessions = await rawSql`
     SELECT s.id, s.course_category_id, s.coach_id, s.room_id, s.title,
