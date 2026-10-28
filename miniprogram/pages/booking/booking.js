@@ -183,7 +183,8 @@ Page({
                 date: b.session_date,
                 time: b.start_time + "–" + b.end_time,
                 coachName: b.coach_name || "专属导师",
-                roomName: b.room_name || ""
+                roomName: b.room_name || "",
+                waitlisted: b.status === "waitlisted"
               };
             })
           });
@@ -204,13 +205,16 @@ Page({
       wx.showToast({ title: "还没有会员卡，请联系前台开卡后再约", icon: "none", duration: 2800 });
       return;
     }
-    if (session.bookedByMe) { wx.showToast({ title: "已经约过了", icon: "none" }); return; }
-    if (session.remaining <= 0) { wx.showToast({ title: "名额已满", icon: "none" }); return; }
+    if (session.bookedByMe || session.waitlistedByMe) { wx.showToast({ title: "已经约过了", icon: "none" }); return; }
+    var waitlist = String(e.currentTarget.dataset.waitlist || "") === "1";
+    if (session.remaining <= 0 && !waitlist) { wx.showToast({ title: "名额已满，可以点候补", icon: "none" }); return; }
 
     wx.showModal({
-      title: "预约确认",
-      content: "确认预约 " + session.sessionDate + " " + session.startTime + " " + session.courseName + " 吗？\n（开课后将自动扣除课时，如不来请在开课前取消）",
-      confirmText: "确认预约",
+      title: waitlist ? "加入候补" : "预约确认",
+      content: waitlist
+        ? "这节课已经满员。加入候补后，有人取消会按顺序自动补上，不占用你的课时，补上后才会算预约。"
+        : "确认预约 " + session.sessionDate + " " + session.startTime + " " + session.courseName + " 吗？\n（开课后将自动扣除课时，如不来请在开课前取消）",
+      confirmText: waitlist ? "加入候补" : "确认预约",
       confirmColor: "#0D0C0F",
       success: function(resConfirm) {
         if (!resConfirm.confirm) return;
@@ -221,12 +225,14 @@ Page({
           header: { "Content-Type": "application/json" },
           data: {
             sessionId: id,
+            waitlist: waitlist,
             idempotencyKey: "m" + (wx.getStorageSync("memberId") || "") + "-" + id + "-" + Date.now()
           },
           success: function(res) {
             that.setData({ submitting: false });
             if (res.statusCode === 201 || res.statusCode === 200) {
-              wx.showToast({ title: "预约成功", icon: "success" });
+              var queued = res.data && res.data.waitlisted;
+              wx.showToast({ title: queued ? "已加入候补" : "预约成功", icon: "success" });
               that.loadAll();
             } else {
               var msg = (res.data && res.data.error) || "预约失败";

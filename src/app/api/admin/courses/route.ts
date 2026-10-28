@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/admin-session";
+import { requireCatalogEditor } from "@/lib/auth/catalog-access";
 import { rawSql } from "@/db";
 
 const bad = (msg: string, status = 400) => NextResponse.json({ error: msg }, { status });
@@ -11,7 +12,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  if (!(await requireAdmin(request))) return bad("需要管理员登录", 401);
+  const denied = await requireCatalogEditor(request);
+  if (denied) return denied;
   const b = await request.json();
   const key = String(b.key || "").trim();
   const name = String(b.name || "").trim();
@@ -29,7 +31,8 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  if (!(await requireAdmin(request))) return bad("需要管理员登录", 401);
+  const denied = await requireCatalogEditor(request);
+  if (denied) return denied;
   const b = await request.json();
   const id = Number(b.id);
   if (!id) return bad("缺少 id");
@@ -52,7 +55,8 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  if (!(await requireAdmin(request))) return bad("需要管理员登录", 401);
+  const denied = await requireCatalogEditor(request);
+  if (denied) return denied;
   const id = Number(new URL(request.url).searchParams.get("id"));
   if (!id) return bad("缺少 id");
   const [used] = await rawSql`SELECT id FROM class_sessions WHERE course_category_id = ${id} LIMIT 1`;

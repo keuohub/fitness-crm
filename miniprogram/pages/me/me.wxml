@@ -126,6 +126,14 @@
           <text class="me-service-arrow">›</text>
         </view>
 
+        <view class="me-service-row" bindtap="goGrowth">
+          <view class="me-service-texts">
+            <text class="me-service-title">成长记录</text>
+            <text class="me-service-note">相伴天数、连续上课、体围</text>
+          </view>
+          <text class="me-service-arrow">›</text>
+        </view>
+
         <view class="me-service-row" bindtap="goCards">
           <view class="me-service-texts">
             <text class="me-service-title">我的卡</text>

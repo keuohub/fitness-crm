@@ -5,7 +5,8 @@ Page({
     submitting: false,
     error: "",
     inviteCode: "",
-    phoneSuffix: ""
+    phoneSuffix: "",
+    agreed: false
   },
 
   onLoad: function(options) {
@@ -45,6 +46,13 @@ Page({
     this.setData({ phoneSuffix: val, error: "" });
   },
 
+  toggleAgree: function() {
+    this.setData({ agreed: !this.data.agreed, error: "" });
+  },
+
+  openPrivacy: function() { wx.navigateTo({ url: "/pages/legal/privacy" }); },
+  openTerms: function() { wx.navigateTo({ url: "/pages/legal/terms" }); },
+
   handleLogin: function() {
     var that = this;
     var code = (that.data.inviteCode || "").trim().toUpperCase();
@@ -52,6 +60,14 @@ Page({
 
     if (!code) {
       that.setData({ error: "请输入专属邀请码" });
+      return;
+    }
+    if (!suffix) {
+      that.setData({ error: "请填写手机尾号或登录 PIN" });
+      return;
+    }
+    if (!that.data.agreed) {
+      that.setData({ error: "请先阅读并同意隐私政策和用户协议" });
       return;
     }
 
@@ -80,9 +96,14 @@ Page({
             var diff = Math.floor((Date.now() - new Date(String(data.joinedAt).replace(/-/g, "/")).getTime()) / 86400000);
             wx.setStorageSync("joinDays", Math.max(1, diff));
           }
-          // 使用 reLaunch 彻底销毁旧的 Page 实例栈，100% 触发全新挂载
-          // 落点必须是 tabBar 页面，否则进入后没有底部导航（原 growth 是非 tab 页）
-          wx.reLaunch({ url: "/pages/stars/stars" });
+          api.request({
+            url: "/api/portal/consent",
+            method: "POST",
+            data: { agreed: true },
+            complete: function() {
+              wx.reLaunch({ url: "/pages/stars/stars" });
+            }
+          });
         } else {
           var errMsg = (res.data && res.data.error) ? res.data.error : "未找到该会员档案，请核对或联系小桥";
           that.setData({ submitting: false, error: errMsg });

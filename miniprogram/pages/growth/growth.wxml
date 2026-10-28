@@ -1,0 +1,64 @@
+<view class="g-page">
+  <view wx:if="{{loading}}" class="g-muted">正在打开成长记录…</view>
+  <view wx:elif="{{error}}" class="g-error">{{error}}</view>
+  <block wx:else>
+    <view class="g-hero">
+      <text class="g-kicker">GROWTH</text>
+      <text class="g-title">我的成长</text>
+    </view>
+    <view class="g-stats">
+      <view class="g-stat">
+        <text class="g-num">{{companionshipDays || "—"}}</text>
+        <text class="g-label">相伴天数</text>
+      </view>
+      <view class="g-stat">
+        <text class="g-num">{{streakWeeks}}</text>
+        <text class="g-label">连续上课周</text>
+      </view>
+      <view class="g-stat">
+        <text class="g-num">{{attendedCount}}</text>
+        <text class="g-label">到课次数</text>
+      </view>
+    </view>
+
+    <view class="g-card" wx:if="{{weightBars.length}}">
+      <text class="g-card-title">体重</text>
+      <view class="g-bars">
+        <view wx:for="{{weightBars}}" wx:key="date" class="g-bar-col">
+          <view class="g-bar" style="height: {{item.height}}rpx"></view>
+          <text class="g-bar-label">{{item.date}}</text>
+        </view>
+      </view>
+    </view>
+    <view class="g-card" wx:else>
+      <text class="g-card-title">还没有体重记录</text>
+      <text class="g-muted">记下今天的数字，下次就能看见变化。</text>
+    </view>
+
+    <view class="g-card">
+      <text class="g-card-title">记一笔</text>
+      <input class="g-input" type="digit" placeholder="体重 kg" value="{{weightKg}}" bindinput="onWeight" />
+      <input class="g-input" type="digit" placeholder="腰围 cm" value="{{waistCm}}" bindinput="onWaist" />
+      <button class="g-btn" bindtap="save" loading="{{saving}}">保存</button>
+      <button class="g-btn g-btn-ghost" bindtap="choosePhoto">上传私密对比照</button>
+      <text class="g-muted">照片只在你的账号、教练和店长之间可见，不会出现在徕舞之星。</text>
+    </view>
+
+    <view class="g-card" wx:if="{{measurements.length}}">
+      <text class="g-card-title">最近记录</text>
+      <view wx:for="{{measurements}}" wx:key="id" class="g-row">
+        <text>{{item.measured_on}} · {{item.weight_kg || "—"}}kg · 腰 {{item.waist_cm || "—"}}</text>
+      </view>
+    </view>
+
+    <view class="g-card" wx:if="{{notes.length}}">
+      <text class="g-card-title">教练记下的话</text>
+      <view wx:for="{{notes}}" wx:key="id" class="g-row">
+        <text>{{item.content}}</text>
+      </view>
+    </view>
+    <view class="g-card" wx:else>
+      <text class="g-muted">上完课，教练的话会出现在这里。</text>
+    </view>
+  </block>
+</view>

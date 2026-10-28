@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getActiveCoachId } from "@/lib/auth/coach-session";
 import { rawSql } from "@/db";
+import { sweepCardLifecycle } from "@/lib/card-lifecycle";
+import { shanghaiToday } from "@/lib/shanghai-date";
 const bad = (msg: string, status = 400) => NextResponse.json({ error: msg }, { status });
 
 export async function POST(request: NextRequest) {
@@ -11,6 +13,8 @@ export async function POST(request: NextRequest) {
   const status = String(body.status || "");
   if (!bookingId) return bad("缺少 bookingId");
   if (!["attended", "no_show"].includes(status)) return bad("status 只能是 attended 或 no_show");
+  const today = shanghaiToday();
+  await sweepCardLifecycle().catch((err) => console.error("[check-in] card sweep", err));
 
   const [booking] = await rawSql`
     SELECT b.*, s.coach_id, b.session_id AS sid, s.session_date, s.start_time, s.course_category_id
@@ -38,8 +42,8 @@ export async function POST(request: NextRequest) {
         WHERE mc.tenant_id = 1
           AND mc.member_id = (SELECT member_id FROM booking_ok)
           AND mc.status = 'active'
-          AND (mc.valid_from IS NULL OR mc.valid_from::date <= CURRENT_DATE)
-          AND (mc.valid_until IS NULL OR mc.valid_until::date >= CURRENT_DATE)
+          AND (mc.valid_from IS NULL OR BTRIM(mc.valid_from) = '' OR LEFT(mc.valid_from, 10) <= ${today})
+          AND (mc.valid_until IS NULL OR BTRIM(mc.valid_until) = '' OR LEFT(mc.valid_until, 10) >= ${today})
           AND (ct.category = 'period' OR mc.remaining_count > 0)
           AND (
             EXISTS (
@@ -62,6 +66,7 @@ export async function POST(request: NextRequest) {
       ), card AS (
         UPDATE member_cards mc
         SET remaining_count = CASE WHEN c.category = 'count' THEN mc.remaining_count - 1 ELSE mc.remaining_count END,
+            status = CASE WHEN c.category = 'count' AND mc.remaining_count - 1 <= 0 THEN 'exhausted' ELSE mc.status END,
             updated_at = NOW()
         FROM candidate c
         WHERE mc.id = c.id AND (c.category = 'period' OR mc.remaining_count > 0)
@@ -101,8 +106,8 @@ export async function POST(request: NextRequest) {
         SELECT mc.id, mc.remaining_count, ct.category
         FROM member_cards mc JOIN card_types ct ON ct.id = mc.card_type_id
         WHERE mc.tenant_id = 1 AND mc.member_id = ${booking.member_id} AND mc.status = 'active'
-          AND (mc.valid_from IS NULL OR mc.valid_from::date <= CURRENT_DATE)
-          AND (mc.valid_until IS NULL OR mc.valid_until::date >= CURRENT_DATE)
+          AND (mc.valid_from IS NULL OR BTRIM(mc.valid_from) = '' OR LEFT(mc.valid_from, 10) <= ${today})
+          AND (mc.valid_until IS NULL OR BTRIM(mc.valid_until) = '' OR LEFT(mc.valid_until, 10) >= ${today})
           AND (
             EXISTS (
               SELECT 1 FROM card_type_courses ctc

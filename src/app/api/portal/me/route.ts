@@ -4,6 +4,8 @@ import { members, trainings, questionnaireSubmissions, photos, courseOfferings }
 import { eq, sql, asc } from "drizzle-orm";
 import { getPortalMemberId } from "@/lib/auth/member-session";
 import { getMemberStage } from "@/lib/member-stage";
+import { companionshipDays } from "@/lib/shanghai-date";
+import { memberHasStaffAccess } from "@/lib/staff-access";
 
 function inferCategoryKey(name: string, enName?: string): string {
   const n = ((name || "") + " " + (enName || "")).toLowerCase();
@@ -164,34 +166,14 @@ export async function GET(request: NextRequest) {
   const photoCount = Number(photoRow?.n || 0);
 
   // 伴行天数：只有真实入会日期才计算，否则 null（前端显示「待录入」）
-  let joinDays: number | null = null;
-  if (member.joinedAt) {
-    const t = new Date(String(member.joinedAt).replace(/[-/.]/g, "/")).getTime();
-    if (!Number.isNaN(t)) {
-      joinDays = Math.max(1, Math.floor((Date.now() - t) / 86400000) + 1);
-    }
-  }
+  const joinDays = companionshipDays(member.joinedAt);
 
   const stage = getMemberStage(totalHours);
 
   // 检查是否具备管家端/管理权限 (小桥 / 教练 / 馆长)
-  const [managerCheck] = await rawSql`
-    SELECT u.role, u.is_coach
-    FROM users u
-    WHERE (u.email = ${member.phone} OR u.name = ${member.name})
-      AND u.status = 'active'
-    LIMIT 1
-  `.catch(() => []);
-
-  const isManager = Boolean(
-    managerCheck?.role === "owner" ||
-    managerCheck?.role === "admin" ||
-    managerCheck?.role === "coach" ||
-    Number(managerCheck?.is_coach) === 1 ||
-    member.phone === "15271754857" ||
-    member.name === "小桥"
-  );
-  const managerRole = managerCheck?.role || (member.name === "小桥" ? "owner" : null);
+  const staff = await memberHasStaffAccess(member);
+  const isManager = staff.allowed;
+  const managerRole = staff.role;
 
   const response = NextResponse.json({
     memberId: member.id,

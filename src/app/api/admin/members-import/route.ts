@@ -1,420 +1,534 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireRole } from "@/lib/auth/rbac";
+import { getValidAdminSession } from "@/lib/auth/admin-session";
 import { rawSql } from "@/db";
 import { generatePortalCode, generateLoginPin } from "@/lib/auth/member-credentials";
+import { addCalendarDays, shanghaiToday } from "@/lib/shanghai-date";
+import {
+  MAX_IMPORT_ROWS,
+  PlannedRow,
+  annotateInFileDuplicates,
+  cardIdempotencyKey,
+  matchExistingMember,
+  normalizePhone,
+  planImportRow,
+  tableToRecords,
+} from "@/lib/member-import";
+import { xlsxFirstSheet } from "@/lib/xlsx-lite";
+import crypto from "crypto";
 
-// 批量导入会员与会员卡（支持新会员建档 + 老会员补卡）
-// 匹配优先级：手机号 -> 会员编号 -> 唯一姓名（重名报错拒绝猜测）
-const MAX_ROWS = 500;
+function tableToRecordsSafe(table: string[][]) {
+  return tableToRecords(table);
+}
 
-type RawRow = Record<string, any>;
-
-type ResultRow = {
-  line: number;
-  status: "created" | "skipped" | "failed";
+type DbMember = {
+  id: number;
   name: string;
-  matchedBy?: "phone" | "memberCode" | "name" | "new";
-  portalCode?: string;
-  loginPin?: string;
-  loginMode?: "phone" | "pin";
-  secondFactor?: string;
-  cardName?: string;
-  cardId?: number;
-  reason?: string;
+  phone: string | null;
+  member_code: string | null;
+  portal_code: string | null;
+  login_pin: string | null;
+  joined_at: string | null;
+  notes: string | null;
 };
 
-function pick(row: RawRow, keys: string[]): string {
-  for (const k of keys) {
-    if (row[k] !== undefined && row[k] !== null && String(row[k]).trim() !== "") return String(row[k]).trim();
+type CardTypeRow = {
+  id: number;
+  name: string;
+  category: string;
+  total_count: number | null;
+  validity_days: number | null;
+  is_active: number;
+};
+
+async function requireImporter(request: NextRequest) {
+  const session = await getValidAdminSession(request);
+  if (!session) return { error: NextResponse.json({ error: "需要管理员登录" }, { status: 401 }) };
+  const role = session.role || "owner";
+  const rank: Record<string, number> = { owner: 4, admin: 4, manager: 3, coach: 2, viewer: 1 };
+  if ((rank[role] ?? 0) < 3) {
+    return { error: NextResponse.json({ error: "仅店主或店长可以导入或回滚会员" }, { status: 403 }) };
   }
-  return "";
+  return { session };
 }
 
-function toDate(v: string): string {
-  const s = v.replace(/[./]/g, "-").trim();
-  const m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
-  if (!m) return "";
-  return `${m[1]}-${String(m[2]).padStart(2, "0")}-${String(m[3]).padStart(2, "0")}`;
+let schemaReady: Promise<void> | null = null;
+function ensureImportSchema() {
+  if (!schemaReady) {
+    schemaReady = (async () => {
+      await rawSql`ALTER TABLE members ADD COLUMN IF NOT EXISTS import_batch_id TEXT`;
+      await rawSql`ALTER TABLE member_cards ADD COLUMN IF NOT EXISTS import_batch_id TEXT`;
+      await rawSql`ALTER TABLE card_transactions ADD COLUMN IF NOT EXISTS import_batch_id TEXT`;
+      await rawSql`
+        CREATE TABLE IF NOT EXISTS import_batches (
+          id TEXT PRIMARY KEY,
+          created_by INTEGER,
+          summary_json TEXT,
+          status TEXT NOT NULL DEFAULT 'applied',
+          created_at TIMESTAMP NOT NULL DEFAULT NOW()
+        )`;
+      await rawSql`
+        CREATE TABLE IF NOT EXISTS import_changes (
+          id SERIAL PRIMARY KEY,
+          batch_id TEXT NOT NULL,
+          action TEXT NOT NULL,
+          payload_json TEXT NOT NULL,
+          created_at TIMESTAMP NOT NULL DEFAULT NOW()
+        )`;
+      await rawSql`CREATE INDEX IF NOT EXISTS idx_import_changes_batch ON import_changes(batch_id)`;
+    })().catch((err) => {
+      schemaReady = null;
+      throw err;
+    });
+  }
+  return schemaReady;
 }
 
-// 智能推算入会起始日（来时路）
-// 优先识别具体天数（如"820天"、"大概800天"、"相伴600天"或纯数字"820"），保证小程序端今天精准呈现该天数，且后续每天自然+1天
-function deduceJoinedAt(rawJoined: string, notes: string): { date: string; inferred: boolean; label?: string } {
-  const todayStr = new Date().toISOString().slice(0, 10);
-  const now = new Date();
-
-  // 1. 明确的完整日期 (YYYY-MM-DD / YYYY.M.D / YYYY/M/D)
-  const explicit = toDate(rawJoined);
-  if (explicit) return { date: explicit, inferred: false };
-
-  // 2. 年月 (如 2023-05, 2023.5)
-  const ymMatch = rawJoined.replace(/[./]/g, "-").trim().match(/^(\d{4})-(\d{1,2})$/);
-  if (ymMatch) {
-    const y = ymMatch[1];
-    const m = String(ymMatch[2]).padStart(2, "0");
-    return { date: `${y}-${m}-01`, inferred: true, label: `${y}年${m}月` };
-  }
-
-  // 3. 纯数字判断：若是 2010-当前年份 视为年份(如 2022)；其他正整数(如 820, 500, 300) 视为具体相伴天数！
-  const pureNum = rawJoined.trim().match(/^(\d+)$/);
-  if (pureNum) {
-    const n = parseInt(pureNum[1], 10);
-    if (n >= 2010 && n <= now.getFullYear()) {
-      return { date: `${n}-01-01`, inferred: true, label: `${n}年` };
-    } else if (n > 0 && n <= 15000) {
-      const pastTime = new Date(now.getTime() - (n - 1) * 86400000);
-      return { date: pastTime.toISOString().slice(0, 10), inferred: true, label: `${n}天` };
+function indexMembers(list: DbMember[]) {
+  const byPhone = new Map<string, DbMember[]>();
+  const byCode = new Map<string, DbMember>();
+  const byName = new Map<string, DbMember[]>();
+  for (const m of list) {
+    const phone = normalizePhone(String(m.phone || "")).phone;
+    if (phone) {
+      const arr = byPhone.get(phone) || [];
+      arr.push(m);
+      byPhone.set(phone, arr);
+    }
+    const code = String(m.member_code || "").trim().toUpperCase();
+    if (code) {
+      byCode.set(code, m);
+      if (!code.startsWith("LW")) byCode.set("LW" + code, m);
+    }
+    const name = String(m.name || "").trim();
+    if (name) {
+      const arr = byName.get(name) || [];
+      arr.push(m);
+      byName.set(name, arr);
     }
   }
-
-  // 4. 扫描文本（合并入会日期与备注）
-  const text = `${rawJoined} ${notes}`.trim();
-  if (!text) return { date: todayStr, inferred: false };
-
-  // 4.0 核心优先：识别具体天数（如 "820天", "大概800天", "来了750天", "相伴600天"）
-  const dayMatch = text.match(/(?:约|大概|上了|练了|相伴|已有|来了|天数)?\s*(\d+)\s*天/);
-  if (dayMatch) {
-    const days = parseInt(dayMatch[1], 10);
-    if (days > 0 && days <= 15000) {
-      const pastTime = new Date(now.getTime() - (days - 1) * 86400000);
-      return { date: pastTime.toISOString().slice(0, 10), inferred: true, label: `${days}天` };
-    }
-  }
-
-  // 4.1 识别具体年份：如 "2021年", "2022老会员", "2020年来莱芜"
-  const yearInText = text.match(/(20\d{2})\s*年?/);
-  if (yearInText) {
-    const y = parseInt(yearInText[1], 10);
-    if (y >= 2010 && y <= now.getFullYear()) {
-      return { date: `${y}-01-01`, inferred: true, label: `${y}年` };
-    }
-  }
-
-  // 4.2 识别年数并换算为具体天数（避免模糊描述，小程序端均以具体天数呈现）
-  const halfYearMatch = text.match(/(\d+)\s*年半/);
-  if (halfYearMatch) {
-    const years = parseFloat(halfYearMatch[1]) + 0.5;
-    const days = Math.round(years * 365);
-    const pastTime = new Date(now.getTime() - (days - 1) * 86400000);
-    return { date: pastTime.toISOString().slice(0, 10), inferred: true, label: `${days}天` };
-  }
-
-  if (/半年/.test(text)) {
-    const days = 182;
-    const pastTime = new Date(now.getTime() - (days - 1) * 86400000);
-    return { date: pastTime.toISOString().slice(0, 10), inferred: true, label: `${days}天` };
-  }
-
-  const yearMatch = text.match(/(?:约|大概|上了|练了|相伴|已有|会员)?\s*(\d+(?:\.\d+)?)\s*年/);
-  if (yearMatch) {
-    const years = parseFloat(yearMatch[1]);
-    if (years > 0 && years <= 30) {
-      const days = Math.round(years * 365);
-      const pastTime = new Date(now.getTime() - (days - 1) * 86400000);
-      return { date: pastTime.toISOString().slice(0, 10), inferred: true, label: `${days}天` };
-    }
-  }
-
-  // 4.3 识别月份并换算为具体天数
-  const monthMatch = text.match(/(?:约|大概|上了|练了)?\s*(\d+)\s*个?月/);
-  if (monthMatch) {
-    const months = parseInt(monthMatch[1], 10);
-    if (months > 0 && months < 120) {
-      const days = Math.round(months * 30.5);
-      const pastTime = new Date(now.getTime() - (days - 1) * 86400000);
-      return { date: pastTime.toISOString().slice(0, 10), inferred: true, label: `${days}天` };
-    }
-  }
-
-  return { date: todayStr, inferred: false };
+  return { byPhone, byCode, byName };
 }
 
-function addDays(date: string, days: number): string {
-  const [y, m, d] = date.split("-").map(Number);
-  const dt = new Date(Date.UTC(y, m - 1, d));
-  dt.setUTCDate(dt.getUTCDate() + days);
-  return dt.toISOString().slice(0, 10);
-}
-
-function mapGender(v: string): string | null {
-  const s = v.trim().toLowerCase();
-  if (!s) return null;
-  if (["女", "female", "f", "女士"].includes(s)) return "female";
-  if (["男", "male", "m", "先生"].includes(s)) return "male";
-  return null;
+async function remember(batchId: string, action: string, payload: Record<string, unknown>) {
+  await rawSql`
+    INSERT INTO import_changes (batch_id, action, payload_json)
+    VALUES (${batchId}, ${action}, ${JSON.stringify(payload)})
+  `;
 }
 
 export async function POST(request: NextRequest) {
-  const admin = await requireRole(request, "manager");
-  if (!admin) return NextResponse.json({ error: "权限不足，仅店长或店主可批量导入会员" }, { status: 403 });
+  const auth = await requireImporter(request);
+  if ("error" in auth && auth.error) return auth.error;
+  const session = auth.session!;
 
   const body = await request.json().catch(() => ({}));
-  const rows: RawRow[] = Array.isArray(body.rows) ? body.rows : [];
+  if (body.action === "parse") return parseWorkbook(body);
+  if (body.action === "rollback") return rollbackBatch(String(body.batchId || ""));
+
+  const dryRun = Boolean(body.dryRun);
+  const rows: Record<string, unknown>[] = Array.isArray(body.rows) ? body.rows : [];
   if (!rows.length) return NextResponse.json({ error: "没有可导入的行" }, { status: 400 });
-  if (rows.length > MAX_ROWS) return NextResponse.json({ error: `一次最多导入 ${MAX_ROWS} 行，请拆成多个文件` }, { status: 400 });
-
-  const cardTypes = await rawSql`SELECT id, name, category, total_count, validity_days FROM card_types WHERE tenant_id = 1 AND is_active = 1`;
-  const typeByName = new Map<string, any>(cardTypes.map((t: any) => [String(t.name).trim(), t]));
-
-  // 加载全量有效会员用于优先级匹配：1. 手机号 2. 会员编号 3. 姓名唯一
-  const allExisting = await rawSql`
-    SELECT id, name, phone, member_code, portal_code, login_pin, portal_enabled 
-    FROM members WHERE tenant_id = 1
-  `;
-  const phoneOwner = new Map<string, any>();
-  const codeOwner = new Map<string, any>();
-  const nameOwner = new Map<string, any[]>();
-
-  for (const m of allExisting) {
-    if (m.phone && String(m.phone).trim()) {
-      phoneOwner.set(String(m.phone).trim(), m);
-    }
-    if (m.member_code && String(m.member_code).trim()) {
-      const code = String(m.member_code).trim();
-      codeOwner.set(code.toUpperCase(), m);
-      codeOwner.set(("LW" + code).toUpperCase(), m);
-    }
-    const nm = String(m.name || "").trim();
-    if (nm) {
-      const list = nameOwner.get(nm) || [];
-      list.push(m);
-      nameOwner.set(nm, list);
-    }
+  if (rows.length > MAX_IMPORT_ROWS) {
+    return NextResponse.json({ error: `一次最多导入 ${MAX_IMPORT_ROWS} 行，请拆成多个文件` }, { status: 400 });
   }
 
-  // 生成新会员编号（获取当前最大数字编号加一）
+  try {
+    await ensureImportSchema();
+  } catch (err) {
+    console.error("[members-import] schema", err);
+    return NextResponse.json({ error: "导入表结构初始化失败，请稍后重试" }, { status: 500 });
+  }
+
+  const now = new Date();
+  const today = shanghaiToday(now);
+  const planned = rows.map((row, i) => planImportRow(row, i + 1, now));
+  annotateInFileDuplicates(planned);
+
+  const cardTypes = (await rawSql`
+    SELECT id, name, category, total_count, validity_days, is_active
+    FROM card_types WHERE tenant_id = 1
+  `) as CardTypeRow[];
+  const existing = (await rawSql`
+    SELECT id, name, phone, member_code, portal_code, login_pin, joined_at, notes
+    FROM members WHERE tenant_id = 1
+  `) as DbMember[];
+  const idx = indexMembers(existing);
+
   const [last] = await rawSql`
-    SELECT member_code FROM members 
+    SELECT member_code FROM members
     WHERE tenant_id = 1 AND member_code IS NOT NULL AND member_code ~ '^[0-9]+$'
     ORDER BY member_code::int DESC LIMIT 1
   `;
-  let nextCodeNum = 1;
-  if (last?.member_code) nextCodeNum = parseInt(String(last.member_code), 10) + 1;
+  let nextCodeNum = last?.member_code ? parseInt(String(last.member_code), 10) + 1 : 1;
 
-  const results: ResultRow[] = [];
-  const today = new Date().toISOString().slice(0, 10);
+  const batchId = dryRun ? null : `imp_${Date.now().toString(36)}_${crypto.randomBytes(3).toString("hex")}`;
+  const results: Record<string, unknown>[] = [];
 
-  for (let i = 0; i < rows.length; i++) {
-    const row = rows[i];
-    const line = i + 1;
-    const name = pick(row, ["姓名", "会员姓名", "name", "名字"]).slice(0, 30);
-    const phone = pick(row, ["手机号", "手机", "电话", "phone", "mobile"]);
-    const memberCodeInput = pick(row, ["会员编号", "卡号", "编号", "memberCode", "code"]).toUpperCase();
-    const gender = mapGender(pick(row, ["性别", "gender"]));
-    const birthday = toDate(pick(row, ["生日", "birthday"]));
-    const rawJoined = pick(row, ["入会日期", "入会时间", "joinedAt", "joinDate"]);
-    const mentorName = pick(row, ["带教导师", "导师", "mentorName", "mentor"]);
-    const notes = pick(row, ["备注", "notes", "note"]);
-    const deduced = deduceJoinedAt(rawJoined, notes);
-    const joinedAt = deduced.date;
-    const cardName = pick(row, ["卡名", "卡种", "卡类型", "cardName", "cardType"]);
-    const totalRaw = pick(row, ["总次数", "总数", "total", "totalCount"]);
-    const remainRaw = pick(row, ["剩余次数", "剩余", "remaining", "remainingCount"]);
-    const validFromRaw = pick(row, ["生效日", "生效日期", "validFrom"]);
-    const validUntilRaw = pick(row, ["到期日", "截止日期", "validUntil"]);
-    const daysRaw = pick(row, ["有效天数", "validityDays"]);
-
-    if (!name) {
-      results.push({ line, status: "failed", name: "（空）", reason: "缺少姓名" });
+  for (const row of planned) {
+    if (!row.ok) {
+      results.push({ line: row.line, status: "failed", name: row.name, reason: row.reason, warnings: row.warnings });
       continue;
     }
-
-    let memberId = 0;
-    let isExistingMember = false;
-    let matchedBy: "phone" | "memberCode" | "name" | "new" = "new";
-    let portalCode = "";
-    let loginPin = "";
-    let activePhone = phone;
-
-    // 匹配优先级：1. 手机号 -> 2. 会员编号 -> 3. 唯一姓名
-    if (phone && phoneOwner.has(phone)) {
-      const existing = phoneOwner.get(phone);
-      memberId = Number(existing.id);
-      isExistingMember = true;
-      matchedBy = "phone";
-      portalCode = existing.portal_code || "";
-      loginPin = existing.login_pin || "";
-      activePhone = existing.phone || phone;
-    } else if (memberCodeInput && codeOwner.has(memberCodeInput)) {
-      const existing = codeOwner.get(memberCodeInput);
-      memberId = Number(existing.id);
-      isExistingMember = true;
-      matchedBy = "memberCode";
-      portalCode = existing.portal_code || "";
-      loginPin = existing.login_pin || "";
-      activePhone = existing.phone || phone;
-    } else if (name && nameOwner.has(name)) {
-      const matches = nameOwner.get(name)!;
-      if (matches.length === 1) {
-        const existing = matches[0];
-        memberId = Number(existing.id);
-        isExistingMember = true;
-        matchedBy = "name";
-        portalCode = existing.portal_code || "";
-        loginPin = existing.login_pin || "";
-        activePhone = existing.phone || phone;
-      } else if (!phone && !memberCodeInput) {
-        // 重名且无辅助信息，拒绝盲猜，直接报错拦截
-        results.push({
-          line,
-          status: "failed",
-          name,
-          reason: `重名（库中存在 ${matches.length} 位同名会员），请补手机号或会员编号`,
-        });
-        continue;
-      }
-    }
-
-    // 新老会员更新逻辑
-    let memberUpdated = false;
-    if (!isExistingMember) {
-      // 重新生成唯一 8 位邀请码
-      for (let t = 0; t < 20; t++) {
-        const c = generatePortalCode();
-        const [dup] = await rawSql`SELECT id FROM members WHERE portal_code = ${c} LIMIT 1`;
-        if (!dup) { portalCode = c; break; }
-      }
-      loginPin = generateLoginPin();
-
-      try {
-        const memberCode = String(nextCodeNum).padStart(4, "0");
-        nextCodeNum += 1;
-        const [created] = await rawSql`
-          INSERT INTO members
-            (tenant_id, name, phone, gender, member_code, portal_code, login_pin, portal_enabled,
-             status, joined_at, birthday, mentor_name, notes, created_at, updated_at)
-          VALUES
-            (1, ${name}, ${phone || null}, ${gender}, ${memberCode}, ${portalCode}, ${loginPin}, 1,
-             'active', ${joinedAt}, ${birthday || null}, ${mentorName || null}, ${notes || null}, NOW(), NOW())
-          RETURNING id`;
-        memberId = Number(created.id);
-        const newMemberObj = { id: memberId, name, phone, member_code: memberCode, portal_code: portalCode, login_pin: loginPin };
-        if (phone) phoneOwner.set(phone, newMemberObj);
-        codeOwner.set(memberCode, newMemberObj);
-        const nl = nameOwner.get(name) || [];
-        nl.push(newMemberObj);
-        nameOwner.set(name, nl);
-      } catch (err: any) {
-        results.push({ line, status: "failed", name, reason: "建会员失败：" + String(err?.message || err).slice(0, 80) });
-        continue;
-      }
-    } else {
-      // 老会员：如果提供了入会时间/推算出相伴起始日，或提供了备注，回填更新到会员档案
-      try {
-        if (deduced.inferred || rawJoined || notes) {
-          if ((deduced.inferred || rawJoined) && notes) {
-            await rawSql`UPDATE members SET joined_at = ${joinedAt}, notes = ${notes}, updated_at = NOW() WHERE id = ${memberId}`;
-            memberUpdated = true;
-          } else if (deduced.inferred || rawJoined) {
-            await rawSql`UPDATE members SET joined_at = ${joinedAt}, updated_at = NOW() WHERE id = ${memberId}`;
-            memberUpdated = true;
-          } else if (notes) {
-            await rawSql`UPDATE members SET notes = ${notes}, updated_at = NOW() WHERE id = ${memberId}`;
-            memberUpdated = true;
-          }
-        }
-      } catch (e) {
-        // 回填失败不阻断后续开卡
-      }
-    }
-
-    // 开卡逻辑（新会员与老会员统一执行）
-    let cardId: number | undefined;
-    let cardReason = "";
-    let isDuplicateCard = false;
-
-    if (cardName) {
-      const type = typeByName.get(cardName);
-      if (!type) {
-        cardReason = `卡种「${cardName}」不存在，会员${isExistingMember ? "已匹配" : "已建"}但未开卡`;
-      } else {
-        const isCount = String(type.category) === "count";
-        const total = totalRaw ? Number(totalRaw) : (type.total_count ? Number(type.total_count) : null);
-        const remaining = remainRaw ? Number(remainRaw) : total;
-        const validFrom = toDate(validFromRaw) || joinedAt || today;
-        const validityDays = daysRaw ? Number(daysRaw) : (type.validity_days ? Number(type.validity_days) : null);
-        const validUntil = toDate(validUntilRaw) || (validityDays ? addDays(validFrom, validityDays) : null);
-
-        if (isCount && (!total || remaining === null || remaining < 0 || remaining > total)) {
-          cardReason = `次卡次数不合理（总 ${total ?? "空"} 余 ${remaining ?? "空"}）`;
-        } else if (!isCount && !validUntil) {
-          cardReason = "期限卡缺少到期日或有效天数";
-        } else {
-          const key = `import-${memberId}-${type.id}-${validFrom}-${validUntil || ""}-${isCount ? remaining : 0}`;
-          const [dup] = await rawSql`SELECT id FROM member_cards WHERE idempotency_key = ${key} LIMIT 1`;
-          if (dup) {
-            cardId = Number(dup.id);
-            cardReason = "该卡此前已开通，跳过重复开卡";
-            isDuplicateCard = true;
-          } else {
-            const [card] = await rawSql`
-              INSERT INTO member_cards
-                (tenant_id, member_id, card_type_id, status, total_count, remaining_count,
-                 valid_from, valid_until, purchased_at, price_cents, idempotency_key, created_at, updated_at)
-              VALUES
-                (1, ${memberId}, ${type.id}, 'active',
-                 ${isCount ? total : null}, ${isCount ? remaining : null},
-                 ${validFrom}, ${validUntil}, ${validFrom}, 0, ${key}, NOW(), NOW())
-              RETURNING id`;
-            cardId = Number(card.id);
-            await rawSql`
-              INSERT INTO card_transactions (tenant_id, member_card_id, member_id, type, amount, balance_after, note, idempotency_key, created_at)
-              VALUES (1, ${cardId}, ${memberId}, 'purchase', ${isCount ? total : 0}, ${isCount ? remaining : 0}, '批量导入开卡', ${key}, NOW())`;
-          }
-        }
-      }
-    } else {
-      // 未填卡名：不开卡
-      if (isExistingMember) {
-        if (memberUpdated) {
-          cardReason = `老会员档案已更新相伴起始日（${joinedAt}${deduced.label ? " · " + deduced.label : ""}，未开卡）`;
-        } else {
-          cardReason = "老会员未填写开卡卡名，跳过开卡";
-        }
-      } else {
-        cardReason = `已建档并生成相伴旅程（起始日：${joinedAt}${deduced.label ? " · " + deduced.label : ""}，未开卡）`;
-      }
-    }
-
-    const cleanPhone = (activePhone || "").replace(/\D/g, "");
-    const loginMode: "phone" | "pin" = cleanPhone.length >= 4 ? "phone" : "pin";
-    const secondFactor = loginMode === "phone" ? cleanPhone.slice(-4) : loginPin;
-
-    let rowStatus: "created" | "skipped" | "failed" = "created";
-    if (isExistingMember) {
-      if (cardId && !isDuplicateCard) {
-        rowStatus = "created"; // 成功补卡
-      } else if (memberUpdated) {
-        rowStatus = "created"; // 成功更新老会员相伴资料
-      } else {
-        rowStatus = "skipped"; // 老会员无新卡开通且无资料更新
-      }
-    }
-
-    results.push({
-      line,
-      status: rowStatus,
-      name,
-      matchedBy,
-      portalCode,
-      loginPin,
-      loginMode,
-      secondFactor,
-      cardName: cardName || undefined,
-      cardId,
-      reason: cardReason || (isExistingMember && cardId && !isDuplicateCard ? "已成功为老会员补开卡" : undefined),
+    const outcome = await applyRow({
+      row,
+      idx,
+      cardTypes,
+      dryRun,
+      batchId,
+      today,
+      nextCodeNum,
+      actorId: session.userId,
     });
+    if (outcome.nextCodeNum) nextCodeNum = outcome.nextCodeNum;
+    results.push(outcome.result);
   }
 
   const summary = {
+    dryRun,
+    batchId,
     total: results.length,
     created: results.filter((r) => r.status === "created").length,
     skipped: results.filter((r) => r.status === "skipped").length,
     failed: results.filter((r) => r.status === "failed").length,
-    cardsCreated: results.filter((r) => r.cardId && r.reason !== "该卡此前已开通，跳过重复开卡").length,
-    membersCreated: results.filter((r) => r.matchedBy === "new" && r.status === "created").length,
-    cardsSupplemented: results.filter((r) => r.matchedBy !== "new" && r.status === "created").length,
+    membersCreated: results.filter((r) => r.memberAction === "create").length,
+    cardsCreated: results.filter((r) => r.cardAction === "create").length,
   };
 
+  if (!dryRun && batchId) {
+    await rawSql`
+      INSERT INTO import_batches (id, created_by, summary_json, status)
+      VALUES (${batchId}, ${session.userId}, ${JSON.stringify(summary)}, 'applied')
+    `;
+  }
+
   return NextResponse.json({ summary, results });
+}
+
+async function parseWorkbook(body: { xlsxBase64?: string }) {
+  if (!body.xlsxBase64) return NextResponse.json({ error: "缺少 xlsx 文件" }, { status: 400 });
+  try {
+    const buf = Buffer.from(String(body.xlsxBase64), "base64");
+    if (buf.length > 5 * 1024 * 1024) return NextResponse.json({ error: "文件不能超过 5MB" }, { status: 400 });
+    const table = xlsxFirstSheet(buf);
+    const rows = tableToRecordsSafe(table);
+    if (!rows.length) return NextResponse.json({ error: "工作表是空的，或第一行不是表头" }, { status: 400 });
+    return NextResponse.json({ rows });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "无法读取 xlsx";
+    return NextResponse.json({ error: msg }, { status: 400 });
+  }
+}
+
+async function applyRow(args: {
+  row: PlannedRow;
+  idx: ReturnType<typeof indexMembers>;
+  cardTypes: CardTypeRow[];
+  dryRun: boolean;
+  batchId: string | null;
+  today: string;
+  nextCodeNum: number;
+  actorId: number;
+}): Promise<{ result: Record<string, unknown>; nextCodeNum?: number }> {
+  const { row, idx, cardTypes, dryRun, today } = args;
+  let nextCodeNum = args.nextCodeNum;
+  const warnings = [...row.warnings];
+
+  const indexed: { id: number; name: string; phone: string; memberCode: string; row: DbMember }[] = [];
+  for (const list of idx.byPhone.values()) {
+    for (const m of list) {
+      if (!indexed.some((x) => x.id === m.id)) indexed.push({ id: m.id, name: m.name, phone: normalizePhone(String(m.phone || "")).phone, memberCode: String(m.member_code || ""), row: m });
+    }
+  }
+  for (const list of idx.byName.values()) {
+    for (const m of list) {
+      if (!indexed.some((x) => x.id === m.id)) indexed.push({ id: m.id, name: m.name, phone: normalizePhone(String(m.phone || "")).phone, memberCode: String(m.member_code || ""), row: m });
+    }
+  }
+  const matched = matchExistingMember(row, indexed);
+  if (!matched.ok) return { result: { line: row.line, status: "failed", name: row.name, reason: matched.reason, warnings } };
+  if (matched.warning) warnings.push(matched.warning);
+  let member: DbMember | null = matched.member ? indexed.find((x) => x.id === matched.member!.id)?.row || null : null;
+  let matchedBy = matched.matchedBy;
+
+  let cardPlan: { type: CardTypeRow; total: number | null; remaining: number | null; validFrom: string; validUntil: string | null; status: string } | { error: string } | null = null;
+  if (row.cardName) {
+    const named = cardTypes.filter((t) => String(t.name).trim() === row.cardName);
+    if (!named.length) {
+      return { result: { line: row.line, status: "failed", name: row.name, matchedBy, reason: `卡种「${row.cardName}」不存在。请先在「会员卡」建好同名卡种，或把卡名留空`, warnings } };
+    }
+    const activeNamed = named.filter((t) => Number(t.is_active) === 1);
+    if (!activeNamed.length) {
+      return { result: { line: row.line, status: "failed", name: row.name, reason: `卡种「${row.cardName}」已停用。请先启用，或改用在用卡种`, warnings } };
+    }
+    if (activeNamed.length > 1) {
+      return { result: { line: row.line, status: "failed", name: row.name, reason: `有 ${activeNamed.length} 个启用中的卡种都叫「${row.cardName}」，请先改名区分`, warnings } };
+    }
+    if (named.length > 1) warnings.push(`同名卡种有 ${named.length} 个，已使用启用中的那一个`);
+    const type = activeNamed[0];
+    const isCount = String(type.category) === "count";
+    const total = isCount ? (row.total ?? (type.total_count != null ? Number(type.total_count) : null)) : null;
+    const remaining = isCount ? (row.remaining ?? total) : null;
+    let validUntil = row.validUntil;
+    if (!isCount && !validUntil && type.validity_days) validUntil = addCalendarDays(row.validFrom, Number(type.validity_days));
+    if (isCount && (total == null || remaining == null)) {
+      return { result: { line: row.line, status: "failed", name: row.name, reason: "次卡必须有总次数（表格填写，或卡种上已有默认次数）", warnings } };
+    }
+    if (isCount && remaining != null && total != null && (remaining < 0 || remaining > total)) {
+      return { result: { line: row.line, status: "failed", name: row.name, reason: `次卡次数不合理（总 ${total}，余 ${remaining}）`, warnings } };
+    }
+    if (!isCount && !validUntil) {
+      return { result: { line: row.line, status: "failed", name: row.name, reason: "期限卡必须填写到期日或有效天数", warnings } };
+    }
+    let status = "active";
+    if (validUntil && validUntil < today) status = "expired";
+    else if (isCount && remaining === 0) status = "exhausted";
+    cardPlan = { type, total, remaining, validFrom: row.validFrom, validUntil, status };
+  }
+
+  const memberAction = member ? "match" : "create";
+  let cardAction: "create" | "skip" | "none" = cardPlan ? "create" : "none";
+  let cardId: number | undefined;
+  let cardReason = "";
+
+  if (member && cardPlan && !("error" in cardPlan)) {
+    const key = cardIdempotencyKey(member.id, cardPlan.type.id, cardPlan.validFrom, cardPlan.validUntil);
+    const [dup] = await rawSql`SELECT id, remaining_count, status FROM member_cards WHERE tenant_id = 1 AND idempotency_key = ${key} LIMIT 1`;
+    if (dup) {
+      cardAction = "skip";
+      cardId = Number(dup.id);
+      cardReason = "该卡此前已开通，未重复开卡";
+      if (cardPlan.remaining != null && Number(dup.remaining_count) !== cardPlan.remaining) {
+        warnings.push(`库内剩余 ${dup.remaining_count} 次，表格是 ${cardPlan.remaining} 次。重导不会改余额，请到会员卡页面调整`);
+      }
+    }
+  }
+
+  let willTouchMember = false;
+  if (member) {
+    const joined = member.joined_at ? String(member.joined_at).slice(0, 10) : "";
+    if (!joined && row.joinedAt) willTouchMember = true;
+    else if (joined && joined !== row.joinedAt) warnings.push(`库内相伴起始日是 ${joined}，表格是 ${row.joinedAt}，未覆盖`);
+    if (!member.notes && row.notes) willTouchMember = true;
+    else if (member.notes && row.notes && member.notes !== row.notes) warnings.push("库内已有备注，未覆盖");
+  }
+
+  if (dryRun) {
+    const status = !member || cardAction === "create" || willTouchMember ? "created" : "skipped";
+    const reason = [
+      member ? `将匹配已有会员（${matchedBy === "phone" ? "手机号" : matchedBy === "memberCode" ? "会员编号" : "姓名"}）` : "将新建会员并生成邀请码",
+      cardAction === "create" ? `将开通「${row.cardName}」` : cardAction === "skip" ? cardReason : "不开卡",
+      willTouchMember ? "将补相伴起始日或备注" : "",
+    ].filter(Boolean).join("；");
+    return {
+      result: {
+        line: row.line,
+        status,
+        name: row.name,
+        matchedBy,
+        memberAction,
+        cardAction,
+        cardName: row.cardName || undefined,
+        cardId,
+        portalCode: member?.portal_code || "（正式导入时生成）",
+        loginPin: member?.login_pin || "",
+        loginMode: row.phone ? "phone" : "pin",
+        secondFactor: row.phone ? row.phone.slice(-4) : "（正式导入时生成）",
+        reason,
+        warnings,
+      },
+    };
+  }
+
+  const batchId = args.batchId!;
+  if (!member) {
+    let portalCode = "";
+    for (let t = 0; t < 20; t++) {
+      const c = generatePortalCode();
+      const [dup] = await rawSql`SELECT id FROM members WHERE portal_code = ${c} LIMIT 1`;
+      if (!dup) { portalCode = c; break; }
+    }
+    if (!portalCode) {
+      return { result: { line: row.line, status: "failed", name: row.name, reason: "邀请码生成失败，请重试这一行", warnings } };
+    }
+    const loginPin = generateLoginPin();
+    const memberCode = String(nextCodeNum).padStart(4, "0");
+    nextCodeNum += 1;
+    try {
+      const [created] = await rawSql`
+        INSERT INTO members
+          (tenant_id, name, phone, gender, member_code, portal_code, login_pin, portal_enabled,
+           status, joined_at, birthday, mentor_name, notes, import_batch_id, created_at, updated_at)
+        VALUES
+          (1, ${row.name}, ${row.phone || null}, ${row.gender}, ${memberCode}, ${portalCode}, ${loginPin}, 1,
+           'active', ${row.joinedAt}, ${row.birthday || null}, ${row.mentorName || null}, ${row.notes || null},
+           ${batchId}, NOW(), NOW())
+        RETURNING id, name, phone, member_code, portal_code, login_pin, joined_at, notes
+      `;
+      member = created as DbMember;
+      matchedBy = "new";
+      await remember(batchId, "insert_member", { memberId: member.id });
+      if (row.phone) {
+        const arr = idx.byPhone.get(row.phone) || [];
+        arr.push(member);
+        idx.byPhone.set(row.phone, arr);
+      }
+      const names = idx.byName.get(row.name) || [];
+      names.push(member);
+      idx.byName.set(row.name, names);
+      idx.byCode.set(memberCode, member);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      return { result: { line: row.line, status: "failed", name: row.name, reason: "建会员失败：" + msg.slice(0, 120), warnings }, nextCodeNum };
+    }
+  } else if (willTouchMember) {
+    const before = { joined_at: member.joined_at, notes: member.notes };
+    const joined = member.joined_at ? String(member.joined_at).slice(0, 10) : "";
+    const nextJoined = joined || row.joinedAt;
+    const nextNotes = member.notes || row.notes || null;
+    await rawSql`
+      UPDATE members SET joined_at = ${nextJoined}, notes = ${nextNotes}, updated_at = NOW()
+      WHERE id = ${member.id}
+    `;
+    await remember(batchId, "update_member", { memberId: member.id, before });
+    member.joined_at = nextJoined;
+    member.notes = nextNotes;
+  }
+
+  if (cardPlan && !("error" in cardPlan) && member && cardAction === "create") {
+    const key = cardIdempotencyKey(member.id, cardPlan.type.id, cardPlan.validFrom, cardPlan.validUntil);
+    const [dup] = await rawSql`SELECT id, remaining_count FROM member_cards WHERE tenant_id = 1 AND idempotency_key = ${key} LIMIT 1`;
+    if (dup) {
+      cardAction = "skip";
+      cardId = Number(dup.id);
+      cardReason = "该卡此前已开通，未重复开卡";
+    } else {
+      const [card] = await rawSql`
+        INSERT INTO member_cards
+          (tenant_id, member_id, card_type_id, status, total_count, remaining_count,
+           valid_from, valid_until, purchased_at, price_cents, idempotency_key, import_batch_id, created_at, updated_at)
+        VALUES
+          (1, ${member.id}, ${cardPlan.type.id}, ${cardPlan.status},
+           ${cardPlan.total}, ${cardPlan.remaining},
+           ${cardPlan.validFrom}, ${cardPlan.validUntil}, ${cardPlan.validFrom}, 0, ${key}, ${batchId}, NOW(), NOW())
+        RETURNING id
+      `;
+      cardId = Number(card.id);
+      await rawSql`
+        INSERT INTO card_transactions
+          (tenant_id, member_card_id, member_id, type, amount, balance_after, note, idempotency_key, import_batch_id, created_by, created_at)
+        VALUES
+          (1, ${cardId}, ${member.id}, 'purchase', ${cardPlan.total ?? 0}, ${cardPlan.remaining ?? 0},
+           '批量导入开卡', ${key}, ${batchId}, ${args.actorId}, NOW())
+      `;
+      await remember(batchId, "insert_card", { cardId, memberId: member.id });
+      cardReason = cardPlan.status === "active" ? "已开卡" : `已开卡（状态 ${cardPlan.status === "expired" ? "已过期" : "已用完"}）`;
+    }
+  } else if (!row.cardName) {
+    cardReason = member && matchedBy !== "new" ? "未填写卡名，不开卡" : `已建档，相伴从 ${row.joinedAt} 起算，未开卡`;
+  }
+
+  const phoneDigits = normalizePhone(String(member?.phone || row.phone || "")).phone;
+  const loginMode = phoneDigits ? "phone" : "pin";
+  const loginPin = member?.login_pin || "";
+  const changed = matchedBy === "new" || cardAction === "create" || willTouchMember;
+  return {
+    nextCodeNum,
+    result: {
+      line: row.line,
+      status: changed ? "created" : "skipped",
+      name: row.name,
+      matchedBy,
+      memberAction,
+      cardAction,
+      portalCode: member?.portal_code || "",
+      loginPin,
+      loginMode,
+      secondFactor: loginMode === "phone" ? phoneDigits.slice(-4) : loginPin,
+      cardName: row.cardName || undefined,
+      cardId,
+      reason: cardReason || undefined,
+      warnings,
+    },
+  };
+}
+
+async function rollbackBatch(batchId: string) {
+  if (!/^imp_[a-z0-9_]+$/i.test(batchId)) {
+    return NextResponse.json({ error: "批次号不正确" }, { status: 400 });
+  }
+  await ensureImportSchema();
+  const [batch] = await rawSql`SELECT id, status FROM import_batches WHERE id = ${batchId}`;
+  if (!batch) return NextResponse.json({ error: "找不到这批导入" }, { status: 404 });
+  if (batch.status === "rolled_back") {
+    return NextResponse.json({ ok: true, already: true, message: "这批已经回滚过" });
+  }
+
+  const changes = await rawSql`
+    SELECT action, payload_json FROM import_changes WHERE batch_id = ${batchId} ORDER BY id DESC
+  `;
+  const blocked: string[] = [];
+  let cardsRemoved = 0;
+  let membersRemoved = 0;
+  let membersRestored = 0;
+
+  for (const change of changes) {
+    const payload = JSON.parse(String(change.payload_json || "{}"));
+    if (change.action === "insert_card") {
+      const cardId = Number(payload.cardId);
+      const [foreign] = await rawSql`
+        SELECT COUNT(*)::int AS n FROM card_transactions
+        WHERE member_card_id = ${cardId}
+          AND (import_batch_id IS DISTINCT FROM ${batchId} OR type <> 'purchase')
+      `;
+      if (Number(foreign?.n || 0) > 0) {
+        blocked.push(`会员卡 #${cardId} 已有消课或其他流水，未删除`);
+        continue;
+      }
+      await rawSql`DELETE FROM card_transactions WHERE member_card_id = ${cardId} AND import_batch_id = ${batchId}`;
+      await rawSql`DELETE FROM member_cards WHERE id = ${cardId} AND import_batch_id = ${batchId}`;
+      cardsRemoved += 1;
+    }
+  }
+
+  for (const change of changes) {
+    const payload = JSON.parse(String(change.payload_json || "{}"));
+    if (change.action === "update_member") {
+      const before = payload.before || {};
+      await rawSql`
+        UPDATE members SET joined_at = ${before.joined_at ?? null}, notes = ${before.notes ?? null}, updated_at = NOW()
+        WHERE id = ${Number(payload.memberId)}
+      `;
+      membersRestored += 1;
+    }
+  }
+
+  for (const change of changes) {
+    const payload = JSON.parse(String(change.payload_json || "{}"));
+    if (change.action !== "insert_member") continue;
+    const memberId = Number(payload.memberId);
+    const [use] = await rawSql`
+      SELECT
+        (SELECT COUNT(*)::int FROM member_cards WHERE member_id = ${memberId}) AS cards,
+        (SELECT COUNT(*)::int FROM bookings WHERE member_id = ${memberId}) AS bookings,
+        (SELECT COUNT(*)::int FROM attendance WHERE member_id = ${memberId}) AS attendance
+    `;
+    if (Number(use?.cards || 0) + Number(use?.bookings || 0) + Number(use?.attendance || 0) > 0) {
+      blocked.push(`会员 #${memberId} 已有卡、预约或出勤，未删除档案`);
+      continue;
+    }
+    await rawSql`DELETE FROM members WHERE id = ${memberId} AND import_batch_id = ${batchId}`;
+    membersRemoved += 1;
+  }
+
+  const status = blocked.length ? "rolled_back_partial" : "rolled_back";
+  await rawSql`UPDATE import_batches SET status = ${status} WHERE id = ${batchId}`;
+  return NextResponse.json({
+    ok: blocked.length === 0,
+    batchId,
+    cardsRemoved,
+    membersRemoved,
+    membersRestored,
+    blocked,
+    message: blocked.length ? "已回滚能安全撤销的部分，下面这些请人工处理" : "这批导入已撤回",
+  });
 }

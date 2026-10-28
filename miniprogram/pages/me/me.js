@@ -203,6 +203,10 @@ Page({
     wx.navigateTo({ url: "/pages/cards/cards" });
   },
 
+  goGrowth: function() {
+    wx.navigateTo({ url: "/pages/growth/growth" });
+  },
+
   goLetters: function() {
     wx.navigateTo({ url: "/pages/feedback/feedback" });
   },

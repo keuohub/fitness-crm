@@ -42,6 +42,19 @@ Page({
                 ? c.courseCategoryNames.join(" · ")
                 : "",
               remainingText: c.category === "count" ? (c.remainingCount || 0) + " 次" : "不限次",
+              renewalText: (function() {
+                if (c.status !== "active") return "";
+                if (c.category === "count" && Number(c.remainingCount) > 0 && Number(c.remainingCount) <= 3) {
+                  return "还剩 " + c.remainingCount + " 次，续卡请联系小桥";
+                }
+                if (c.validUntil) {
+                  var today = new Date();
+                  var end = new Date(String(c.validUntil).slice(0, 10).replace(/-/g, "/"));
+                  var days = Math.round((end.getTime() - new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime()) / 86400000);
+                  if (days >= 0 && days <= 14) return "还有 " + days + " 天到期，续卡请联系小桥";
+                }
+                return "";
+              })(),
               validText: c.validUntil ? (c.validUntil + " 到期") : "长期有效",
               purchasedText: c.purchasedAt ? format.formatChineseDate(c.purchasedAt) : "",
               transactions: (c.transactions || []).slice(0, 5).map(function(t) {

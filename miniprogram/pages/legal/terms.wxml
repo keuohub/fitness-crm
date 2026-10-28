@@ -1,0 +1,12 @@
+<scroll-view scroll-y class="legal">
+  <text class="h1">徕舞用户协议</text>
+  <text class="p">生效日期：2026年10月28日。</text>
+  <text class="h2">账号</text>
+  <text class="p">邀请码和手机尾号或登录 PIN 只给你本人使用。不要把它们发给别人。发现别人登了你的账号，马上告诉小桥。</text>
+  <text class="h2">约课</text>
+  <text class="p">预约需要有效会员卡。课满可以候补，有人取消时按顺序补上。开课前规定时间内可以自己取消；更晚请联系前台。到课或未取消的缺席会按馆内规则消课。</text>
+  <text class="h2">会员卡</text>
+  <text class="p">次数、有效期和可约课种以馆内开卡时的约定为准。小程序里看到的余额与后台是同一套记录。本小程序不提供在线支付。</text>
+  <text class="h2">身体记录</text>
+  <text class="p">体围和对比照用于你自己看变化，不是医疗诊断。不舒服请停止练习并寻求医生帮助。</text>
+</scroll-view>

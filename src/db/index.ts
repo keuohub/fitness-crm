@@ -1,16 +1,14 @@
 import { neon, type NeonQueryFunction } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
+import { drizzle as drizzleNeon } from "drizzle-orm/neon-http";
+import { drizzle as drizzlePg } from "drizzle-orm/node-postgres";
+import { Pool, types as pgTypes } from "pg";
 import * as schema from "./schema";
 
-// ── 懒初始化（Lazy Init）──────────────────────────────────────
-// 目的：Docker / 云托管构建阶段不读数据库连接串，`next build` 不会因缺少
-// DATABASE_URL 而中断；真正缺失时在**首次访问数据库**的那一刻报错（fail-fast）。
-// 调用方无需修改：rawSql 仍是标签模板函数，db 仍是 drizzle 实例。
+// 构建阶段不读连接串。线上 Neon 仍走 HTTP 驱动；
+// 指向普通 Postgres（本地验收、云托管自建库）时改走 node-postgres，语句用法不变。
 
-// 显式写死 neon 的类型参数，避免 ReturnType<typeof neon> 被推成
-// NeonQueryFunction<boolean, boolean> 而让调用方拿到联合返回类型。
 type NeonSql = NeonQueryFunction<false, false>;
-type Database = ReturnType<typeof drizzle<typeof schema>>;
+type Database = ReturnType<typeof drizzleNeon<typeof schema>>;
 
 let sqlSingleton: NeonSql | null = null;
 let dbSingleton: Database | null = null;
@@ -26,36 +24,77 @@ function getDatabaseUrl(): string {
   return url;
 }
 
+function isNeonHost(url: string): boolean {
+  try {
+    const host = new URL(url).hostname;
+    return host === "neon.tech" || host.endsWith(".neon.tech");
+  } catch {
+    return false;
+  }
+}
+
+pgTypes.setTypeParser(20, (value) => Number(value));
+pgTypes.setTypeParser(21, (value) => Number(value));
+pgTypes.setTypeParser(23, (value) => Number(value));
+pgTypes.setTypeParser(700, (value) => Number(value));
+pgTypes.setTypeParser(701, (value) => Number(value));
+pgTypes.setTypeParser(1700, (value) => Number(value));
+
+function normalizeValue(value: unknown): unknown {
+  if (value instanceof Date) return value.toISOString();
+  if (Array.isArray(value)) return value.map(normalizeValue);
+  if (value && typeof value === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [key, item] of Object.entries(value as Record<string, unknown>)) out[key] = normalizeValue(item);
+    return out;
+  }
+  return value;
+}
+
+function pgTagged(pool: Pool): NeonSql {
+  const tag = (strings: TemplateStringsArray, ...values: unknown[]) => {
+    let text = "";
+    const params: unknown[] = [];
+    strings.forEach((part, index) => {
+      text += part;
+      if (index < values.length) {
+        params.push(values[index] === undefined ? null : values[index]);
+        text += `$${params.length}`;
+      }
+    });
+    return pool.query(text, params).then((result) => result.rows.map((row) => normalizeValue(row)));
+  };
+  return tag as unknown as NeonSql;
+}
+
 function getSql(): NeonSql {
-  if (!sqlSingleton) sqlSingleton = neon(getDatabaseUrl());
+  if (!sqlSingleton) {
+    const url = getDatabaseUrl();
+    sqlSingleton = isNeonHost(url) ? neon(url) : pgTagged(new Pool({ connectionString: url }));
+  }
   return sqlSingleton;
 }
 
 function getDb(): Database {
-  if (!dbSingleton) dbSingleton = drizzle(getSql(), { schema });
+  if (!dbSingleton) {
+    const url = getDatabaseUrl();
+    if (isNeonHost(url)) {
+      dbSingleton = drizzleNeon(neon(url), { schema });
+    } else {
+      dbSingleton = drizzlePg(new Pool({ connectionString: url }), { schema }) as unknown as Database;
+    }
+  }
   return dbSingleton;
 }
 
-/**
- * 标签模板形式与原来完全一致：rawSql`SELECT ...`
- * 类型直接沿用 neon 的签名（保留其重载），否则调用方会拿到联合返回类型。
- */
-export const rawSql = ((
-  strings: TemplateStringsArray,
-  ...values: unknown[]
-) => getSql()(strings, ...values)) as unknown as NeonSql;
+export const rawSql = ((strings: TemplateStringsArray, ...values: unknown[]) =>
+  getSql()(strings, ...values)) as unknown as NeonSql;
 
-/**
- * 与原来的 drizzle 实例用法完全一致（db.select / db.insert / ...）。
- * 用 Proxy 延迟到首次属性访问才建连接，方法会绑定到真实实例，避免 this 丢失。
- */
 export const db = new Proxy({} as Database, {
   get(_target, prop) {
     const real = getDb() as unknown as Record<PropertyKey, unknown>;
     const value = Reflect.get(real, prop, real);
-    return typeof value === "function"
-      ? (value as (...args: unknown[]) => unknown).bind(real)
-      : value;
+    return typeof value === "function" ? (value as (...args: unknown[]) => unknown).bind(real) : value;
   },
   has(_target, prop) {
     return Reflect.has(getDb() as unknown as object, prop);

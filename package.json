@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "tsx --test src/lib/shanghai-date.test.ts src/lib/member-import.test.ts src/lib/xlsx-lite.test.ts src/lib/growth-metrics.test.ts",
+    "typecheck": "tsc --noEmit",
     "cron:start": "npx tsx src/scripts/scheduler.ts",
     "cron:manual": "npx tsx src/scripts/daily-feedback-cron.ts",
     "sync": "python3 scripts/sync_all.py",

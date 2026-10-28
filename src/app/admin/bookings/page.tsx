@@ -64,6 +64,7 @@ function addDate(dateStr: string, days: number) {
 
 const statusBadge: Record<string, { label: string; bg: string; text: string; border: string }> = {
   booked: { label: "已预约", bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200" },
+  waitlisted: { label: "候补", bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200" },
   attended: { label: "已到课", bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200" },
   cancelled: { label: "已取消", bg: "bg-gray-100", text: "text-gray-500", border: "border-gray-200" },
   no_show: { label: "未到", bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200" },
@@ -292,7 +293,7 @@ export default function AdminReservationsPage() {
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
+                    <table className="w-full min-w-[720px] text-left text-sm">
                       <thead className="bg-[#FAFBFD] border-b border-[#E1E5EB] text-[#697180] text-xs font-medium">
                         <tr>
                           <th className="px-5 py-2.5">学员</th>
@@ -352,7 +353,7 @@ export default function AdminReservationsPage() {
                               </td>
 
                               <td className="px-5 py-3 text-right">
-                                {b.status === "booked" ? (
+                                {b.status === "booked" || b.status === "waitlisted" ? (
                                   <button
                                     onClick={() => {
                                       setCancellingBooking(b);

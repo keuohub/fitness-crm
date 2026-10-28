@@ -518,7 +518,7 @@ export default function AdminSchedulePage() {
             <button
               key={tab.id}
               onClick={() => setCategoryFilter(tab.id)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-1.5 ${
+              className={`whitespace-nowrap px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-1.5 ${
                 categoryFilter === tab.id
                   ? "bg-white text-[#2563EB] shadow-xs font-semibold"
                   : "text-[#697180] hover:text-[#292D35]"
@@ -554,7 +554,7 @@ export default function AdminSchedulePage() {
           return (
             <div
               key={date}
-              className={`flex flex-col bg-white border rounded-xl overflow-hidden shadow-sm min-h-[500px] transition-all ${
+              className={`flex flex-col bg-white border rounded-xl overflow-hidden shadow-sm min-h-[140px] md:min-h-[500px] transition-all ${
                 isToday ? "border-[#2563EB] ring-2 ring-[#2563EB]/15" : "border-[#E1E5EB]"
               }`}
             >

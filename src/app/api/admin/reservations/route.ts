@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/admin-session";
 import { rawSql } from "@/db";
+import { shanghaiToday } from "@/lib/shanghai-date";
+import { releaseBooking } from "@/lib/waitlist";
 const bad = (msg: string, status = 400) => NextResponse.json({ error: msg }, { status });
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => shanghaiToday();
 const isDate = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s);
 
 export async function GET(request: NextRequest) {
@@ -57,15 +59,8 @@ export async function POST(request: NextRequest) {
   const [booking] = await rawSql`SELECT * FROM bookings WHERE id = ${bookingId} AND tenant_id = 1`;
   if (!booking) return bad("预约不存在", 404);
   if (booking.status === "cancelled") return NextResponse.json({ booking, duplicate: true });
-  if (booking.status !== "booked") return bad("该预约不可取消", 409);
-  const rows = await rawSql`
-    WITH updated AS (
-      UPDATE bookings SET status = 'cancelled', cancelled_at = NOW(),
-        cancel_reason = ${body.reason || "后台取消"}, updated_at = NOW()
-      WHERE id = ${bookingId} AND tenant_id = 1 AND status = 'booked' RETURNING *
-    ), released AS (
-      UPDATE class_sessions SET booked_count = GREATEST(booked_count - 1, 0), updated_at = NOW()
-      WHERE id IN (SELECT session_id FROM updated) RETURNING id
-    ) SELECT * FROM updated`;
-  return NextResponse.json({ booking: rows[0] || booking });
+  if (!["booked", "waitlisted"].includes(booking.status)) return bad("该预约不可取消", 409);
+  const result = await releaseBooking({ bookingId, reason: body.reason || "后台取消" });
+  if (!result.ok) return bad(result.error, result.status);
+  return NextResponse.json({ ok: true, duplicate: result.duplicate, promoted: result.promoted });
 }

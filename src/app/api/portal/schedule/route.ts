@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getPortalMemberId } from "@/lib/auth/member-session";
 import { rawSql } from "@/db";
 import { autoSettleFinishedBookings } from "@/lib/booking-settle";
+import { shanghaiToday } from "@/lib/shanghai-date";
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => shanghaiToday();
 function addDays(date: string, days: number) {
   const [y, m, d] = date.split("-").map(Number);
   const dt = new Date(Date.UTC(y, m - 1, d));
@@ -40,8 +41,17 @@ export async function GET(request: NextRequest) {
     SELECT b.id, b.session_id, b.status
     FROM bookings b JOIN class_sessions s ON s.id = b.session_id
     WHERE b.tenant_id = 1 AND b.member_id = ${memberId}
-      AND b.status = 'booked' AND s.session_date BETWEEN ${from} AND ${to}`;
+      AND b.status IN ('booked', 'waitlisted') AND s.session_date BETWEEN ${from} AND ${to}`;
   const mineMap = new Map(mine.map((b: any) => [b.session_id, b]));
+
+  const waitRows = await rawSql`
+    SELECT session_id, COUNT(*)::int AS n
+    FROM bookings
+    WHERE tenant_id = 1 AND status = 'waitlisted' AND session_id IN (
+      SELECT id FROM class_sessions WHERE tenant_id = 1 AND session_date BETWEEN ${from} AND ${to}
+    )
+    GROUP BY session_id`;
+  const waitMap = new Map(waitRows.map((w: any) => [w.session_id, Number(w.n)]));
 
   const rows = sessions.map((s: any) => ({
     id: s.id,
@@ -61,8 +71,10 @@ export async function GET(request: NextRequest) {
     bookedCount: s.booked_count,
     remaining: Math.max(0, Number(s.capacity) - Number(s.booked_count)),
     status: s.status,
-    bookedByMe: mineMap.has(s.id),
+    bookedByMe: mineMap.get(s.id)?.status === "booked",
+    waitlistedByMe: mineMap.get(s.id)?.status === "waitlisted",
     bookingId: mineMap.get(s.id)?.id || null,
+    waitlistCount: waitMap.get(s.id) || 0,
   }));
 
   const response = NextResponse.json({ from, to, sessions: rows });
