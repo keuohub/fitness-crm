@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { addCalendarDays, shanghaiToday } from "@/lib/shanghai-date";
 import { useEffect, useState, useMemo } from "react";
 import { useToast } from "@/components/admin/Toast";
 import {
@@ -322,12 +323,10 @@ export default function AdminCardsPage() {
       }));
       return;
     }
-    const today = new Date().toISOString().slice(0, 10);
+    const today = shanghaiToday();
     let validUntil = "";
     if (selected.validityDays) {
-      const d = new Date();
-      d.setDate(d.getDate() + selected.validityDays);
-      validUntil = d.toISOString().slice(0, 10);
+      validUntil = addCalendarDays(today, selected.validityDays);
     }
     const tc = selected.totalCount != null ? String(selected.totalCount) : "";
     const vd = selected.validityDays != null ? String(selected.validityDays) : "";
@@ -349,10 +348,8 @@ export default function AdminCardsPage() {
     setIssue((prev) => {
       let validUntil = prev.validUntil;
       if (!isNaN(days) && days > 0) {
-        const base = prev.validFrom ? new Date(prev.validFrom) : new Date();
-        const d = new Date(base);
-        d.setDate(d.getDate() + days);
-        validUntil = d.toISOString().slice(0, 10);
+        const base = prev.validFrom && /^\d{4}-\d{2}-\d{2}$/.test(prev.validFrom) ? prev.validFrom : shanghaiToday();
+        validUntil = addCalendarDays(base, days);
       }
       return { ...prev, validityDays: daysStr, validUntil };
     });
@@ -362,10 +359,8 @@ export default function AdminCardsPage() {
     setIssue((prev) => {
       let validUntil = prev.validUntil;
       const days = parseInt(prev.validityDays, 10);
-      if (!isNaN(days) && days > 0 && fromStr) {
-        const d = new Date(fromStr);
-        d.setDate(d.getDate() + days);
-        validUntil = d.toISOString().slice(0, 10);
+      if (!isNaN(days) && days > 0 && /^\d{4}-\d{2}-\d{2}$/.test(fromStr)) {
+        validUntil = addCalendarDays(fromStr, days);
       }
       return { ...prev, validFrom: fromStr, validUntil };
     });

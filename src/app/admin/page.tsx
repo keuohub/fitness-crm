@@ -1,4 +1,5 @@
 import { db, rawSql } from "@/db";
+import { companionshipDays, shanghaiToday } from "@/lib/shanghai-date";
 import { members, trainings } from "@/db/schema";
 import { sql } from "drizzle-orm";
 import Link from "next/link";
@@ -28,10 +29,10 @@ interface AnniversaryInfo {
   level: string;
 }
 
-function daysBetween(d1: string): number {
-  const a = new Date(d1);
-  const b = new Date();
-  return Math.floor((b.getTime() - a.getTime()) / 86400000);
+function daysSince(date: string): number {
+  const inclusive = companionshipDays(date);
+  if (inclusive == null) return 0;
+  return Math.max(0, inclusive - 1);
 }
 
 function getLevel(days: number): string {
@@ -50,6 +51,7 @@ interface CareReminder {
 }
 
 export default async function AdminPage() {
+  const today = shanghaiToday();
   const [
     allMembers,
     rows,
@@ -90,7 +92,7 @@ export default async function AdminPage() {
       SELECT count(*)::int as count
       FROM bookings b
       JOIN class_sessions cs ON b.session_id = cs.id
-      WHERE cs.session_date = to_char(CURRENT_DATE, 'YYYY-MM-DD')
+      WHERE cs.session_date = ${today}
         AND b.status IN ('booked', 'attended')
     `.catch((e) => {
       console.error("todayBookings error:", e);
@@ -99,7 +101,7 @@ export default async function AdminPage() {
     rawSql`
       SELECT count(*)::int as count
       FROM member_cards
-      WHERE created_at >= CURRENT_DATE
+      WHERE (created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Shanghai')::date = ${today}::date
     `.catch((e) => {
       console.error("todayCards error:", e);
       return [{ count: 0 }];
@@ -107,7 +109,7 @@ export default async function AdminPage() {
     rawSql`
       SELECT count(*)::int as count
       FROM members
-      WHERE created_at >= CURRENT_DATE
+      WHERE (created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Shanghai')::date = ${today}::date
     `.catch((e) => {
       console.error("todayMembers error:", e);
       return [{ count: 0 }];
@@ -144,7 +146,8 @@ export default async function AdminPage() {
   const anniversaries: AnniversaryInfo[] = [];
   for (const m of allMembers) {
     if (!m.joinedAt) continue;
-    const days = daysBetween(m.joinedAt);
+    const days = companionshipDays(m.joinedAt);
+    if (days == null) continue;
     const milestones = [30, 90, 180, 365, 730, 1095];
     const isClose = milestones.some((d) => Math.abs(days - d) <= 3);
     if (isClose) {
@@ -170,9 +173,9 @@ export default async function AdminPage() {
   for (const m of allMembers) {
     const lastDate = lastTrainingMap.get(m.id) || null;
     const daysSinceLastTraining = lastDate
-      ? daysBetween(lastDate)
+      ? daysSince(lastDate)
       : m.joinedAt
-      ? daysBetween(m.joinedAt)
+      ? daysSince(m.joinedAt)
       : 999;
 
     if (daysSinceLastTraining >= 14) {
@@ -180,7 +183,7 @@ export default async function AdminPage() {
         memberId: m.id,
         memberName: m.name,
         lastTrainingDate: lastDate,
-        daysSinceJoin: m.joinedAt ? daysBetween(m.joinedAt) : 0,
+        daysSinceJoin: m.joinedAt ? daysSince(m.joinedAt) : 0,
       });
     }
   }

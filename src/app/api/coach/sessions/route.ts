@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getActiveCoachId } from "@/lib/auth/coach-session";
 import { rawSql } from "@/db";
-const today = () => new Date().toISOString().slice(0, 10);
+import { shanghaiToday } from "@/lib/shanghai-date";
+const today = () => shanghaiToday();
 
 export async function GET(request: NextRequest) {
   const coachId = await getActiveCoachId(request);

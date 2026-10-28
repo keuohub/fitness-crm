@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getPortalMemberId } from "@/lib/auth/member-session";
 import { rawSql } from "@/db";
 import { autoSettleFinishedBookings } from "@/lib/booking-settle";
+import { shanghaiToday } from "@/lib/shanghai-date";
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => shanghaiToday();
 function addDays(date: string, days: number) {
   const [y, m, d] = date.split("-").map(Number);
   const dt = new Date(Date.UTC(y, m - 1, d));

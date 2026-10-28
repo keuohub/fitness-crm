@@ -17,6 +17,7 @@ type ResultRow = {
   cardName?: string;
   cardId?: number;
   reason?: string;
+  warnings?: string[];
 };
 
 const HEADER_ALIASES: Record<string, string[]> = {
@@ -87,6 +88,21 @@ export default function MembersImportPage() {
   const [summary, setSummary] = useState<any>(null);
   const [results, setResults] = useState<ResultRow[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [rollingBack, setRollingBack] = useState(false);
+
+  const canonicalize = (input: Record<string, string>[]) =>
+    input.map((row) => {
+      const o: Record<string, string> = {};
+      for (const [key, value] of Object.entries(row)) {
+        const nk = normalizeKey(key);
+        let field = "";
+        for (const [name, list] of Object.entries(HEADER_ALIASES)) {
+          if (list.some((a) => normalizeKey(a) === nk)) field = name;
+        }
+        if (field) o[field] = String(value ?? "").trim();
+      }
+      return o;
+    });
 
   const parse = (text: string) => {
     const table = parseTable(text);
@@ -96,14 +112,45 @@ export default function MembersImportPage() {
     return objs;
   };
 
+  const toBase64 = (buf: ArrayBuffer) => {
+    const bytes = new Uint8Array(buf);
+    let binary = "";
+    const chunk = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunk) {
+      binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+    }
+    return btoa(binary);
+  };
+
   const onFile = async (file: File) => {
+    if (/\.xlsx$/i.test(file.name)) {
+      try {
+        const buf = await file.arrayBuffer();
+        const res = await fetch("/api/admin/members-import", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "parse", xlsxBase64: toBase64(buf) }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "无法读取 Excel");
+        const objs = canonicalize(data.rows || []);
+        setRaw("");
+        setRows(objs);
+        setSummary(null);
+        setResults([]);
+        showToast(`已读取 ${file.name}，共 ${objs.length} 行`, "success");
+      } catch (err: unknown) {
+        showToast(err instanceof Error ? err.message : "无法读取 Excel", "error");
+      }
+      return;
+    }
     const text = await file.text();
     setRaw(text);
     parse(text);
     showToast(`已读取 ${file.name}，共 ${toObjects(parseTable(text)).length} 行`, "success");
   };
 
-  const submit = async () => {
+  const submit = async (dryRun: boolean) => {
     const toSend = rows.length ? rows : parse(raw);
     if (!toSend.length) { showToast("先粘贴或上传数据", "warning"); return; }
     setSubmitting(true);
@@ -111,17 +158,44 @@ export default function MembersImportPage() {
       const res = await fetch("/api/admin/members-import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rows: toSend }),
+        body: JSON.stringify({ rows: toSend, dryRun }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "导入失败");
       setSummary(data.summary);
       setResults(data.results || []);
-      showToast(`导入完成：新建 ${data.summary.created} 位，跳过 ${data.summary.skipped}，失败 ${data.summary.failed}`, "success");
-    } catch (err: any) {
-      showToast(err.message || "导入失败", "error");
+      showToast(
+        dryRun
+          ? `预检完成：可写入 ${data.summary.created} 行，跳过 ${data.summary.skipped}，失败 ${data.summary.failed}。还没有写入数据库`
+          : `导入完成：写入 ${data.summary.created} 行，跳过 ${data.summary.skipped}，失败 ${data.summary.failed}`,
+        data.summary.failed ? "warning" : "success"
+      );
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : "导入失败", "error");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const rollback = async () => {
+    const batchId = summary?.batchId;
+    if (!batchId) return;
+    if (!window.confirm(`撤回批次 ${batchId}？只会删除这批新建、且还没有预约或消课的会员和卡。`)) return;
+    setRollingBack(true);
+    try {
+      const res = await fetch("/api/admin/members-import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "rollback", batchId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "回滚失败");
+      const blocked = (data.blocked || []).join("；");
+      showToast(blocked ? `${data.message} ${blocked}` : data.message, blocked ? "warning" : "success");
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : "回滚失败", "error");
+    } finally {
+      setRollingBack(false);
     }
   };
 
@@ -188,8 +262,7 @@ export default function MembersImportPage() {
 
       <h1 style={{ fontSize: 22, fontWeight: 600, color: "#292D35", margin: "0 0 6px" }}>批量导入会员</h1>
       <p style={{ fontSize: 13, color: "#697180", margin: "0 0 22px", lineHeight: 1.7 }}>
-        一张表同时完成两件事：建会员档案、给会员开卡。导入成功后系统会自动生成邀请码与登录 PIN，会员立刻可以在小程序登录约课。
-        表头参考：姓名、手机号、性别、生日、入会日期、带教导师、备注、卡名、总次数、剩余次数、生效日、到期日、有效天数。手机号留空也能建会员。
+        先预检，确认没有失败行，再正式导入。同一份表可以重导：已开通的卡不会重复开，已有相伴起始日不会被覆盖。导入后如果还没有人约课，可以用批次号撤回。
       </p>
 
       {!results.length && (
@@ -201,20 +274,21 @@ export default function MembersImportPage() {
 
           <div style={{ display: "flex", gap: 10, marginBottom: 14, flexWrap: "wrap", alignItems: "center" }}>
             <button type="button" onClick={() => fileRef.current?.click()} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 6, border: "1px solid #E1E5EB", background: "#F5F7FA", color: "#292D35", fontSize: 13, cursor: "pointer" }}>
-              <Upload size={14} /> 上传 CSV 文件
+              <Upload size={14} /> 上传 CSV 或 Excel
             </button>
             <button type="button" onClick={downloadTemplate} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 6, border: "1px solid #E1E5EB", background: "#FFFFFF", color: "#2563EB", fontSize: 13, cursor: "pointer" }}>
               <Download size={14} /> 下载标准导入模板
             </button>
-            <input ref={fileRef} type="file" accept=".csv,.txt" style={{ display: "none" }} onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); }} />
+            <input ref={fileRef} type="file" accept=".csv,.txt,.xlsx" style={{ display: "none" }} onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); }} />
             <span style={{ fontSize: 12.5, color: "#697180" }}>或者直接从 Excel 复制整张表粘贴到下方输入框</span>
           </div>
 
           <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 8, padding: "12px 14px", marginBottom: 14, fontSize: 12.5, color: "#475569", lineHeight: 1.7 }}>
-            <div style={{ fontWeight: 600, color: "#1E293B", marginBottom: 4 }}>相伴来时路与具体天数规则：</div>
-            <div>1. <strong>卡与人完全解绑</strong>：以前上过的老卡不需要录入。「卡名」一列直接留空，系统只建立会员档案，不绑定任何废卡，完全不影响会员在小程序查看相伴经历。</div>
-            <div>2. <strong>直接填具体天数，绝不含糊</strong>：在「备注」或「相伴天数」列里直接写具体天数（如「820天」、「大概来了800天」、「相伴600天」或纯数字「820」），系统会自动对齐起始日。小程序端绝不显示飘忽的「约3年」「上了一年半」，而是精确呈现震撼的「相伴自律 820 天」，仪式感十足，极适合发朋友圈。</div>
-            <div>3. <strong>每日自然累加</strong>：一旦录入起始日，会员端每天打开小程序，相伴天数都会自然 +1 天（今天 820 天，明天自动变成 821 天），无需人工每天跑数据更新。</div>
+            <div style={{ fontWeight: 600, color: "#1E293B", marginBottom: 4 }}>表头必须是第一行，列可以少，但不能改含义：</div>
+            <div>姓名（必填）、手机号（11 位，可空）、性别（男/女，可空）、生日（YYYY-MM-DD，可空）、入会日期（可填日期、2022、820 或「820天」）、带教导师、备注、卡名（须与后台卡种名称完全一致，留空则只建档不开卡）、总次数、剩余次数（留空=按总次数；要记 0 次必须写 0）、生效日、到期日、有效天数。</div>
+            <div style={{ marginTop: 6 }}>1. 有手机号时按手机号认人，不会因为同名并到别人身上。没有手机号时，只在库里姓名唯一才匹配。</div>
+            <div>2. 相伴天数按上海日期计算。填「820天」表示今天是第 820 天，明天自动变成 821。已有起始日的老会员，重导不会改这个日期。</div>
+            <div>3. 卡名必须先在「会员卡」里建好。次卡剩余大于总次数、期限卡没有到期日，这一行会失败，其他人不受影响。</div>
           </div>
 
           <textarea
@@ -231,8 +305,11 @@ export default function MembersImportPage() {
             </span>
             <div style={{ display: "flex", gap: 10 }}>
               <button type="button" onClick={reset} style={{ padding: "8px 14px", borderRadius: 6, border: "1px solid #E1E5EB", background: "#FFFFFF", color: "#697180", fontSize: 13, cursor: "pointer" }}>清空</button>
-              <button type="button" onClick={submit} disabled={submitting || !rows.length} style={{ padding: "8px 18px", borderRadius: 6, border: "none", background: rows.length ? "#2563EB" : "#BFD3F5", color: "#FFFFFF", fontSize: 13, fontWeight: 500, cursor: rows.length ? "pointer" : "not-allowed" }}>
-                {submitting ? "导入中..." : "开始导入"}
+              <button type="button" onClick={() => submit(true)} disabled={submitting || !rows.length} style={{ padding: "8px 14px", borderRadius: 6, border: "1px solid #BFDBFE", background: "#FFFFFF", color: "#1D4ED8", fontSize: 13, cursor: rows.length ? "pointer" : "not-allowed" }}>
+                {submitting ? "处理中..." : "先预检"}
+              </button>
+              <button type="button" onClick={() => submit(false)} disabled={submitting || !rows.length} style={{ padding: "8px 18px", borderRadius: 6, border: "none", background: rows.length ? "#2563EB" : "#BFD3F5", color: "#FFFFFF", fontSize: 13, fontWeight: 500, cursor: rows.length ? "pointer" : "not-allowed" }}>
+                {submitting ? "导入中..." : "确认导入"}
               </button>
             </div>
           </div>
@@ -270,15 +347,26 @@ export default function MembersImportPage() {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14, flexWrap: "wrap", gap: 10 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <CheckCircle2 size={16} style={{ color: "#059669" }} />
-              <span style={{ fontSize: 14, fontWeight: 600, color: "#292D35" }}>导入结果</span>
+              <span style={{ fontSize: 14, fontWeight: 600, color: "#292D35" }}>{summary?.dryRun ? "预检结果（未写入）" : "导入结果"}</span>
               <span style={{ fontSize: 12.5, color: "#697180" }}>
-                新建 {summary?.created} 位 · 开卡 {summary?.cardsCreated} 张 · 跳过 {summary?.skipped} · 失败 {summary?.failed}
+                {summary?.dryRun ? "可写入" : "已写入"} {summary?.created} 行 · 开卡 {summary?.cardsCreated} 张 · 跳过 {summary?.skipped} · 失败 {summary?.failed}
+                {summary?.batchId ? ` · 批次 ${summary.batchId}` : ""}
               </span>
             </div>
             <div style={{ display: "flex", gap: 10 }}>
               <button type="button" onClick={downloadCsv} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 6, border: "1px solid #E1E5EB", background: "#F5F7FA", color: "#292D35", fontSize: 13, cursor: "pointer" }}>
                 <Download size={14} /> 下载结果与凭据
               </button>
+              {summary?.dryRun && (
+                <button type="button" onClick={() => submit(false)} disabled={submitting} style={{ padding: "7px 14px", borderRadius: 6, border: "none", background: "#2563EB", color: "#FFFFFF", fontSize: 13, cursor: "pointer" }}>
+                  {submitting ? "导入中..." : "确认写入"}
+                </button>
+              )}
+              {summary?.batchId && !summary?.dryRun && (
+                <button type="button" onClick={rollback} disabled={rollingBack} style={{ padding: "7px 14px", borderRadius: 6, border: "1px solid #FECACA", background: "#FEF2F2", color: "#B91C1C", fontSize: 13, cursor: "pointer" }}>
+                  {rollingBack ? "撤回中..." : "撤回这批"}
+                </button>
+              )}
               <button type="button" onClick={reset} style={{ padding: "7px 14px", borderRadius: 6, border: "none", background: "#2563EB", color: "#FFFFFF", fontSize: 13, cursor: "pointer" }}>再导一批</button>
             </div>
           </div>
@@ -325,7 +413,10 @@ export default function MembersImportPage() {
                       ) : "—"}
                     </td>
                     <td style={{ padding: "8px 10px", borderBottom: "1px solid #F1F3F6" }}>{r.cardName || "—"}</td>
-                    <td style={{ padding: "8px 10px", borderBottom: "1px solid #F1F3F6", color: "#697180" }}>{r.reason || ""}</td>
+                    <td style={{ padding: "8px 10px", borderBottom: "1px solid #F1F3F6", color: "#697180" }}>
+                      {r.reason || ""}
+                      {r.warnings && r.warnings.length > 0 ? ` ${r.warnings.join("；")}` : ""}
+                    </td>
                   </tr>
                 ))}
               </tbody>
