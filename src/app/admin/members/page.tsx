@@ -56,6 +56,9 @@ export default function AdminMembersPage() {
 
   // 视图模式：桌面表格 vs iPad/移动端卡片视图
   const [viewMode, setViewMode] = useState<"table" | "grid">("table");
+  useEffect(() => {
+    if (window.innerWidth <= 800) setViewMode("grid");
+  }, []);
 
   // 会员编辑抽屉状态
   const [editingMember, setEditingMember] = useState<Partial<MemberItem> | null>(null);
@@ -312,7 +315,7 @@ export default function AdminMembersPage() {
             我的账户 · 会员档案与手札
           </h1>
           <p style={{ fontSize: 13, color: "#697180", marginTop: 4, margin: 0 }}>
-            实时管理 280 位在籍会员的基础档案、细分课时资产及课后心声手札，修改后即时同步至学员端。
+            当前 {members.length} 位在籍会员。档案、课时和课后手札改完后，学员端看到的是同一份记录。
           </p>
         </div>
 
@@ -585,12 +588,13 @@ export default function AdminMembersPage() {
                 background: "#FFFFFF",
                 borderRadius: 8,
                 border: "1px solid #E1E5EB",
-                overflow: "hidden",
+                overflow: "auto",
               }}
             >
               <table
                 style={{
                   width: "100%",
+                  minWidth: 860,
                   borderCollapse: "collapse",
                   textAlign: "left",
                   fontSize: 13,

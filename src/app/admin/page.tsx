@@ -1,6 +1,6 @@
 import { db, rawSql } from "@/db";
 import { companionshipDays, shanghaiToday } from "@/lib/shanghai-date";
-import { members, trainings } from "@/db/schema";
+import { members } from "@/db/schema";
 import { sql } from "drizzle-orm";
 import Link from "next/link";
 import MobileManagementHome from "@/components/admin/MobileManagementHome";
@@ -70,11 +70,13 @@ export default async function AdminPage() {
         return [];
       }),
     rawSql`
-      SELECT member_id, MAX(training_date) as last_date
-      FROM trainings
-      GROUP BY member_id
+      SELECT a.member_id, MAX(s.session_date) AS last_date
+      FROM attendance a
+      JOIN class_sessions s ON s.id = a.session_id
+      WHERE a.status = 'attended'
+      GROUP BY a.member_id
     `.catch((e) => {
-      console.error("trainings query error:", e);
+      console.error("attendance query error:", e);
       return [];
     }),
     rawSql`

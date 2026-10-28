@@ -252,17 +252,19 @@ async function applyRow(args: {
 
   let cardPlan: { type: CardTypeRow; total: number | null; remaining: number | null; validFrom: string; validUntil: string | null; status: string } | { error: string } | null = null;
   if (row.cardName) {
-    const matches = cardTypes.filter((t) => String(t.name).trim() === row.cardName);
-    if (!matches.length) {
+    const named = cardTypes.filter((t) => String(t.name).trim() === row.cardName);
+    if (!named.length) {
       return { result: { line: row.line, status: "failed", name: row.name, matchedBy, reason: `卡种「${row.cardName}」不存在。请先在「会员卡」建好同名卡种，或把卡名留空`, warnings } };
     }
-    if (matches.length > 1) {
-      return { result: { line: row.line, status: "failed", name: row.name, reason: `有 ${matches.length} 个卡种都叫「${row.cardName}」，请先改名区分`, warnings } };
-    }
-    const type = matches[0];
-    if (Number(type.is_active) !== 1) {
+    const activeNamed = named.filter((t) => Number(t.is_active) === 1);
+    if (!activeNamed.length) {
       return { result: { line: row.line, status: "failed", name: row.name, reason: `卡种「${row.cardName}」已停用。请先启用，或改用在用卡种`, warnings } };
     }
+    if (activeNamed.length > 1) {
+      return { result: { line: row.line, status: "failed", name: row.name, reason: `有 ${activeNamed.length} 个启用中的卡种都叫「${row.cardName}」，请先改名区分`, warnings } };
+    }
+    if (named.length > 1) warnings.push(`同名卡种有 ${named.length} 个，已使用启用中的那一个`);
+    const type = activeNamed[0];
     const isCount = String(type.category) === "count";
     const total = isCount ? (row.total ?? (type.total_count != null ? Number(type.total_count) : null)) : null;
     const remaining = isCount ? (row.remaining ?? total) : null;

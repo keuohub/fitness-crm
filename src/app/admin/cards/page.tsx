@@ -817,7 +817,7 @@ export default function AdminCardsPage() {
 
         {/* Table View */}
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
+          <table className="w-full min-w-[860px] text-left text-sm">
             <thead className="bg-[#F8FAFC] border-b border-[#E1E5EB] text-[#697180] text-xs font-medium">
               <tr>
                 <th className="px-5 py-3.5">会员档案</th>

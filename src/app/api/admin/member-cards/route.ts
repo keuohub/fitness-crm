@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/admin-session";
 import { getAdminUser, requireRole } from "@/lib/auth/rbac";
 import { rawSql } from "@/db";
+import { shanghaiToday } from "@/lib/shanghai-date";
 
 function bad(msg: string, status = 400) {
   return NextResponse.json({ error: msg }, { status });
 }
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => shanghaiToday();
 function addDays(dateStr: string, days: number) {
   const [y, m, d] = dateStr.split("-").map(Number);
   const dt = new Date(Date.UTC(y, m - 1, d));
