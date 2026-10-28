@@ -805,25 +805,135 @@ page {
   margin-bottom: 10rpx;
 }
 
+.mgr-field-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10rpx;
+}
+
+.mgr-field-hint {
+  font-size: 20rpx;
+  color: #B89358;
+  font-weight: 600;
+}
+
 .mgr-field-picker {
   background: #FFFFFF;
   border: 1rpx solid rgba(13, 12, 15, 0.12);
   border-radius: 14rpx;
-  padding: 22rpx 24rpx;
-  font-size: 26rpx;
+  padding: 0 24rpx;
+  min-height: 88rpx;
+  height: 88rpx;
+  line-height: 88rpx;
+  font-size: 28rpx;
   color: #0D0C0F;
   font-weight: 500;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
 }
 
 .mgr-field-input {
   background: #FFFFFF;
   border: 1rpx solid rgba(13, 12, 15, 0.12);
   border-radius: 14rpx;
-  padding: 20rpx 24rpx;
-  font-size: 26rpx;
+  padding: 0 24rpx;
+  min-height: 88rpx;
+  height: 88rpx;
+  line-height: 88rpx;
+  font-size: 28rpx;
   color: #0D0C0F;
   box-sizing: border-box;
   width: 100%;
+}
+
+/* 席位步进器触控栏 (大触控区、饱满舒适) */
+.mgr-stepper-wrap {
+  display: flex;
+  align-items: center;
+  background: #FFFFFF;
+  border: 1.5rpx solid rgba(184, 147, 88, 0.45);
+  border-radius: 18rpx;
+  height: 96rpx;
+  min-height: 96rpx;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.mgr-stepper-btn {
+  width: 110rpx;
+  height: 96rpx;
+  background: #FAF8F5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 44rpx;
+  font-weight: 700;
+  color: #0D0C0F;
+}
+
+.mgr-stepper-btn:active {
+  background: #EBE5DF;
+}
+
+.mgr-stepper-btn.btn-disabled {
+  color: #D6D3D1;
+  background: #F5F5F4;
+}
+
+.mgr-stepper-op {
+  line-height: 1;
+}
+
+.mgr-stepper-val-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 96rpx;
+}
+
+.mgr-stepper-input {
+  width: 110rpx;
+  height: 96rpx;
+  min-height: 96rpx;
+  line-height: 96rpx;
+  text-align: center;
+  font-size: 38rpx;
+  font-weight: 800;
+  color: #0D0C0F;
+}
+
+.mgr-stepper-unit {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #78716C;
+  margin-left: 2rpx;
+}
+
+.mgr-capacity-pills-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-top: 14rpx;
+}
+
+.mgr-cap-pill {
+  padding: 14rpx 22rpx;
+  background: #FFFFFF;
+  border: 1rpx solid rgba(13, 12, 15, 0.15);
+  border-radius: 12rpx;
+  font-size: 22rpx;
+  color: #57534E;
+  font-weight: 500;
+}
+
+.mgr-cap-pill.pill-active {
+  background: #0D0C0F;
+  border-color: #0D0C0F;
+  color: #F6E6DA;
+  font-weight: 600;
 }
 
 .mgr-field-textarea {
@@ -1045,21 +1155,27 @@ page {
   background: #FFFFFF;
   border: 1rpx solid rgba(13, 12, 15, 0.1);
   border-radius: 16rpx;
-  padding: 18rpx 24rpx;
-  font-size: 24rpx;
+  padding: 0 24rpx;
+  height: 84rpx;
+  min-height: 84rpx;
+  line-height: 84rpx;
+  font-size: 26rpx;
+  box-sizing: border-box;
 }
 
 .mgr-search-btn {
   background: #0D0C0F;
   color: #F6E6DA;
   border: 1rpx solid #B89358;
-  padding: 0 30rpx;
+  padding: 0 32rpx;
+  height: 84rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 16rpx;
-  font-size: 24rpx;
+  font-size: 26rpx;
   font-weight: 600;
+  box-sizing: border-box;
 }
 
 .mgr-member-card {

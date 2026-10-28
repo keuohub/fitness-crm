@@ -391,16 +391,65 @@
         </view>
       </view>
 
-      <!-- 席位上限 -->
+      <!-- 席位上限 (Stepper 步进器 + 快捷预设) -->
       <view class="mgr-field-group">
-        <text class="mgr-field-label">席位上限 (人)</text>
-        <input
-          class="mgr-field-input"
-          type="number"
-          value="{{newSessionCapacity}}"
-          bindinput="onSessionCapacityInput"
-          placeholder="如：6"
-        />
+        <view class="mgr-field-label-row">
+          <text class="mgr-field-label">席位上限 (单节容纳人数)</text>
+          <text class="mgr-field-hint" wx:if="{{sessionOptions.rooms[newSessionRoomIndex].capacity}}">
+            教室上限：{{sessionOptions.rooms[newSessionRoomIndex].capacity}}人
+          </text>
+        </view>
+        
+        <!-- 大号步进器触控栏 -->
+        <view class="mgr-stepper-wrap">
+          <view class="mgr-stepper-btn {{newSessionCapacity <= 1 ? 'btn-disabled' : ''}}" bindtap="decCapacity">
+            <text class="mgr-stepper-op">−</text>
+          </view>
+          <view class="mgr-stepper-val-box">
+            <input
+              class="mgr-stepper-input"
+              type="number"
+              value="{{newSessionCapacity}}"
+              bindinput="onSessionCapacityInput"
+            />
+            <text class="mgr-stepper-unit">人</text>
+          </view>
+          <view class="mgr-stepper-btn" bindtap="incCapacity">
+            <text class="mgr-stepper-op">+</text>
+          </view>
+        </view>
+
+        <!-- 常用席位快捷点选药丸 -->
+        <view class="mgr-capacity-pills-row">
+          <view
+            class="mgr-cap-pill {{newSessionCapacity === 1 ? 'pill-active' : ''}}"
+            bindtap="setCapacityPreset"
+            data-cap="1"
+          >
+            1人 (私教)
+          </view>
+          <view
+            class="mgr-cap-pill {{newSessionCapacity === 2 ? 'pill-active' : ''}}"
+            bindtap="setCapacityPreset"
+            data-cap="2"
+          >
+            2人 (VIP)
+          </view>
+          <view
+            class="mgr-cap-pill {{newSessionCapacity === 6 ? 'pill-active' : ''}}"
+            bindtap="setCapacityPreset"
+            data-cap="6"
+          >
+            6人 (大床满席)
+          </view>
+          <view
+            class="mgr-cap-pill {{newSessionCapacity === 8 ? 'pill-active' : ''}}"
+            bindtap="setCapacityPreset"
+            data-cap="8"
+          >
+            8人 (垫上小器械)
+          </view>
+        </view>
       </view>
 
       <button

@@ -508,6 +508,34 @@ Page({
   onSessionEndChange: function(e) { this.setData({ newSessionEndTime: e.detail.value }); },
   onSessionCapacityInput: function(e) { this.setData({ newSessionCapacity: Number(e.detail.value) || 6 }); },
 
+  decCapacity: function() {
+    var cur = Number(this.data.newSessionCapacity) || 6;
+    if (cur > 1) {
+      this.setData({ newSessionCapacity: cur - 1 });
+    }
+  },
+
+  incCapacity: function() {
+    var cur = Number(this.data.newSessionCapacity) || 6;
+    var room = this.data.sessionOptions.rooms[this.data.newSessionRoomIndex];
+    var max = (room && room.capacity) ? Number(room.capacity) : 20;
+    if (cur < max) {
+      this.setData({ newSessionCapacity: cur + 1 });
+    } else {
+      wx.showToast({ title: "已达教室上限 " + max + " 人", icon: "none" });
+    }
+  },
+
+  setCapacityPreset: function(e) {
+    var cap = Number(e.currentTarget.dataset.cap) || 6;
+    var room = this.data.sessionOptions.rooms[this.data.newSessionRoomIndex];
+    if (room && room.capacity && cap > Number(room.capacity)) {
+      wx.showToast({ title: "超过当前教室上限 (" + room.capacity + "人)", icon: "none" });
+      return;
+    }
+    this.setData({ newSessionCapacity: cap });
+  },
+
   submitCreateSession: function() {
     var that = this;
     var opts = this.data.sessionOptions;
