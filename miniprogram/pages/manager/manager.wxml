@@ -312,7 +312,7 @@
       <view class="mgr-sub-title-row">
         <text class="mgr-sub-view-title">排课中心</text>
         <view class="mgr-date-pick-badge" bindtap="toggleScheduleForm">
-          {{showScheduleForm ? '收起表单 ▲' : '+ 快速发布排课 ▼'}}
+          {{showScheduleForm ? '收起表单 ▲' : (editingSessionId > 0 ? '正在编辑场次 ▼' : '+ 快速发布排课 ▼')}}
         </view>
       </view>
       <text class="mgr-sub-view-sub">发布排课后，前端会员端约课页面实时同步上线</text>
@@ -320,7 +320,10 @@
 
     <!-- 排课表单：完全在标准文档流中，100%原生流畅滚动，决无遮罩穿透！ -->
     <view wx:if="{{showScheduleForm}}" class="mgr-form-card">
-      <view class="mgr-form-card-title">发布新排课场次</view>
+      <view class="mgr-form-card-head">
+        <view class="mgr-form-card-title">{{editingSessionId > 0 ? '修改已有排课场次' : '发布新排课场次'}}</view>
+        <text wx:if="{{editingSessionId > 0}}" class="mgr-form-close-text" bindtap="cancelEditSession">取消编辑</text>
+      </view>
 
       <!-- 上课日期 -->
       <view class="mgr-field-group">
@@ -458,7 +461,7 @@
         loading="{{submittingSession}}"
         disabled="{{submittingSession}}"
       >
-        立即发布排课 (学员端同步上线)
+        {{editingSessionId > 0 ? '保存修改并同步会员端' : '立即发布排课 (学员端同步上线)'}}
       </button>
     </view>
 
@@ -488,6 +491,10 @@
           <text class="mgr-sch-cap">席位：{{item.booked_count}} / {{item.capacity}} 人</text>
           <text class="mgr-sch-status">{{item.status === 'open' ? '开放预约中' : item.status}}</text>
         </view>
+        <view class="mgr-sch-actions-row">
+          <view class="mgr-sch-btn-edit" bindtap="startEditSession" data-item="{{item}}">修改场次</view>
+          <view class="mgr-sch-btn-cancel" bindtap="cancelSessionItem" data-id="{{item.id}}" data-title="{{item.course_name}}">取消场次</view>
+        </view>
       </view>
     </block>
   </view>
@@ -500,14 +507,15 @@
     <view class="mgr-sub-header">
       <view class="mgr-sub-title-row">
         <text class="mgr-sub-view-title">全会馆核心课程与星级</text>
+        <view class="mgr-date-pick-badge" bindtap="openCreateCourse">+ 新建课程</view>
       </view>
       <text class="mgr-sub-view-sub">点击任一课程即可实时修改名称、分类、星级难度及简介</text>
     </view>
 
     <!-- 课程编辑展开卡 -->
-    <view wx:if="{{editingCourse.id > 0}}" class="mgr-form-card">
+    <view wx:if="{{editingCourse.id >= 0}}" class="mgr-form-card">
       <view class="mgr-form-card-head">
-        <text class="mgr-form-card-title">正在编辑：{{editingCourse.name}}</text>
+        <text class="mgr-form-card-title">{{editingCourse.id > 0 ? ('正在编辑：' + editingCourse.name) : '新建核心课程'}}</text>
         <text class="mgr-form-close-text" bindtap="cancelEditCourse">取消</text>
       </view>
 
@@ -595,7 +603,7 @@
         loading="{{submittingCourse}}"
         disabled="{{submittingCourse}}"
       >
-        保存修改并同步会员端
+        {{editingCourse.id > 0 ? '保存修改并同步会员端' : '立即创建新课程并发布'}}
       </button>
     </view>
 
@@ -678,6 +686,54 @@
       </button>
     </view>
 
+    <!-- 现场开卡表单卡片 (Issue Card) -->
+    <view wx:if="{{showIssueCardModal}}" class="mgr-form-card mgr-issue-card-box">
+      <view class="mgr-form-card-head">
+        <text class="mgr-form-card-title">为【{{selectedIssueMember.name}}】办理发卡</text>
+        <text class="mgr-form-close-text" bindtap="closeIssueCard">取消</text>
+      </view>
+
+      <view class="mgr-field-group">
+        <text class="mgr-field-label">选择会员卡种类</text>
+        <picker
+          range="{{sessionOptions.cardTypes}}"
+          range-key="name"
+          value="{{selectedIssueCardTypeIndex}}"
+          bindchange="onIssueCardTypeChange"
+        >
+          <view class="mgr-field-picker">
+            {{sessionOptions.cardTypes[selectedIssueCardTypeIndex].name || '请选择卡种'}} ›
+          </view>
+        </picker>
+      </view>
+
+      <view class="mgr-field-group" wx:if="{{sessionOptions.cardTypes[selectedIssueCardTypeIndex].category === 'count'}}">
+        <text class="mgr-field-label">初始可用课时 (次)</text>
+        <input
+          class="mgr-field-input"
+          type="number"
+          placeholder="如：10"
+          value="{{customIssueCount}}"
+          bindinput="onCustomIssueCountInput"
+        />
+      </view>
+
+      <view class="mgr-issue-card-info" wx:if="{{sessionOptions.cardTypes[selectedIssueCardTypeIndex]}}">
+        <text class="mgr-issue-info-text">
+          • 有效期：{{sessionOptions.cardTypes[selectedIssueCardTypeIndex].validity_days ? sessionOptions.cardTypes[selectedIssueCardTypeIndex].validity_days + ' 天' : '长期有效'}}  • 类别：{{sessionOptions.cardTypes[selectedIssueCardTypeIndex].category === 'count' ? '次卡' : '期限畅练卡'}}
+        </text>
+      </view>
+
+      <button
+        class="mgr-primary-btn"
+        bindtap="submitIssueCard"
+        loading="{{submittingIssueCard}}"
+        disabled="{{submittingIssueCard}}"
+      >
+        确认开卡并激活课时
+      </button>
+    </view>
+
     <!-- 搜索栏 -->
     <view class="mgr-search-bar-wrap">
       <input
@@ -712,7 +768,10 @@
         </view>
         <view class="mgr-member-card-right">
           <text class="mgr-member-cards-num">{{item.active_cards_count}} 张有效卡</text>
-          <text class="mgr-member-status-tag">{{item.status === 'active' ? '正常在籍' : item.status}}</text>
+          <view class="mgr-member-action-pills">
+            <view class="mgr-pill-issue-card" catchtap="openIssueCard" data-item="{{item}}">+发卡</view>
+            <text class="mgr-member-status-tag">{{item.status === 'active' ? '正常在籍' : item.status}}</text>
+          </view>
         </view>
       </view>
       <view wx:if="{{membersList.length > 0}}" class="mgr-list-footnote">

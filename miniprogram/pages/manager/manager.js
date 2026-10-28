@@ -34,10 +34,12 @@ Page({
 
     // ── 排课中心 (schedule) ──
     showScheduleForm: true,
+    editingSessionId: 0,
     sessionOptions: {
       courses: [],
       coaches: [],
-      rooms: []
+      rooms: [],
+      cardTypes: []
     },
     newSessionCourseIndex: 0,
     newSessionCoachIndex: 0,
@@ -56,7 +58,7 @@ Page({
     loadingCourses: false,
     errorCourses: "",
     editingCourse: {
-      id: 0,
+      id: -1,
       name: "",
       categoryType: "boutique",
       difficultyStars: 3,
@@ -69,6 +71,11 @@ Page({
     newMemberName: "",
     newMemberPhone: "",
     submittingMember: false,
+    showIssueCardModal: false,
+    selectedIssueMember: null,
+    selectedIssueCardTypeIndex: 0,
+    customIssueCount: "",
+    submittingIssueCard: false,
     memberSearchKeyword: "",
     membersList: [],
     totalMembersDb: 0,
@@ -185,7 +192,8 @@ Page({
   switchToSchedule: function() {
     this.setData({
       currentView: "schedule",
-      navTitle: "排课中心"
+      navTitle: "排课中心",
+      editingSessionId: 0
     });
     this.loadSessionOptions();
     this.fetchScheduleSessions(this.data.newSessionDate);
@@ -195,7 +203,7 @@ Page({
     this.setData({
       currentView: "courses",
       navTitle: "课程管理",
-      editingCourse: { id: 0, name: "", categoryType: "boutique", difficultyStars: 3, description: "" }
+      editingCourse: { id: -1, name: "", categoryType: "boutique", difficultyStars: 3, description: "" }
     });
     this.fetchCourses();
   },
@@ -203,8 +211,11 @@ Page({
   switchToMembers: function() {
     this.setData({
       currentView: "members",
-      navTitle: "会员中心"
+      navTitle: "会员中心",
+      showIssueCardModal: false,
+      selectedIssueMember: null
     });
+    this.loadSessionOptions();
     this.fetchMembers();
   },
 
@@ -453,7 +464,8 @@ Page({
             sessionOptions: {
               courses: res.data.courses || [],
               coaches: res.data.coaches || [],
-              rooms: res.data.rooms || []
+              rooms: res.data.rooms || [],
+              cardTypes: res.data.cardTypes || []
             }
           });
         }
@@ -536,6 +548,42 @@ Page({
     this.setData({ newSessionCapacity: cap });
   },
 
+  startEditSession: function(e) {
+    var item = e.currentTarget.dataset.item;
+    var opts = this.data.sessionOptions;
+    var courseIdx = 0;
+    var coachIdx = 0;
+    var roomIdx = 0;
+
+    for (var i = 0; i < opts.courses.length; i++) {
+      if (opts.courses[i].name === item.course_name) { courseIdx = i; break; }
+    }
+    for (var j = 0; j < opts.coaches.length; j++) {
+      if (opts.coaches[j].name === item.coach_name) { coachIdx = j; break; }
+    }
+    for (var k = 0; k < opts.rooms.length; k++) {
+      if (opts.rooms[k].name === item.room_name) { roomIdx = k; break; }
+    }
+
+    this.setData({
+      showScheduleForm: true,
+      editingSessionId: item.id,
+      newSessionDate: item.session_date,
+      newSessionCourseIndex: courseIdx,
+      newSessionCoachIndex: coachIdx,
+      newSessionRoomIndex: roomIdx,
+      newSessionStartTime: item.start_time,
+      newSessionEndTime: item.end_time,
+      newSessionCapacity: Number(item.capacity) || 6
+    });
+
+    wx.pageScrollTo({ scrollTop: 0, duration: 250 });
+  },
+
+  cancelEditSession: function() {
+    this.setData({ editingSessionId: 0 });
+  },
+
   submitCreateSession: function() {
     var that = this;
     var opts = this.data.sessionOptions;
@@ -548,13 +596,17 @@ Page({
     var coach = opts.coaches[this.data.newSessionCoachIndex];
     var room = opts.rooms[this.data.newSessionRoomIndex];
 
+    var isEdit = this.data.editingSessionId > 0;
+    var action = isEdit ? "update_session" : "create_session";
+
     this.setData({ submittingSession: true });
-    wx.showLoading({ title: "正在排课…" });
+    wx.showLoading({ title: isEdit ? "正在保存修改…" : "正在发布排课…" });
 
     api.request({
-      url: "/api/portal/manager/actions?action=create_session",
+      url: "/api/portal/manager/actions?action=" + action,
       method: "POST",
       data: {
+        sessionId: this.data.editingSessionId,
         courseCategoryId: course ? course.id : 1,
         coachId: coach ? coach.id : null,
         roomId: room ? room.id : null,
@@ -567,13 +619,14 @@ Page({
         wx.hideLoading();
         that.setData({ submittingSession: false });
         if (res.statusCode === 200 && res.data && res.data.success) {
-          wx.showToast({ title: "排课发布成功", icon: "success" });
+          wx.showToast({ title: isEdit ? "场次已更新" : "排课发布成功", icon: "success" });
+          that.setData({ editingSessionId: 0 });
           that.fetchScheduleSessions(that.data.newSessionDate);
           that.loadDashboard();
         } else {
-          var err = (res.data && res.data.error) || "排课发布失败";
+          var err = (res.data && res.data.error) || (isEdit ? "更新失败" : "排课发布失败");
           wx.showModal({
-            title: "排课冲突提醒",
+            title: isEdit ? "场次修改提醒" : "排课冲突提醒",
             content: err,
             showCancel: false,
             confirmText: "知道了"
@@ -653,6 +706,19 @@ Page({
     });
   },
 
+  openCreateCourse: function() {
+    this.setData({
+      editingCourse: {
+        id: 0,
+        name: "",
+        categoryType: "boutique",
+        difficultyStars: 3,
+        description: ""
+      }
+    });
+    wx.pageScrollTo({ scrollTop: 0, duration: 250 });
+  },
+
   openEditCourse: function(e) {
     var item = e.currentTarget.dataset.item;
     this.setData({
@@ -664,12 +730,12 @@ Page({
         description: item.description || ""
       }
     });
-    wx.pageScrollTo({ scrollTop: 0, duration: 300 });
+    wx.pageScrollTo({ scrollTop: 0, duration: 250 });
   },
 
   cancelEditCourse: function() {
     this.setData({
-      editingCourse: { id: 0, name: "", categoryType: "boutique", difficultyStars: 3, description: "" }
+      editingCourse: { id: -1, name: "", categoryType: "boutique", difficultyStars: 3, description: "" }
     });
   },
 
@@ -691,22 +757,27 @@ Page({
     var c = this.data.editingCourse;
     if (!c.name.trim()) { wx.showToast({ title: "课程名不能为空", icon: "none" }); return; }
 
+    var isNew = c.id === 0;
+    var action = isNew ? "create_course" : "update_course";
+
     this.setData({ submittingCourse: true });
-    wx.showLoading({ title: "正在同步修改…" });
+    wx.showLoading({ title: isNew ? "正在创建课程…" : "正在同步修改…" });
 
     api.request({
-      url: "/api/portal/manager/actions?action=update_course",
+      url: "/api/portal/manager/actions?action=" + action,
       method: "POST",
       data: c,
       success: function(res) {
         wx.hideLoading();
         that.setData({ submittingCourse: false });
         if (res.statusCode === 200 && res.data && res.data.success) {
-          wx.showToast({ title: "已同步更新", icon: "success" });
+          wx.showToast({ title: isNew ? "课程创建成功" : "已同步更新", icon: "success" });
           that.cancelEditCourse();
           that.fetchCourses();
+          that.loadSessionOptions();
         } else {
-          wx.showToast({ title: (res.data && res.data.error) || "修改失败", icon: "none" });
+          var err = (res.data && res.data.error) || (isNew ? "创建失败" : "修改失败");
+          wx.showToast({ title: err, icon: "none" });
         }
       },
       fail: function() {
@@ -783,12 +854,14 @@ Page({
         if (res.statusCode === 200 && res.data && res.data.success) {
           var portalCode = res.data.portalCode || "已开通";
           var loginPin = res.data.loginPin || phone.slice(-4);
+          var createdMem = res.data.member;
           wx.showModal({
             title: "录入成功",
-            content: "会员【" + name + "】已建档并开通约课通道！\n\n专属邀请码：" + portalCode + "\n登录验证码：" + loginPin + "\n\n会员在小程序「登录」页输入此邀请码与验证码即可直接登录约课。",
-            showCancel: false,
-            confirmText: "我知道了",
-            success: function() {
+            content: "会员【" + name + "】已建档并开通约课通道！\n\n专属邀请码：" + portalCode + "\n登录验证码：" + loginPin + "\n\n是否立即为该学员办理发卡？",
+            showCancel: true,
+            cancelText: "稍后发卡",
+            confirmText: "立即发卡",
+            success: function(sm) {
               that.setData({
                 showNewMemberCard: false,
                 newMemberName: "",
@@ -796,6 +869,9 @@ Page({
               });
               that.fetchMembers();
               that.loadDashboard();
+              if (sm.confirm && createdMem) {
+                that.openIssueCardWithMember(createdMem);
+              }
             }
           });
         } else {
@@ -811,6 +887,93 @@ Page({
       fail: function() {
         wx.hideLoading();
         that.setData({ submittingMember: false });
+        wx.showToast({ title: "网络连接失败", icon: "none" });
+      }
+    });
+  },
+
+  // 现场发卡逻辑 (Issue Card)
+  openIssueCard: function(e) {
+    var member = e.currentTarget.dataset.item;
+    this.openIssueCardWithMember(member);
+  },
+
+  openIssueCardWithMember: function(member) {
+    var cardTypes = this.data.sessionOptions.cardTypes || [];
+    var defaultTotal = (cardTypes[0] && cardTypes[0].total_count) ? String(cardTypes[0].total_count) : "10";
+    this.setData({
+      showIssueCardModal: true,
+      selectedIssueMember: member,
+      selectedIssueCardTypeIndex: 0,
+      customIssueCount: defaultTotal
+    });
+    wx.pageScrollTo({ scrollTop: 0, duration: 250 });
+  },
+
+  closeIssueCard: function() {
+    this.setData({
+      showIssueCardModal: false,
+      selectedIssueMember: null
+    });
+  },
+
+  onIssueCardTypeChange: function(e) {
+    var idx = Number(e.detail.value);
+    var cardTypes = this.data.sessionOptions.cardTypes || [];
+    var ct = cardTypes[idx];
+    this.setData({
+      selectedIssueCardTypeIndex: idx,
+      customIssueCount: ct && ct.total_count ? String(ct.total_count) : ""
+    });
+  },
+
+  onCustomIssueCountInput: function(e) {
+    this.setData({ customIssueCount: e.detail.value });
+  },
+
+  submitIssueCard: function() {
+    var that = this;
+    var member = this.data.selectedIssueMember;
+    var cardTypes = this.data.sessionOptions.cardTypes || [];
+    var ct = cardTypes[this.data.selectedIssueCardTypeIndex];
+
+    if (!member) { wx.showToast({ title: "未指定学员", icon: "none" }); return; }
+    if (!ct) { wx.showToast({ title: "请选择会员卡类型", icon: "none" }); return; }
+
+    this.setData({ submittingIssueCard: true });
+    wx.showLoading({ title: "正在开卡…" });
+
+    api.request({
+      url: "/api/portal/manager/actions?action=issue_card",
+      method: "POST",
+      data: {
+        memberId: member.id,
+        cardTypeId: ct.id,
+        customCount: this.data.customIssueCount ? Number(this.data.customIssueCount) : null
+      },
+      success: function(res) {
+        wx.hideLoading();
+        that.setData({ submittingIssueCard: false });
+        if (res.statusCode === 200 && res.data && res.data.success) {
+          wx.showModal({
+            title: "开卡成功",
+            content: res.data.message || ("已为【" + member.name + "】开通【" + ct.name + "】"),
+            showCancel: false,
+            confirmText: "好的",
+            success: function() {
+              that.closeIssueCard();
+              that.fetchMembers();
+              that.loadDashboard();
+            }
+          });
+        } else {
+          var err = (res.data && res.data.error) || "开卡失败";
+          wx.showModal({ title: "开卡提示", content: err, showCancel: false });
+        }
+      },
+      fail: function() {
+        wx.hideLoading();
+        that.setData({ submittingIssueCard: false });
         wx.showToast({ title: "网络连接失败", icon: "none" });
       }
     });

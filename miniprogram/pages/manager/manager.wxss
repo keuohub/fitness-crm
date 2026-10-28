@@ -1079,6 +1079,35 @@ page {
   color: #A8A29E;
 }
 
+.mgr-sch-actions-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16rpx;
+  margin-top: 14rpx;
+  padding-top: 12rpx;
+  border-top: 1rpx dashed rgba(13, 12, 15, 0.08);
+}
+
+.mgr-sch-btn-edit {
+  font-size: 20rpx;
+  color: #B89358;
+  background: rgba(184, 147, 88, 0.12);
+  border: 1rpx solid rgba(184, 147, 88, 0.35);
+  padding: 8rpx 20rpx;
+  border-radius: 10rpx;
+  font-weight: 600;
+}
+
+.mgr-sch-btn-cancel {
+  font-size: 20rpx;
+  color: #DC2626;
+  background: rgba(220, 38, 38, 0.08);
+  border: 1rpx solid rgba(220, 38, 38, 0.25);
+  padding: 8rpx 20rpx;
+  border-radius: 10rpx;
+  font-weight: 600;
+}
+
 
 /* ════════════════════════════════════════════════════════════ */
 /* 课程卡片列表 (Courses List) */
@@ -1251,6 +1280,43 @@ page {
 .mgr-member-status-tag {
   font-size: 18rpx;
   color: #A8A29E;
+}
+
+.mgr-member-action-pills {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-top: 4rpx;
+}
+
+.mgr-pill-issue-card {
+  font-size: 20rpx;
+  color: #F6E6DA;
+  background: #0D0C0F;
+  border: 1rpx solid #B89358;
+  padding: 4rpx 14rpx;
+  border-radius: 8rpx;
+  font-weight: 600;
+}
+
+.mgr-issue-card-box {
+  border: 1.5rpx solid rgba(184, 147, 88, 0.5) !important;
+  background: #FFFAF5 !important;
+  margin-bottom: 24rpx;
+}
+
+.mgr-issue-card-info {
+  margin: 14rpx 0 20rpx;
+  padding: 14rpx 20rpx;
+  background: rgba(184, 147, 88, 0.1);
+  border-radius: 12rpx;
+}
+
+.mgr-issue-info-text {
+  font-size: 20rpx;
+  color: #78716C;
+  line-height: 1.5;
+  display: block;
 }
 
 

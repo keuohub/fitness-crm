@@ -111,7 +111,13 @@ export async function GET(request: NextRequest) {
     `.catch(() => []);
     const roomList = await rawSql`SELECT id, name, capacity FROM rooms ORDER BY id ASC`.catch(() => []);
     const courses = await rawSql`SELECT id, name, category_type FROM course_categories ORDER BY id ASC`.catch(() => []);
-    return NextResponse.json({ coaches, rooms: roomList, courses });
+    const cardTypes = await rawSql`
+      SELECT id, name, category, total_count, validity_days, price_cents
+      FROM card_types
+      WHERE tenant_id = 1 AND is_active = 1
+      ORDER BY sort_order ASC, id ASC
+    `.catch(() => []);
+    return NextResponse.json({ coaches, rooms: roomList, courses, cardTypes });
   }
 
   // 4. 获取会员列表 (支持搜索，默认脱敏展示手机号)
@@ -347,8 +353,7 @@ export async function POST(request: NextRequest) {
       SET name = ${name},
           category_type = ${categoryType},
           difficulty_stars = ${difficultyStars},
-          description = ${description},
-          updated_at = NOW()
+          description = ${description}
       WHERE id = ${courseId}
     `;
 
@@ -469,6 +474,195 @@ export async function POST(request: NextRequest) {
       success: true,
       message: `排课场次已取消${affectedBookings.length > 0 ? `，已同步为 ${affectedBookings.length} 位已约学员取消预约` : ''}`,
       cancelledBookingsCount: affectedBookings.length
+    });
+  }
+
+  // 6. 手机管家端：直接新建一门课程
+  if (action === "create_course") {
+    const name = String(body.name || "").trim();
+    const categoryType = String(body.categoryType || "boutique");
+    const difficultyStars = Math.max(1, Math.min(5, Number(body.difficultyStars || 3)));
+    const description = String(body.description || "").trim();
+
+    if (!name) return bad("课程名称不能为空");
+
+    const [existing] = await rawSql`SELECT id FROM course_categories WHERE name = ${name} AND is_active = 1 LIMIT 1`.catch(() => []);
+    if (existing) return bad(`课程【${name}】已存在，请勿重复创建`, 409);
+
+    const courseKey = "c_" + Date.now().toString(36);
+    const [newCourse] = await rawSql`
+      INSERT INTO course_categories (tenant_id, key, name, category_type, difficulty_stars, description, is_active, created_at)
+      VALUES (1, ${courseKey}, ${name}, ${categoryType}, ${difficultyStars}, ${description}, 1, NOW())
+      RETURNING *
+    `;
+
+    return NextResponse.json({ success: true, course: newCourse, message: `新课程【${name}】已创建，可直接用于排课` });
+  }
+
+  // 7. 手机管家端：编辑修改已有排课场次（带完整冲突校验）
+  if (action === "update_session") {
+    const sessionId = Number(body.sessionId);
+    if (!sessionId) return bad("缺少 sessionId");
+
+    const [currSession] = await rawSql`SELECT * FROM class_sessions WHERE id = ${sessionId} AND tenant_id = 1`.catch(() => []);
+    if (!currSession) return bad("场次不存在", 404);
+    if (currSession.status === "cancelled") return bad("已取消的场次不可直接编辑，请重新发布");
+
+    const courseCategoryId = Number(body.courseCategoryId) || currSession.course_category_id;
+    const coachId = Number(body.coachId) || currSession.coach_id;
+    const roomId = Number(body.roomId) || currSession.room_id;
+    const sessionDate = String(body.sessionDate || currSession.session_date).trim();
+    const startTime = String(body.startTime || currSession.start_time).trim();
+    const endTime = String(body.endTime || currSession.end_time).trim();
+    const capacity = Number(body.capacity || currSession.capacity);
+
+    if (startTime >= endTime) return bad("开始时间必须早于结束时间");
+
+    // 席位上限不能低于当前已预约的人数
+    if (capacity < Number(currSession.booked_count || 0)) {
+      return bad(`席位上限（${capacity}人）不能低于当前已预约人数（${currSession.booked_count}人）`);
+    }
+
+    // 教室容量校验
+    if (roomId) {
+      const [room] = await rawSql`SELECT name, capacity FROM rooms WHERE id = ${roomId}`.catch(() => []);
+      if (room && capacity > Number(room.capacity)) {
+        return bad(`席位上限（${capacity}人）不可超过教室【${room.name}】的最大容纳人数（${room.capacity}人）`);
+      }
+    }
+
+    // 教练冲突校验（排除当前场次本身）
+    if (coachId) {
+      const [coachCollision] = await rawSql`
+        SELECT cs.id, cs.title, cs.start_time, cs.end_time, u.name as coach_name
+        FROM class_sessions cs
+        JOIN users u ON u.id = cs.coach_id
+        WHERE cs.tenant_id = 1
+          AND cs.id <> ${sessionId}
+          AND cs.session_date = ${sessionDate}
+          AND cs.coach_id = ${coachId}
+          AND cs.status <> 'cancelled'
+          AND cs.start_time < ${endTime}
+          AND cs.end_time > ${startTime}
+        LIMIT 1
+      `.catch(() => []);
+      if (coachCollision) {
+        return bad(`导师【${coachCollision.coach_name}】在同时段（${coachCollision.start_time}-${coachCollision.end_time}）已有课程【${coachCollision.title}】，不可冲突排课`);
+      }
+    }
+
+    // 教室冲突校验（排除当前场次本身）
+    if (roomId) {
+      const [roomCollision] = await rawSql`
+        SELECT cs.id, cs.title, cs.start_time, cs.end_time, r.name as room_name
+        FROM class_sessions cs
+        JOIN rooms r ON r.id = cs.room_id
+        WHERE cs.tenant_id = 1
+          AND cs.id <> ${sessionId}
+          AND cs.session_date = ${sessionDate}
+          AND cs.room_id = ${roomId}
+          AND cs.status <> 'cancelled'
+          AND cs.start_time < ${endTime}
+          AND cs.end_time > ${startTime}
+        LIMIT 1
+      `.catch(() => []);
+      if (roomCollision) {
+        return bad(`教室【${roomCollision.room_name}】在同时段（${roomCollision.start_time}-${roomCollision.end_time}）已被课程【${roomCollision.title}】占用，不可冲突排课`);
+      }
+    }
+
+    const [course] = await rawSql`SELECT name FROM course_categories WHERE id = ${courseCategoryId} LIMIT 1`.catch(() => []);
+    const title = course?.name || currSession.title;
+
+    await rawSql`
+      UPDATE class_sessions
+      SET course_category_id = ${courseCategoryId},
+          coach_id = ${coachId},
+          room_id = ${roomId},
+          title = ${title},
+          session_date = ${sessionDate},
+          start_time = ${startTime},
+          end_time = ${endTime},
+          capacity = ${capacity},
+          updated_at = NOW()
+      WHERE id = ${sessionId}
+    `;
+
+    return NextResponse.json({ success: true, message: `场次已更新：${sessionDate} ${startTime} ${title}` });
+  }
+
+  // 8. 手机管家端：现场为学员开卡（发卡，支持次卡与期限卡，记入真实账目与卡流水）
+  if (action === "issue_card") {
+    const memberId = Number(body.memberId);
+    const cardTypeId = Number(body.cardTypeId);
+    if (!memberId || !cardTypeId) return bad("缺少会员或卡类型");
+
+    const [member] = await rawSql`SELECT id, name, status FROM members WHERE id = ${memberId} AND tenant_id = 1`.catch(() => []);
+    if (!member) return bad("会员不存在", 404);
+    if (member.status === "archived") return bad("该会员已归档，不能开卡");
+
+    const [ct] = await rawSql`SELECT * FROM card_types WHERE id = ${cardTypeId} AND tenant_id = 1 AND is_active = 1`.catch(() => []);
+    if (!ct) return bad("所选卡类型不存在或已停用", 404);
+
+    const validFrom = String(body.validFrom || (new Date(Date.now() + 8 * 3600_000).toISOString().slice(0, 10)));
+    const customCount = body.customCount != null && body.customCount !== "" ? Number(body.customCount) : null;
+    const customDays = body.customDays != null && body.customDays !== "" ? Number(body.customDays) : null;
+
+    let totalCount: number | null = null;
+    let remaining: number | null = null;
+    let validUntil: string | null = null;
+
+    const days = customDays !== null ? customDays : Number(ct.validity_days || 0);
+    if (days > 0) {
+      const dt = new Date(Date.now() + 8 * 3600_000 + days * 86400_000);
+      validUntil = dt.toISOString().slice(0, 10);
+    }
+
+    if (ct.category === "count") {
+      totalCount = customCount !== null ? customCount : Number(ct.total_count || 10);
+      remaining = totalCount;
+      if (totalCount <= 0) return bad("次数卡总次数必须大于0");
+    } else {
+      // 期限卡
+      totalCount = customCount;
+      remaining = totalCount;
+      if (!validUntil) {
+        // 默认 365 天
+        const dt = new Date(Date.now() + 8 * 3600_000 + 365 * 86400_000);
+        validUntil = dt.toISOString().slice(0, 10);
+      }
+    }
+
+    const priceCents = Number(ct.price_cents || 0);
+
+    const [newCard] = await rawSql`
+      INSERT INTO member_cards (
+        tenant_id, member_id, card_type_id, status,
+        total_count, remaining_count, valid_from, valid_until,
+        purchased_at, price_cents, created_at, updated_at
+      ) VALUES (
+        1, ${memberId}, ${cardTypeId}, 'active',
+        ${totalCount}, ${remaining}, ${validFrom}, ${validUntil},
+        ${validFrom}, ${priceCents}, NOW(), NOW()
+      )
+      RETURNING *
+    `;
+
+    // 写入流水
+    await rawSql`
+      INSERT INTO card_transactions (
+        tenant_id, member_card_id, member_id, type, amount,
+        balance_after, note, created_at
+      ) VALUES (
+        1, ${newCard.id}, ${memberId}, 'purchase', ${remaining ?? 0},
+        ${remaining}, '管家手机端现场发卡', NOW()
+      )
+    `.catch(() => {});
+
+    return NextResponse.json({
+      success: true,
+      card: newCard,
+      message: `已成功为【${member.name}】开通【${ct.name}】${totalCount ? `（${totalCount}次）` : ''}`
     });
   }
 
