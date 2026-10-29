@@ -1,98 +1,362 @@
 page {
-  background-color: #F6E6DA;
-  color: #1C1415;
+  background-color: #F7F4EE;
+  color: #231F1D;
   font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
 }
+
 .cards-page {
   min-height: 100vh;
   padding: calc(env(safe-area-inset-top) + 110rpx) 36rpx 0;
   box-sizing: border-box;
 }
-.cards-loading { min-height: 70vh; display: flex; align-items: center; justify-content: center; }
-.cards-loading-text { font-size: 26rpx; color: rgba(255,255,255,.86); }
-.cards-hero { padding: 4rpx 8rpx 28rpx; }
-.cards-eyebrow { display: block; font-size: 20rpx; letter-spacing: 4rpx; color: rgba(255,255,255,.68); }
-.cards-title { display: block; margin-top: 14rpx; font-size: 52rpx; font-weight: 600; color: #FFFFFF; }
-.cards-error { background: rgba(255,255,255,.92); border-radius: 16rpx; padding: 18rpx 24rpx; margin-bottom: 18rpx; }
-.cards-error-text { font-size: 24rpx; color: #9E2A2B; }
-.cards-empty { background: rgba(255,255,255,.62); border: 1rpx dashed rgba(255,255,255,.9); border-radius: 22rpx; padding: 34rpx 28rpx; }
-.cards-empty-title { display: block; font-size: 28rpx; font-weight: 600; color: #FFFFFF; }
-.cards-empty-body { display: block; margin-top: 12rpx; font-size: 23rpx; line-height: 1.8; color: rgba(255,255,255,.85); }
-.card-item { background: rgba(255,255,255,.92); border-radius: 26rpx; padding: 28rpx; margin-bottom: 18rpx; box-shadow: 0 14rpx 36rpx rgba(120,24,26,.1); }
-.card-top { display: flex; justify-content: space-between; align-items: flex-start; }
-.card-main { display: flex; flex-direction: column; }
-.card-name { font-size: 34rpx; font-weight: 600; color: #1C1415; }
-.card-type { margin-top: 6rpx; font-size: 21rpx; color: #8C827B; }
-.card-status { padding: 5rpx 16rpx; border-radius: 20rpx; font-size: 20rpx; background: #E8F3EC; color: #2E7D4F; }
-.card-status-frozen, .card-status-expired { background: #F3E7E5; color: #9E2A2B; }
-.card-status-exhausted { background: #F1EDE8; color: #6D645D; }
-.card-scope { display: flex; align-items: center; gap: 12rpx; margin-top: 14rpx; padding: 10rpx 16rpx; background: #FAF5F2; border-radius: 12rpx; }
-.card-scope-label { font-size: 20rpx; color: #BA2428; font-weight: 600; padding: 2rpx 8rpx; background: rgba(186,36,40,.08); border-radius: 6rpx; }
-.card-scope-text { font-size: 22rpx; color: #5C524D; }
-.card-balance-row { display: flex; align-items: flex-end; justify-content: space-between; margin-top: 22rpx; padding-top: 20rpx; border-top: 1rpx solid rgba(28,20,21,.06); }
-.card-balance { display: flex; flex-direction: column; }
-.card-balance-num { font-size: 48rpx; font-weight: 600; color: #BA2428; }
-.card-balance-label { margin-top: 4rpx; font-size: 20rpx; color: #8C827B; }
-.card-valid { text-align: right; }
-.card-valid-text { display: block; font-size: 23rpx; color: #2B2629; }
-.card-valid-label { display: block; margin-top: 4rpx; font-size: 20rpx; color: #8C827B; }
-.card-tx { margin-top: 20rpx; padding-top: 16rpx; border-top: 1rpx solid rgba(28,20,21,.06); }
-.card-tx-row { display: flex; align-items: center; justify-content: space-between; font-size: 21rpx; color: #6D645D; padding: 5rpx 0; }
-.card-tx-amount { color: #9E2A2B; }
-.card-tx-date { color: #A79E9A; }
-.cards-bottom-space { height: calc(env(safe-area-inset-bottom) + 120rpx); }
 
-/* ── 年卡身份标识：金色身份条 + 年卡徽章 + 深金卡面 ── */
-.card-item-annual {
-  background: linear-gradient(158deg, #2B241C 0%, #3E3225 52%, #2B241C 100%);
-  border: 1rpx solid rgba(201,162,75,.5);
-  box-shadow: 0 16rpx 40rpx rgba(43,36,28,.28);
+.cards-loading {
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.card-item-annual .card-name { color: #F4E6C4; }
-.card-item-annual .card-type { color: rgba(244,230,196,.6); }
-.card-item-annual .card-balance-num { color: #E9CB82; }
-.card-item-annual .card-balance-label { color: rgba(244,230,196,.55); }
-.card-item-annual .card-valid-text { color: #F4E6C4; }
-.card-item-annual .card-valid-label { color: rgba(244,230,196,.55); }
-.card-item-annual .card-scope { background: rgba(233,203,130,.1); }
-.card-item-annual .card-scope-label { color: #E9CB82; background: rgba(233,203,130,.16); }
-.card-item-annual .card-scope-text { color: rgba(244,230,196,.85); }
-.card-item-annual .card-balance-row,
-.card-item-annual .card-tx { border-top-color: rgba(233,203,130,.2); }
-.card-item-annual .card-tx-row { color: rgba(244,230,196,.72); }
-.card-item-annual .card-tx-amount { color: #E9CB82; }
-.card-item-annual .card-tx-date { color: rgba(244,230,196,.45); }
-.card-item-annual .card-status { background: rgba(233,203,130,.16); color: #E9CB82; }
-.card-item-annual .card-status-frozen,
-.card-item-annual .card-status-expired { background: rgba(158,42,43,.24); color: #F0B9B0; }
+
+.cards-loading-text {
+  font-size: 26rpx;
+  color: #7A7068;
+}
+
+.cards-hero {
+  padding: 4rpx 8rpx 32rpx;
+}
+
+.cards-eyebrow {
+  display: block;
+  font-size: 20rpx;
+  font-weight: 500;
+  letter-spacing: 4rpx;
+  color: #7A7068;
+}
+
+.cards-title {
+  display: block;
+  margin-top: 12rpx;
+  font-size: 50rpx;
+  font-weight: 600;
+  color: #231F1D;
+  letter-spacing: -0.5rpx;
+}
+
+.cards-error {
+  background: #FBEBE8;
+  border: 1rpx solid #E8B4AD;
+  border-radius: 18rpx;
+  padding: 20rpx 24rpx;
+  margin-bottom: 20rpx;
+}
+
+.cards-error-text {
+  font-size: 24rpx;
+  color: #9B4A3F;
+}
+
+.cards-empty {
+  background: #FFFFFF;
+  border: 1rpx dashed #E6E0D6;
+  border-radius: 24rpx;
+  padding: 48rpx 36rpx;
+  text-align: center;
+}
+
+.cards-empty-title {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #231F1D;
+}
+
+.cards-empty-body {
+  display: block;
+  margin-top: 14rpx;
+  font-size: 24rpx;
+  line-height: 1.8;
+  color: #7A7068;
+}
+
+/* 常规卡片 */
+.card-item {
+  background: #FFFFFF;
+  border: 1rpx solid #E6E0D6;
+  border-radius: 26rpx;
+  padding: 30rpx 28rpx;
+  margin-bottom: 22rpx;
+  box-shadow: 0 4rpx 16rpx rgba(35, 31, 29, 0.04);
+}
+
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.card-main {
+  display: flex;
+  flex-direction: column;
+}
+
+.card-name-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.card-name {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #231F1D;
+  letter-spacing: -0.2rpx;
+}
+
+.card-type {
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  color: #7A7068;
+}
+
+.card-status {
+  padding: 6rpx 18rpx;
+  border-radius: 20rpx;
+  font-size: 20rpx;
+  font-weight: 500;
+  background: #EBF3ED;
+  color: #2E6B47;
+}
+
+.card-status-frozen,
+.card-status-expired {
+  background: #FBEBE8;
+  color: #9B4A3F;
+}
+
+.card-status-exhausted {
+  background: #EFECE6;
+  color: #7A7068;
+}
+
+.card-scope {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-top: 16rpx;
+  padding: 10rpx 16rpx;
+  background: #F7F4EE;
+  border: 1rpx solid #E6E0D6;
+  border-radius: 12rpx;
+}
+
+.card-scope-label {
+  font-size: 20rpx;
+  color: #9B4A3F;
+  font-weight: 600;
+  padding: 2rpx 8rpx;
+  background: rgba(155, 74, 63, 0.08);
+  border-radius: 6rpx;
+}
+
+.card-scope-text {
+  font-size: 22rpx;
+  color: #5C524D;
+}
+
+.card-balance-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-top: 24rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid #E6E0D6;
+}
+
+.card-balance {
+  display: flex;
+  flex-direction: column;
+}
+
+.card-balance-num {
+  font-size: 48rpx;
+  font-weight: 600;
+  color: #9B4A3F;
+  line-height: 1.1;
+}
+
+.card-balance-label {
+  margin-top: 6rpx;
+  font-size: 20rpx;
+  color: #7A7068;
+}
+
+.card-valid {
+  text-align: right;
+}
+
+.card-valid-text {
+  display: block;
+  font-size: 24rpx;
+  font-weight: 500;
+  color: #231F1D;
+}
+
+.card-valid-label {
+  display: block;
+  margin-top: 4rpx;
+  font-size: 20rpx;
+  color: #7A7068;
+}
+
+.card-tx {
+  margin-top: 20rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid #E6E0D6;
+}
+
+.card-tx-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 21rpx;
+  color: #7A7068;
+  padding: 6rpx 0;
+}
+
+.card-tx-amount {
+  color: #9B4A3F;
+  font-weight: 500;
+}
+
+.card-tx-date {
+  color: #A79E9A;
+}
+
+.cards-bottom-space {
+  height: calc(env(safe-area-inset-bottom) + 120rpx);
+}
+
+/* ── 年卡静奢黑檀面：沉檀木黑 + 柔润岩灰边框 + 陶赭朱砂徽章 ── */
+.card-item-annual {
+  background: #231F1D;
+  border: 1rpx solid rgba(230, 224, 214, 0.18);
+  box-shadow: 0 12rpx 32rpx rgba(35, 31, 29, 0.22);
+}
+
 .card-annual-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: -28rpx -28rpx 22rpx;
+  margin: -30rpx -28rpx 22rpx;
   padding: 16rpx 28rpx 14rpx;
-  background: linear-gradient(96deg, #C9A24B 0%, #E9CB82 46%, #B8893B 100%);
+  background: rgba(247, 244, 238, 0.06);
+  border-bottom: 1rpx solid rgba(230, 224, 214, 0.1);
   border-radius: 26rpx 26rpx 0 0;
 }
-.card-annual-bar-text { font-size: 22rpx; font-weight: 600; letter-spacing: 3rpx; color: #26201A; }
-.card-annual-bar-en { font-size: 18rpx; letter-spacing: 4rpx; color: rgba(38,32,26,.6); }
-.card-name-row { display: flex; align-items: center; }
+
+.card-annual-bar-text {
+  font-size: 22rpx;
+  font-weight: 500;
+  letter-spacing: 3rpx;
+  color: #F7F4EE;
+}
+
+.card-annual-bar-en {
+  font-size: 18rpx;
+  letter-spacing: 4rpx;
+  color: rgba(247, 244, 238, 0.5);
+}
+
+.card-item-annual .card-name {
+  color: #F7F4EE;
+}
+
+.card-item-annual .card-type {
+  color: rgba(247, 244, 238, 0.6);
+}
+
 .card-annual-badge {
-  margin-left: 12rpx;
   padding: 2rpx 12rpx;
   border-radius: 8rpx;
   font-size: 18rpx;
   font-weight: 600;
   letter-spacing: 1rpx;
-  color: #26201A;
-  background: linear-gradient(135deg, #F0D79B 0%, #C9A24B 100%);
+  color: #F7F4EE;
+  background: #9B4A3F;
 }
+
+.card-item-annual .card-balance-num {
+  color: #F7F4EE;
+}
+
+.card-item-annual .card-balance-label {
+  color: rgba(247, 244, 238, 0.55);
+}
+
+.card-item-annual .card-valid-text {
+  color: #F7F4EE;
+}
+
+.card-item-annual .card-valid-label {
+  color: rgba(247, 244, 238, 0.55);
+}
+
+.card-item-annual .card-scope {
+  background: rgba(247, 244, 238, 0.06);
+  border-color: rgba(247, 244, 238, 0.1);
+}
+
+.card-item-annual .card-scope-label {
+  color: #F7F4EE;
+  background: rgba(155, 74, 63, 0.4);
+}
+
+.card-item-annual .card-scope-text {
+  color: rgba(247, 244, 238, 0.85);
+}
+
+.card-item-annual .card-balance-row,
+.card-item-annual .card-tx {
+  border-top-color: rgba(230, 224, 214, 0.12);
+}
+
+.card-item-annual .card-tx-row {
+  color: rgba(247, 244, 238, 0.7);
+}
+
+.card-item-annual .card-tx-amount {
+  color: #F7F4EE;
+}
+
+.card-item-annual .card-tx-date {
+  color: rgba(247, 244, 238, 0.45);
+}
+
+.card-item-annual .card-status {
+  background: rgba(247, 244, 238, 0.12);
+  color: #F7F4EE;
+  border: 1rpx solid rgba(247, 244, 238, 0.2);
+}
+
+.card-item-annual .card-status-frozen,
+.card-item-annual .card-status-expired {
+  background: rgba(155, 74, 63, 0.25);
+  color: #F7F4EE;
+}
+
 .card-annual-footer {
-  margin-top: 18rpx;
+  margin-top: 20rpx;
   padding-top: 14rpx;
-  border-top: 1rpx dashed rgba(233,203,130,.26);
+  border-top: 1rpx dashed rgba(230, 224, 214, 0.15);
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-.card-annual-footer-text { font-size: 19rpx; letter-spacing: 2rpx; color: rgba(233,203,130,.72); }
+
+.card-annual-footer-text {
+  font-size: 19rpx;
+  letter-spacing: 2rpx;
+  color: rgba(247, 244, 238, 0.55);
+}
