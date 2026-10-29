@@ -106,13 +106,7 @@ export async function POST(request: NextRequest) {
 
     if (validOtherCards.length > 0) {
       // 有有效卡，但该卡无权约本课
-      const allowedCardTypes = await rawSql`
-        SELECT ct.name FROM card_types ct
-        JOIN card_type_courses ctc ON ctc.card_type_id = ct.id
-        WHERE ctc.course_category_id = ${session.course_category_id} AND ct.is_active = 1
-      `;
-      const allowedNames = allowedCardTypes.map((r: any) => r.name).join("或");
-      return bad(`这张卡不能约${session.course_name}，请使用${allowedNames || "对应专属卡"}或联系小桥`, 422);
+      return bad(`这张卡不能约${session.course_name}，如想升级卡项可与小桥联系`, 422);
     }
 
     // b. 检查是否有历史卡（过期、冻结、次数耗尽）

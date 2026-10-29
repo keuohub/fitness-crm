@@ -230,12 +230,16 @@ Page({
               that.loadAll();
             } else {
               var msg = (res.data && res.data.error) || "预约失败";
+              if (msg.indexOf("不能约") !== -1 && (msg.indexOf("请使用") !== -1 || msg.indexOf("如想升级卡项") !== -1)) {
+                var match = msg.match(/(这张卡不能约[^，,]+)/);
+                msg = (match ? match[1] : "当前卡项不能预约该课程") + "，如想升级卡项可与小桥联系";
+              }
               wx.showModal({
                 title: "预约提示",
                 content: msg,
                 showCancel: false,
                 confirmText: "我知道了",
-                confirmColor: "#8A1F17"
+                confirmColor: "#9B4A3F"
               });
             }
           },
