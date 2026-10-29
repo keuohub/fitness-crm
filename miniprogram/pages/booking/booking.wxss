@@ -1,11 +1,12 @@
 /* pages/booking/booking.wxss
    徕舞女子塑形 · 会员约课系统
-   轻奢暖沙原调 · 无紫色 · 吸顶分类与周历 · 黄金三栏图文排版
+   静奢燕麦象牙底色 #F7F4EE / 沉檀木黑 #231F1D / 陶赭朱砂 #9B4A3F / 柔润岩灰 #E6E0D6
+   吸顶分类与周历 · 黄金三栏图文排版 · 移动端高屏效与触控工学
    ============================================================ */
 
 page {
-  background-color: #F6E6DA;
-  color: #1C1415;
+  background-color: #F7F4EE;
+  color: #231F1D;
   font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -20,10 +21,10 @@ page {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(246, 230, 218, 0.96);
+  background: rgba(247, 244, 238, 0.96);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1rpx solid rgba(28, 20, 21, 0.06);
+  border-bottom: 1rpx solid #E6E0D6;
 }
 
 /* 自定义导航标题（避让灵动岛） */
@@ -41,7 +42,7 @@ page {
   font-size: 32rpx;
   font-weight: 600;
   letter-spacing: 2rpx;
-  color: #1C1415;
+  color: #231F1D;
 }
 
 /* 一级分类导航 Tab */
@@ -49,7 +50,7 @@ page {
   display: flex;
   align-items: center;
   justify-content: space-around;
-  padding: 8rpx 24rpx 14rpx;
+  padding: 8rpx 20rpx 14rpx;
 }
 
 .bk-cat-tab {
@@ -61,29 +62,30 @@ page {
 }
 
 .bk-cat-label {
-  font-size: 29rpx;
+  font-size: 28rpx;
   font-weight: 500;
   color: #7A7068;
+  letter-spacing: 0.5rpx;
   transition: color 0.2s ease;
 }
 
 .bk-cat-active .bk-cat-label {
-  color: #0D0C0F;
-  font-weight: 700;
+  color: #231F1D;
+  font-weight: 600;
 }
 
 .bk-cat-bar {
   margin-top: 8rpx;
-  width: 44rpx;
+  width: 36rpx;
   height: 5rpx;
-  background: #0D0C0F;
+  background: #9B4A3F;
   border-radius: 4rpx;
 }
 
 /* 单行周历横滑条 */
 .bk-dates-scroll {
   white-space: nowrap;
-  padding: 10rpx 0 20rpx;
+  padding: 8rpx 0 20rpx;
 }
 
 .bk-dates-row {
@@ -101,9 +103,9 @@ page {
   height: 118rpx;
   margin-right: 14rpx;
   border-radius: 20rpx;
-  background: rgba(255, 255, 255, 0.65);
-  border: 1rpx solid rgba(255, 255, 255, 0.8);
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.03);
+  background: #FFFFFF;
+  border: 1rpx solid #E6E0D6;
+  box-shadow: 0 2rpx 8rpx rgba(35, 31, 29, 0.02);
   transition: all 0.2s cubic-bezier(0.2, 0.8, 0.25, 1);
 }
 
@@ -119,28 +121,28 @@ page {
 
 .bk-date-daynum {
   margin-top: 6rpx;
-  font-size: 24rpx;
+  font-size: 26rpx;
   font-weight: 600;
-  color: #1C1415;
+  color: #231F1D;
 }
 
-/* 选中高亮日期：曜黑胶囊底 + 暖金微点 */
+/* 选中高亮日期：沉檀木黑胶囊底 + 陶赭朱砂微点 */
 .bk-date-active {
-  background: #0D0C0F !important;
-  border-color: #0D0C0F !important;
-  box-shadow: 0 8rpx 20rpx -4rpx rgba(13, 12, 15, 0.35);
+  background: #231F1D !important;
+  border-color: #231F1D !important;
+  box-shadow: 0 8rpx 20rpx rgba(35, 31, 29, 0.2);
 }
 
 .bk-date-active .bk-date-weekday,
 .bk-date-active .bk-date-daynum {
-  color: #F6E6DA !important;
+  color: #F7F4EE !important;
 }
 
 .bk-date-dot {
   width: 6rpx;
   height: 6rpx;
   border-radius: 50%;
-  background: #C59A45;
+  background: #9B4A3F;
   margin-top: 6rpx;
 }
 
@@ -172,38 +174,39 @@ page {
 
 .bk-alert-error {
   background: #FDF2F1;
-  color: #9E2A2B;
-  border: 1rpx solid #F5C6CB;
+  color: #9B4A3F;
+  border: 1rpx solid #E8C8C5;
 }
 
 .bk-nocard {
   margin-bottom: 24rpx;
-  padding: 22rpx 26rpx;
-  border-radius: 18rpx;
-  background: rgba(255, 255, 255, 0.85);
-  border: 1rpx solid #E8D3BF;
-  box-shadow: 0 4rpx 14rpx rgba(0, 0, 0, 0.03);
+  padding: 24rpx 28rpx;
+  border-radius: 20rpx;
+  background: #FFFFFF;
+  border: 1rpx solid #E6E0D6;
+  box-shadow: 0 4rpx 14rpx rgba(35, 31, 29, 0.03);
 }
 
 .bk-nocard-title {
   display: block;
   font-size: 26rpx;
   font-weight: 600;
-  color: #8A5A32;
+  color: #9B4A3F;
+  letter-spacing: 0.5rpx;
 }
 
 .bk-nocard-body {
   display: block;
   margin-top: 8rpx;
   font-size: 23rpx;
-  color: #A2764F;
+  color: #7A7068;
   line-height: 1.6;
 }
 
 /* 空状态 */
 .bk-empty {
-  background: rgba(255, 255, 255, 0.7);
-  border: 1rpx dashed rgba(140, 130, 123, 0.35);
+  background: #FFFFFF;
+  border: 1rpx dashed #D9D2C7;
   border-radius: 24rpx;
   padding: 60rpx 40rpx;
   text-align: center;
@@ -214,7 +217,7 @@ page {
   display: block;
   font-size: 28rpx;
   font-weight: 600;
-  color: #1C1415;
+  color: #231F1D;
 }
 
 .bk-empty-body {
@@ -224,7 +227,7 @@ page {
   color: #8C827B;
 }
 
-/* ── 核心三栏课程卡片 ── */
+/* ── 核心三栏课程卡片：舒展防挤压排版 ── */
 .bk-list {
   display: flex;
   flex-direction: column;
@@ -232,23 +235,24 @@ page {
 
 .bk-card {
   background: #FFFFFF;
-  border-radius: 22rpx;
-  padding: 20rpx 24rpx;
+  border-radius: 24rpx;
+  padding: 22rpx 24rpx;
   margin-bottom: 20rpx;
   display: flex;
   align-items: center;
-  box-shadow: 0 6rpx 20rpx rgba(28, 20, 21, 0.045);
-  border: 1rpx solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4rpx 16rpx rgba(35, 31, 29, 0.035);
+  border: 1rpx solid #E6E0D6;
 }
 
 /* 左栏：封面 */
 .bk-card-cover-wrap {
-  width: 156rpx;
-  height: 196rpx;
+  width: 148rpx;
+  height: 188rpx;
   border-radius: 16rpx;
   overflow: hidden;
   flex-shrink: 0;
-  background: #EFE6DE;
+  background: #F7F4EE;
+  border: 1rpx solid #F0ECE4;
 }
 
 .bk-card-cover {
@@ -261,19 +265,19 @@ page {
 .bk-card-info {
   flex: 1;
   min-width: 0;
-  height: 196rpx;
-  margin-left: 22rpx;
+  height: 188rpx;
+  margin-left: 20rpx;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 6rpx 0;
+  padding: 4rpx 0;
   box-sizing: border-box;
 }
 
 .bk-card-name {
-  font-size: 30rpx;
-  font-weight: 700;
-  color: #1C1415;
+  font-size: 29rpx;
+  font-weight: 600;
+  color: #231F1D;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -293,7 +297,7 @@ page {
 }
 
 .bk-star {
-  font-size: 24rpx;
+  font-size: 22rpx;
   line-height: 1;
 }
 
@@ -302,29 +306,33 @@ page {
 }
 
 .bk-star-gray {
-  color: #D6CEC8;
+  color: #E2DDD6;
 }
 
 .bk-remain-tag {
-  font-size: 21rpx;
+  font-size: 20rpx;
   color: #7A7068;
+  background: #F7F4EE;
+  padding: 2rpx 10rpx;
+  border-radius: 6rpx;
 }
 
 .bk-remain-full {
-  color: #9E2A2B;
-  font-weight: 600;
+  color: #9B4A3F;
+  background: rgba(155, 74, 63, 0.08);
+  font-weight: 500;
 }
 
 .bk-card-coach-row {
   display: flex;
   align-items: center;
-  font-size: 24rpx;
-  color: #8C827B;
+  font-size: 23rpx;
+  color: #7A7068;
 }
 
 .bk-coach-name {
   font-weight: 500;
-  color: #4A423D;
+  color: #231F1D;
 }
 
 .bk-room-name {
@@ -334,24 +342,25 @@ page {
 /* 右栏：大字时间与按钮 */
 .bk-card-action {
   flex-shrink: 0;
-  height: 196rpx;
+  height: 188rpx;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   justify-content: space-between;
-  padding: 6rpx 0;
+  padding: 4rpx 0;
   box-sizing: border-box;
-  margin-left: 12rpx;
+  margin-left: 14rpx;
 }
 
 .bk-card-time {
-  font-size: 28rpx;
-  font-weight: 700;
-  color: #1C1415;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #231F1D;
   letter-spacing: -0.5rpx;
+  font-family: -apple-system, BlinkMacSystemFont, "Cinzel", "Plus Jakarta Sans", sans-serif;
 }
 
-/* 按钮状态规范（曜黑胶囊底 / 预约红 / 灰色停用） */
+/* 按钮状态规范（陶赭朱砂底 / 预约红 / 灰色停用） */
 .bk-btn {
   border-radius: 36rpx;
   display: inline-flex;
@@ -365,23 +374,23 @@ page {
 }
 
 .bk-btn-primary {
-  padding: 12rpx 36rpx;
-  background: #0D0C0F;
-  color: #F6E6DA;
-  box-shadow: 0 4rpx 14rpx rgba(13, 12, 15, 0.25);
+  padding: 12rpx 32rpx;
+  background: #9B4A3F;
+  color: #F7F4EE;
+  box-shadow: 0 4rpx 14rpx rgba(155, 74, 63, 0.25);
 }
 
 .bk-btn-primary .bk-btn-text {
-  font-size: 24rpx;
+  font-size: 23rpx;
   font-weight: 600;
-  letter-spacing: 2rpx;
+  letter-spacing: 1.5rpx;
 }
 
 .bk-btn-booked {
-  padding: 10rpx 28rpx;
-  background: #FDF2F1;
-  color: #8A1F17;
-  border: 1.5rpx solid #E0C9C5;
+  padding: 10rpx 26rpx;
+  background: rgba(155, 74, 63, 0.08);
+  color: #9B4A3F;
+  border: 1.5rpx solid rgba(155, 74, 63, 0.25);
 }
 
 .bk-btn-booked .bk-btn-text {
@@ -390,13 +399,13 @@ page {
 }
 
 .bk-btn-disabled {
-  padding: 12rpx 32rpx;
-  background: #EAE4DE;
-  color: #A79E9A;
+  padding: 12rpx 30rpx;
+  background: #EFEBE4;
+  color: #A8A099;
 }
 
 .bk-btn-disabled .bk-btn-text {
-  font-size: 24rpx;
+  font-size: 23rpx;
   font-weight: 500;
 }
 
@@ -416,24 +425,26 @@ page {
 
 .bk-my-title {
   font-size: 28rpx;
-  font-weight: 700;
-  color: #1C1415;
+  font-weight: 600;
+  color: #231F1D;
+  letter-spacing: 0.5rpx;
 }
 
 .bk-my-badge {
   font-size: 21rpx;
-  color: #8C827B;
+  color: #7A7068;
 }
 
 .bk-my-card {
-  background: rgba(255, 255, 255, 0.9);
+  background: #FFFFFF;
+  border: 1rpx solid #E6E0D6;
   border-radius: 20rpx;
   padding: 22rpx 24rpx;
   margin-bottom: 14rpx;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.03);
+  box-shadow: 0 4rpx 12rpx rgba(35, 31, 29, 0.025);
 }
 
 .bk-my-main {
@@ -444,23 +455,23 @@ page {
 
 .bk-my-course {
   font-size: 27rpx;
-  font-weight: 700;
-  color: #1C1415;
+  font-weight: 600;
+  color: #231F1D;
 }
 
 .bk-my-meta {
   margin-top: 6rpx;
   font-size: 21rpx;
-  color: #8C827B;
+  color: #7A7068;
 }
 
 .bk-my-cancel {
   padding: 8rpx 22rpx;
   border-radius: 28rpx;
-  border: 1rpx solid #E0C9C5;
-  color: #8A1F17;
+  border: 1rpx solid rgba(155, 74, 63, 0.3);
+  color: #9B4A3F;
   font-size: 21rpx;
-  background: #FDF2F1;
+  background: rgba(155, 74, 63, 0.06);
 }
 
 /* ── 底部安全间距，确保彻底避让自定义 TabBar ── */
