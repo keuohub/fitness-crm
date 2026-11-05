@@ -23,35 +23,35 @@ var OFFERINGS_DATA = [
     name: "精选普拉提",
     summary: "深层核心唤醒 · 脊柱逐节舒展 · 呼吸优雅重构",
     highlight: "沉浸于轻柔专注的呼吸律动中，由内而外唤醒深层盆底肌与腹横肌，释放肩颈与背部日常紧绷，重塑轻盈挺拔的女性仪态与柔韧力量。",
-    imageUrl: "/images/courses_original/pilates.png"
+    imageUrl: "/images/courses_original/pilates.jpg"
   },
   {
     id: 2,
     name: "高定大器械",
     summary: "德国原木核心床 · 弹簧离心雕刻 · 关节零负担延展",
     highlight: "在高精度弹簧阻力的精妙对抗中，精准激活日常难以触及的深层细小肌群，重塑纤细修长线条，重获骨盆中立与挺拔流畅的力学美感。",
-    imageUrl: "/images/courses_original/equipment.png"
+    imageUrl: "/images/courses_original/equipment.jpg"
   },
   {
     id: 3,
     name: "维密减脂超模班",
     summary: "间歇心率节律 · 天鹅颈直角肩雕刻 · 臀腿比例重塑",
     highlight: "结合普拉提精细控制与轻盈燃脂节律，集中雕琢锁骨线条、天鹅颈与紧致腰腹弧度，提拉紧致下半身线条，收获如超模般舒展挺拔的从容气场。",
-    imageUrl: "/images/courses_original/fat_burn.png"
+    imageUrl: "/images/courses_original/fat_burn.jpg"
   },
   {
     id: 5,
     name: "私教",
     summary: "主理团队全维度定制 · 专属体态档案 · 一对一私享雕琢",
     highlight: "专注你的每一次呼吸节律与发力细节，根据个人身体状态与周期节奏量身定制专属方案，用细腻手感与专业口令，陪伴你见证身体的每一次从容蜕变。",
-    imageUrl: "/images/courses_original/private.png"
+    imageUrl: "/images/courses_original/private.jpg"
   },
   {
     id: 4,
     name: "瑜伽",
     summary: "经络柔韧流转 · 正念深层觉知 · 身心沉静滋养",
     highlight: "在静谧温润的氛围中跟随呼吸舒展全身筋膜，平复日常繁杂情绪与疲惫，赋予关节深层润泽与舒展，唤醒身体内在的平衡与宁静之美。",
-    imageUrl: "/images/courses_original/yoga.png"
+    imageUrl: "/images/courses_original/yoga.jpg"
   }
 ];
 
@@ -189,11 +189,11 @@ Page({
             var name = o.name || "";
             var finalImg = rawImg;
             // 优先使用用户后台上传的 100% 原始课程实拍大图（绝不改格式、绝不加模糊滤镜）
-            if (name.indexOf("普拉提") >= 0) finalImg = "/images/courses_original/pilates.png";
-            else if (name.indexOf("器械") >= 0) finalImg = "/images/courses_original/equipment.png";
-            else if (name.indexOf("超模") >= 0 || name.indexOf("减脂") >= 0) finalImg = "/images/courses_original/fat_burn.png";
-            else if (name.indexOf("瑜伽") >= 0) finalImg = "/images/courses_original/yoga.png";
-            else if (name.indexOf("私教") >= 0) finalImg = "/images/courses_original/private.png";
+            if (name.indexOf("普拉提") >= 0) finalImg = "/images/courses_original/pilates.jpg";
+            else if (name.indexOf("器械") >= 0) finalImg = "/images/courses_original/equipment.jpg";
+            else if (name.indexOf("超模") >= 0 || name.indexOf("减脂") >= 0) finalImg = "/images/courses_original/fat_burn.jpg";
+            else if (name.indexOf("瑜伽") >= 0) finalImg = "/images/courses_original/yoga.jpg";
+            else if (name.indexOf("私教") >= 0) finalImg = "/images/courses_original/private.jpg";
             return {
               id: o.id,
               name: o.name,
