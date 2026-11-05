@@ -57,3 +57,6 @@ docs/D5_仓库与凭据提示_20261023.md
 make_wps_doc.py
 .d6d-edge.mjs
 public/brand/stars_backup/
+
+# 55MB 陈旧副本（10-28 备份），不纳入版本管理
+/fitness-crm/
