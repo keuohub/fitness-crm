@@ -5,15 +5,15 @@
    ============================================================ */
 
 page {
-  background-color: #F6E6DA;
-  color: #1C1415;
-  font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+  background-color: #f3efe8;
+  color: var(--c-text, #3D3538);
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
 
 .mgr-page {
   min-height: 100vh;
-  padding: calc(env(safe-area-inset-top) + 94rpx) 30rpx calc(env(safe-area-inset-bottom) + 60rpx);
+  padding: calc(env(safe-area-inset-top) + 94rpx) 30rpx calc(104rpx + 16rpx + env(safe-area-inset-bottom) + 40rpx);
   box-sizing: border-box;
 }
 
@@ -25,14 +25,14 @@ page {
   right: 0;
   height: calc(env(safe-area-inset-top) + 88rpx);
   padding-top: env(safe-area-inset-top);
-  background: #F6E6DA;
+  background: var(--c-bg, #ffffff);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding-left: 24rpx;
   padding-right: 24rpx;
   z-index: 100;
-  border-bottom: 1rpx solid rgba(28, 20, 21, 0.08);
+  border-bottom: 1rpx solid var(--c-line, #E6DDD4);
 }
 
 .mgr-nav-left {
@@ -47,13 +47,13 @@ page {
 .mgr-nav-back {
   font-size: 36rpx;
   line-height: 1;
-  color: #0D0C0F;
+  color: #000000;
 }
 
 .mgr-nav-back-text {
   font-size: 22rpx;
   font-weight: 600;
-  color: #0D0C0F;
+  color: #000000;
 }
 
 .mgr-nav-title {
@@ -65,14 +65,14 @@ page {
 .mgr-nav-brand {
   font-size: 30rpx;
   font-weight: 700;
-  color: #0D0C0F;
+  color: #000000;
   letter-spacing: 0.5rpx;
 }
 
 .mgr-nav-badge {
   font-size: 18rpx;
   color: #F6E6DA;
-  background: #0D0C0F;
+  background: #000000;
   border: 1rpx solid #B89358;
   padding: 2rpx 10rpx;
   border-radius: 6rpx;
@@ -87,7 +87,7 @@ page {
 
 .mgr-nav-home-pill {
   font-size: 20rpx;
-  color: #0D0C0F;
+  color: #000000;
   background: rgba(184, 147, 88, 0.2);
   border: 1rpx solid rgba(184, 147, 88, 0.5);
   padding: 6rpx 16rpx;
@@ -147,7 +147,7 @@ page {
 /* 顶部黑金头图卡 */
 .mgr-hero-card {
   margin-top: 14rpx;
-  background: linear-gradient(135deg, #1A191D 0%, #0D0C0F 100%);
+  background: #000000;
   border-radius: 24rpx;
   padding: 28rpx 30rpx;
   border: 1rpx solid rgba(184, 147, 88, 0.35);
@@ -224,7 +224,7 @@ page {
 .mgr-stat-num {
   font-size: 44rpx;
   font-weight: 800;
-  color: #0D0C0F;
+  color: #000000;
   line-height: 1;
   margin-bottom: 10rpx;
 }
@@ -358,7 +358,7 @@ page {
 .mgr-grid-title {
   font-size: 28rpx;
   font-weight: 700;
-  color: #0D0C0F;
+  color: #000000;
 }
 
 .mgr-grid-note {
@@ -393,26 +393,29 @@ page {
   margin-bottom: 12rpx;
 }
 
-.bg-gold { background: linear-gradient(135deg, #B89358 0%, #927038 100%); }
-.bg-blue { background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%); }
-.bg-purple { background: linear-gradient(135deg, #4A5568 0%, #2D3748 100%); }
-.bg-green { background: linear-gradient(135deg, #16A34A 0%, #15803D 100%); }
-.bg-amber { background: linear-gradient(135deg, #D97706 0%, #B45309 100%); }
-.bg-slate { background: linear-gradient(135deg, #64748B 0%, #475569 100%); }
-.bg-orange { background: linear-gradient(135deg, #EA580C 0%, #C2410C 100%); }
-.bg-sky { background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%); }
-.bg-rose { background: linear-gradient(135deg, #E11D48 0%, #BE123C 100%); }
+.bg-gold,
+.bg-blue,
+.bg-purple,
+.bg-green,
+.bg-amber,
+.bg-slate,
+.bg-orange,
+.bg-sky,
+.bg-rose {
+  background: #ffffff;
+  border: 1px solid #ece7df;
+}
 
 .mgr-item-char {
-  color: #FFFFFF;
-  font-size: 28rpx;
-  font-weight: 700;
+  color: #000000;
+  font-size: 32rpx;
+  font-weight: 600;
 }
 
 .mgr-item-title {
   font-size: 24rpx;
   font-weight: 600;
-  color: #0D0C0F;
+  color: #000000;
   margin-bottom: 4rpx;
 }
 
@@ -441,7 +444,7 @@ page {
 .mgr-switch-text {
   font-size: 26rpx;
   font-weight: 700;
-  color: #0D0C0F;
+  color: #000000;
 }
 
 .mgr-switch-note {
@@ -469,7 +472,7 @@ page {
 .mgr-sub-view-title {
   font-size: 32rpx;
   font-weight: 800;
-  color: #0D0C0F;
+  color: #000000;
 }
 
 .mgr-sub-view-sub {
@@ -480,7 +483,7 @@ page {
 
 .mgr-date-pick-badge {
   font-size: 22rpx;
-  color: #0D0C0F;
+  color: #000000;
   background: rgba(184, 147, 88, 0.25);
   border: 1rpx solid rgba(184, 147, 88, 0.6);
   padding: 8rpx 18rpx;
@@ -510,8 +513,8 @@ page {
 }
 
 .tab-active {
-  background: #0D0C0F;
-  border-color: #B89358;
+  background: #000000;
+  border-color: #000000;
 }
 
 .mgr-tab-day {
@@ -521,13 +524,13 @@ page {
 }
 
 .tab-active .mgr-tab-day {
-  color: #B89358;
+  color: #ffffff;
 }
 
 .mgr-tab-date {
   font-size: 24rpx;
   font-weight: 700;
-  color: #0D0C0F;
+  color: #000000;
 }
 
 .tab-active .mgr-tab-date {
@@ -566,7 +569,7 @@ page {
 .mgr-empty-title {
   font-size: 28rpx;
   font-weight: 700;
-  color: #0D0C0F;
+  color: #000000;
   display: block;
   margin-bottom: 10rpx;
 }
@@ -585,7 +588,7 @@ page {
 
 .mgr-empty-action-btn {
   display: inline-block;
-  background: #0D0C0F;
+  background: #000000;
   color: #F6E6DA;
   border: 1rpx solid #B89358;
   font-size: 24rpx;
@@ -625,7 +628,7 @@ page {
 .mgr-time-val {
   font-size: 24rpx;
   font-weight: 700;
-  color: #0D0C0F;
+  color: #000000;
 }
 
 .mgr-room-tag {
@@ -647,7 +650,7 @@ page {
 .mgr-session-title {
   font-size: 30rpx;
   font-weight: 700;
-  color: #0D0C0F;
+  color: #000000;
 }
 
 .mgr-coach-name {
@@ -674,7 +677,7 @@ page {
 .mgr-cap-val {
   font-size: 24rpx;
   font-weight: 700;
-  color: #0D0C0F;
+  color: #000000;
 }
 
 .text-full {
@@ -723,7 +726,7 @@ page {
   width: 44rpx;
   height: 44rpx;
   border-radius: 50%;
-  background: #0D0C0F;
+  background: #000000;
   color: #F6E6DA;
   font-size: 20rpx;
   font-weight: 700;
@@ -741,7 +744,7 @@ page {
 .mgr-att-name {
   font-size: 24rpx;
   font-weight: 700;
-  color: #0D0C0F;
+  color: #000000;
 }
 
 .mgr-att-meta {
@@ -783,7 +786,7 @@ page {
 .mgr-form-card-title {
   font-size: 28rpx;
   font-weight: 800;
-  color: #0D0C0F;
+  color: #000000;
   margin-bottom: 20rpx;
 }
 
@@ -827,7 +830,7 @@ page {
   height: 88rpx;
   line-height: 88rpx;
   font-size: 28rpx;
-  color: #0D0C0F;
+  color: #000000;
   font-weight: 500;
   box-sizing: border-box;
   display: flex;
@@ -843,7 +846,7 @@ page {
   height: 88rpx;
   line-height: 88rpx;
   font-size: 28rpx;
-  color: #0D0C0F;
+  color: #000000;
   box-sizing: border-box;
   width: 100%;
 }
@@ -870,7 +873,7 @@ page {
   justify-content: center;
   font-size: 44rpx;
   font-weight: 700;
-  color: #0D0C0F;
+  color: #000000;
 }
 
 .mgr-stepper-btn:active {
@@ -902,7 +905,7 @@ page {
   text-align: center;
   font-size: 38rpx;
   font-weight: 800;
-  color: #0D0C0F;
+  color: #000000;
 }
 
 .mgr-stepper-unit {
@@ -930,8 +933,8 @@ page {
 }
 
 .mgr-cap-pill.pill-active {
-  background: #0D0C0F;
-  border-color: #0D0C0F;
+  background: #000000;
+  border-color: #000000;
   color: #F6E6DA;
   font-weight: 600;
 }
@@ -942,7 +945,7 @@ page {
   border-radius: 14rpx;
   padding: 20rpx 24rpx;
   font-size: 24rpx;
-  color: #0D0C0F;
+  color: #000000;
   box-sizing: border-box;
   width: 100%;
   height: 140rpx;
@@ -957,7 +960,7 @@ page {
 .flex-1 { flex: 1; }
 
 .mgr-primary-btn {
-  background: linear-gradient(135deg, #1A191D 0%, #0D0C0F 100%);
+  background: #000000;
   color: #F6E6DA;
   border: 1rpx solid #B89358;
   border-radius: 16rpx;
@@ -1012,7 +1015,7 @@ page {
 }
 
 .mgr-type-pill.pill-active {
-  background: #0D0C0F;
+  background: #000000;
   border-color: #B89358;
   color: #F6E6DA;
   font-weight: 700;
@@ -1027,7 +1030,7 @@ page {
 .mgr-headline-text {
   font-size: 26rpx;
   font-weight: 700;
-  color: #0D0C0F;
+  color: #000000;
 }
 
 .mgr-schedule-preview-card {
@@ -1047,7 +1050,7 @@ page {
 .mgr-sch-time {
   font-size: 24rpx;
   font-weight: 700;
-  color: #0D0C0F;
+  color: #000000;
 }
 
 .mgr-sch-room {
@@ -1064,7 +1067,7 @@ page {
 .mgr-sch-name {
   font-size: 26rpx;
   font-weight: 700;
-  color: #0D0C0F;
+  color: #000000;
 }
 
 .mgr-sch-coach {
@@ -1132,7 +1135,7 @@ page {
 .mgr-course-name {
   font-size: 28rpx;
   font-weight: 700;
-  color: #0D0C0F;
+  color: #000000;
 }
 
 .mgr-course-tag {
@@ -1193,7 +1196,7 @@ page {
 }
 
 .mgr-search-btn {
-  background: #0D0C0F;
+  background: #000000;
   color: #F6E6DA;
   border: 1rpx solid #B89358;
   padding: 0 32rpx;
@@ -1230,7 +1233,7 @@ page {
   border-radius: 50%;
   background: #FAF3EC;
   border: 1rpx solid #B89358;
-  color: #0D0C0F;
+  color: #000000;
   font-size: 22rpx;
   font-weight: 700;
   display: flex;
@@ -1248,7 +1251,7 @@ page {
 .mgr-member-name {
   font-size: 26rpx;
   font-weight: 700;
-  color: #0D0C0F;
+  color: #000000;
 }
 
 .mgr-member-code-badge {
@@ -1292,7 +1295,7 @@ page {
 .mgr-pill-issue-card {
   font-size: 20rpx;
   color: #F6E6DA;
-  background: #0D0C0F;
+  background: #000000;
   border: 1rpx solid #B89358;
   padding: 4rpx 14rpx;
   border-radius: 8rpx;
@@ -1342,7 +1345,7 @@ page {
 .mgr-card-type-name {
   font-size: 26rpx;
   font-weight: 700;
-  color: #0D0C0F;
+  color: #000000;
 }
 
 .mgr-card-status-badge {
@@ -1398,7 +1401,7 @@ page {
 .mgr-room-name {
   font-size: 28rpx;
   font-weight: 700;
-  color: #0D0C0F;
+  color: #000000;
 }
 
 .mgr-room-cap-badge {
@@ -1475,7 +1478,7 @@ page {
 }
 
 .mgr-engine-card {
-  background: linear-gradient(135deg, #1A191D 0%, #0D0C0F 100%);
+  background: #000000;
   border: 1rpx solid rgba(184, 147, 88, 0.4);
   border-radius: 20rpx;
   padding: 26rpx;

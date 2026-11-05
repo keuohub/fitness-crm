@@ -1,4 +1,8 @@
 {
+  "usingComponents": {},
+  "backgroundColor": "#f3efe8",
+  "navigationBarBackgroundColor": "#f3efe8",
+  "navigationBarTextStyle": "black",
   "navigationBarTitleText": "小桥的来信",
-  "backgroundColor": "#FAFAFA"
+  "backgroundTextStyle": "dark"
 }

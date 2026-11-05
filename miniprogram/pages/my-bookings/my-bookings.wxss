@@ -1,0 +1,220 @@
+/* pages/my-bookings/my-bookings.wxss */
+.my-page {
+  min-height: 100vh;
+  background-color: #c9c3b9;
+  color: var(--c-text, #222222);
+  font-family: var(--font-sans);
+  box-sizing: border-box;
+}
+
+/* 顶部简明卡次条 */
+.my-header-bar {
+  padding: 16rpx 32rpx 14rpx;
+  background: var(--c-card-soft, #efeae2);
+}
+
+.my-header-card-text {
+  font-size: var(--fs-caption, 24rpx);
+  color: var(--c-muted, #666666);
+  font-family: var(--font-num);
+}
+
+/* 顶部细线分段 Tab 栏 */
+.my-tabs {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background: #ffffff;
+  border-bottom: 1rpx solid var(--c-line, #ece7df);
+  height: 88rpx;
+}
+
+.my-tab {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.my-tab-label {
+  font-size: var(--fs-body, 28rpx);
+  color: var(--c-hint, #999999);
+  transition: color var(--dur-fast, 150ms) var(--ease, ease);
+}
+
+.my-tab-active .my-tab-label {
+  color: var(--c-title, #000000);
+  font-weight: 600;
+}
+
+.my-tab-line {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 48rpx;
+  height: 4rpx;
+  background: #000000;
+  border-radius: 0;
+}
+
+/* 骨架屏 */
+.my-skeleton-wrap {
+  padding: 24rpx 32rpx;
+}
+
+.my-sk-item {
+  height: 160rpx;
+  border-radius: 0;
+  margin-bottom: 20rpx;
+}
+
+/* 报错态 */
+.my-error-wrap {
+  padding-top: 120rpx;
+}
+
+.my-error-msg {
+  font-size: var(--fs-body, 28rpx);
+  color: var(--c-muted, #666666);
+  margin-bottom: 32rpx;
+}
+
+.my-retry-btn {
+  padding: 0 48rpx;
+}
+
+/* 内容列表区域 */
+.my-content-body {
+  padding: 24rpx 32rpx calc(env(safe-area-inset-bottom) + 60rpx);
+  box-sizing: border-box;
+}
+
+.my-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.my-card {
+  background: var(--c-card-soft, #efeae2);
+  border: none;
+  border-radius: 0;
+  padding: 24rpx 28rpx;
+  margin-bottom: 18rpx;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.my-card-dimmed {
+  opacity: 0.6;
+}
+
+/* 左侧日期块 */
+.my-date-col {
+  width: 96rpx;
+  padding-right: 20rpx;
+  margin-right: 20rpx;
+  border-right: 1rpx solid var(--c-line, #ece7df);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.my-date-day {
+  font-family: var(--font-num);
+  font-size: 40rpx;
+  line-height: 1;
+  font-weight: 700;
+  color: var(--c-title, #000000);
+}
+
+.my-date-weekday {
+  font-size: var(--fs-micro, 22rpx);
+  color: var(--c-muted, #666666);
+  margin-top: 8rpx;
+}
+
+/* 中间课程与时间 */
+.my-info-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.my-course-name {
+  font-size: var(--fs-h3, 30rpx);
+  font-weight: 600;
+  color: var(--c-title, #000000);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.my-time-range {
+  font-family: var(--font-num);
+  font-size: var(--fs-sub, 26rpx);
+  color: var(--c-title, #000000);
+  margin-top: 6rpx;
+  font-weight: 500;
+}
+
+.my-coach-row {
+  margin-top: 4rpx;
+  font-size: var(--fs-caption, 24rpx);
+  color: var(--c-muted, #666666);
+}
+
+.my-cancel-date-text {
+  margin-top: 6rpx;
+  font-size: var(--fs-micro, 22rpx);
+  color: var(--c-hint, #999999);
+}
+
+/* 右侧操作区 */
+.my-action-col {
+  flex-shrink: 0;
+  margin-left: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.my-cancel-link {
+  font-size: var(--fs-caption, 24rpx);
+  color: var(--c-muted, #666666);
+  text-decoration: underline;
+  padding: 8rpx 0;
+}
+
+.my-cutoff-text {
+  font-size: var(--fs-micro, 22rpx);
+  color: var(--c-hint, #999999);
+  line-height: 1.3;
+  text-align: right;
+  max-width: 140rpx;
+}
+
+/* 空状态 */
+.my-empty-box {
+  padding: 100rpx 40rpx;
+  text-align: center;
+}
+
+.my-empty-text {
+  font-size: var(--fs-body, 28rpx);
+  color: var(--c-muted, #666666);
+  margin-bottom: 24rpx;
+}
+
+.my-empty-btn {
+  height: 72rpx;
+  line-height: 72rpx;
+  padding: 0 40rpx;
+  font-size: var(--fs-caption, 24rpx);
+}

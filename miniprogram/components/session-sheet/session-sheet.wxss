@@ -1,0 +1,161 @@
+/* components/session-sheet/session-sheet.wxss · v2.2 实拍：92vh、taupe 头区、白圆角内容卡、老师块 */
+.sheet-wrapper { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 990; }
+.sheet-mask {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.45);
+  animation: maskFadeIn 150ms ease-out both;
+}
+@keyframes maskFadeIn { from { opacity: 0; } to { opacity: 1; } }
+.sheet-panel {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  height: 92vh;
+  background: #ffffff;
+  border-radius: 32rpx 32rpx 0 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  animation: panelSlideUp 240ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes panelSlideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.sheet-close {
+  position: absolute; top: 20rpx; right: 20rpx; z-index: 5;
+  width: 64rpx; height: 64rpx; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex; align-items: center; justify-content: center;
+}
+.sheet-close-icon { font-size: 28rpx; color: #111111; }
+.sheet-body { flex: 1; min-height: 0; background: #c9c3b9; }
+.sheet-top-cover { width: 100%; height: calc(100vw * 9 / 16); display: block; background: #efeae2; }
+.sheet-head { background: #c9c3b9; padding: 40rpx 40rpx 64rpx; display: flex; flex-direction: column; }
+.sheet-head-top { display: flex; align-items: center; justify-content: space-between; padding-right: 72rpx; }
+.sheet-tag { font-size: 22rpx; color: #54555b; background: #efeae2; border-radius: 999rpx; padding: 4rpx 16rpx; }
+.sheet-diff { display: flex; align-items: flex-end; }
+.sheet-diff-label { font-size: 22rpx; color: #54555b; margin-right: 8rpx; line-height: 1; }
+.sheet-diff-bars { display: flex; align-items: flex-end; }
+.sheet-bar { width: 8rpx; margin-left: 4rpx; background: #e4dfd6; border-radius: 2rpx; }
+.sheet-bar-0 { height: 12rpx; } .sheet-bar-1 { height: 18rpx; } .sheet-bar-2 { height: 24rpx; }
+.sheet-bar--on { background: #000000; }
+.sheet-title { margin-top: 24rpx; font-size: 44rpx; font-weight: 700; line-height: 1.25; color: #111111; }
+.sheet-subtitle { margin-top: 8rpx; font-size: 26rpx; color: #54555b; }
+.sheet-head-line { margin-top: 12rpx; font-size: 26rpx; color: #111111; font-variant-numeric: tabular-nums; }
+.sheet-content {
+  position: relative;
+  margin-top: -24rpx;
+  background: #ffffff;
+  border-radius: 32rpx 32rpx 0 0;
+  padding: 16rpx 40rpx 48rpx;
+  min-height: 50vh;
+  display: flex;
+  flex-direction: column;
+}
+.sheet-sec-title { margin-top: 40rpx; margin-bottom: 16rpx; font-size: 38rpx; font-weight: 600; color: #111111; }
+.sheet-desc-text { font-size: 28rpx; line-height: 1.6; color: #54555b; }
+.sheet-cap { display: block; margin-top: 8rpx; font-size: 24rpx; color: #8a8b90; line-height: 1.5; }
+.sheet-coach { background: #efeae2; border-radius: 24rpx; padding: 28rpx; display: flex; flex-direction: column; }
+.sheet-coach-top { display: flex; align-items: center; }
+.sheet-coach-avatar { width: 96rpx; height: 96rpx; border-radius: 50%; flex-shrink: 0; margin-right: 24rpx; background: #f6f6f6; }
+.sheet-coach-initial { display: flex; align-items: center; justify-content: center; font-size: 36rpx; font-weight: 600; color: #000000; }
+.sheet-coach-names { display: flex; flex-direction: column; min-width: 0; }
+.sheet-coach-name { font-size: 32rpx; font-weight: 600; color: #111111; }
+.sheet-coach-bio { margin-top: 20rpx; font-size: 28rpx; line-height: 1.6; color: #54555b; }
+.sheet-clamp4 { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.sheet-link { margin-top: 8rpx; font-size: 24rpx; color: #111111; text-decoration: underline; }
+.sheet-coach-quote { margin-top: 12rpx; font-size: 28rpx; color: #111111; line-height: 1.5; }
+.sheet-info-row { display: flex; align-items: center; justify-content: space-between; margin-top: 40rpx; padding: 24rpx 0; border-top: 1px solid #ece7df; border-bottom: 1px solid #ece7df; }
+.sheet-row-label { font-size: 28rpx; color: #54555b; }
+.sheet-row-val { font-size: 28rpx; color: #111111; font-variant-numeric: tabular-nums; }
+.sheet-remain-urgent { color: #c8501e; }
+.sheet-remain-normal { color: #111111; }
+.sheet-capacity-total { color: #8a8b90; }
+.sheet-remain-full { color: #8a8b90; }
+.sheet-deduct-card { margin-top: 24rpx; background: #efeae2; border-radius: 24rpx; padding: 24rpx 28rpx; display: flex; flex-direction: column; }
+.sheet-deduct-text { font-size: 28rpx; color: #111111; }
+.sheet-notice-card { margin-top: 24rpx; }
+.sheet-notice-head { display: flex; justify-content: space-between; align-items: center; padding: 24rpx 0; }
+.sheet-notice-title { font-size: 28rpx; font-weight: 600; color: #111111; }
+.sheet-notice-toggle { font-size: 24rpx; color: #54555b; text-decoration: underline; }
+.sheet-notice-body { padding-bottom: 16rpx; }
+.sheet-notice-item { display: flex; margin-bottom: 12rpx; font-size: 26rpx; line-height: 1.6; color: #54555b; }
+.sheet-notice-idx { width: 36rpx; flex-shrink: 0; color: #111111; }
+.sheet-notice-text { flex: 1; }
+.sheet-notice-ack { margin-top: 8rpx; }
+.sheet-notice-ack-text { font-size: 24rpx; color: #111111; text-decoration: underline; }
+
+.sheet-footer {
+  padding: 20rpx 36rpx calc(env(safe-area-inset-bottom) + 24rpx);
+  border-top: 1px solid #ece7df;
+  background: #ffffff;
+}
+
+.sheet-error-alert {
+  margin-bottom: 16rpx;
+  padding: 14rpx 20rpx;
+  border-radius: 16rpx;
+  background: #efeae2;
+  border: none;
+}
+
+.sheet-error-text {
+  font-size: 24rpx;
+  color: #111111;
+  line-height: 1.4;
+}
+
+.sheet-btn-main {
+  width: 100%;
+  border-radius: 999rpx;
+  height: 88rpx;
+}
+
+.sheet-btn-disabled {
+  opacity: 0.45 !important;
+}
+
+.sheet-booked-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+}
+
+.sheet-booked-tag {
+  height: 88rpx;
+  padding: 0 32rpx;
+  font-size: 26rpx;
+  border-radius: 999rpx;
+  flex-shrink: 0;
+}
+
+.sheet-btn-cancel {
+  flex: 1;
+  height: 88rpx;
+  border-radius: 999rpx;
+}
+
+.sheet-cutoff-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.sheet-cutoff-text {
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  color: #54555b;
+}
+
+.sheet-nocard-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.sheet-nocard-hint {
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  color: #54555b;
+  text-align: center;
+}

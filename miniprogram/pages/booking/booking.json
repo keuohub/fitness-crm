@@ -1,5 +1,11 @@
 {
-  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "session-sheet": "/components/session-sheet/session-sheet",
+    "next-class": "/components/next-class/next-class",
+    "state-view": "/components/state-view/state-view"
+  },
   "navigationStyle": "custom",
-  "backgroundColor": "#F6E6DA"
+  "enablePullDownRefresh": true,
+  "backgroundColor": "#c9c3b9",
+  "backgroundTextStyle": "dark"
 }

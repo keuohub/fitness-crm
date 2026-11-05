@@ -1,585 +1,349 @@
 /* pages/transformation/transformation.wxss
-   我的蜕变 · 简化版：天数 / 总节数 / 四类课 / 对比照 / 小桥记录 / 说句话
+   成长板块 · lululemon 规范
+   直角体态照 · #efeae2 底块 · 无序号装饰
    ============================================================ */
 
 page {
-  background-color: #F6E6DA;
-  color: #1C1415;
-  font-family: -apple-system, "PingFang SC", "Songti SC", "Helvetica Neue", sans-serif;
-  -webkit-font-smoothing: antialiased;
+  background-color: #f3efe8;
+  color: #000000;
+  font-family: var(--font-sans);
+  min-height: 100vh;
+  box-sizing: border-box;
 }
 
 .tf-page {
-  min-height: 100vh;
-  padding: calc(env(safe-area-inset-top) + 110rpx) 36rpx 0;
+  padding: 0 40rpx;
   box-sizing: border-box;
-  animation: tfFadeIn 0.4s ease both;
 }
 
-@keyframes tfFadeIn {
-  from { opacity: 0; transform: translateY(12rpx); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.tf-loading {
-  min-height: 70vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.tf-loading,
+.tf-error {
+  padding: 80rpx 0;
+  text-align: center;
 }
 
 .tf-loading-text {
   font-size: 26rpx;
-  color: rgba(255, 255, 255, 0.85);
-  letter-spacing: 2rpx;
-}
-
-.tf-error {
-  margin-bottom: 24rpx;
-  padding: 20rpx 24rpx;
-  border-radius: 16rpx;
-  background: rgba(255, 255, 255, 0.9);
+  color: #54555b;
 }
 
 .tf-error-text {
-  font-size: 24rpx;
-  color: #9E2A2B;
+  font-size: 26rpx;
+  color: #54555b;
 }
 
-/* 开头 */
+/* 顶部 */
 .tf-hero {
-  padding: 8rpx 8rpx 30rpx;
-  display: flex;
-  flex-direction: column;
-}
-
-.tf-eyebrow {
-  font-size: 20rpx;
-  letter-spacing: 4rpx;
-  color: rgba(255, 255, 255, 0.7);
+  padding-bottom: 32rpx;
 }
 
 .tf-name-row {
   display: flex;
   align-items: baseline;
-  margin-top: 18rpx;
-  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-bottom: 8rpx;
 }
 
 .tf-name {
-  font-size: 64rpx;
-  font-weight: 700;
-  color: #FFFFFF;
-  font-family: -apple-system, "PingFang SC", "Songti SC", "SimSun", serif;
-  letter-spacing: 2rpx;
-  line-height: 1.15;
-  text-shadow: 0 4rpx 18rpx rgba(138, 26, 30, 0.35);
+  font-size: 40rpx;
+  font-weight: 600;
+  color: #000000;
 }
 
 .tf-honorific {
-  font-size: 34rpx;
-  font-weight: 400;
-  color: rgba(255, 255, 255, 0.92);
-  margin-left: 12rpx;
-  letter-spacing: 4rpx;
-  font-family: -apple-system, "PingFang SC", "Songti SC", "SimSun", serif;
+  font-size: 28rpx;
+  color: #54555b;
 }
 
 .tf-days {
-  margin-top: 16rpx;
-  font-size: 28rpx;
-  color: rgba(255, 255, 255, 0.92);
-  letter-spacing: 1.5rpx;
-  font-weight: 400;
-  text-shadow: 0 2rpx 8rpx rgba(138, 26, 30, 0.2);
+  font-size: 26rpx;
+  color: #54555b;
 }
 
-.tf-days-muted {
-  color: rgba(255, 255, 255, 0.7);
-}
-
-/* 总节数 */
+/* 核心数字 */
 .tf-total-card {
-  background: rgba(255, 255, 255, 0.9);
-  border: 1rpx solid rgba(255, 255, 255, 0.95);
-  border-radius: 28rpx;
-  padding: 34rpx 34rpx 28rpx;
-  box-shadow: 0 18rpx 44rpx rgba(120, 24, 26, 0.14);
+  padding: 32rpx;
+  margin-bottom: 24rpx;
+  box-sizing: border-box;
 }
 
 .tf-total-label {
   font-size: 24rpx;
-  color: #6D645D;
-  letter-spacing: 2rpx;
+  color: #54555b;
+  display: block;
+  margin-bottom: 8rpx;
 }
 
 .tf-total-row {
   display: flex;
   align-items: baseline;
-  margin-top: 6rpx;
+  gap: 8rpx;
+  margin-bottom: 8rpx;
 }
 
 .tf-total-num {
-  font-size: 88rpx;
-  line-height: 1.1;
-  font-weight: 700;
-  color: #0D0C0F;
-  font-family: -apple-system, "PingFang SC", sans-serif;
+  font-family: var(--font-num);
+  font-size: 72rpx;
+  font-weight: 600;
+  color: #000000;
+  line-height: 1;
 }
 
 .tf-total-unit {
-  margin-left: 10rpx;
-  font-size: 26rpx;
-  color: #6D645D;
+  font-size: 28rpx;
+  color: #000000;
 }
 
 .tf-total-note {
-  display: block;
-  margin-top: 8rpx;
   font-size: 22rpx;
-  color: #8C827B;
+  color: #999999;
+  display: block;
 }
 
 /* 四类课 */
 .tf-course-grid {
-  margin-top: 20rpx;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, 1fr);
   gap: 16rpx;
+  margin-bottom: 48rpx;
 }
 
 .tf-course-card {
-  background: rgba(255, 255, 255, 0.82);
-  border: 1rpx solid rgba(255, 255, 255, 0.9);
-  border-radius: 22rpx;
-  padding: 24rpx 26rpx;
+  padding: 24rpx;
+  box-sizing: border-box;
 }
 
 .tf-course-name {
-  font-size: 23rpx;
-  color: #5C5559;
-  letter-spacing: 1rpx;
+  font-size: 26rpx;
+  color: #54555b;
+  display: block;
+  margin-bottom: 8rpx;
 }
 
 .tf-course-num-row {
-  margin-top: 10rpx;
   display: flex;
   align-items: baseline;
+  gap: 6rpx;
 }
 
 .tf-course-num {
-  font-size: 54rpx;
-  font-weight: 700;
-  color: #BA2428;
-  font-family: -apple-system, "PingFang SC", sans-serif;
-  line-height: 1;
+  font-family: var(--font-num);
+  font-size: 40rpx;
+  font-weight: 600;
+  color: #000000;
 }
 
 .tf-course-unit {
-  margin-left: 8rpx;
-  font-size: 22rpx;
-  color: #8C827B;
+  font-size: 24rpx;
+  color: #000000;
 }
 
-/* 通用 section */
+/* 区块通用 */
 .tf-section {
-  margin-top: 44rpx;
+  margin-bottom: 56rpx;
 }
 
 .tf-section-head {
-  display: flex;
-  align-items: baseline;
   margin-bottom: 20rpx;
-  padding-left: 4rpx;
 }
 
-.tf-section-index {
-  font-size: 22rpx;
-  color: rgba(255, 255, 255, 0.65);
-  letter-spacing: 2rpx;
-  margin-right: 14rpx;
-}
-
-.tf-section-title {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #FFFFFF;
-  letter-spacing: 2rpx;
-  font-family: -apple-system, "PingFang SC", sans-serif;
-}
-
-/* 角度切换 */
+/* 角度切换 Tab */
 .tf-angle-tabs {
   display: flex;
-  gap: 12rpx;
-  margin-bottom: 18rpx;
+  gap: 16rpx;
+  margin-bottom: 24rpx;
 }
 
 .tf-angle-tab {
-  padding: 10rpx 26rpx;
-  border-radius: 30rpx;
-  font-size: 22rpx;
-  color: #5C5559;
-  background: rgba(255, 255, 255, 0.55);
+  font-size: 24rpx;
+  color: #54555b;
+  padding: 8rpx 24rpx;
+  border-radius: 999rpx;
+  background: #efeae2;
 }
 
 .tf-angle-tab-active {
-  background: #0D0C0F;
-  color: #F7F3EF;
+  color: #ffffff;
+  background: #000000;
+  font-weight: 500;
 }
 
-/* 对比 */
+/* 体态对比卡片：直角、并排、标签黑底白字小胶囊 */
 .tf-compare-card {
-  background: rgba(255, 255, 255, 0.84);
-  border-radius: 24rpx;
-  padding: 18rpx;
-  margin-bottom: 18rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+  box-sizing: border-box;
 }
 
 .tf-compare-row {
   display: flex;
-  gap: 12rpx;
+  gap: 16rpx;
 }
 
 .tf-compare-pane {
-  position: relative;
   flex: 1;
-  border-radius: 16rpx;
+  position: relative;
   overflow: hidden;
-  background: #EAE3DE;
+  height: calc((100vw - 112rpx) / 2 * 4 / 3);
+  background: #ffffff;
 }
 
 .tf-compare-img {
   width: 100%;
-  height: 360rpx;
+  height: 100%;
+  object-fit: cover;
   display: block;
+  border-radius: 0;
 }
 
 .tf-compare-tag {
   position: absolute;
-  left: 14rpx;
-  top: 14rpx;
-  padding: 4rpx 14rpx;
-  border-radius: 20rpx;
-  background: rgba(8, 7, 10, 0.72);
-  color: #F7F3EF;
-  font-size: 18rpx;
+  top: 12rpx;
+  left: 12rpx;
+  z-index: 2;
+  font-size: 20rpx;
+  padding: 2rpx 14rpx;
+  height: 36rpx;
 }
 
 .tf-compare-date {
   position: absolute;
-  left: 14rpx;
   bottom: 12rpx;
-  font-size: 18rpx;
-  color: rgba(255, 255, 255, 0.9);
+  left: 12rpx;
+  right: 12rpx;
+  font-size: 20rpx;
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 4rpx 10rpx;
+  z-index: 2;
+  text-align: center;
 }
 
 .tf-compare-analysis {
   display: block;
   margin-top: 16rpx;
+  font-size: 26rpx;
+  line-height: 1.6;
+  color: #000000;
+}
+
+.tf-empty-compare-text {
   font-size: 24rpx;
-  line-height: 1.85;
-  color: #3A3234;
+  color: #54555b;
+  line-height: 1.6;
+  display: block;
 }
 
-/* 空状态体态框架卡片 */
-.tf-compare-frame-card {
-  border: 1.5rpx solid rgba(255, 255, 255, 0.95);
-  box-shadow: 0 16rpx 40rpx rgba(120, 24, 26, 0.08);
-}
-
-.tf-frame-badge {
-  display: flex;
-  align-items: center;
-  gap: 12rpx;
-  margin-bottom: 16rpx;
-  padding: 6rpx 16rpx;
-  background: rgba(158, 42, 43, 0.08);
-  border-radius: 12rpx;
-  width: fit-content;
-}
-
-.tf-frame-badge-dot {
-  width: 10rpx;
-  height: 10rpx;
-  border-radius: 50%;
-  background: #9E2A2B;
-}
-
-.tf-frame-badge-txt {
-  font-size: 20rpx;
-  font-weight: 600;
-  color: #9E2A2B;
-  letter-spacing: 1rpx;
-}
-
-.tf-compare-pane-empty {
-  border: 2rpx dashed rgba(158, 42, 43, 0.28);
-  background: linear-gradient(180deg, #F9F5F1 0%, #EFE8E1 100%);
-  height: 380rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.tf-pane-after {
-  background: linear-gradient(180deg, #FAF7F4 0%, #F3ECE6 100%);
-  border-color: rgba(13, 12, 15, 0.22);
-}
-
-.tf-pane-skeleton {
+/* 小桥的记录 */
+.tf-notes-list {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 20rpx;
-  text-align: center;
+  gap: 16rpx;
 }
 
-.tf-silhouette-ring {
-  width: 72rpx;
-  height: 72rpx;
-  border-radius: 50%;
-  border: 2rpx solid rgba(158, 42, 43, 0.35);
-  background: rgba(255, 255, 255, 0.6);
-  margin-bottom: 16rpx;
-  position: relative;
-}
-
-.tf-silhouette-ring::after {
-  content: "";
-  position: absolute;
-  top: 14rpx;
-  left: 24rpx;
-  width: 20rpx;
-  height: 20rpx;
-  border-radius: 50%;
-  background: rgba(158, 42, 43, 0.45);
-}
-
-.tf-silhouette-glow {
-  border-color: rgba(13, 12, 15, 0.35);
-}
-
-.tf-silhouette-glow::after {
-  background: rgba(13, 12, 15, 0.45);
-}
-
-.tf-pane-title {
-  font-size: 24rpx;
-  font-weight: 600;
-  color: #2D2727;
-  letter-spacing: 1rpx;
-  margin-bottom: 6rpx;
-}
-
-.tf-pane-desc {
-  font-size: 19rpx;
-  color: #8C827B;
-}
-
-.tf-frame-indicators {
-  margin-top: 22rpx;
-  padding-top: 20rpx;
-  border-top: 1rpx solid rgba(0, 0, 0, 0.06);
-}
-
-.tf-frame-ind-title {
-  font-size: 22rpx;
-  font-weight: 600;
-  color: #2D2727;
-  display: block;
-  margin-bottom: 12rpx;
-}
-
-.tf-frame-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10rpx;
-  margin-bottom: 16rpx;
-}
-
-.tf-frame-tag {
-  font-size: 20rpx;
-  color: #5C5559;
-  background: rgba(246, 228, 221, 0.6);
-  border: 1rpx solid rgba(255, 255, 255, 0.8);
-  padding: 6rpx 18rpx;
-  border-radius: 20rpx;
-}
-
-.tf-frame-note {
-  font-size: 20rpx;
-  line-height: 1.6;
-  color: #8C827B;
-  display: block;
-}
-
-/* 记录 */
 .tf-note-card {
-  background: rgba(255, 255, 255, 0.84);
-  border-radius: 22rpx;
-  padding: 24rpx 26rpx;
-  margin-bottom: 16rpx;
+  padding: 24rpx;
+  box-sizing: border-box;
 }
 
 .tf-note-date {
+  font-size: 22rpx;
+  color: #999999;
+  font-family: var(--font-num);
   display: block;
-  font-size: 20rpx;
-  color: #8C827B;
-  letter-spacing: 1rpx;
+  margin-bottom: 8rpx;
 }
 
 .tf-note-content {
-  display: block;
-  margin-top: 12rpx;
   font-size: 26rpx;
-  line-height: 1.9;
-  color: #2B2629;
+  color: #000000;
+  line-height: 1.6;
+  display: block;
+  margin-bottom: 8rpx;
 }
 
 .tf-note-tags {
+  font-size: 22rpx;
+  color: #54555b;
   display: block;
-  margin-top: 12rpx;
-  font-size: 20rpx;
-  color: #9E2A2B;
 }
 
-/* 空状态 */
 .tf-empty {
-  background: rgba(255, 255, 255, 0.6);
-  border: 1rpx dashed rgba(255, 255, 255, 0.9);
-  border-radius: 22rpx;
-  padding: 34rpx 30rpx;
+  padding: 48rpx 24rpx;
 }
 
 .tf-empty-title {
-  display: block;
-  font-size: 26rpx;
-  color: #FFFFFF;
-  font-weight: 600;
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #000000;
+  margin-bottom: 8rpx;
 }
 
 .tf-empty-body {
-  display: block;
-  margin-top: 12rpx;
-  font-size: 23rpx;
-  line-height: 1.8;
-  color: rgba(255, 255, 255, 0.84);
+  font-size: 24rpx;
+  color: #54555b;
+  line-height: 1.5;
 }
 
-/* 回音 + 便签 */
+/* 跟小桥说句话 */
 .tf-reply-card {
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 22rpx;
-  padding: 24rpx 26rpx;
-  margin-bottom: 18rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+  box-sizing: border-box;
 }
 
 .tf-reply-label {
+  font-size: 22rpx;
+  color: #999999;
   display: block;
-  font-size: 21rpx;
-  color: #9E2A2B;
-  letter-spacing: 1rpx;
+  margin-bottom: 8rpx;
 }
 
 .tf-reply-text {
+  font-size: 26rpx;
+  color: #000000;
+  line-height: 1.6;
   display: block;
-  margin-top: 10rpx;
-  font-size: 25rpx;
-  line-height: 1.85;
-  color: #2B2629;
 }
 
 .tf-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 12rpx;
-  margin-bottom: 16rpx;
-}
-
-.tf-tag {
-  padding: 10rpx 22rpx;
-  border-radius: 30rpx;
-  font-size: 22rpx;
-  color: #5C5559;
-  background: rgba(255, 255, 255, 0.6);
-}
-
-.tf-tag-active {
-  background: #BA2428;
-  color: #FFFFFF;
+  margin-bottom: 20rpx;
 }
 
 .tf-textarea {
   width: 100%;
-  min-height: 170rpx;
+  height: 180rpx;
+  padding: 20rpx;
+  border: 1px solid #ece7df;
+  border-radius: 4rpx;
+  font-size: 26rpx;
   box-sizing: border-box;
-  padding: 22rpx 24rpx;
-  border-radius: 20rpx;
-  background: rgba(255, 255, 255, 0.9);
-  font-size: 25rpx;
-  line-height: 1.7;
-  color: #1C1415;
+  margin-bottom: 20rpx;
+  background: #ffffff;
 }
 
 .tf-placeholder {
-  color: #A79E9A;
-  font-size: 24rpx;
+  color: #999999;
 }
 
 .tf-submit {
-  margin-top: 16rpx;
+  width: 100%;
   height: 88rpx;
   line-height: 88rpx;
-  border-radius: 44rpx;
-  background: #0D0C0F;
-  color: #F7F3EF;
-  font-size: 26rpx;
-  letter-spacing: 2rpx;
-}
-
-.tf-submit::after {
-  border: none;
 }
 
 .tf-receipt {
   display: block;
-  margin-top: 14rpx;
-  font-size: 22rpx;
-  line-height: 1.7;
-  color: rgba(255, 255, 255, 0.86);
-}
-
-/* 下一步 */
-.tf-actions {
-  margin-top: 46rpx;
-  display: flex;
-  gap: 16rpx;
-}
-
-.tf-action-primary,
-.tf-action-secondary {
-  flex: 1;
-  height: 92rpx;
-  border-radius: 46rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 25rpx;
-  letter-spacing: 1rpx;
-}
-
-.tf-action-primary {
-  background: #0D0C0F;
-  color: #F7F3EF;
-}
-
-.tf-action-secondary {
-  background: rgba(255, 255, 255, 0.78);
-  color: #1C1415;
+  margin-top: 16rpx;
+  font-size: 24rpx;
+  color: #54555b;
+  line-height: 1.5;
+  text-align: center;
 }
 
 .tf-bottom-space {
-  height: calc(env(safe-area-inset-bottom) + 210rpx);
+  height: calc(104rpx + 16rpx + env(safe-area-inset-bottom) + 40rpx);
 }

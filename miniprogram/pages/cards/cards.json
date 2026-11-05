@@ -1,5 +1,9 @@
 {
-  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "state-view": "/components/state-view/state-view"
+  },
   "navigationStyle": "custom",
-  "backgroundColor": "#F6E6DA"
+  "enablePullDownRefresh": true,
+  "backgroundColor": "#f3efe8",
+  "backgroundTextStyle": "dark"
 }

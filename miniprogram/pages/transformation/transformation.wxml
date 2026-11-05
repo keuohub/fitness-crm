@@ -1,40 +1,37 @@
 <view class="tf-page">
+  <view style="height: {{nav.navBottom + 16}}px;"></view>
 
   <view wx:if="{{loading}}" class="tf-loading">
-    <text class="tf-loading-text">正在打开你的身体手札…</text>
+    <text class="tf-loading-text">正在打开你的成长记录…</text>
   </view>
 
   <block wx:else>
 
-    <view wx:if="{{loadError}}" class="tf-error">
-      <text class="tf-error-text">{{loadError}}</text>
-    </view>
+    <state-view wx:if="{{loadError}}" type="error" icon="wifi" title="没连上网络" desc="检查一下网络，再试一次" actionText="重新加载" bindaction="onRetry" compact="{{true}}" />
 
-    <!-- 01 开头：姓名 + 尊称 + 陪伴天数 -->
+    <!-- 开头：姓名 + 陪伴天数 -->
     <view class="tf-hero">
-      <text class="tf-eyebrow">MY JOURNEY AT LAIWU</text>
       <view class="tf-name-row">
         <text class="tf-name">{{memberName || '你'}}</text>
         <text class="tf-honorific" wx:if="{{memberName}}">{{honorific || '女士'}}</text>
       </view>
       <text class="tf-days" wx:if="{{joinDays !== null}}">这是徕舞陪伴你的第 {{joinDays}} 天。</text>
-      <text class="tf-days tf-days-muted" wx:else>这是徕舞与你相遇的序章。</text>
     </view>
 
-    <!-- 02 核心数字：一共上了多少节 -->
-    <view class="tf-total-card">
+    <!-- 核心数字：累计上课 -->
+    <view class="tf-total-card card-soft">
       <text class="tf-total-label">累计上课</text>
       <view class="tf-total-row">
-        <text class="tf-total-num">{{totalHours}}</text>
+        <text class="t-num-xl tf-total-num">{{totalHours}}</text>
         <text class="tf-total-unit">节</text>
       </view>
       <text class="tf-total-note" wx:if="{{latestTrainingDate}}">最近一次上课 · {{latestTrainingDate}}</text>
       <text class="tf-total-note" wx:else>第一节课之后，这里会开始记录</text>
     </view>
 
-    <!-- 03 四类课：各上了多少节 -->
-    <view class="tf-course-grid">
-      <view class="tf-course-card" wx:for="{{courseCounts}}" wx:key="key">
+    <!-- 四类课 -->
+    <view class="tf-course-grid" wx:if="{{courseCounts.length > 0}}">
+      <view class="tf-course-card card-soft" wx:for="{{courseCounts}}" wx:key="key">
         <text class="tf-course-name">{{item.label}}</text>
         <view class="tf-course-num-row">
           <text class="tf-course-num">{{item.count}}</text>
@@ -43,11 +40,10 @@
       </view>
     </view>
 
-    <!-- 04 身体变化：后台按会员上传的对比照 -->
+    <!-- 身体变化：后台按会员上传的对比照 -->
     <view class="tf-section">
       <view class="tf-section-head">
-        <text class="tf-section-index">01</text>
-        <text class="tf-section-title">身体变化</text>
+        <text class="section-title">身体变化</text>
       </view>
 
       <view class="tf-angle-tabs">
@@ -60,95 +56,57 @@
         >{{item.label}}</view>
       </view>
 
+      <!-- 有对比照：直角、并排、标签黑底白字小胶囊 -->
       <view wx:if="{{shownComparisons.length > 0}}">
-        <view class="tf-compare-card" wx:for="{{shownComparisons}}" wx:key="id">
+        <view class="tf-compare-card card-soft" wx:for="{{shownComparisons}}" wx:key="id">
           <view class="tf-compare-row">
-            <view class="tf-compare-pane" bindtap="previewImage" data-src="{{item.photo1_url}}">
+            <view class="tf-compare-pane" bindtap="previewImage" data-src="{{item.photo1_url}}" data-all="{{[item.photo1_url, item.photo2_url]}}">
               <image class="tf-compare-img" src="{{item.photo1_url}}" mode="aspectFill" lazy-load="true" />
-              <text class="tf-compare-tag">之前</text>
-              <text class="tf-compare-date">{{item.photo1_date}}</text>
+              <view class="tag tag--dark tf-compare-tag">之前</view>
+              <text class="tf-compare-date" wx:if="{{item.photo1_date}}">{{item.photo1_date}}</text>
             </view>
-            <view class="tf-compare-pane" bindtap="previewImage" data-src="{{item.photo2_url}}">
+            <view class="tf-compare-pane" bindtap="previewImage" data-src="{{item.photo2_url}}" data-all="{{[item.photo1_url, item.photo2_url]}}">
               <image class="tf-compare-img" src="{{item.photo2_url}}" mode="aspectFill" lazy-load="true" />
-              <text class="tf-compare-tag">现在</text>
-              <text class="tf-compare-date">{{item.photo2_date}}</text>
+              <view class="tag tag--dark tf-compare-tag">现在</view>
+              <text class="tf-compare-date" wx:if="{{item.photo2_date}}">{{item.photo2_date}}</text>
             </view>
           </view>
           <text class="tf-compare-analysis" wx:if="{{item.analysis}}">{{item.analysis}}</text>
         </view>
       </view>
 
-      <view wx:else class="tf-compare-card tf-compare-frame-card">
-        <view class="tf-frame-badge">
-          <text class="tf-frame-badge-dot"></text>
-          <text class="tf-frame-badge-txt">{{selectedAngleLabel || '全角度'}}对照框架 · 等待初测拍摄</text>
-        </view>
-        <view class="tf-compare-row">
-          <view class="tf-compare-pane tf-compare-pane-empty">
-            <view class="tf-pane-skeleton">
-              <view class="tf-silhouette-ring"></view>
-              <text class="tf-pane-title">初始体态照</text>
-              <text class="tf-pane-desc">入会基准采集</text>
-            </view>
-            <text class="tf-compare-tag">BEFORE 初始</text>
-            <text class="tf-compare-date">待拍摄</text>
-          </view>
-          <view class="tf-compare-pane tf-compare-pane-empty tf-pane-after">
-            <view class="tf-pane-skeleton">
-              <view class="tf-silhouette-ring tf-silhouette-glow"></view>
-              <text class="tf-pane-title">阶段蜕变照</text>
-              <text class="tf-pane-desc">定期复测比对</text>
-            </view>
-            <text class="tf-compare-tag">AFTER 蜕变</text>
-            <text class="tf-compare-date">阶段生成</text>
-          </view>
-        </view>
-        <view class="tf-frame-indicators">
-          <text class="tf-frame-ind-title">本角度重点追踪维度：</text>
-          <view class="tf-frame-tags">
-            <text class="tf-frame-tag" wx:if="{{selectedAngle === 'front' || selectedAngle === 'all'}}">双肩水平线</text>
-            <text class="tf-frame-tag" wx:if="{{selectedAngle === 'front' || selectedAngle === 'all'}}">肋骨外翻微调</text>
-            <text class="tf-frame-tag" wx:if="{{selectedAngle === 'front' || selectedAngle === 'all'}}">骨盆正位中立</text>
-            <text class="tf-frame-tag" wx:if="{{selectedAngle === 'side' || selectedAngle === 'all'}}">颈椎前倾矫正</text>
-            <text class="tf-frame-tag" wx:if="{{selectedAngle === 'side' || selectedAngle === 'all'}}">圆肩背部舒展</text>
-            <text class="tf-frame-tag" wx:if="{{selectedAngle === 'side' || selectedAngle === 'all'}}">骨盆前倾纠偏</text>
-            <text class="tf-frame-tag" wx:if="{{selectedAngle === 'back' || selectedAngle === 'all'}}">脊柱中轴延展</text>
-            <text class="tf-frame-tag" wx:if="{{selectedAngle === 'back' || selectedAngle === 'all'}}">肩胛骨平整贴合</text>
-            <text class="tf-frame-tag" wx:if="{{selectedAngle === 'back' || selectedAngle === 'all'}}">臀腿力线重塑</text>
-          </view>
-          <text class="tf-frame-note">💡 到店时小桥会在测评室为你拍摄正面、侧面、背面体态照。上传后系统将自动生成高清对照卡与专属复盘手札。</text>
-        </view>
+      <!-- 无对比照占位 -->
+      <view wx:else class="tf-compare-card card-soft">
+        <text class="tf-empty-compare-text">到店时可以在测评室拍摄正面、侧面、背面体态照。上传后会在这里生成对比。</text>
       </view>
     </view>
 
-    <!-- 05 小桥的记录：后台真实录入的内容 -->
+    <!-- 小桥的记录 -->
     <view class="tf-section">
       <view class="tf-section-head">
-        <text class="tf-section-index">02</text>
-        <text class="tf-section-title">小桥的记录</text>
+        <text class="section-title">小桥的记录</text>
       </view>
 
-      <view wx:if="{{coachNotes.length > 0}}">
-        <view class="tf-note-card" wx:for="{{coachNotes}}" wx:key="id">
+      <view wx:if="{{coachNotes.length > 0}}" class="tf-notes-list">
+        <view class="tf-note-card card-soft" wx:for="{{coachNotes}}" wx:key="id">
           <text class="tf-note-date">{{item.date}}</text>
           <text class="tf-note-content">{{item.content}}</text>
           <text class="tf-note-tags" wx:if="{{item.tags}}">{{item.tags}}</text>
         </view>
       </view>
-      <view wx:else class="tf-empty">
+      <view wx:else class="empty-state tf-empty">
         <text class="tf-empty-title">第一节课之后，这里会有小桥写给你的话</text>
         <text class="tf-empty-body">她会记录你当天的身体状态、练到的重点，以及下一次要注意的地方。</text>
       </view>
     </view>
 
-    <!-- 06 跟小桥说句话 -->
+    <!-- 跟小桥说句话 -->
     <view class="tf-section">
       <view class="tf-section-head">
-        <text class="tf-section-index">03</text>
-        <text class="tf-section-title">跟小桥说句话</text>
+        <text class="section-title">跟小桥说句话</text>
       </view>
 
-      <view class="tf-reply-card" wx:if="{{latestReply}}">
+      <view class="tf-reply-card card-soft" wx:if="{{latestReply}}">
         <text class="tf-reply-label">小桥回音 · {{latestReply.date}}</text>
         <text class="tf-reply-text">{{latestReply.reply}}</text>
       </view>
@@ -157,7 +115,7 @@
         <view
           wx:for="{{feelingTags}}"
           wx:key="name"
-          class="tf-tag {{item.active ? 'tf-tag-active' : ''}}"
+          class="tag {{item.active ? 'tag--dark' : ''}}"
           data-index="{{index}}"
           bindtap="toggleTag"
         >{{item.name}}</view>
@@ -172,8 +130,8 @@
         bindinput="onFeelingInput"
       />
 
-      <button class="tf-submit" bindtap="submitFeeling" loading="{{feelingSubmitting}}" disabled="{{feelingSubmitting}}">
-        {{feelingSubmitting ? "正在送出…" : "TO 小桥"}}
+      <button class="btn-primary tf-submit" bindtap="submitFeeling" loading="{{feelingSubmitting}}" disabled="{{feelingSubmitting}}">
+        {{feelingSubmitting ? "正在送出…" : "发给小桥"}}
       </button>
       <text class="tf-receipt" wx:if="{{feelingReceipt}}">{{feelingReceipt}}</text>
     </view>

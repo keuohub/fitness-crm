@@ -1,8 +1,12 @@
 <view class="nt-page">
+  <view class="nav-row" style="padding-top: {{nav.navTop}}px; height: {{nav.navH}}px;">
+    <view class="nav-back" bindtap="navBack"><view class="nav-back-arrow"></view></view>
+  </view>
+  <view class="nav-gap"></view>
   <view wx:if="{{loading}}" class="nt-loading"><text>正在翻你的课后记录…</text></view>
   <block wx:else>
-    <view class="nt-hero"><text class="nt-eyebrow">AFTER CLASS</text><text class="nt-title">课后记录</text></view>
-    <view wx:if="{{error}}" class="nt-error">{{error}}</view>
+    <view class="nt-hero"><text class="nt-title">课后记录</text></view>
+    <state-view wx:if="{{error}}" type="error" icon="wifi" title="没连上网络" desc="检查一下网络，再试一次" actionText="重新加载" bindaction="onRetry" />
     <view wx:if="{{notes.length===0&&!error}}" class="nt-empty">
       <text class="nt-empty-title">还没有课后记录</text>
       <text class="nt-empty-body">上完课，小桥或教练会在这里留一句。</text>

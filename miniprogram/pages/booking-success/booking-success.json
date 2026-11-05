@@ -1,0 +1,9 @@
+{
+  "usingComponents": {},
+  "navigationStyle": "default",
+  "navigationBarTitleText": "预约成功",
+  "backgroundColor": "#f3efe8",
+  "navigationBarBackgroundColor": "#f3efe8",
+  "navigationBarTextStyle": "black",
+  "backgroundTextStyle": "dark"
+}

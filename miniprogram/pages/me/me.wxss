@@ -1,491 +1,315 @@
 /* pages/me/me.wxss
-   我的账户 · 结合 BRAND_SYSTEM_SPEC.md 静奢设计规范打磨
-   燕麦象牙底色 #F7F4EE / 沉檀木黑 #231F1D / 陶赭朱砂 #9B4A3F / 柔润岩灰 #E6E0D6
+   我的账户 · 女子塑形高奢温润版（Cin v3 规范）
+   暖米底色 · 胭脂玫瑰主色 · 柔和圆角 · 典藏管家入口
    ============================================================ */
 
 page {
-  background-color: #F7F4EE;
-  color: #231F1D;
-  font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
-  -webkit-font-smoothing: antialiased;
+  background-color: #f6f0ea;
+  color: #3a2a2d;
+  font-family: var(--font-sans);
+  min-height: 100vh;
+  box-sizing: border-box;
 }
 
 .me-page {
-  min-height: 100vh;
-  padding: calc(env(safe-area-inset-top) + 100rpx) 36rpx 0;
+  padding: 0 40rpx;
   box-sizing: border-box;
-  animation: meFadeIn 0.35s ease both;
 }
 
-@keyframes meFadeIn {
-  from { opacity: 0; transform: translateY(10rpx); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.me-loading {
-  min-height: 70vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.me-loading,
+.me-error {
+  padding: 80rpx 0;
+  text-align: center;
 }
 
 .me-loading-text {
   font-size: 26rpx;
-  color: #7A7068;
-}
-
-.me-error {
-  margin-bottom: 22rpx;
-  padding: 18rpx 24rpx;
-  border-radius: 16rpx;
-  background: #FFF;
-  border: 1rpx solid #E6E0D6;
+  color: #7a6a6c;
 }
 
 .me-error-text {
-  font-size: 24rpx;
-  color: #9B4A3F;
+  font-size: 26rpx;
+  color: #7a6a6c;
 }
 
-/* 顶部标题区：高对比度沉檀木黑 + 温润副标题，彻底解决白字在浅底上失焦问题 */
-.me-hero {
-  padding: 10rpx 8rpx 32rpx;
-}
-
-.me-hero-title {
-  display: block;
-  font-size: 48rpx;
-  font-weight: 600;
-  color: #231F1D;
-  letter-spacing: 1.5rpx;
-}
-
-.me-hero-sub {
-  display: block;
-  margin-top: 10rpx;
-  font-size: 24rpx;
-  color: #7A7068;
-  letter-spacing: 0.5rpx;
-  line-height: 1.5;
-}
-
-/* 档案卡：白底纯粹微水泥质感 + 柔润岩灰细边 */
-.me-profile-card {
-  background: #FFFFFF;
-  border: 1rpx solid #E6E0D6;
-  border-radius: 28rpx;
-  padding: 32rpx 28rpx 28rpx;
-  box-shadow: 0 8rpx 24rpx rgba(35, 31, 29, 0.04);
-}
-
-.me-profile-top {
+/* 顶部头像与问候语 */
+.me-header {
   display: flex;
   align-items: center;
+  gap: 28rpx;
+  padding-bottom: 40rpx;
 }
 
 .me-avatar-wrap {
+  width: 108rpx;
+  height: 108rpx;
   position: relative;
-  width: 124rpx;
-  height: 124rpx;
-  border-radius: 62rpx;
-  overflow: hidden;
-  background: #F7F4EE;
-  border: 2rpx solid #E6E0D6;
   flex-shrink: 0;
+  cursor: pointer;
 }
 
 .me-avatar {
-  width: 100%;
-  height: 100%;
+  width: 108rpx;
+  height: 108rpx;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  box-shadow: 0 0 0 4rpx #f6e3df, 0 6rpx 16rpx rgba(138, 58, 72, 0.12);
 }
 
 .me-avatar-placeholder {
-  width: 100%;
-  height: 100%;
+  width: 108rpx;
+  height: 108rpx;
+  border-radius: 50%;
+  background: #f6e3df;
+  color: #8a3a48;
+  font-size: 40rpx;
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 44rpx;
-  font-weight: 500;
-  color: #9B4A3F;
-  background: #F4EFEB;
+  box-shadow: 0 0 0 4rpx #f6e3df;
 }
 
-.me-avatar-hint {
+/* 头像右下小圆「+」 */
+.me-avatar-plus {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  text-align: center;
-  font-size: 17rpx;
-  line-height: 28rpx;
-  color: #F7F4EE;
-  background: rgba(35, 31, 29, 0.65);
-}
-
-.me-profile-main {
-  margin-left: 26rpx;
+  right: -4rpx;
+  bottom: -4rpx;
+  width: 34rpx;
+  height: 34rpx;
+  border-radius: 50%;
+  background: #8a3a48;
+  border: 3rpx solid #ffffff;
   display: flex;
-  flex-direction: column;
-  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.15);
 }
 
-.me-profile-name {
-  font-size: 38rpx;
-  font-weight: 600;
-  color: #231F1D;
-  letter-spacing: 1rpx;
+.me-avatar-plus::before {
+  content: "";
+  position: absolute;
+  width: 14rpx;
+  height: 2rpx;
+  background: #ffffff;
 }
 
-.me-profile-code {
-  margin-top: 6rpx;
-  font-size: 22rpx;
-  color: #7A7068;
-  letter-spacing: 0.5rpx;
+.me-avatar-plus::after {
+  content: "";
+  position: absolute;
+  width: 2rpx;
+  height: 14rpx;
+  background: #ffffff;
 }
 
-.me-profile-status {
-  margin-top: 10rpx;
-  align-self: flex-start;
-  padding: 4rpx 16rpx;
-  border-radius: 12rpx;
-  background: rgba(155, 74, 63, 0.08);
-  border: 1rpx solid rgba(155, 74, 63, 0.16);
-  color: #9B4A3F;
-  font-size: 20rpx;
-  font-weight: 500;
-}
-
-.me-profile-meta {
-  margin-top: 26rpx;
-  padding-top: 22rpx;
-  border-top: 1rpx solid #F0ECE4;
-  display: flex;
-}
-
-.me-meta-item {
+.me-header-info {
   flex: 1;
-  display: flex;
-  flex-direction: column;
   min-width: 0;
 }
 
-.me-meta-label {
-  font-size: 20rpx;
-  color: #8C827B;
+.me-greeting {
+  font-size: 40rpx;
+  font-weight: 600;
+  color: #3a2a2d;
+  display: block;
+  margin-bottom: 12rpx;
   letter-spacing: 0.5rpx;
 }
 
-.me-meta-value {
-  margin-top: 6rpx;
-  font-size: 24rpx;
-  font-weight: 500;
-  color: #231F1D;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.me-meta-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
 }
 
-/* 管理端专享入口 */
-.me-manager-entrance {
-  margin-top: 24rpx;
-  background: linear-gradient(135deg, #2B2623 0%, #1F1B19 100%);
-  border-radius: 22rpx;
-  padding: 24rpx 28rpx;
+.me-tag {
+  font-size: 22rpx;
+  color: #8a3a48;
+  background: #f6e3df;
+  padding: 4rpx 16rpx;
+  border-radius: 999rpx;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+/* 管理员专享入口 (黑金高定典藏卡) */
+.me-manager-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border: 1rpx solid rgba(155, 74, 63, 0.35);
-  box-shadow: 0 8rpx 24rpx rgba(35, 31, 29, 0.12);
+  padding: 28rpx 32rpx;
+  background: linear-gradient(135deg, #2D1418 0%, #1A0B0E 100%);
+  border: 1px solid rgba(248, 223, 176, 0.35);
+  border-radius: 24rpx;
+  margin-top: 24rpx;
+  margin-bottom: 32rpx;
+  box-shadow: 0 10rpx 28rpx rgba(45, 20, 24, 0.25);
+  cursor: pointer;
+  transition: transform 0.15s ease;
 }
 
-.me-manager-badge {
-  display: inline-block;
-  font-size: 18rpx;
-  color: #F7F4EE;
-  background: rgba(155, 74, 63, 0.35);
-  border: 1rpx solid rgba(155, 74, 63, 0.5);
-  padding: 2rpx 12rpx;
-  border-radius: 6rpx;
-  margin-bottom: 8rpx;
-  font-weight: 500;
+.me-manager-row:active {
+  transform: scale(0.98);
+}
+
+.me-manager-left {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
 }
 
 .me-manager-title {
-  display: block;
-  font-size: 30rpx;
+  font-size: 28rpx;
   font-weight: 600;
-  color: #F7F4EE;
-  margin-bottom: 6rpx;
-  letter-spacing: 0.5rpx;
+  color: #F8DFB0;
+  letter-spacing: 1rpx;
 }
 
 .me-manager-desc {
-  display: block;
-  font-size: 20rpx;
-  color: #D4CDC5;
-}
-
-.me-manager-btn {
-  display: flex;
-  align-items: center;
-  gap: 6rpx;
-  background: rgba(155, 74, 63, 0.25);
-  border: 1rpx solid rgba(155, 74, 63, 0.5);
-  border-radius: 30rpx;
-  padding: 10rpx 20rpx;
-  color: #F7F4EE;
-  flex-shrink: 0;
-}
-
-.me-manager-btn-text {
   font-size: 22rpx;
-  font-weight: 600;
+  color: rgba(248, 223, 176, 0.75);
 }
 
 .me-manager-arrow {
-  font-size: 28rpx;
-  color: #D49386;
+  font-size: 36rpx;
+  color: #F8DFB0;
+  font-weight: 300;
 }
 
-/* 分区公共头部：陶赭朱砂编号 + 沉檀木黑标题 */
+/* 训练数据 */
 .me-section {
-  margin-top: 44rpx;
+  margin-bottom: 40rpx;
 }
 
 .me-section-head {
-  display: flex;
-  align-items: baseline;
   margin-bottom: 20rpx;
-  padding-left: 4rpx;
-}
-
-.me-section-index {
-  font-size: 22rpx;
-  font-weight: 600;
-  color: #9B4A3F;
-  margin-right: 14rpx;
-  letter-spacing: 2rpx;
-  font-family: -apple-system, BlinkMacSystemFont, "Cinzel", sans-serif;
 }
 
 .me-section-title {
   font-size: 32rpx;
   font-weight: 600;
-  color: #231F1D;
-  letter-spacing: 1rpx;
+  color: #3a2a2d;
+  letter-spacing: 0.5rpx;
 }
 
-/* 训练资产卡片 */
-.me-total-card {
-  background: #FFFFFF;
-  border: 1rpx solid #E6E0D6;
-  border-radius: 26rpx;
-  padding: 30rpx;
-  box-shadow: 0 4rpx 16rpx rgba(35, 31, 29, 0.03);
+.me-total-block {
+  padding: 36rpx;
+  background: #ffffff;
+  border-radius: 28rpx;
+  border: 1px solid #efe4dc;
+  box-shadow: 0 8rpx 24rpx rgba(138, 58, 72, 0.05);
+  box-sizing: border-box;
 }
 
 .me-total-label {
-  font-size: 23rpx;
-  color: #7A7068;
+  font-size: 24rpx;
+  color: #7a6a6c;
+  display: block;
+  margin-bottom: 12rpx;
+  letter-spacing: 1rpx;
 }
 
-.me-total-row {
+.me-total-num-wrap {
   display: flex;
   align-items: baseline;
-  margin-top: 6rpx;
+  gap: 8rpx;
+  margin-bottom: 12rpx;
 }
 
 .me-total-num {
-  font-size: 82rpx;
-  line-height: 1.05;
+  font-family: var(--font-num);
+  font-size: 80rpx;
   font-weight: 600;
-  color: #231F1D;
-  font-family: -apple-system, BlinkMacSystemFont, "Cinzel", "Plus Jakarta Sans", sans-serif;
+  color: #8a3a48;
+  line-height: 1;
 }
 
 .me-total-unit {
-  margin-left: 10rpx;
-  font-size: 24rpx;
-  color: #7A7068;
+  font-size: 28rpx;
+  color: #8a3a48;
+  font-weight: 500;
 }
 
 .me-total-note {
+  font-size: 23rpx;
+  color: #a8999b;
   display: block;
-  margin-top: 10rpx;
-  font-size: 21rpx;
-  color: #8C827B;
 }
 
-.me-total-right {
-  margin-top: 20rpx;
-  padding-top: 18rpx;
-  border-top: 1rpx solid #F0ECE4;
-}
-
-.me-total-empty-title {
-  display: block;
-  font-size: 25rpx;
-  font-weight: 600;
-  color: #231F1D;
-}
-
-.me-total-empty-body {
-  display: block;
-  margin-top: 8rpx;
-  font-size: 22rpx;
-  line-height: 1.7;
-  color: #7A7068;
-}
-
-.me-course-grid {
-  margin-top: 18rpx;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16rpx;
-}
-
-.me-course-card {
-  background: #FFFFFF;
-  border: 1rpx solid #E6E0D6;
-  border-radius: 20rpx;
-  padding: 22rpx 24rpx;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 4rpx 12rpx rgba(35, 31, 29, 0.025);
+.me-course-list {
+  background: #ffffff;
+  border-radius: 24rpx;
+  border: 1px solid #efe4dc;
+  margin-top: 16rpx;
+  overflow: hidden;
+  box-shadow: 0 6rpx 18rpx rgba(138, 58, 72, 0.04);
 }
 
 .me-course-name {
-  font-size: 22rpx;
-  color: #7A7068;
+  font-size: 28rpx;
+  color: #3a2a2d;
 }
 
-.me-course-num {
-  margin-top: 10rpx;
-  font-size: 42rpx;
+.me-course-count {
+  font-family: var(--font-num);
+  font-size: 32rpx;
   font-weight: 600;
-  color: #9B4A3F;
-  line-height: 1.1;
-  font-family: -apple-system, BlinkMacSystemFont, "Cinzel", "Plus Jakarta Sans", sans-serif;
+  color: #8a3a48;
 }
 
-.me-course-unit {
-  font-size: 20rpx;
-  font-weight: 400;
-  color: #7A7068;
-  margin-left: 4rpx;
-}
-
-/* 02 小桥的回音卡片 */
-.me-reply-card {
-  background: #FFFFFF;
-  border: 1rpx solid #E6E0D6;
-  border-radius: 24rpx;
-  padding: 28rpx 30rpx;
-  box-shadow: 0 4rpx 16rpx rgba(35, 31, 29, 0.03);
-}
-
-.me-reply-date {
-  display: block;
-  font-size: 21rpx;
-  color: #9B4A3F;
-  letter-spacing: 0.5rpx;
-}
-
-.me-reply-text {
-  display: block;
-  margin-top: 10rpx;
-  font-size: 26rpx;
-  line-height: 1.7;
-  color: #231F1D;
-}
-
-.me-empty {
-  background: #FFFFFF;
-  border: 1rpx dashed #D9D2C7;
-  border-radius: 24rpx;
-  padding: 34rpx 30rpx;
-}
-
-.me-empty-title {
-  display: block;
-  font-size: 26rpx;
-  font-weight: 600;
-  color: #231F1D;
-}
-
-.me-empty-body {
-  display: block;
-  margin-top: 10rpx;
-  font-size: 22rpx;
-  line-height: 1.8;
-  color: #7A7068;
-}
-
-.me-empty-link {
-  display: inline-block;
-  margin-top: 18rpx;
-  padding: 10rpx 24rpx;
-  border-radius: 24rpx;
-  background: rgba(155, 74, 63, 0.08);
-  border: 1rpx solid rgba(155, 74, 63, 0.2);
-  color: #9B4A3F;
-  font-size: 22rpx;
-  font-weight: 500;
-}
-
-/* 03 服务菜单卡片：静奢白底列表 + 柔润岩灰分割线 + 贴心触摸态 */
-.me-service-card {
-  background: #FFFFFF;
-  border: 1rpx solid #E6E0D6;
-  border-radius: 26rpx;
+/* 列表行导航菜单 */
+.me-menu-section {
+  background: #ffffff;
+  border-radius: 28rpx;
+  border: 1px solid #efe4dc;
   overflow: hidden;
-  box-shadow: 0 4rpx 16rpx rgba(35, 31, 29, 0.03);
+  box-shadow: 0 8rpx 24rpx rgba(138, 58, 72, 0.05);
 }
 
-.me-service-row {
+.list-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 26rpx 28rpx;
-  border-bottom: 1rpx solid #F0ECE4;
+  padding: 32rpx;
+  border-bottom: 1px solid #f6f0ea;
+  box-sizing: border-box;
   transition: background-color 0.15s ease;
 }
 
-.me-service-row:active {
-  background-color: #FAF7F2;
-}
-
-.me-service-row-last {
+.list-row:last-child {
   border-bottom: none;
 }
 
-.me-service-texts {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
+.list-row:active {
+  background-color: #fdfaf7;
 }
 
-.me-service-title {
+.me-menu-title {
   font-size: 28rpx;
-  font-weight: 500;
-  color: #231F1D;
+  color: #3a2a2d;
   letter-spacing: 0.5rpx;
 }
 
-.me-service-note {
-  margin-top: 6rpx;
-  font-size: 21rpx;
-  color: #8C827B;
+.list-row__arrow {
+  width: 14rpx;
+  height: 14rpx;
+  border-top: 2px solid #c9c0b8;
+  border-right: 2px solid #c9c0b8;
+  transform: rotate(45deg);
 }
 
-.me-service-arrow {
-  font-size: 28rpx;
-  color: #B5ADA4;
-  font-weight: 400;
-  margin-left: 16rpx;
+.me-logout-row {
+  margin-top: 8rpx;
+  border-top: 1px solid #f6f0ea;
+}
+
+.me-logout-text {
+  color: #a8999b !important;
+  font-size: 26rpx;
 }
 
 .me-bottom-space {
-  height: calc(env(safe-area-inset-bottom) + 140rpx);
+  height: calc(104rpx + 28rpx + env(safe-area-inset-bottom) + 40rpx);
 }

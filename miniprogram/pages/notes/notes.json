@@ -1,1 +1,9 @@
-{ "enablePullDownRefresh": true, "navigationStyle": "custom", "backgroundColor": "#F6E6DA" }
+{
+  "enablePullDownRefresh": true,
+  "navigationStyle": "custom",
+  "backgroundColor": "#f3efe8",
+  "backgroundTextStyle": "dark",
+  "usingComponents": {
+    "state-view": "/components/state-view/state-view"
+  }
+}

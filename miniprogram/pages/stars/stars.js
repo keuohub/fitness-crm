@@ -3,13 +3,20 @@ var api = require("../../utils/api.js");
 
 var hasShownSplashThisSession = false;
 
+var DEFAULT_STARS = [
+  { id: 1, name: "陈芳", avatarUrl: "/images/stars/member_star_1.jpg", quote: "“肩颈松弛下来之后，呼吸都深了，连夜里的睡眠都踏实了许多。”", journey: "相伴自律 365 天 · 100 节大器械私教" },
+  { id: 3, name: "王晓燕", avatarUrl: "/images/stars/member_star_3.jpg", quote: "“把注意力收回到每一次呼与吸，身体比想象中更有内在的韧性。”", journey: "相伴自律 365 天 · 30 节精选普拉提" },
+  { id: 4, name: "刘立想", avatarUrl: "/images/stars/member_star_4.jpg", quote: "“在呼吸的节律里，重新找回身体原本的力量与从容。”", journey: "相伴自律 365 天 · 56 节精选普拉提" },
+  { id: 2, name: "袁琪", avatarUrl: "/images/stars/member_star_2.jpg", quote: "“以前总习惯性耸肩，在这里找回了背部力量，整个人自然挺拔了。”", journey: "相伴自律 365 天 · 精选普拉提" }
+];
+
 Page({
   data: {
-    starsList: [],
+    starsList: DEFAULT_STARS,
     currentIndex: 0,
-    currentStar: null,
+    currentStar: DEFAULT_STARS[0],
     baseUrl: "",
-    loading: true,
+    loading: false,
     loadError: "",
     showSplash: false,
     splashFadeOut: false
@@ -18,7 +25,7 @@ Page({
   onLoad: function() {
     var baseUrl = api.getBaseUrl();
     var cached = wx.getStorageSync("cached_stars");
-    var initialList = Array.isArray(cached) && cached.length > 0 ? cached : [];
+    var initialList = Array.isArray(cached) && cached.length > 0 ? cached : DEFAULT_STARS;
 
     var showSplash = !hasShownSplashThisSession;
     if (showSplash) {
@@ -29,7 +36,7 @@ Page({
       baseUrl: baseUrl,
       starsList: initialList,
       currentStar: initialList[0] || null,
-      loading: initialList.length === 0,
+      loading: false,
       showSplash: showSplash,
       splashFadeOut: false
     });
@@ -73,6 +80,11 @@ Page({
     }, 450);
   },
 
+  splashToBooking: function() {
+    this.skipSplash();
+    wx.switchTab({ url: "/pages/booking/booking" });
+  },
+
   onShow: function() {
     if (this.data.showSplash) {
       this.setTabBarHidden(true);
@@ -91,7 +103,13 @@ Page({
 
   fullUrl: function(p) {
     if (!p) return "";
+    if (p.indexOf("member_star_1") >= 0) return "/images/stars/member_star_1.jpg";
+    if (p.indexOf("member_star_2") >= 0) return "/images/stars/member_star_2.jpg";
+    if (p.indexOf("member_star_3") >= 0) return "/images/stars/member_star_3.jpg";
+    if (p.indexOf("member_star_4") >= 0 || p.indexOf("brand-1792570568116-z3ysm9") >= 0) return "/images/stars/member_star_4.jpg";
     if (p.indexOf("http") === 0) return p;
+    // 本地包内直读，零延迟
+    if (p.indexOf("/images/") === 0) return p;
     return api.getBaseUrl() + p;
   },
 

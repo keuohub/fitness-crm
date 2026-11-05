@@ -1,8 +1,8 @@
 <!-- pages/manager/manager.wxml -->
-<view class="mgr-page">
+<view class="mgr-page" style="padding-top: calc({{nav.navBottom + 4}}px + 94rpx);">
 
   <!-- 顶部自定义状态栏与全局导航 -->
-  <view class="mgr-navbar">
+  <view class="mgr-navbar" style="padding-top: {{nav.navBottom + 4}}px; height: 88rpx; box-sizing: content-box;">
     <view class="mgr-nav-left" bindtap="{{currentView === 'home' ? 'goBackMember' : 'goHomeView'}}">
       <text class="mgr-nav-back">‹</text>
       <text class="mgr-nav-back-text">{{currentView === 'home' ? '会员端' : '工作台'}}</text>

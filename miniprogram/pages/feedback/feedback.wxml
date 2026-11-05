@@ -13,30 +13,24 @@
   <!-- 正常内容 -->
   <block wx:else>
 
-    <!-- 章节引言：小桥来信 (Editorial Epistle Header) -->
-    <view class="epistle-header stagger-1">
+    <!-- 章节引言：小桥来信 -->
+    <view class="epistle-header">
       <view class="epistle-chapter-tag">
-        <text class="chapter-code">EPISTLES</text>
-        <text class="chapter-dot">/</text>
         <text class="chapter-label">见字如面</text>
       </view>
       <text class="epistle-hero-title">小桥来信</text>
       <text class="epistle-hero-subtitle">见字如面 · 每一寸身体的微妙改变，我都替你细心珍藏</text>
     </view>
 
-    <!-- 最新一封手札信笺 (The Masterpiece Letter) -->
-    <view wx:if="{{latestFeedback}}" class="epistle-section stagger-2">
+    <!-- 最新一封手札信笺 -->
+    <view wx:if="{{latestFeedback}}" class="epistle-section">
       <view class="epistle-section-header">
         <view class="header-left">
-          <text class="section-chapter-num">01</text>
           <text class="section-title">最新手札</text>
         </view>
-        <text class="section-postmark">LATEST EPISTLE</text>
       </view>
 
       <view class="stationery-letter-sheet" bindtap="toggleLatest">
-        <!-- 信笺装饰暗纹 -->
-        <text class="letter-watermark">“</text>
         <view class="letter-top-crimson-line"></view>
 
         <!-- 信笺元信息 -->
@@ -61,7 +55,7 @@
             <text class="sign-author">小桥 · 于徕舞</text>
           </view>
           <view class="letter-seal-stamp">
-            <text class="seal-text">徕舞\n私享</text>
+            <text class="seal-text">徕舞\n手札</text>
           </view>
         </view>
 
@@ -78,20 +72,18 @@
           <view class="action-trigger-btn" catchtap="goToFeeling">
             <text class="action-spark">✦</text>
             <text class="action-txt">给小桥写回音便签 · 记录今日体感</text>
-            <text class="action-arrow">→</text>
           </view>
         </view>
       </view>
     </view>
 
-    <!-- 极细发丝分隔律动线 -->
+    <!-- 极细发丝分隔线 -->
     <view class="editorial-hairline"></view>
 
     <!-- 「自律长跑 · 蜕变时光轴」 -->
-    <view class="epistle-section stagger-3">
+    <view class="epistle-section">
       <view class="epistle-section-header">
         <view class="header-left">
-          <text class="section-chapter-num">02</text>
           <text class="section-title">自律经纬</text>
         </view>
         <text class="section-postmark">相伴 {{joinDays}} 天</text>
@@ -101,7 +93,7 @@
         <!-- 里程碑 1 -->
         <view class="milestone-spine-item milestone-done">
           <view class="spine-col">
-            <view class="spine-dot"><text class="dot-text">01</text></view>
+            <view class="spine-dot"></view>
             <view class="spine-line"></view>
           </view>
           <view class="milestone-info">
@@ -116,7 +108,7 @@
         <!-- 里程碑 2 -->
         <view class="milestone-spine-item {{trainCount >= 10 ? 'milestone-done' : 'milestone-active'}}">
           <view class="spine-col">
-            <view class="spine-dot"><text class="dot-text">02</text></view>
+            <view class="spine-dot"></view>
             <view class="spine-line"></view>
           </view>
           <view class="milestone-info">
@@ -133,7 +125,7 @@
         <!-- 里程碑 3 -->
         <view class="milestone-spine-item {{trainCount >= 30 ? 'milestone-done' : (trainCount >= 10 ? 'milestone-active' : 'milestone-locked')}}">
           <view class="spine-col">
-            <view class="spine-dot"><text class="dot-text">03</text></view>
+            <view class="spine-dot"></view>
             <view class="spine-line"></view>
           </view>
           <view class="milestone-info">
@@ -150,12 +142,12 @@
         <!-- 里程碑 4 -->
         <view class="milestone-spine-item {{joinDays >= 365 ? 'milestone-done' : 'milestone-locked'}}">
           <view class="spine-col">
-            <view class="spine-dot"><text class="dot-text">04</text></view>
+            <view class="spine-dot"></view>
           </view>
           <view class="milestone-info">
             <view class="milestone-title-row">
-              <text class="milestone-name">终生优雅 · 掌控身体与生活</text>
-              <text class="milestone-status-badge status-locked">终身守候</text>
+              <text class="milestone-name">第 100 节 · 身体的稳定与从容</text>
+              <text class="milestone-status-badge status-locked">长期陪伴</text>
             </view>
             <text class="milestone-narrative">挺拔从容融于呼吸本能，自律化为骨骼底气，无论岁月流转，皆为从容大女主气场。</text>
           </view>
@@ -163,11 +155,11 @@
       </view>
     </view>
 
-    <!-- 极细发丝分隔律动线 -->
+    <!-- 极细发丝分隔线 -->
     <view class="editorial-hairline"></view>
 
     <!-- 无反馈空状态 -->
-    <view wx:if="{{!latestFeedback && historyFeedbacks.length === 0}}" class="epistle-empty-state stagger-2">
+    <view wx:if="{{!latestFeedback && historyFeedbacks.length === 0}}" class="epistle-empty-state">
       <view class="empty-seal-stamp">印</view>
       <text class="empty-lead">第一封专属手札 · 正在为你执笔</text>
       <text class="empty-caption">每一次深层呼吸与肌肉延展，都值得被温柔记录与珍藏</text>
@@ -176,10 +168,9 @@
     </view>
 
     <!-- 历史反馈列表 -->
-    <view wx:if="{{historyFeedbacks.length > 0}}" class="epistle-section stagger-4">
+    <view wx:if="{{historyFeedbacks.length > 0}}" class="epistle-section">
       <view class="epistle-section-header">
         <view class="header-left">
-          <text class="section-chapter-num">03</text>
           <text class="section-title">手札珍藏</text>
         </view>
         <text class="section-postmark">{{historyFeedbacks.length}} 封</text>

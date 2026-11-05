@@ -34,6 +34,24 @@ Component({
   },
 
   methods: {
+    updateTab: function(targetRoute) {
+      var route = targetRoute;
+      if (!route) {
+        var pages = getCurrentPages();
+        route = pages.length ? "/" + pages[pages.length - 1].route : "/pages/stars/stars";
+      }
+      if (route.charAt(0) !== "/") {
+        route = "/" + route;
+      }
+      var idx = this.data.list.findIndex(function(item) {
+        return item.pagePath === route;
+      });
+      this.setData({
+        selected: idx >= 0 ? idx : 0,
+        hidden: false
+      });
+    },
+
     switchTab: function(e) {
       var data = e.currentTarget.dataset;
       var url = data.path;

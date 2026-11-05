@@ -1,5 +1,6 @@
 {
-  "enablePullDownRefresh": true,
+  "usingComponents": {},
   "navigationStyle": "custom",
-  "backgroundColor": "#F6E6DA"
+  "backgroundColor": "#f3efe8",
+  "backgroundTextStyle": "dark"
 }

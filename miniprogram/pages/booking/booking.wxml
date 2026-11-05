@@ -1,135 +1,218 @@
-<view class="bk-container">
+<view class="bk-container {{view === 'landing' ? 'bk-container--landing' : ''}}">
 
-  <!-- 自定义顶部导航栏（完美避让灵动岛与状态栏） -->
-  <view class="bk-header-sticky">
-    <view class="bk-navbar">
-      <text class="bk-nav-title">徕舞普拉提女子塑形</text>
+  <!-- ================= 首屏 landing：沉浸式「预约课程」 ================= -->
+  <view
+    wx:if="{{view === 'landing'}}"
+    class="bk-landing"
+    bindtouchstart="onLandingTouchStart"
+    bindtouchend="onLandingTouchEnd"
+  >
+    <!-- 背景双层淡入 -->
+    <image wx:if="{{bgA}}" class="bk-bg {{bgFront === 'A' && !bgSolid ? 'bk-bg--on' : ''}}" src="{{bgA}}" mode="aspectFill" data-layer="A" bindload="onBgLoad" binderror="onBgError" />
+    <image wx:if="{{bgB}}" class="bk-bg {{bgFront === 'B' && !bgSolid ? 'bk-bg--on' : ''}}" src="{{bgB}}" mode="aspectFill" data-layer="B" bindload="onBgLoad" binderror="onBgError" />
+    <view wx:if="{{bgSolid}}" class="bk-bg-solid">
+      <text class="bk-bg-solid-text">{{landingLabel}}</text>
+    </view>
+    <view class="bk-landing-shade"></view>
+
+    <!-- 顶部：右侧小入口（首屏底图已含高定中英大标题，保持沉浸留白） -->
+    <view class="bk-landing-head" style="padding-top: {{navBottom + 4}}px;">
+      <view class="bk-landing-brand-tag">LAIWU PILATES</view>
+      <text class="bk-landing-link" bindtap="goToMyBookings">我的预约</text>
     </view>
 
-    <!-- 一级分类导航 Tab（精品课 / 团体课 / 私教课 / 全部） -->
-    <view class="bk-cat-tabs">
-      <view
-        wx:for="{{categories}}"
-        wx:key="key"
-        class="bk-cat-tab {{selectedCategory === item.key ? 'bk-cat-active' : ''}}"
-        data-key="{{item.key}}"
-        bindtap="selectCategory"
-      >
-        <text class="bk-cat-label">{{item.label}}</text>
-        <view wx:if="{{selectedCategory === item.key}}" class="bk-cat-bar"></view>
-      </view>
-    </view>
-
-    <!-- 单行周历横滑条（高亮当天，不阻挡） -->
-    <scroll-view class="bk-dates-scroll" scroll-x="{{true}}" show-scrollbar="{{false}}">
-      <view class="bk-dates-row">
-        <view
-          wx:for="{{dates}}"
-          wx:key="value"
-          class="bk-date-pill {{selectedDate === item.value ? 'bk-date-active' : ''}}"
-          data-date="{{item.value}}"
-          bindtap="selectDate"
-        >
-          <text class="bk-date-weekday">{{item.weekday}}</text>
-          <text class="bk-date-daynum">{{item.day}}</text>
-          <view wx:if="{{selectedDate === item.value}}" class="bk-date-dot"></view>
+    <!-- 底部：竖排分类 + 进度 + 主按钮 -->
+    <view class="bk-landing-bottom">
+      <scroll-view class="bk-cat-scroll" scroll-x="{{true}}" enhanced="{{true}}" show-scrollbar="{{false}}" scroll-into-view="lc-{{landingIndex}}" scroll-with-animation="{{true}}">
+        <view class="bk-cat-row">
+          <view
+            wx:for="{{landingCats}}"
+            wx:key="key"
+            id="lc-{{index}}"
+            class="bk-vcat {{landingIndex === index ? 'bk-vcat--on' : ''}}"
+            data-index="{{index}}"
+            data-key="{{item.key}}"
+            catchtap="selectLandingCategory"
+          >
+            <text wx:for="{{item.chars}}" wx:for-item="ch" wx:for-index="ci" wx:key="ci" class="bk-vcat-ch">{{ch}}</text>
+          </view>
         </view>
+      </scroll-view>
+
+      <view class="bk-landing-actions">
+        <view class="bk-progress">
+          <view class="bk-progress-line"></view>
+          <text class="bk-progress-text">{{landingIndex + 1}} / {{landingCats.length}}</text>
+        </view>
+        <view class="bk-landing-btn" catchtap="enterList">{{landingKey === 'all' ? '预约全部课程' : '预约' + landingLabel}}</view>
+        <view class="bk-progress bk-progress--ghost"></view>
       </view>
-    </scroll-view>
+    </view>
   </view>
 
-  <!-- 页面主体区域 -->
-  <view class="bk-content">
-    <view wx:if="{{loading}}" class="bk-loading">
-      <text class="bk-loading-text">正在同步最新排课…</text>
+  <!-- ================= 分类排课列表 list ================= -->
+  <block wx:else>
+    <view class="bk-header-sticky">
+      <!-- 胶囊行：只放返回 -->
+      <view class="bk-navbar" style="padding-top: {{navTop}}px; height: {{navHeight}}px;">
+        <view class="bk-back" bindtap="backToLanding"><view class="bk-back-arrow"></view></view>
+      </view>
+      <!-- 胶囊下方：分类大标题 + 右侧入口 -->
+      <view class="bk-title-row">
+        <text class="bk-page-title">{{listLabel}}</text>
+        <view class="bk-sub-actions">
+          <text class="bk-text-btn" bindtap="openNoticeModal">须知</text>
+          <text class="bk-text-btn" bindtap="goToMyBookings">我的预约</text>
+        </view>
+      </view>
+      <text class="bk-rule-text">可约未来 7 天 · 开课前 2 小时截止</text>
+
+      <!-- 分类 Tab -->
+      <scroll-view class="bk-cat-tabs-scroll" scroll-x="{{true}}" enhanced="{{true}}" show-scrollbar="{{false}}">
+        <view class="bk-cat-tabs">
+          <view
+            wx:for="{{categories}}"
+            wx:key="key"
+            class="bk-cat-tab {{selectedCategory === item.key ? 'bk-cat-active' : ''}}"
+            data-key="{{item.key}}"
+            bindtap="selectCategory"
+          >
+            <text class="bk-cat-label">{{item.label}}</text>
+            <view wx:if="{{selectedCategory === item.key}}" class="bk-cat-line"></view>
+          </view>
+        </view>
+      </scroll-view>
     </view>
 
-    <block wx:else>
-      <!-- 异常提示 -->
-      <view wx:if="{{error}}" class="bk-alert bk-alert-error"><text>{{error}}</text></view>
-
-      <!-- 无卡提示（温和典雅） -->
-      <view wx:if="{{hasCard === false}}" class="bk-nocard">
-        <text class="bk-nocard-title">尊享体验提示</text>
-        <text class="bk-nocard-body">当前课表支持随时查阅，预约上课需持有有效卡项。开卡或续期请联系小桥或馆内导师。</text>
-      </view>
-
-      <!-- 当天无课空状态 -->
-      <view wx:if="{{shownSessions.length === 0}}" class="bk-empty">
-        <text class="bk-empty-title">该分类当日暂无排课</text>
-        <text class="bk-empty-body">您可以切换上方分类或点击其他日期查看。</text>
-      </view>
-
-      <!-- 标准化动态三栏卡片列表（直观高屏效） -->
-      <view class="bk-list">
-        <view wx:for="{{shownSessions}}" wx:key="id" class="bk-card">
-          <!-- 左栏：课程部位动作封面图 -->
-          <view class="bk-card-cover-wrap">
-            <image
-              class="bk-card-cover"
-              src="{{item.cover}}"
-              mode="aspectFill"
-              lazy-load="true"
-            ></image>
+    <view class="bk-content">
+      <!-- 课程介绍（该分类 offering，可折叠） -->
+      <view class="bk-intro" wx:if="{{listOffering}}">
+        <view class="bk-intro-top" bindtap="toggleIntro">
+          <image wx:if="{{listOffering.imageUrl && !listOffering.imgFailed}}" class="bk-intro-thumb {{introExpanded ? 'bk-intro-thumb--big' : ''}}" src="{{listOffering.imageUrl}}" mode="aspectFill" binderror="onIntroImgError" />
+          <view class="bk-intro-head">
+            <text class="bk-intro-name">{{listOffering.name}}</text>
+            <text class="bk-intro-toggle">{{introExpanded ? '收起介绍' : '展开介绍'}}</text>
           </view>
+        </view>
+        <view wx:if="{{introExpanded}}" class="bk-intro-body">
+          <text wx:if="{{listOffering.summary}}" class="bk-intro-text">{{listOffering.summary}}</text>
+          <text wx:if="{{listOffering.target}}" class="bk-intro-cap">适合：{{listOffering.target}}</text>
+          <text wx:if="{{listOffering.highlight}}" class="bk-intro-cap">{{listOffering.highlight}}</text>
+        </view>
+      </view>
 
-          <!-- 中栏：课程名称、星级难度、导师与席位 -->
-          <view class="bk-card-info">
-            <text class="bk-card-name">{{item.courseName}}</text>
-            
-            <view class="bk-card-rating">
-              <view class="bk-stars">
-                <text wx:for="{{item.starsList}}" wx:key="*this" class="bk-star {{item ? 'bk-star-gold' : 'bk-star-gray'}}">★</text>
+      <text class="bk-section-title">课程安排</text>
+
+      <!-- 游客温馨提示条 -->
+      <view wx:if="{{!isLoggedIn}}" class="bk-guest-strip" bindtap="goLoginFromList">
+        <text class="bk-guest-strip-text">登录会员档案后可直接预约席位</text>
+        <text class="bk-guest-strip-btn">去登录 ›</text>
+      </view>
+
+      <next-class wx:if="{{isLoggedIn}}" id="nextClass" compact="{{true}}" />
+
+      <!-- 日期条（所有用户均可见） -->
+      <scroll-view class="bk-dates-scroll" scroll-x="{{true}}" show-scrollbar="{{false}}">
+        <view class="bk-dates-row">
+          <view
+            wx:for="{{dates}}"
+            wx:key="value"
+            class="bk-date-item {{selectedDate === item.value ? 'bk-date-active' : ''}}"
+            data-date="{{item.value}}"
+            bindtap="selectDate"
+          >
+            <text class="bk-date-weekday">{{item.weekday}}</text>
+            <text class="bk-date-daynum">{{item.day}}</text>
+            <view wx:if="{{selectedDate === item.value}}" class="bk-date-line"></view>
+            <view wx:elif="{{item.hasBooked}}" class="bk-date-dot"></view>
+            <view wx:else class="bk-date-placeholder"></view>
+          </view>
+        </view>
+      </scroll-view>
+
+      <view wx:if="{{loading}}" class="bk-skeleton-list">
+        <view class="skeleton bk-sk-card"></view>
+        <view class="skeleton bk-sk-card"></view>
+        <view class="skeleton bk-sk-card"></view>
+      </view>
+
+      <state-view wx:elif="{{error}}" type="error" icon="wifi" title="{{error.indexOf('登录') >= 0 ? '登录已过期' : '没连上网络'}}" desc="{{error.indexOf('登录') >= 0 ? '' : '检查一下网络，再试一次'}}" actionText="重新加载" bindaction="loadAll" />
+
+      <state-view wx:elif="{{shownSessions.length === 0 && catNoneIn7}}" type="empty" icon="calendar" title="近 7 天没有排{{listLabel}}" desc="可以先看看其他课" actionText="看全部课程" bindaction="showAllCategory" />
+
+      <state-view wx:elif="{{shownSessions.length === 0}}" type="empty" icon="calendar" title="这天没有{{selectedCategory === 'all' ? '排课' : listLabel}}" desc="换一天看看，或先看看其他课" actionText="看看明天" bindaction="selectNextDay" />
+
+      <!-- 课程卡（实拍：课种标 + 难度三格 → 课名 → 教室/老师 → 时间 + 状态胶囊） -->
+      <view wx:else class="bk-list">
+        <view
+          wx:for="{{shownSessions}}"
+          wx:key="id"
+          class="bk-card {{item.isEnded ? 'bk-card--ended' : ''}}"
+          data-id="{{item.id}}"
+          bindtap="onCardTap"
+        >
+          <view class="bk-card-top">
+            <text wx:if="{{item.catLabel}}" class="bk-card-tag">{{item.catLabel}}</text>
+            <view wx:else></view>
+            <view class="bk-diff">
+              <text class="bk-diff-label">难度</text>
+              <view class="bk-diff-bars">
+                <view wx:for="{{item.bars}}" wx:for-item="on" wx:for-index="bi" wx:key="bi" class="bk-bar bk-bar-{{bi}} {{on ? 'bk-bar--on' : ''}}"></view>
               </view>
-              <text class="bk-remain-tag {{item.remaining === 0 ? 'bk-remain-full' : ''}}">
-                {{item.remaining === 0 ? '人数已满' : '还可预约 ' + item.remaining + ' 人'}}
-              </text>
-            </view>
-
-            <view class="bk-card-coach-row">
-              <text class="bk-coach-name">{{item.coachName || '专属导师'}}</text>
-              <text wx:if="{{item.roomName}}" class="bk-room-name">· {{item.roomName}}</text>
             </view>
           </view>
-
-          <!-- 右栏：大字时间区间与高质感行动按钮 -->
-          <view class="bk-card-action">
-            <text class="bk-card-time">{{item.startTime}}–{{item.endTime}}</text>
-            
-            <view wx:if="{{item.bookedByMe}}" class="bk-btn bk-btn-booked" data-id="{{item.bookingId}}" bindtap="cancel">
-              <text class="bk-btn-text">已预约</text>
-            </view>
-            <view wx:elif="{{item.isEnded}}" class="bk-btn bk-btn-disabled">
-              <text class="bk-btn-text">已开课</text>
-            </view>
-            <view wx:elif="{{item.remaining <= 0}}" class="bk-btn bk-btn-disabled">
-              <text class="bk-btn-text">已满</text>
-            </view>
-            <view wx:else class="bk-btn bk-btn-primary" data-id="{{item.id}}" bindtap="reserve">
-              <text class="bk-btn-text">预约</text>
+          <text class="bk-card-name">{{item.courseName}}</text>
+          <text wx:if="{{item.roomName || item.coachName}}" class="bk-card-meta">{{item.roomName}}{{item.roomName && item.coachName ? ' · ' : ''}}{{item.coachName}}</text>
+          <view class="bk-card-bottom">
+            <text class="bk-card-time">{{item.dateLine}}</text>
+            <view class="bk-card-act">
+              <text wx:if="{{!item.bookedByMe && !item.isEnded && item.remaining > 0 && item.remaining <= 3}}" class="bk-remain-warn">仅剩 {{item.remaining}} 位</text>
+              <view wx:if="{{item.bookedByMe}}" class="bk-pill bk-pill--dark">已预约</view>
+              <view wx:elif="{{item.isEnded}}" class="bk-pill bk-pill--muted">已开课</view>
+              <view wx:elif="{{item.remaining <= 0}}" class="bk-pill bk-pill--muted">已满</view>
+              <view wx:elif="{{!isLoggedIn}}" class="bk-pill">查看/预约</view>
+              <view wx:else class="bk-pill">立即预约</view>
             </view>
           </view>
         </view>
       </view>
 
-      <!-- 我的近期预约待上课（贴心置底卡片） -->
-      <view class="bk-my-section" wx:if="{{myBookings.length > 0}}">
-        <view class="bk-my-head">
-          <text class="bk-my-title">我的待上课预约</text>
-          <text class="bk-my-badge">共 {{myBookings.length}} 节</text>
-        </view>
-        <view wx:for="{{myBookings}}" wx:key="id" class="bk-my-card">
-          <view class="bk-my-main">
-            <text class="bk-my-course">{{item.courseName}}</text>
-            <text class="bk-my-meta">{{item.date}} · {{item.time}} · {{item.coachName}}</text>
-          </view>
-          <view class="bk-my-cancel" data-id="{{item.id}}" bindtap="cancel">取消预约</view>
-        </view>
-      </view>
-
-      <!-- 底部安全垫高，杜绝悬浮底栏遮挡卡片 -->
       <view class="bk-bottom-space"></view>
-    </block>
+    </view>
+  </block>
+
+  <!-- 课程详情半屏弹层组件 -->
+  <session-sheet
+    show="{{sheetVisible}}"
+    session="{{sheetSession}}"
+    loggedIn="{{isLoggedIn}}"
+    cardSummary="{{cardSummary}}"
+    submitting="{{sheetSubmitting}}"
+    errorMessage="{{sheetErrorMessage}}"
+    coach="{{sheetCoach}}"
+    intro="{{sheetIntro}}"
+    bindclose="closeSheet"
+    bindreserve="handleSheetReserve"
+    bindcancel="handleSheetCancel"
+    bindlogin="goLoginWithSession"
+  />
+
+  <!-- 约课须知独立全量弹层 -->
+  <view class="bk-notice-modal" wx:if="{{noticeModalVisible}}" catchtouchmove="noop">
+    <view class="bk-notice-mask" bindtap="closeNoticeModal"></view>
+    <view class="bk-notice-panel">
+      <view class="bk-notice-head">
+        <text class="bk-notice-head-title">约课须知</text>
+        <view class="bk-notice-head-close" bindtap="closeNoticeModal">✕</view>
+      </view>
+      <scroll-view class="bk-notice-scroll" scroll-y="{{true}}">
+        <view class="bk-notice-modal-item" wx:for="{{noticeItems}}" wx:key="*this">
+          <text class="bk-notice-modal-num">{{index + 1}}.</text>
+          <text class="bk-notice-modal-text">{{item}}</text>
+        </view>
+      </scroll-view>
+      <button class="btn-primary bk-notice-modal-btn" bindtap="closeNoticeModal">知道了</button>
+    </view>
   </view>
 
 </view>

@@ -1,6 +1,6 @@
+var navUtil = require("../../utils/nav.js");
 // pages/transformation/transformation.js
 // 设计原则：只展示后台真实录入的数据，不推算、不编造、不堆文案。
-// 会员一眼看到：来了多少天、一共上了多少节、四类课各多少、身体变化、小桥记录。
 var api = require("../../utils/api.js");
 var format = require("../../utils/format.js");
 
@@ -28,6 +28,7 @@ Page({
     latestTrainingDate: "",
 
     selectedAngle: "all",
+    selectedAngleLabel: "全角度",
     angleTabs: [
       { key: "all", label: "全部" },
       { key: "front", label: "正面" },
@@ -53,6 +54,7 @@ Page({
   },
 
   onLoad: function() {
+    this.setData({ nav: navUtil.getNavMetrics() });
     var memberId = wx.getStorageSync("memberId");
     if (!memberId || !wx.getStorageSync("memberToken")) {
       wx.reLaunch({ url: "/pages/login/login?force=1" });
@@ -67,7 +69,12 @@ Page({
 
   onShow: function() {
     if (typeof this.getTabBar === "function" && this.getTabBar()) {
-      this.getTabBar().setData({ selected: 3, hidden: false });
+      var tb = this.getTabBar();
+      if (typeof tb.updateTab === "function") {
+        tb.updateTab("/pages/transformation/transformation");
+      } else {
+        tb.setData({ hidden: false });
+      }
     }
     var now = Date.now();
     if (this.data.memberId && (!this._lastLoad || now - this._lastLoad > 3000)) {
@@ -76,15 +83,17 @@ Page({
     }
   },
 
+  onRetry: function() {
+    this.setData({ loading: true });
+    this.loadAll();
+  },
   onPullDownRefresh: function() {
     var that = this;
     this.loadAll(function() { wx.stopPullDownRefresh(); });
   },
 
   fullUrl: function(p) {
-    if (!p) return "";
-    if (p.indexOf("http") === 0) return p;
-    return api.getBaseUrl() + p;
+    return api.fullUrl(p);
   },
 
   loadAll: function(done) {
@@ -108,10 +117,9 @@ Page({
       if (resMe.statusCode === 200 && resMe.data) {
         var m = resMe.data;
         payload.memberName = m.memberName || that.data.memberName;
-        // 尊称按性别渲染：只有明确是男性才叫「先生」，其余（含未填）沿用「女士」。
         var g = String(m.gender || "").toLowerCase();
         payload.honorific = (g === "male" || g === "m" || g === "男") ? "先生" : "女士";
-        payload.avatarUrl = that.fullUrl(m.avatarUrl || "");
+        payload.avatarUrl = api.fullUrl(m.avatarUrl || "");
         payload.joinedAt = m.joinedAt ? format.formatChineseDate(m.joinedAt) : "";
         payload.joinDays = (m.joinDays === null || m.joinDays === undefined) ? null : Number(m.joinDays);
         payload.totalHours = Number(m.totalHours || 0);
@@ -131,8 +139,8 @@ Page({
           .map(function(c) {
             return {
               id: c.id,
-              photo1_url: that.fullUrl(c.photo1_url),
-              photo2_url: that.fullUrl(c.photo2_url),
+              photo1_url: api.fullUrl(c.photo1_url),
+              photo2_url: api.fullUrl(c.photo2_url),
               photo1_date: c.photo1_date ? format.formatChineseDate(c.photo1_date) : "",
               photo2_date: c.photo2_date ? format.formatChineseDate(c.photo2_date) : "",
               angle: c.photo1_type || c.photo2_type || "front",
@@ -193,7 +201,13 @@ Page({
   previewImage: function(e) {
     var src = e.currentTarget.dataset.src;
     if (!src) return;
-    wx.previewImage({ urls: [src], current: src });
+    var all = e.currentTarget.dataset.all;
+    var urls = Array.isArray(all) && all.length > 0 ? all : [src];
+    wx.previewImage({
+      urls: urls,
+      current: src,
+      showmenu: true
+    });
   },
 
   onFeelingInput: function(e) {
@@ -249,7 +263,7 @@ Page({
   },
 
   goBooking: function() {
-    wx.navigateTo({ url: "/pages/booking/booking" });
+    wx.switchTab({ url: "/pages/booking/booking" });
   },
 
   goFeedback: function() {
@@ -257,9 +271,9 @@ Page({
   },
 
   onShareTimeline: function() {
-    return { title: "徕舞女子塑形 · 身体掌权，终生优雅" };
+    return { title: "徕舞女子塑形 · 约一节课" };
   },
   onShareAppMessage: function() {
-    return { title: "我的身体手札 · 徕舞", path: "/pages/stars/stars" };
+    return { title: "徕舞女子塑形 · 约一节课", path: "/pages/transformation/transformation" };
   }
 });

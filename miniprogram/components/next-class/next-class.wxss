@@ -1,0 +1,232 @@
+/* components/next-class/next-class.wxss
+   lululemon 规范下一节课组件
+   完整模式 #efeae2 底块、无描边、直角 · 7天黑实心/灰描边圆点
+   ============================================================ */
+
+.next-class-wrapper {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* 骨架屏 */
+.next-skeleton-box {
+  border-radius: 0;
+  background-color: #efeae2;
+}
+
+.next-skeleton-compact {
+  height: 72rpx;
+  margin: 12rpx 0;
+}
+
+.next-skeleton-full {
+  height: 200rpx;
+  margin-bottom: 24rpx;
+}
+
+/* ── 紧凑模式（约课页顶部） ── */
+.next-compact-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16rpx 32rpx;
+  background: #ffffff;
+  border-bottom: 1px solid #ece7df;
+  box-sizing: border-box;
+}
+
+.compact-left {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.compact-tag {
+  font-size: 22rpx;
+  color: #000000;
+  background: #efeae2;
+  padding: 2rpx 10rpx;
+  border-radius: 4rpx;
+  margin-right: 14rpx;
+  flex-shrink: 0;
+  font-weight: 500;
+}
+
+.compact-time {
+  font-family: var(--font-num);
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #000000;
+  margin-right: 14rpx;
+  flex-shrink: 0;
+}
+
+.compact-course {
+  font-size: 26rpx;
+  color: #54555b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compact-right {
+  flex-shrink: 0;
+  margin-left: 16rpx;
+}
+
+.compact-link {
+  font-size: 24rpx;
+  color: #000000;
+  font-weight: 500;
+}
+
+/* ── 完整模式（「我的」页顶部）：#efeae2 底块、无描边、直角 ── */
+.next-card {
+  background: #efeae2;
+  border: none;
+  border-radius: 0;
+  padding: 28rpx 32rpx;
+  margin-bottom: 28rpx;
+  box-sizing: border-box;
+}
+
+.nc-main-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24rpx;
+}
+
+.nc-left-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.nc-label {
+  font-size: 22rpx;
+  color: #54555b;
+  margin-bottom: 6rpx;
+}
+
+.nc-time-main {
+  font-family: var(--font-num);
+  font-size: 36rpx;
+  line-height: 1.35;
+  font-weight: 600;
+  color: #000000;
+}
+
+.nc-course-line {
+  margin-top: 6rpx;
+  font-size: 26rpx;
+  color: #000000;
+}
+
+.nc-course-name {
+  font-weight: 500;
+}
+
+.nc-coach-name {
+  color: #54555b;
+}
+
+.nc-right-col {
+  flex-shrink: 0;
+  text-align: right;
+  padding-top: 8rpx;
+}
+
+.nc-card-text {
+  font-size: 24rpx;
+  color: #54555b;
+  font-family: var(--font-num);
+}
+
+/* 7天点列：本周 7 点黑实心/灰描边 */
+.nc-week-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 16rpx;
+  border-top: 1px solid #ece7df;
+}
+
+.nc-day-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.nc-day-name {
+  font-size: 22rpx;
+  color: #999999;
+  margin-bottom: 8rpx;
+}
+
+.nc-dot {
+  width: 14rpx;
+  height: 14rpx;
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+.nc-dot-active {
+  background: #000000;
+  border: none;
+}
+
+.nc-dot-idle {
+  background: transparent;
+  border: 2rpx solid #cccccc;
+}
+
+.nc-today-bar {
+  margin-top: 8rpx;
+  width: 18rpx;
+  height: 3rpx;
+  background: transparent;
+  border-radius: 2rpx;
+}
+
+.nc-today-bar-show {
+  background: #000000;
+}
+
+/* 暂无课空状态卡片 */
+.next-empty-card {
+  background: #efeae2;
+  border: none;
+  border-radius: 0;
+  padding: 28rpx 32rpx;
+  margin-bottom: 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+}
+
+.nc-empty-text-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.nc-empty-title {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #000000;
+}
+
+.nc-empty-btn {
+  height: 56rpx;
+  line-height: 56rpx;
+  padding: 0 28rpx;
+  font-size: 24rpx;
+  border-radius: 999rpx;
+  background: #000000;
+  color: #ffffff;
+  margin: 0;
+}

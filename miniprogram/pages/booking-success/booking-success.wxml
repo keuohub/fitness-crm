@@ -1,0 +1,77 @@
+<view class="success-page">
+
+  <!-- 加载骨架屏 -->
+  <view wx:if="{{loading}}" class="success-skeleton-wrap">
+    <view class="skeleton success-sk-circle"></view>
+    <view class="skeleton success-sk-title"></view>
+    <view class="skeleton success-sk-card"></view>
+  </view>
+
+  <!-- 加载异常态（明确告知已预约成功） -->
+  <view wx:elif="{{loadError}}" class="error-state success-error-box">
+    <text class="success-error-title">{{loadError}}</text>
+    <text class="success-error-hint">请勿重复预约，你可以重新加载或在「我的预约」中查看</text>
+    <view class="success-error-actions">
+      <button class="btn-primary success-err-btn" bindtap="handleRetry">重新加载</button>
+      <button class="btn-secondary success-err-btn" bindtap="goToMyBookings">查看我的预约</button>
+    </view>
+  </view>
+
+  <!-- 正常预约成功呈现 -->
+  <view wx:else class="success-content">
+    <!-- 顶部细墨线对勾徽标 -->
+    <view class="success-badge">
+      <view class="success-badge-circle">
+        <view class="success-badge-check"></view>
+      </view>
+    </view>
+
+    <!-- 仪式感大标题与副标题 -->
+    <view class="success-header">
+      <text class="success-title">约好了</text>
+      <text class="success-subtitle">{{sessionInfo.dateCN}} {{sessionInfo.startTime}}</text>
+    </view>
+
+    <!-- 课次信息卡 -->
+    <view class="card success-card">
+      <text class="success-course-name">{{sessionInfo.courseName}}</text>
+      
+      <view class="success-meta-row">
+        <text class="success-meta-time">{{sessionInfo.startTime}}–{{sessionInfo.endTime}}</text>
+        <text wx:if="{{sessionInfo.durationMinutes > 0}}" class="success-meta-duration"> · {{sessionInfo.durationMinutes}} 分钟</text>
+      </view>
+
+      <view class="success-meta-row" wx:if="{{sessionInfo.coachName || sessionInfo.roomName}}">
+        <text wx:if="{{sessionInfo.coachName}}" class="success-coach">{{sessionInfo.coachName}}</text>
+        <text wx:if="{{sessionInfo.roomName}}" class="success-room"> · {{sessionInfo.roomName}}</text>
+      </view>
+
+      <view class="success-divider"></view>
+
+      <!-- 免费取消截止规则 -->
+      <view class="success-rule-row" wx:if="{{sessionInfo.cancelDeadlineText}}">
+        <text class="success-rule-text">{{sessionInfo.cancelDeadlineText}}</text>
+      </view>
+
+      <!-- 卡次与扣次说明 -->
+      <view class="success-card-deduct" wx:if="{{cardInfoText}}">
+        <text class="success-deduct-text">{{cardInfoText}}</text>
+      </view>
+    </view>
+
+    <!-- 情绪陪伴文案 -->
+    <view class="success-warm-wrap" wx:if="{{warmNote}}">
+      <text class="success-warm-text">{{warmNote}}</text>
+    </view>
+
+    <!-- 底部行动按钮组 -->
+    <view class="success-actions">
+      <button class="btn-primary success-btn-main" bindtap="addToCalendar">加入手机日历</button>
+      <button class="btn-secondary success-btn-sub" bindtap="goToMyBookings">查看我的预约</button>
+      <view class="success-text-btn-wrap">
+        <text class="btn-text" bindtap="goToBooking">继续约课</text>
+      </view>
+    </view>
+  </view>
+
+</view>

@@ -138,9 +138,20 @@ page {
 
 .indicator-item {
   cursor: pointer;
+  position: relative;
   height: 6rpx;
   border-radius: 3rpx;
   transition: all 340ms cubic-bezier(0.2, 0.8, 0.25, 1);
+}
+
+/* 扩展触控热区至移动端工学 44rpx+，外观保持极细精致药丸不变 */
+.indicator-item::after {
+  content: "";
+  position: absolute;
+  top: -24rpx;
+  bottom: -24rpx;
+  left: -12rpx;
+  right: -12rpx;
 }
 
 .indicator-dot {

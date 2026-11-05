@@ -1,0 +1,53 @@
+<view class="next-class-wrapper" wx:if="{{isLoggedIn}}">
+  <!-- 紧凑模式（约课页顶部）：只在有下一节课时显示，无课时紧凑模式不渲染 -->
+  <block wx:if="{{compact}}">
+    <view class="next-compact-bar" bindtap="goToMyBookings" wx:if="{{!loading && hasNext}}">
+      <view class="compact-left">
+        <text class="compact-tag">下一节</text>
+        <text class="compact-time">{{nextDateText}}</text>
+        <text class="compact-course">{{nextCourseName}}</text>
+      </view>
+      <view class="compact-right" catchtap="goToMyBookings">
+        <text class="compact-link">我的预约 ›</text>
+      </view>
+    </view>
+  </block>
+
+  <!-- 完整模式（「我的」页顶部）：#f6f6f6 底块、无描边；本周 7 点黑实心/灰描边 -->
+  <block wx:else>
+    <view wx:if="{{loading}}" class="skeleton next-skeleton-box next-skeleton-full"></view>
+    <!-- 有下一节课 -->
+    <view wx:elif="{{hasNext}}" class="next-card" bindtap="goToMyBookings">
+      <view class="nc-main-row">
+        <view class="nc-left-col">
+          <text class="nc-label">下一节</text>
+          <text class="nc-time-main">{{nextDateText}}</text>
+          <view class="nc-course-line">
+            <text class="nc-course-name">{{nextCourseName}}</text>
+            <text wx:if="{{nextCoachName}}" class="nc-coach-name"> · {{nextCoachName}}</text>
+          </view>
+        </view>
+        <view class="nc-right-col" wx:if="{{cardShortText}}">
+          <text class="nc-card-text">{{cardShortText}}</text>
+        </view>
+      </view>
+
+      <!-- 本周日历点（周一至周日） -->
+      <view class="nc-week-row">
+        <view class="nc-day-col" wx:for="{{weekDots}}" wx:key="dateStr">
+          <text class="nc-day-name">{{item.label}}</text>
+          <view class="nc-dot {{item.hasActive ? 'nc-dot-active' : 'nc-dot-idle'}}"></view>
+          <view class="nc-today-bar {{item.isToday ? 'nc-today-bar-show' : ''}}"></view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 暂无课空状态：无课时「这周还没有约课」+ 小号黑胶囊「去约课」——此页唯一一处 -->
+    <view wx:else class="next-empty-card">
+      <view class="nc-empty-text-wrap">
+        <text class="nc-empty-title">这周还没有约课</text>
+      </view>
+      <button class="btn-primary btn-sm nc-empty-btn" bindtap="goToBookingTab">去约课</button>
+    </view>
+  </block>
+</view>

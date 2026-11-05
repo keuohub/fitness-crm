@@ -1,0 +1,173 @@
+<view class="sheet-wrapper" wx:if="{{show}}">
+  <!-- 遮罩层 -->
+  <view class="sheet-mask" bindtap="onClose" catchtouchmove="noop"></view>
+
+  <!-- 底部弹层：92vh，顶部圆角 -->
+  <view class="sheet-panel" catchtouchmove="noop">
+
+    <!-- 关闭按钮 -->
+    <view class="sheet-close" bindtap="onClose" aria-label="关闭">
+      <text class="sheet-close-icon">✕</text>
+    </view>
+
+    <scroll-view class="sheet-body" scroll-y="{{true}}">
+      <!-- 16:9 课程图（无图或失败则不显示） -->
+      <image
+        wx:if="{{session.cover && !imgFailed}}"
+        class="sheet-top-cover"
+        src="{{session.cover}}"
+        mode="aspectFill"
+        binderror="onImgError"
+      />
+
+      <!-- taupe 头区 -->
+      <view class="sheet-head">
+        <view class="sheet-head-top">
+          <text wx:if="{{session.catLabel}}" class="sheet-tag">{{session.catLabel}}</text>
+          <view wx:else></view>
+          <view class="sheet-diff">
+            <text class="sheet-diff-label">难度</text>
+            <view class="sheet-diff-bars">
+              <view wx:for="{{bars}}" wx:for-item="on" wx:for-index="bi" wx:key="bi" class="sheet-bar sheet-bar-{{bi}} {{on ? 'sheet-bar--on' : ''}}"></view>
+            </view>
+          </view>
+        </view>
+        <text class="sheet-title">{{session.courseName}}</text>
+        <text wx:if="{{session.title && session.title !== session.courseName}}" class="sheet-subtitle">{{session.title}}</text>
+        <text class="sheet-head-line">{{dateLine}}{{duration > 0 ? ' · ' + duration + ' 分钟' : ''}}</text>
+        <text wx:if="{{session.roomName}}" class="sheet-head-line">{{session.roomName}}</text>
+      </view>
+
+      <!-- 白色圆角内容卡 -->
+      <view class="sheet-content">
+        <!-- 课程介绍 -->
+        <block wx:if="{{intro && (intro.summary || intro.target || intro.highlight)}}">
+          <text class="sheet-sec-title">课程介绍</text>
+          <text wx:if="{{intro.summary}}" class="sheet-desc-text">{{intro.summary}}</text>
+          <text wx:if="{{intro.target}}" class="sheet-cap">适合：{{intro.target}}</text>
+          <text wx:if="{{intro.highlight}}" class="sheet-cap">{{intro.highlight}}</text>
+        </block>
+        <block wx:elif="{{session.description}}">
+          <text class="sheet-sec-title">课程介绍</text>
+          <text class="sheet-desc-text">{{session.description}}</text>
+        </block>
+
+        <!-- 老师 -->
+        <block wx:if="{{coach}}">
+          <text class="sheet-sec-title">老师</text>
+          <view class="sheet-coach">
+            <view class="sheet-coach-top">
+              <image wx:if="{{coachAvatar && !coachAvatarFailed}}" class="sheet-coach-avatar" src="{{coachAvatar}}" mode="aspectFill" binderror="onCoachAvatarError" />
+              <view wx:else class="sheet-coach-avatar sheet-coach-initial">{{coachInitial}}</view>
+              <view class="sheet-coach-names">
+                <text class="sheet-coach-name">{{coach.name}}</text>
+                <text wx:if="{{coach.roleTitle}}" class="sheet-cap">{{coach.roleTitle}}</text>
+              </view>
+            </view>
+            <text wx:if="{{coach.bio}}" class="sheet-coach-bio {{bioExpanded ? '' : 'sheet-clamp4'}}">{{coach.bio}}</text>
+            <text wx:if="{{coach.bio && coach.bio.length > 80}}" class="sheet-link" bindtap="toggleBio">{{bioExpanded ? '收起' : '展开'}}</text>
+            <text wx:if="{{coach.experience}}" class="sheet-cap">{{coach.experience}}</text>
+            <text wx:if="{{coach.creds}}" class="sheet-cap">{{coach.creds}}</text>
+            <text wx:if="{{coach.quote}}" class="sheet-coach-quote">{{coach.quote}}</text>
+          </view>
+        </block>
+        <block wx:elif="{{session.coachName}}">
+          <text class="sheet-sec-title">老师</text>
+          <text class="sheet-desc-text">{{session.coachName}}</text>
+        </block>
+
+        <!-- 名额 -->
+        <view class="sheet-info-row">
+          <text class="sheet-row-label">名额</text>
+          <view class="sheet-row-val">
+            <block wx:if="{{session.remaining > 0}}">
+              <text class="{{session.remaining <= 3 ? 'sheet-remain-urgent' : 'sheet-remain-normal'}}">剩 {{session.remaining}} 位</text>
+              <text class="sheet-capacity-total"> / 共 {{session.capacity}} 位</text>
+            </block>
+            <text wx:else class="sheet-remain-full">已满</text>
+          </view>
+        </view>
+
+        <!-- 扣次说明（仅已登录展示） -->
+        <view class="sheet-deduct-card" wx:if="{{loggedIn && cardSummary}}">
+          <text class="sheet-deduct-text">{{cardSummary.text}}</text>
+          <text wx:if="{{cardSummary.primary && cardSummary.primary.category === 'period'}}" class="sheet-cap">期限卡不扣次数</text>
+          <text wx:else class="sheet-cap">上完课自动扣 1 次，开课前 2 小时可免费取消</text>
+        </view>
+
+        <!-- 约课须知折叠块 -->
+        <view class="sheet-notice-card">
+          <view class="sheet-notice-head" bindtap="toggleNotice">
+            <text class="sheet-notice-title">约课须知</text>
+            <text class="sheet-notice-toggle">{{noticeExpanded ? '收起' : '展开'}}</text>
+          </view>
+          <view class="sheet-notice-body" wx:if="{{noticeExpanded}}">
+            <view class="sheet-notice-item" wx:for="{{noticeItems}}" wx:key="*this">
+              <text class="sheet-notice-idx">{{index + 1}}.</text>
+              <text class="sheet-notice-text">{{item}}</text>
+            </view>
+            <view class="sheet-notice-ack" bindtap="markNoticeSeen">
+              <text class="sheet-notice-ack-text">知道了</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+
+    <!-- 底部固定操作区 -->
+    <view class="sheet-footer">
+      <!-- 错误提示 -->
+      <view wx:if="{{errorMessage}}" class="sheet-error-alert">
+        <text class="sheet-error-text">{{errorMessage}}</text>
+      </view>
+
+      <!-- 1. 未登录 -->
+      <block wx:if="{{!loggedIn}}">
+        <button class="btn-primary sheet-btn-main" bindtap="onLoginTap">登录后预约</button>
+      </block>
+
+      <!-- 2. 已预约 -->
+      <block wx:elif="{{session.bookedByMe}}">
+        <view class="sheet-booked-actions">
+          <view class="tag tag--dark sheet-booked-tag">已预约</view>
+          <block wx:if="{{canCancel}}">
+            <button class="btn-secondary sheet-btn-cancel" bindtap="onCancelBooking">取消预约</button>
+          </block>
+          <block wx:else>
+            <view class="sheet-cutoff-col">
+              <button class="btn-secondary sheet-btn-cancel sheet-btn-disabled" disabled="{{true}}">取消预约</button>
+              <text class="sheet-cutoff-text">距开课不足 2 小时，请联系前台</text>
+            </view>
+          </block>
+        </view>
+      </block>
+
+      <!-- 3. 已开课 -->
+      <block wx:elif="{{isEnded}}">
+        <button class="btn-primary sheet-btn-main sheet-btn-disabled" disabled="{{true}}">已开课</button>
+      </block>
+
+      <!-- 4. 满员 -->
+      <block wx:elif="{{session.remaining <= 0}}">
+        <button class="btn-primary sheet-btn-main sheet-btn-disabled" disabled="{{true}}">已满</button>
+      </block>
+
+      <!-- 5. 无可用卡 -->
+      <block wx:elif="{{cardSummary && cardSummary.hasUsable === false}}">
+        <view class="sheet-nocard-col">
+          <button class="btn-primary sheet-btn-main sheet-btn-disabled" disabled="{{true}}">确认预约</button>
+          <text class="sheet-nocard-hint">{{cardSummary.primary ? "可约次数已被待上的课占满，上完或取消一节后再约" : "还没有可用的卡，联系小桥开卡"}}</text>
+        </view>
+      </block>
+
+      <!-- 6. 正常预约：黑胶囊「确认预约」 -->
+      <block wx:else>
+        <button
+          class="btn-primary sheet-btn-main"
+          bindtap="onReserve"
+          disabled="{{submitting}}"
+        >{{submitting ? '正在预约…' : '预约'}}</button>
+      </block>
+    </view>
+  </view>
+</view>

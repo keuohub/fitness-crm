@@ -66,7 +66,7 @@
   <view wx:if="{{loading && !showSplash}}" style="position:fixed;left:0;right:0;top:0;bottom:0;background:linear-gradient(170deg,#F5E5D9 0%,#D4423C 100%);"></view>
 
   <!-- ====== 全屏开屏：到徕舞 一起好状态 ====== -->
-  <view class="splash-screen {{splashFadeOut ? 'splash-fade-out' : ''}}" wx:if="{{showSplash}}" catchtouchmove="noop">
+  <view class="splash-screen {{splashFadeOut ? 'splash-fade-out' : ''}}" wx:if="{{showSplash}}" catchtouchmove="noop" bindtap="skipSplash">
     <view class="splash-center">
       <text class="splash-brand-luxury">L A I W U</text>
       <view class="splash-brand-line"></view>
@@ -75,7 +75,7 @@
       <text class="splash-main">一起</text>
       <text class="splash-main">好状态</text>
 
-      <view class="splash-cta" bindtap="skipSplash">即刻开启</view>
+      <view class="splash-cta" catchtap="splashToBooking">即刻预约</view>
     </view>
   </view>
 </view>

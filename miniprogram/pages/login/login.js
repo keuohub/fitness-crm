@@ -9,6 +9,7 @@ Page({
   },
 
   onLoad: function(options) {
+    this.optionsFrom = (options && options.from) || "";
     // 若带 switch=1 或 force=1，表示用户主动要求切换账号，不自动重定向
     var isSwitching = options && (options.switch === "1" || options.force === "1");
     if (!isSwitching) {
@@ -45,6 +46,19 @@ Page({
     this.setData({ phoneSuffix: val, error: "" });
   },
 
+  handleSkipLogin: function() {
+    if (this.optionsFrom === "booking") {
+      var pages = getCurrentPages();
+      if (pages && pages.length > 1) {
+        wx.navigateBack();
+      } else {
+        wx.switchTab({ url: "/pages/booking/booking" });
+      }
+    } else {
+      wx.switchTab({ url: "/pages/stars/stars" });
+    }
+  },
+
   handleLogin: function() {
     var that = this;
     var code = (that.data.inviteCode || "").trim().toUpperCase();
@@ -55,8 +69,7 @@ Page({
       return;
     }
 
-    // 已移除 DEMO / LAIWU2024 / LAIWU2025 三个硬编码口令。
-    // 它们会把任何人直接放进 memberId=9 的真实会员档案（含训练记录与体态照）。
+    // 已移除旧版本硬编码口令。
     // 提审如需账号，请在后台新建一个「审核测试」会员，用它的真实邀请码登录，
     // 这样审核员看到的是真实链路，而不是别人的档案。
 
@@ -70,8 +83,12 @@ Page({
       success: function(res) {
         if (res.statusCode === 200 && res.data && res.data.memberId) {
           var data = res.data;
-          // 清除上一位会员的所有缓存，绝不串门
+          // 清除上一位会员的所有缓存，但保留本轮可能暂存的待约课次
+          var pendingSessionId = wx.getStorageSync("pendingSessionId");
           wx.clearStorageSync();
+          if (pendingSessionId) {
+            wx.setStorageSync("pendingSessionId", pendingSessionId);
+          }
           wx.setStorageSync("memberToken", data.token || "");
           wx.setStorageSync("tokenExpiresAt", data.tokenExpiresAt || 0);
           wx.setStorageSync("memberId", data.memberId);
@@ -80,9 +97,18 @@ Page({
             var diff = Math.floor((Date.now() - new Date(String(data.joinedAt).replace(/-/g, "/")).getTime()) / 86400000);
             wx.setStorageSync("joinDays", Math.max(1, diff));
           }
-          // 使用 reLaunch 彻底销毁旧的 Page 实例栈，100% 触发全新挂载
-          // 落点必须是 tabBar 页面，否则进入后没有底部导航（原 growth 是非 tab 页）
-          wx.reLaunch({ url: "/pages/stars/stars" });
+          if (data.managerRole) {
+            wx.setStorageSync("managerRole", data.managerRole);
+          }
+          if (data.isManager !== undefined) {
+            wx.setStorageSync("isManager", Boolean(data.isManager));
+          }
+          // from=booking 时跳回约课 Tab，否则默认回到首页
+          if (that.optionsFrom === "booking") {
+            wx.switchTab({ url: "/pages/booking/booking" });
+          } else {
+            wx.reLaunch({ url: "/pages/stars/stars" });
+          }
         } else {
           var errMsg = (res.data && res.data.error) ? res.data.error : "未找到该会员档案，请核对或联系小桥";
           that.setData({ submitting: false, error: errMsg });
@@ -97,14 +123,14 @@ Page({
 
   onShareAppMessage: function() {
     return {
-      title: "徕舞健身 · 会员专属成长手札",
+      title: "徕舞女子塑形 · 约一节课",
       path: "/pages/stars/stars"
     };
   },
 
   onShareTimeline: function() {
     return {
-      title: "徕舞健身 · 会员专属成长手札",
+      title: "徕舞女子塑形 · 约一节课",
       query: ""
     };
   }

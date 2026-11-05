@@ -1,151 +1,148 @@
 <view class="brand-container">
+  <view class="nav-row" style="padding-top: {{nav.navTop}}px; height: {{nav.navH}}px;">
+    <view class="nav-back" bindtap="navBack"><view class="nav-back-arrow"></view></view>
+  </view>
+  <view class="nav-gap"></view>
 
-  <!-- 顶部标题区 (避开顶部刘海与状态栏，呈现从容留白) -->
+  <!-- 顶部标题区 -->
   <view class="brand-hero-header">
-    <view class="brand-title-wrap">
-      <text class="brand-hero-title">{{heroTitle || '了解徕舞'}}</text>
-      <text class="brand-hero-subtitle">{{heroSubtitle || '以克制之道，唤醒身体内在的秩序与平衡'}}</text>
-    </view>
+    <text class="brand-hero-title">{{heroTitle || '了解徕舞'}}</text>
   </view>
 
-  <!-- 极细发丝线 -->
-  <view class="editorial-hairline"></view>
+  <!-- 空状态：三块全空时显示 -->
+  <view wx:if="{{venueList.length === 0 && teamList.length === 0 && offeringsList.length === 0}}" class="empty-state">
+    <text>内容在准备中</text>
+  </view>
 
-  <!-- 板块一：场馆空间 -->
-  <view class="brand-section">
-    <view class="section-title-bar">
-      <view class="section-tag-group">
-        <text class="section-index">{{sec1Num || '01'}}</text>
+  <block wx:else>
+
+    <!-- 板块一：场馆空间 -->
+    <view class="brand-section" wx:if="{{venueList.length > 0}}">
+      <view class="section-title-bar">
         <text class="section-heading">{{sec1Title || '场馆空间'}}</text>
       </view>
-      <text class="section-en-label">{{sec1En || 'SPACES'}}</text>
-    </view>
-    <text class="section-intro">{{sec1Intro || '柔和漫射日光、天然实木大器械与私密更衣室，营造沉静专注的练习氛围。'}}</text>
+      <text class="section-intro" wx:if="{{sec1Intro}}">{{sec1Intro}}</text>
 
-    <!-- 横向滑动画廊 (Horizontal Gallery) -->
-    <scroll-view class="venue-gallery-scroll" scroll-x="{{true}}" enable-flex="{{true}}" enhanced="{{true}}" show-scrollbar="{{false}}">
-      <view
-        wx:for="{{venueList}}"
-        wx:key="id"
-        class="venue-card-item"
-        bindtap="previewVenueImage"
-        data-src="{{item.imageUrl}}"
-      >
-        <view class="venue-image-wrap">
-          <image class="venue-img" src="{{item.imageUrl}}" mode="aspectFill" lazy-load="{{true}}" />
-          <view class="venue-tag-overlay">
-            <text class="venue-tag-pill">{{item.tag}}</text>
-          </view>
-        </view>
-        <view class="venue-meta">
-          <text class="venue-name">{{item.name}}</text>
-          <text class="venue-desc">{{item.desc}}</text>
-        </view>
-      </view>
-    </scroll-view>
-  </view>
-
-  <!-- 极细发丝线 -->
-  <view class="editorial-hairline"></view>
-
-  <!-- 板块二：同行导师 -->
-  <view class="brand-section">
-    <view class="section-title-bar">
-      <view class="section-tag-group">
-        <text class="section-index">{{sec2Num || '02'}}</text>
-        <text class="section-heading">{{sec2Title || '同行导师'}}</text>
-      </view>
-      <text class="section-en-label">{{sec2En || 'MENTORS'}}</text>
-    </view>
-    <text class="section-intro">{{sec2Intro || '深耕人体解剖与体态矫正，用细腻口令与精准触觉纠正，守护每次发力安全。'}}</text>
-
-    <view class="team-cards-stack">
-      <view
-        wx:for="{{teamList}}"
-        wx:key="id"
-        class="mentor-card"
-        bindtap="previewTeamImage"
-        data-src="{{item.avatarUrl}}"
-      >
-        <view class="mentor-header">
-          <image class="mentor-avatar" src="{{item.avatarUrl}}" mode="aspectFill" />
-          <view class="mentor-info">
-            <view class="mentor-name-row">
-              <text class="mentor-name">{{item.name}}</text>
-              <text class="mentor-role-badge" wx:if="{{item.roleTitle}}">{{item.roleTitle}}</text>
-            </view>
-            <text class="mentor-exp" wx:if="{{item.experience}}">{{item.experience}}</text>
-            <text class="mentor-creds" wx:if="{{item.creds}}">{{item.creds}}</text>
-          </view>
-        </view>
-        <view class="mentor-quote-box" wx:if="{{item.quote}}">
-          <text class="mentor-quote">{{item.quote}}</text>
-        </view>
-      </view>
-    </view>
-  </view>
-
-  <!-- 极细发丝线 -->
-  <view class="editorial-hairline"></view>
-
-  <!-- 板块三：项目介绍 -->
-  <view class="brand-section offerings-section">
-    <view class="section-title-bar">
-      <view class="section-tag-group">
-        <text class="section-index">{{sec3Num || '03'}}</text>
-        <text class="section-heading">{{sec3Title || '项目介绍'}}</text>
-      </view>
-      <text class="section-en-label">{{sec3En || 'OFFERINGS'}}</text>
-    </view>
-    <text class="section-intro">{{sec3Intro || '针对不同阶段与体态目标，由主理团队精心研发的核心训练体系。'}}</text>
-
-    <view class="offerings-list">
-      <view
-        wx:for="{{offeringsList}}"
-        wx:key="id"
-        class="offering-card {{item.imageUrl ? 'has-bg' : ''}}"
-      >
-        <!-- 课程板块底图（位于文字下面） -->
+      <!-- 第一张满宽 4:3 大图 -->
+      <view class="venue-hero-card" bindtap="previewVenueImage" data-src="{{venueList[0].imageUrl}}">
         <image
-          wx:if="{{item.imageUrl}}"
-          class="offering-bg-img"
-          src="{{item.imageUrl}}"
+          wx:if="{{!venueList[0].imgFailed}}"
+          class="venue-hero-img"
+          src="{{venueList[0].imageUrl}}"
           mode="aspectFill"
           lazy-load="{{true}}"
+          binderror="onImgError"
+          data-key="venueList"
+          data-index="0"
         />
-        <!-- 柔白光晕磨砂遮罩，保证无论底图多丰富，文字对比度均极致清晰 -->
-        <view wx:if="{{item.imageUrl}}" class="offering-bg-scrim"></view>
+        <view wx:else class="img-fallback venue-hero-img"></view>
+        <view class="venue-meta">
+          <text class="venue-name">{{venueList[0].name}}</text>
+          <text class="venue-desc" wx:if="{{venueList[0].desc}}">{{venueList[0].desc}}</text>
+        </view>
+      </view>
 
-        <!-- 文字内容层 -->
-        <view class="offering-content">
-          <view class="offering-top">
-            <view class="offering-badge">
-              <text class="offering-num">{{item.num}}</text>
-            </view>
-            <view class="offering-names">
-              <text class="offering-title">{{item.name}}</text>
-              <text class="offering-en">{{item.enName}}</text>
-            </view>
+      <!-- 其余横滑（宽 600rpx，4:3） -->
+      <scroll-view wx:if="{{venueList.length > 1}}" class="venue-scroll" scroll-x="{{true}}" enable-flex="{{true}}" show-scrollbar="{{false}}">
+        <view
+          wx:for="{{venueList}}"
+          wx:key="id"
+          wx:if="{{index > 0}}"
+          class="venue-scroll-card"
+          bindtap="previewVenueImage"
+          data-src="{{item.imageUrl}}"
+        >
+          <image
+            wx:if="{{!item.imgFailed}}"
+            class="venue-scroll-img"
+            src="{{item.imageUrl}}"
+            mode="aspectFill"
+            lazy-load="{{true}}"
+            binderror="onImgError"
+            data-key="venueList"
+            data-index="{{index}}"
+          />
+          <view wx:else class="img-fallback venue-scroll-img"></view>
+          <view class="venue-meta">
+            <text class="venue-name">{{item.name}}</text>
+            <text class="venue-desc" wx:if="{{item.desc}}">{{item.desc}}</text>
           </view>
+        </view>
+      </scroll-view>
+    </view>
 
-          <view class="offering-summary-pill">
-            <text class="offering-summary-txt">{{item.summary}}</text>
+    <!-- 板块二：同行导师 -->
+    <view class="brand-section" wx:if="{{teamList.length > 0}}">
+      <view class="section-title-bar">
+        <text class="section-heading">{{sec2Title || '同行导师'}}</text>
+      </view>
+      <text class="section-intro" wx:if="{{sec2Intro}}">{{sec2Intro}}</text>
+
+      <scroll-view class="team-scroll" scroll-x="{{true}}" enable-flex="{{true}}" show-scrollbar="{{false}}">
+        <view
+          wx:for="{{teamList}}"
+          wx:key="id"
+          class="mentor-card"
+          bindtap="previewTeamImage"
+          data-src="{{item.avatarUrl}}"
+        >
+          <image
+            wx:if="{{!item.imgFailed}}"
+            class="mentor-avatar"
+            src="{{item.avatarUrl}}"
+            mode="aspectFill"
+            lazy-load="{{true}}"
+            binderror="onImgError"
+            data-key="teamList"
+            data-index="{{index}}"
+          />
+          <view wx:else class="img-fallback mentor-avatar"></view>
+          <view class="mentor-meta">
+            <text class="mentor-name">{{item.name}}</text>
+            <text class="mentor-role" wx:if="{{item.roleTitle}}">{{item.roleTitle}}</text>
           </view>
+        </view>
+      </scroll-view>
+    </view>
 
-          <view class="offering-detail-block">
-            <view class="detail-row">
-              <text class="detail-label">核心雕刻</text>
-              <text class="detail-content">{{item.highlight}}</text>
-            </view>
+    <!-- 板块三：项目介绍 -->
+    <view class="brand-section offerings-section" wx:if="{{offeringsList.length > 0}}">
+      <view class="section-title-bar">
+        <text class="section-heading">{{sec3Title || '项目介绍'}}</text>
+      </view>
+      <text class="section-intro" wx:if="{{sec3Intro}}">{{sec3Intro}}</text>
+
+      <view class="offerings-list">
+        <view
+          wx:for="{{offeringsList}}"
+          wx:key="id"
+          class="offering-card"
+        >
+          <image
+            wx:if="{{item.imageUrl && !item.imgFailed}}"
+            class="offering-img"
+            src="{{item.imageUrl}}"
+            mode="aspectFill"
+            lazy-load="{{true}}"
+            binderror="onImgError"
+            data-key="offeringsList"
+            data-index="{{index}}"
+          />
+          <view wx:elif="{{item.imageUrl && item.imgFailed}}" class="img-fallback offering-img"></view>
+
+          <view class="offering-content">
+            <text class="offering-title">{{item.name}}</text>
+            <text class="offering-summary" wx:if="{{item.summary}}">{{item.summary}}</text>
+            <text class="offering-target" wx:if="{{item.target}}">适合：{{item.target}}</text>
+            <text class="offering-highlight" wx:if="{{item.highlight}}">{{item.highlight}}</text>
           </view>
         </view>
       </view>
     </view>
-  </view>
 
+  </block>
 
-
-  <!-- 底部留白，保障悬浮胶囊底栏不遮挡 -->
+  <!-- 底部防遮挡垫片 -->
   <view class="dock-spacer"></view>
 
 </view>

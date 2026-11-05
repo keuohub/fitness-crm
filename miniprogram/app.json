@@ -9,7 +9,10 @@
     "pages/feedback/feedback",
     "pages/booking/booking",
     "pages/manager/manager",
-    "pages/login/login"
+    "pages/login/login",
+    "pages/booking-success/booking-success",
+    "pages/my-bookings/my-bookings",
+    "pages/schedule/schedule"
   ],
   "tabBar": {
     "custom": true,

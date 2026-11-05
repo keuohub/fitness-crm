@@ -1,67 +1,67 @@
 <view class="cards-page">
+  <view class="nav-row" style="padding-top: {{nav.navTop}}px; height: {{nav.navH}}px;">
+    <view class="nav-back" bindtap="navBack"><view class="nav-back-arrow"></view></view>
+  </view>
+  <view class="nav-gap"></view>
   <view wx:if="{{loading}}" class="cards-loading">
     <text class="cards-loading-text">正在打开你的卡包…</text>
   </view>
 
   <block wx:else>
     <view class="cards-hero">
-      <text class="cards-eyebrow">MY MEMBERSHIP</text>
       <text class="cards-title">我的卡</text>
     </view>
 
-    <view wx:if="{{error}}" class="cards-error">
-      <text class="cards-error-text">{{error}}</text>
-    </view>
+    <state-view wx:if="{{error}}" type="error" icon="wifi" title="没连上网络" desc="检查一下网络，再试一次" actionText="重新加载" bindaction="onRetry" />
 
-    <view wx:if="{{cards.length === 0 && !error}}" class="cards-empty">
-      <text class="cards-empty-title">还没有会员卡</text>
-      <text class="cards-empty-body">开卡后，这里会显示剩余次数和有效期。需要开卡请联系小桥。</text>
-    </view>
+    <state-view wx:if="{{cards.length === 0 && !error}}" type="empty" icon="card" title="还没有会员卡" desc="开卡或续卡，找小桥就行" actionText="去约课" bindaction="goToBookingTab" />
 
-    <view wx:for="{{cards}}" wx:key="id" class="card-item {{item.isAnnual ? 'card-item-annual' : ''}}">
-      <view wx:if="{{item.isAnnual}}" class="card-annual-bar">
-        <text class="card-annual-bar-text">徕舞年卡 · 专属会员</text>
-        <text class="card-annual-bar-en">ANNUAL</text>
-      </view>
-
-      <view class="card-top">
-        <view class="card-main">
-          <view class="card-name-row">
-            <text class="card-name">{{item.name}}</text>
-            <text wx:if="{{item.isAnnual}}" class="card-annual-badge">年卡</text>
+    <view wx:for="{{cards}}" wx:key="id" class="cards-group">
+      <!-- 会员卡整卡：#731b2e 直角，白字 -->
+      <view class="member-card">
+        <view class="card-top">
+          <view class="card-main">
+            <view class="card-name-row">
+              <text class="card-name">{{item.name}}</text>
+              <text wx:if="{{item.isAnnual}}" class="card-annual-badge">年卡</text>
+            </view>
+            <text class="card-type">{{item.categoryText}}</text>
           </view>
-          <text class="card-type">{{item.categoryText}}</text>
+          <text class="card-status">{{item.statusText}}</text>
         </view>
-        <text class="card-status card-status-{{item.status}}">{{item.statusText}}</text>
-      </view>
 
-      <view class="card-scope" wx:if="{{item.courseScopeText}}">
-        <text class="card-scope-label">可约</text>
-        <text class="card-scope-text">{{item.courseScopeText}}</text>
-      </view>
-
-      <view class="card-balance-row">
-        <view class="card-balance">
-          <text class="card-balance-num">{{item.remainingText}}</text>
-          <text class="card-balance-label">剩余</text>
+        <view class="card-scope" wx:if="{{item.courseScopeText}}">
+          <text class="card-scope-label">可约</text>
+          <text class="card-scope-text">{{item.courseScopeText}}</text>
         </view>
-        <view class="card-valid">
-          <text class="card-valid-text">{{item.validText}}</text>
-          <text class="card-valid-label" wx:if="{{item.purchasedText}}">购于 {{item.purchasedText}}</text>
-        </view>
-      </view>
 
-      <view class="card-tx" wx:if="{{item.transactions.length > 0}}">
-        <view class="card-tx-row" wx:for="{{item.transactions}}" wx:for-item="tx" wx:key="id">
-          <text class="card-tx-label">{{tx.label}}</text>
-          <text class="card-tx-amount">{{tx.amount}}</text>
-          <text class="card-tx-date">{{tx.date}}</text>
+        <view class="card-balance-row">
+          <view class="card-balance">
+            <view class="card-balance-val">
+              <text class="card-balance-num t-num-xl">{{item.remainingText}}</text>
+              <text class="card-balance-unit" wx:if="{{item.isCount}}">次</text>
+            </view>
+            <text class="card-balance-label">剩余</text>
+          </view>
+          <view class="card-valid">
+            <text class="card-valid-text">{{item.validText}}</text>
+            <text class="card-valid-label" wx:if="{{item.purchasedText}}">购于 {{item.purchasedText}}</text>
+          </view>
         </view>
       </view>
 
-      <view class="card-annual-footer" wx:if="{{item.isAnnual}}">
-        <text class="card-annual-footer-text">年卡专属权益 · 全年畅练</text>
-        <text class="card-annual-footer-text">LEAP DANCE</text>
+      <!-- 交易流水：用 list-row 分隔 -->
+      <view class="card-tx-section" wx:if="{{item.transactions.length > 0}}">
+        <text class="card-tx-heading">消费记录</text>
+        <view class="card-tx-list">
+          <view class="list-row" wx:for="{{item.transactions}}" wx:for-item="tx" wx:key="id">
+            <view class="card-tx-info">
+              <text class="card-tx-label">{{tx.label}}</text>
+              <text class="card-tx-date">{{tx.date}}</text>
+            </view>
+            <text class="card-tx-amount">{{tx.amount}}</text>
+          </view>
+        </view>
       </view>
     </view>
 

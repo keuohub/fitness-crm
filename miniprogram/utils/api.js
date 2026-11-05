@@ -7,6 +7,8 @@
  * 3. 401 统一清理会话并回登录页，避免"看起来登录了其实没有"。
  */
 
+// 统一网络请求
+
 var ENV_ID = "crm-d8gk3n5aj45d5cf11";
 var SERVICE_NAME = "crm";
 var DEFAULT_BASE_URL = "https://crm-330905-9-1509862887.sh.run.tcloudbase.com";
@@ -25,6 +27,23 @@ function getBaseUrl() {
   return isDevTools() ? LOCAL_BASE_URL : DEFAULT_BASE_URL;
 }
 
+function fullUrl(p) {
+  if (!p) return "";
+  var str = String(p).trim();
+  if (!str) return "";
+  if (/^(https?:|cloud:|wxfile:)/i.test(str)) return str;
+  // 包内本地资源目录：直接返回相对/绝对本地路径，不走网络
+  if (
+    str.indexOf("/images/categories/") === 0 ||
+    str.indexOf("/images/courses/") === 0 ||
+    str.indexOf("/images/team/") === 0 ||
+    str.indexOf("/images/tab/") === 0 ||
+    str.indexOf("/images/") === 0
+  ) return str;
+  if (str.charAt(0) === "/") return getBaseUrl() + str;
+  return getBaseUrl() + "/" + str;
+}
+
 function clearSession() {
   try {
     wx.removeStorageSync("memberToken");
@@ -33,6 +52,8 @@ function clearSession() {
     wx.removeStorageSync("joinDays");
     wx.removeStorageSync("trainCount");
     wx.removeStorageSync("isDemoMode");
+    wx.removeStorageSync("managerRole");
+    wx.removeStorageSync("isManager");
   } catch (e) {}
 }
 
@@ -72,15 +93,23 @@ function request(options) {
   }
   if (path.charAt(0) !== "/") path = "/" + path;
 
-  // 开发者工具：固定本机后端，避免登录后被切到旧云部署
+  // 开发者工具：优先请求本地 3001，若未启动则无缝回退到云端服务
   if (isDevTools()) {
     wx.request({
       url: LOCAL_BASE_URL + path,
       method: method,
       header: header,
       data: data,
-      success: handleSuccess,
-      fail: fail,
+      success: function(res) {
+        if (res && res.statusCode >= 200 && res.statusCode < 500) {
+          handleSuccess(res);
+        } else {
+          fallbackToWxRequest();
+        }
+      },
+      fail: function() {
+        fallbackToWxRequest();
+      },
       complete: complete
     });
     return;
@@ -119,9 +148,35 @@ function request(options) {
   }
 }
 
+// 从 /api/portal/me 刷新管理角色（登录接口不返回 managerRole），写入 storage 后回调
+var _roleFetchedAt = 0;
+function refreshRole(cb) {
+  cb = cb || function() {};
+  if (!wx.getStorageSync("memberToken")) { cb(); return; }
+  if (Date.now() - _roleFetchedAt < 30000) { cb(); return; }
+  _roleFetchedAt = Date.now();
+  request({
+    url: "/api/portal/me",
+    success: function(res) {
+      if (res && res.statusCode === 200 && res.data) {
+        try {
+          wx.setStorageSync("isManager", Boolean(res.data.isManager));
+          wx.setStorageSync("managerRole", res.data.managerRole || "");
+        } catch (e) {}
+      } else {
+        _roleFetchedAt = 0;
+      }
+    },
+    fail: function() { _roleFetchedAt = 0; },
+    complete: function() { cb(); }
+  });
+}
+
 module.exports = {
   request: request,
+  refreshRole: refreshRole,
   getBaseUrl: getBaseUrl,
+  fullUrl: fullUrl,
   clearSession: clearSession,
   ENV_ID: ENV_ID,
   SERVICE_NAME: SERVICE_NAME,

@@ -1,45 +1,32 @@
-/* components/poster-modal/poster-modal.wxss · 画报级体态美学分享卡组件样式 */
+/* components/poster-modal/poster-modal.wxss · 体态分享卡组件样式 */
 
 .share-modal-mask {
   position: fixed;
   inset: 0;
   z-index: 99999;
-  background: rgba(8, 7, 10, 0.78);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  animation: fadeIn 0.25s ease both;
+  background: rgba(0, 0, 0, 0.75);
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-/* 右上角常驻高奢悬浮关闭按钮 */
+/* 右上角常驻悬浮关闭按钮 */
 .modal-float-close {
   position: fixed;
   top: calc(env(safe-area-inset-top) + 24rpx);
   right: 32rpx;
-  width: 72rpx;
-  height: 72rpx;
+  width: 64rpx;
+  height: 64rpx;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.22);
-  border: 1.5rpx solid rgba(255, 255, 255, 0.45);
-  color: #FFFFFF;
-  font-size: 32rpx;
-  font-weight: 300;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: #ffffff;
+  font-size: 28rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 100001;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.28);
-  transition: transform 140ms ease, background 140ms ease;
 }
+
 .modal-float-close:active {
-  transform: scale(0.92);
-  background: rgba(255, 255, 255, 0.4);
+  background: rgba(0, 0, 0, 0.7);
 }
 
 .share-modal-scroll {
@@ -52,7 +39,7 @@
   width: 100%;
   min-height: 100%;
   box-sizing: border-box;
-  padding: calc(env(safe-area-inset-top) + 110rpx) 44rpx calc(env(safe-area-inset-bottom) + 90rpx);
+  padding: calc(env(safe-area-inset-top) + 100rpx) 44rpx calc(env(safe-area-inset-bottom) + 90rpx);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -63,10 +50,10 @@
   max-width: 620rpx;
   box-sizing: border-box;
   padding: 48rpx 36rpx 40rpx;
-  border-radius: 36rpx;
-  background: #FCF8F5;
-  border: 1.5rpx solid rgba(255, 255, 255, 0.9);
-  box-shadow: 0 24rpx 60rpx rgba(0, 0, 0, 0.38);
+  border-radius: 0;
+  background: #ffffff;
+  border: 1px solid #ece7df;
+  box-shadow: none;
   display: flex;
   flex-direction: column;
 }
@@ -75,20 +62,23 @@
   text-align: center;
   margin-bottom: 24rpx;
 }
+
 .poster-brand-en {
   display: block;
-  font-family: "Didot", "Bodoni MT", Georgia, serif;
-  font-size: 22rpx;
-  letter-spacing: 0.25em;
-  color: #120E0F;
+  font-family: var(--font-sans);
+  font-size: 28rpx;
+  font-weight: 700;
+  letter-spacing: 0;
+  color: #000000;
 }
+
 .poster-brand-cn {
   display: block;
   margin-top: 6rpx;
-  font-family: "Songti SC", Georgia, serif;
-  font-size: 18rpx;
-  color: #8C6A6B;
-  letter-spacing: 0.12em;
+  font-family: var(--font-sans);
+  font-size: 20rpx;
+  color: #666666;
+  letter-spacing: 0;
 }
 
 .poster-member-info {
@@ -96,20 +86,23 @@
   justify-content: space-between;
   align-items: baseline;
   padding-bottom: 18rpx;
-  border-bottom: 1rpx solid rgba(28, 20, 21, 0.08);
+  border-bottom: 1rpx solid #ece7df;
   margin-bottom: 24rpx;
 }
+
 .poster-member-title {
-  font-family: "Songti SC", Georgia, serif;
+  font-family: var(--font-sans);
   font-size: 26rpx;
   font-weight: 600;
-  color: #1C1415;
-  letter-spacing: 1rpx;
+  color: #000000;
+  letter-spacing: 0;
 }
+
 .poster-member-days {
-  font-family: "Didot", "Bodoni MT", Georgia, serif;
-  font-size: 20rpx;
-  color: #8C6A6B;
+  font-family: var(--font-num);
+  font-size: 22rpx;
+  font-weight: 600;
+  color: #000000;
 }
 
 .poster-compare-pair {
@@ -117,31 +110,32 @@
   gap: 16rpx;
   margin-bottom: 24rpx;
 }
+
 .poster-img-box {
   flex: 1;
   position: relative;
-  border-radius: 20rpx;
+  border-radius: 0;
   overflow: hidden;
   aspect-ratio: 3 / 4;
-  background: #EAE3DE;
+  background: #eeeeee;
 }
+
 .poster-img {
   width: 100%;
   height: 100%;
 }
+
 .poster-tag {
   position: absolute;
   bottom: 12rpx;
   left: 12rpx;
   padding: 4rpx 14rpx;
-  border-radius: 999rpx;
-  background: rgba(8, 7, 10, 0.7);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  color: #FFFFFF;
-  font-family: "Songti SC", Georgia, serif;
-  font-size: 16rpx;
-  letter-spacing: 1rpx;
+  border-radius: 9999rpx;
+  background: #000000;
+  color: #ffffff;
+  font-family: var(--font-sans);
+  font-size: 18rpx;
+  letter-spacing: 0;
 }
 
 .poster-no-photo-badge {
@@ -151,54 +145,59 @@
   justify-content: center;
   padding: 56rpx 28rpx;
   margin-bottom: 24rpx;
-  border-radius: 24rpx;
-  background: linear-gradient(135deg, rgba(234, 226, 220, 0.45) 0%, rgba(245, 237, 232, 0.9) 100%);
-  border: 1rpx dashed rgba(186, 36, 40, 0.25);
+  border-radius: 0;
+  background: #efeae2;
+  border: 1px solid #ece7df;
   text-align: center;
 }
+
 .poster-badge-icon {
-  font-size: 40rpx;
-  color: #BA2428;
+  font-size: 36rpx;
+  color: #000000;
   margin-bottom: 12rpx;
 }
+
 .poster-badge-title {
-  font-family: "Songti SC", Georgia, serif;
+  font-family: var(--font-sans);
   font-size: 26rpx;
-  font-weight: 600;
-  color: #1C1415;
-  letter-spacing: 2rpx;
+  font-weight: 700;
+  color: #000000;
+  letter-spacing: 0;
   margin-bottom: 8rpx;
 }
+
 .poster-badge-sub {
-  font-family: "Songti SC", Georgia, serif;
+  font-family: var(--font-sans);
   font-size: 20rpx;
-  color: #8C6A6B;
-  letter-spacing: 1rpx;
+  color: #666666;
+  letter-spacing: 0;
 }
 
 .poster-analysis-box {
   position: relative;
-  background: rgba(255, 255, 255, 0.75);
-  border-radius: 20rpx;
+  background: #efeae2;
+  border-radius: 0;
   padding: 20rpx 24rpx 20rpx 44rpx;
   margin-bottom: 28rpx;
-  border: 1rpx solid rgba(28, 20, 21, 0.04);
+  border: none;
 }
+
 .poster-quote {
   position: absolute;
   top: 10rpx;
   left: 16rpx;
-  font-family: Georgia, serif;
+  font-family: var(--font-sans);
   font-size: 32rpx;
-  color: #BA2428;
-  opacity: 0.6;
+  font-weight: 700;
+  color: #000000;
 }
+
 .poster-analysis {
-  font-family: "Songti SC", Georgia, serif;
+  font-family: var(--font-sans);
   font-size: 24rpx;
   line-height: 1.6;
-  color: #381617;
-  font-style: italic;
+  color: #222222;
+  font-style: normal;
 }
 
 .poster-footer {
@@ -206,42 +205,47 @@
   align-items: center;
   justify-content: space-between;
   padding-top: 20rpx;
-  border-top: 1rpx solid rgba(28, 20, 21, 0.08);
+  border-top: 1rpx solid #ece7df;
 }
+
 .poster-footer-left {
   display: flex;
   flex-direction: column;
   gap: 4rpx;
 }
+
 .poster-sign {
-  font-family: "Songti SC", Georgia, serif;
+  font-family: var(--font-sans);
   font-size: 22rpx;
-  font-weight: 500;
-  color: #1C1415;
+  font-weight: 600;
+  color: #000000;
 }
+
 .poster-slogan {
-  font-family: "Songti SC", Georgia, serif;
+  font-family: var(--font-sans);
   font-size: 18rpx;
-  color: #8C6A6B;
-  letter-spacing: 1rpx;
+  color: #666666;
+  letter-spacing: 0;
 }
+
 .poster-stamp {
   width: 76rpx;
   height: 76rpx;
   border-radius: 50%;
-  border: 1.5rpx dashed #BA2428;
+  border: 1.5rpx dashed #000000;
   display: flex;
   align-items: center;
   justify-content: center;
   transform: rotate(-12deg);
 }
+
 .poster-stamp-inner {
   font-size: 14rpx;
   line-height: 1.2;
-  font-weight: 700;
-  color: #BA2428;
+  font-weight: 600;
+  color: #000000;
   text-align: center;
-  letter-spacing: 1rpx;
+  letter-spacing: 0;
 }
 
 .poster-scroll-bottom-spacer {
@@ -256,7 +260,7 @@
   left: 0;
   right: 0;
   padding: 24rpx 44rpx calc(env(safe-area-inset-bottom) + 24rpx);
-  background: linear-gradient(180deg, rgba(8, 7, 10, 0) 0%, rgba(8, 7, 10, 0.88) 35%, rgba(8, 7, 10, 0.98) 100%);
+  background: rgba(0, 0, 0, 0.88);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -267,33 +271,26 @@
 
 .poster-btn-primary {
   width: 100% !important;
-  height: 92rpx;
-  line-height: 92rpx;
-  background: linear-gradient(135deg, #BA2428 0%, #8C161A 100%);
-  color: #FFFFFF;
-  border-radius: 999rpx;
+  height: 88rpx;
+  line-height: 88rpx;
+  background: #000000;
+  color: #ffffff;
+  border-radius: 9999rpx;
   font-size: 28rpx;
   font-weight: 600;
-  letter-spacing: 2rpx;
+  letter-spacing: 0;
   text-align: center;
-  border: 1rpx solid rgba(255, 255, 255, 0.35);
-  box-shadow: 0 10rpx 32rpx rgba(186, 36, 40, 0.45);
+  border: 1rpx solid rgba(255, 255, 255, 0.4);
+  box-shadow: none;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
   margin: 0;
-  transition: transform 140ms ease;
 }
+
 .poster-btn-primary:active {
-  transform: scale(0.98);
-}
-.poster-btn-spark {
-  font-size: 22rpx;
-  margin-right: 8rpx;
-  color: inherit;
-  display: inline-block;
-  vertical-align: middle;
+  opacity: 0.85;
 }
 
 .poster-bottom-subrow {
@@ -307,47 +304,43 @@
   flex: 1;
   height: 76rpx;
   line-height: 76rpx;
-  background: rgba(255, 255, 255, 0.16);
-  color: #FFFFFF;
-  border-radius: 999rpx;
+  background: transparent;
+  color: #ffffff;
+  border-radius: 9999rpx;
   font-size: 24rpx;
   font-weight: 500;
-  letter-spacing: 1.5rpx;
+  letter-spacing: 0;
   text-align: center;
-  border: 1rpx solid rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  border: 1rpx solid #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
   margin: 0;
-  transition: transform 140ms ease;
 }
+
 .poster-btn-secondary:active {
-  transform: scale(0.98);
+  opacity: 0.8;
 }
 
 .poster-btn-close-pill {
   padding: 0 36rpx;
   height: 76rpx;
   line-height: 76rpx;
-  border-radius: 999rpx;
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.85);
+  border-radius: 9999rpx;
+  background: transparent;
+  color: #ffffff;
   font-size: 24rpx;
-  letter-spacing: 1.5rpx;
+  letter-spacing: 0;
   text-align: center;
-  border: 1rpx solid rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  border: 1rpx solid rgba(255, 255, 255, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 140ms ease;
 }
+
 .poster-btn-close-pill:active {
-  transform: scale(0.98);
+  opacity: 0.8;
 }
 
 /* 隐藏离屏画布 */
@@ -356,7 +349,7 @@
   left: -9999px;
   top: -9999px;
   width: 750px;
-  height: 1200px;
+  height: 1260px;
   z-index: -1;
   pointer-events: none;
 }

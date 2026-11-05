@@ -1,0 +1,149 @@
+<view class="my-page">
+
+  <!-- 顶部简明卡次行 -->
+  <view class="my-header-bar" wx:if="{{cardHeaderText}}">
+    <text class="my-header-card-text">{{cardHeaderText}}</text>
+  </view>
+
+  <!-- 顶部细线分段 Tab 栏 -->
+  <view class="my-tabs">
+    <view
+      class="my-tab {{currentTab === 'upcoming' ? 'my-tab-active' : ''}}"
+      data-tab="upcoming"
+      bindtap="switchTab"
+    >
+      <text class="my-tab-label">待上课</text>
+      <view wx:if="{{currentTab === 'upcoming'}}" class="my-tab-line"></view>
+    </view>
+    <view
+      class="my-tab {{currentTab === 'attended' ? 'my-tab-active' : ''}}"
+      data-tab="attended"
+      bindtap="switchTab"
+    >
+      <text class="my-tab-label">已完成</text>
+      <view wx:if="{{currentTab === 'attended'}}" class="my-tab-line"></view>
+    </view>
+    <view
+      class="my-tab {{currentTab === 'cancelled' ? 'my-tab-active' : ''}}"
+      data-tab="cancelled"
+      bindtap="switchTab"
+    >
+      <text class="my-tab-label">已取消</text>
+      <view wx:if="{{currentTab === 'cancelled'}}" class="my-tab-line"></view>
+    </view>
+  </view>
+
+  <!-- 骨架屏加载态 -->
+  <view wx:if="{{loading}}" class="my-skeleton-wrap">
+    <view class="skeleton my-sk-item"></view>
+    <view class="skeleton my-sk-item"></view>
+    <view class="skeleton my-sk-item"></view>
+  </view>
+
+  <!-- 报错态 -->
+  <view wx:elif="{{loadError}}" class="error-state my-error-wrap">
+    <text class="my-error-msg">{{loadError}}</text>
+    <button class="btn-primary my-retry-btn" bindtap="loadAll">重新加载</button>
+  </view>
+
+  <!-- 内容列表区 -->
+  <view wx:else class="my-content-body">
+
+    <!-- 1. 待上课 -->
+    <block wx:if="{{currentTab === 'upcoming'}}">
+      <view wx:if="{{upcomingList.length === 0}}" class="empty-state my-empty-box">
+        <text class="my-empty-text">还没有待上的课</text>
+        <button class="btn-primary my-empty-btn" bindtap="goToBooking">去约一节</button>
+      </view>
+
+      <view wx:else class="my-list">
+        <view wx:for="{{upcomingList}}" wx:key="id" class="card my-card">
+          <!-- 左侧日期块 -->
+          <view class="my-date-col">
+            <text class="my-date-day">{{item.day}}</text>
+            <text class="my-date-weekday">{{item.weekday}}</text>
+          </view>
+
+          <!-- 中间课程与时间 -->
+          <view class="my-info-col">
+            <text class="my-course-name">{{item.course_name}}</text>
+            <text class="my-time-range">{{item.start_time}}–{{item.end_time}}</text>
+            <view class="my-coach-row" wx:if="{{item.coach_name || item.room_name}}">
+              <text wx:if="{{item.coach_name}}">{{item.coach_name}}</text>
+              <text wx:if="{{item.room_name}}"> · {{item.room_name}}</text>
+            </view>
+          </view>
+
+          <!-- 右侧操作与取消按钮 -->
+          <view class="my-action-col">
+            <block wx:if="{{item.canCancel}}">
+              <text class="my-cancel-link" data-item="{{item}}" bindtap="handleCancel">取消</text>
+            </block>
+            <block wx:else>
+              <text class="my-cutoff-text">不足 2 小时，联系前台</text>
+            </block>
+          </view>
+        </view>
+      </view>
+    </block>
+
+    <!-- 2. 已完成 -->
+    <block wx:elif="{{currentTab === 'attended'}}">
+      <view wx:if="{{attendedList.length === 0}}" class="empty-state my-empty-box">
+        <text class="my-empty-text">还没有已完成的课程</text>
+      </view>
+
+      <view wx:else class="my-list">
+        <view wx:for="{{attendedList}}" wx:key="id" class="card my-card">
+          <view class="my-date-col">
+            <text class="my-date-day">{{item.day}}</text>
+            <text class="my-date-weekday">{{item.weekday}}</text>
+          </view>
+
+          <view class="my-info-col">
+            <text class="my-course-name">{{item.course_name}}</text>
+            <text class="my-time-range">{{item.start_time}}–{{item.end_time}}</text>
+            <view class="my-coach-row" wx:if="{{item.coach_name || item.room_name}}">
+              <text wx:if="{{item.coach_name}}">{{item.coach_name}}</text>
+              <text wx:if="{{item.room_name}}"> · {{item.room_name}}</text>
+            </view>
+          </view>
+
+          <view class="my-action-col">
+            <view wx:if="{{item.statusTag === 'pending_settle'}}" class="tag tag--warn">待结课</view>
+            <view wx:elif="{{item.statusTag === 'unsettled'}}" class="tag tag--warn">待前台结算</view>
+            <view wx:else class="tag tag--success">已完成</view>
+          </view>
+        </view>
+      </view>
+    </block>
+
+    <!-- 3. 已取消 -->
+    <block wx:elif="{{currentTab === 'cancelled'}}">
+      <view wx:if="{{cancelledList.length === 0}}" class="empty-state my-empty-box">
+        <text class="my-empty-text">没有取消记录</text>
+      </view>
+
+      <view wx:else class="my-list">
+        <view wx:for="{{cancelledList}}" wx:key="id" class="card my-card my-card-dimmed">
+          <view class="my-date-col">
+            <text class="my-date-day">{{item.day}}</text>
+            <text class="my-date-weekday">{{item.weekday}}</text>
+          </view>
+
+          <view class="my-info-col">
+            <text class="my-course-name">{{item.course_name}}</text>
+            <text class="my-time-range">{{item.start_time}}–{{item.end_time}}</text>
+            <text class="my-cancel-date-text">{{item.cancelledAtText}}</text>
+          </view>
+
+          <view class="my-action-col">
+            <view class="tag">已取消</view>
+          </view>
+        </view>
+      </view>
+    </block>
+
+  </view>
+
+</view>

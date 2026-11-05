@@ -1,0 +1,13 @@
+<view class="sv sv--{{theme}} {{compact ? 'sv--compact' : ''}}">
+  <block wx:if="{{type === 'loading'}}">
+    <view class="sv-sk sv-sk-1"></view>
+    <view class="sv-sk sv-sk-2"></view>
+    <view class="sv-sk sv-sk-3"></view>
+  </block>
+  <block wx:else>
+    <image wx:if="{{iconSrc}}" class="sv-icon" src="{{iconSrc}}" mode="aspectFit" />
+    <text wx:if="{{title}}" class="sv-title">{{title}}</text>
+    <text wx:if="{{desc}}" class="sv-desc">{{desc}}</text>
+    <view wx:if="{{actionText}}" class="sv-btn" bindtap="onAction">{{actionText}}</view>
+  </block>
+</view>

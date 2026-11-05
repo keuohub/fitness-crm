@@ -1,5 +1,10 @@
 {
+  "usingComponents": {
+    "next-class": "/components/next-class/next-class",
+    "state-view": "/components/state-view/state-view"
+  },
+  "navigationStyle": "custom",
   "enablePullDownRefresh": true,
-  "navigationBarTitleText": "我的",
-  "backgroundColor": "#FAFAFA"
+  "backgroundColor": "#f3efe8",
+  "backgroundTextStyle": "dark"
 }

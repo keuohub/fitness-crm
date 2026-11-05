@@ -1,10 +1,20 @@
+var navUtil = require("../../utils/nav.js");
 var api = require("../../utils/api.js");
 var format = require("../../utils/format.js");
 
 Page({
   data: { loading: true, error: "", cards: [] },
 
+  navBack: function() {
+    if (getCurrentPages().length > 1) {
+      wx.navigateBack();
+    } else {
+      wx.switchTab({ url: "/pages/me/me" });
+    }
+  },
+
   onLoad: function() {
+    this.setData({ nav: navUtil.getNavMetrics() });
     if (!wx.getStorageSync("memberToken")) {
       wx.reLaunch({ url: "/pages/login/login?force=1" });
       return;
@@ -16,6 +26,13 @@ Page({
     if (this.data.cards.length) this.load();
   },
 
+  onRetry: function() {
+    this.setData({ loading: true });
+    this.load();
+  },
+  goToBookingTab: function() {
+    wx.switchTab({ url: "/pages/booking/booking" });
+  },
   onPullDownRefresh: function() {
     var that = this;
     this.load(function() { wx.stopPullDownRefresh(); });
@@ -33,7 +50,6 @@ Page({
             return {
               id: c.id,
               name: c.name,
-              // 年卡身份：接口按「期限卡且有效期≥365天或名称含年卡」判定
               isAnnual: c.isAnnualCard === true,
               categoryText: c.category === "count" ? "次数卡" : "期限卡",
               statusText: statusMap[c.status] || c.status,
@@ -41,7 +57,9 @@ Page({
               courseScopeText: (c.courseCategoryNames && c.courseCategoryNames.length > 0)
                 ? c.courseCategoryNames.join(" · ")
                 : "",
-              remainingText: c.category === "count" ? (c.remainingCount || 0) + " 次" : "不限次",
+              remainingCount: c.remainingCount || 0,
+              isCount: c.category === "count",
+              remainingText: c.category === "count" ? (c.remainingCount || 0) : "不限次",
               validText: c.validUntil ? (c.validUntil + " 到期") : "长期有效",
               purchasedText: c.purchasedAt ? format.formatChineseDate(c.purchasedAt) : "",
               transactions: (c.transactions || []).slice(0, 5).map(function(t) {
@@ -69,12 +87,12 @@ Page({
         finished();
       }
     });
-  }
-,
+  },
+
   onShareAppMessage: function() {
-    return { title: "徕舞女子塑形 · 我的会员卡", path: "/pages/cards/cards" };
+    return { title: "徕舞女子塑形 · 约一节课", path: "/pages/cards/cards" };
   },
   onShareTimeline: function() {
-    return { title: "徕舞女子塑形 · 身体掌权，终生优雅" };
+    return { title: "徕舞女子塑形 · 约一节课" };
   }
 });

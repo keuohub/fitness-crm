@@ -27,7 +27,7 @@ Page({
       return;
     }
     var baseUrl = wx.getStorageSync("baseUrl") || api.DEFAULT_BASE_URL;
-    var memberName = wx.getStorageSync("memberName") || "身体掌权者";
+    var memberName = wx.getStorageSync("memberName") || "你";
     var joinDays = Number(wx.getStorageSync("joinDays") || 0);
     var trainCount = Number(wx.getStorageSync("trainCount") || 0);
 
@@ -184,7 +184,7 @@ Page({
       return;
     }
 
-    var memberName = wx.getStorageSync("memberName") || "身体掌权者";
+    var memberName = wx.getStorageSync("memberName") || "你";
     var joinDays = Number(wx.getStorageSync("joinDays") || 0);
     var trainCount = Number(wx.getStorageSync("trainCount") || 0);
 

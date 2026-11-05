@@ -1,3 +1,4 @@
+var navUtil = require("../../utils/nav.js");
 // pages/manager/manager.js
 // 徕舞普拉提 · 手机端管家智能工作台
 // 全屏沉浸式原生子视图结构：彻底根除弹窗滚动穿透，所有SaaS业务功能实打实打通
@@ -98,11 +99,48 @@ Page({
     errorReports: ""
   },
 
+  checkManagerAccess: function() {
+    var role = wx.getStorageSync("managerRole");
+    var isMgr = wx.getStorageSync("isManager");
+    var hasAccess = Boolean((role && String(role).trim().length > 0) || isMgr === true || isMgr === "true");
+    if (!hasAccess) {
+      if (this._denyShown) return false;
+      this._denyShown = true;
+      var self = this;
+      wx.showModal({
+        title: "提示",
+        content: "工作台仅限场馆主理人与管理员访问",
+        showCancel: false,
+        confirmText: "知道了",
+        success: function() {
+          self._denyShown = false;
+          wx.switchTab({ url: "/pages/stars/stars" });
+        }
+      });
+      return false;
+    }
+    return true;
+  },
+
   onLoad: function() {
+    this.setData({ nav: navUtil.getNavMetrics() });
+    if (!this.checkManagerAccess()) return;
     this.initDate();
     this.initDateTabs();
     this.loadDashboard();
     this.loadSessionOptions();
+  },
+
+  onShow: function() {
+    if (!this.checkManagerAccess()) return;
+    if (typeof this.getTabBar === "function" && this.getTabBar()) {
+      var tb = this.getTabBar();
+      if (typeof tb.updateTab === "function") {
+        tb.updateTab("/pages/manager/manager");
+      } else {
+        tb.setData({ hidden: false });
+      }
+    }
   },
 
   onPullDownRefresh: function() {
@@ -178,7 +216,7 @@ Page({
   },
 
   goBackMember: function() {
-    wx.switchTab({ url: "/pages/me/me" });
+    wx.switchTab({ url: "/pages/stars/stars" });
   },
 
   switchToBookings: function() {
@@ -248,7 +286,7 @@ Page({
   },
 
   tapTeam: function() {
-    wx.switchTab({ url: "/pages/brand/brand" });
+    wx.navigateTo({ url: "/pages/brand/brand" });
   },
 
   // ── 主工作台数据加载 (P0-7 修复：取真实 totalCardsCount，删除 || 5 假数据) ──
@@ -294,8 +332,8 @@ Page({
             title: "权限受限",
             content: "当前登录账号未开通会馆管家权限，仅供会馆导师与主理人使用。",
             showCancel: false,
-            confirmText: "返回",
-            success: function() { wx.switchTab({ url: "/pages/me/me" }); }
+            confirmText: "知道了",
+            success: function() { wx.switchTab({ url: "/pages/stars/stars" }); }
           });
         } else {
           var errMsg = (res.data && res.data.error) || "加载失败，请下拉刷新";

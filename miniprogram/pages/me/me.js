@@ -1,3 +1,4 @@
+var navUtil = require("../../utils/nav.js");
 // pages/me/me.js
 // 我的账户：只展示后台真实数据，页面不生产任何数字。
 var api = require("../../utils/api.js");
@@ -15,11 +16,11 @@ Page({
     mentorName: "",
     status: "",
     joinedAt: "",
-    joinedAtText: "待小桥补录",
+    joinedAtText: "",
     joinDays: null,
-    joinDaysText: "—",
-    memberCodeText: "卡号待小桥补录",
-    statusText: "会员",
+    joinDaysText: "",
+    memberCodeText: "",
+    statusText: "",
     totalHours: 0,
     courseCounts: [],
     latestTrainingDate: "",
@@ -30,6 +31,7 @@ Page({
   },
 
   onLoad: function() {
+    this.setData({ nav: navUtil.getNavMetrics() });
     var memberId = wx.getStorageSync("memberId");
     if (!memberId || !wx.getStorageSync("memberToken")) {
       wx.reLaunch({ url: "/pages/login/login?force=1" });
@@ -41,24 +43,35 @@ Page({
 
   onShow: function() {
     if (typeof this.getTabBar === "function" && this.getTabBar()) {
-      this.getTabBar().setData({ selected: 4, hidden: false });
+      var tb = this.getTabBar();
+      if (typeof tb.updateTab === "function") {
+        tb.updateTab("/pages/me/me");
+      } else {
+        tb.setData({ hidden: false });
+      }
     }
     var now = Date.now();
+    var nc = this.selectComponent("#nextClass");
+    if (nc && typeof nc.refresh === "function") {
+      nc.refresh();
+    }
     if (this.data.memberId && (!this._lastLoad || now - this._lastLoad > 3000)) {
       this._lastLoad = now;
       this.loadAll();
     }
   },
 
+  onRetry: function() {
+    this.setData({ loading: true });
+    this.loadAll();
+  },
   onPullDownRefresh: function() {
     var that = this;
     this.loadAll(function() { wx.stopPullDownRefresh(); });
   },
 
   fullUrl: function(p) {
-    if (!p) return "";
-    if (p.indexOf("http") === 0) return p;
-    return api.getBaseUrl() + p;
+    return api.fullUrl(p);
   },
 
   loadAll: function(done) {
@@ -77,23 +90,29 @@ Page({
             loading: false,
             loadError: "",
             memberName: m.memberName || "",
-            initial: (m.memberName || "").charAt(0) || "会",
-            avatarUrl: that.fullUrl(m.avatarUrl || ""),
+            initial: (m.memberName || "").charAt(0) || "",
+            avatarUrl: api.fullUrl(m.avatarUrl || ""),
             memberCode: m.memberCode || "",
-            memberCodeText: m.memberCode ? ("卡号 " + m.memberCode) : "卡号待小桥补录",
+            memberCodeText: m.memberCode ? ("卡号 " + m.memberCode) : "",
             mentorName: m.mentorName || "",
             status: m.status || "",
-            statusText: m.status === "active" ? "在册会员" : "会员",
+            statusText: m.status === "active" ? "在册会员" : (m.status ? "会员" : ""),
             joinedAt: m.joinedAt ? format.formatChineseDate(m.joinedAt) : "",
-            joinedAtText: m.joinedAt ? format.formatChineseDate(m.joinedAt) : "待小桥补录",
+            joinedAtText: m.joinedAt ? format.formatChineseDate(m.joinedAt) : "",
             joinDays: joinDays,
-            joinDaysText: joinDays === null ? "—" : (joinDays + " 天"),
+            joinDaysText: (joinDays === null || isNaN(joinDays)) ? "" : (joinDays + " 天"),
             totalHours: Number(m.totalHours || 0),
             courseCounts: Array.isArray(m.courseCounts) ? m.courseCounts : [],
             latestTrainingDate: m.lastTrainingDate ? format.formatShortDate(m.lastTrainingDate) : "",
             isManager: Boolean(m.isManager),
             managerRole: m.managerRole || ""
           });
+          wx.setStorageSync("isManager", Boolean(m.isManager));
+          wx.setStorageSync("managerRole", m.managerRole || "");
+          if (typeof that.getTabBar === "function" && that.getTabBar()) {
+            var tb = that.getTabBar();
+            if (typeof tb.updateTab === "function") tb.updateTab("/pages/me/me");
+          }
           if (m.memberName) wx.setStorageSync("memberName", m.memberName);
         } else if (res.statusCode === 401) {
           that.setData({ loading: false, loadError: "登录已过期" });
@@ -110,6 +129,7 @@ Page({
     });
   },
 
+  // round04 误删，已恢复：me.wxml 仍渲染 latestReply（小桥最近一条回复）
   loadLatestReply: function(done) {
     var that = this;
     var finished = typeof done === "function" ? done : function() {};
@@ -156,7 +176,7 @@ Page({
             var data = {};
             try { data = JSON.parse(up.data || "{}"); } catch (e) {}
             if (up.statusCode === 200 && data.avatarUrl) {
-              that.setData({ avatarUrl: that.fullUrl(data.avatarUrl) });
+              that.setData({ avatarUrl: api.fullUrl(data.avatarUrl) });
               wx.showToast({ title: "已更新", icon: "success" });
             } else {
               wx.showToast({ title: "更新失败，请重试", icon: "none" });
@@ -187,8 +207,12 @@ Page({
     });
   },
 
+  goMyBookings: function() {
+    wx.navigateTo({ url: "/pages/my-bookings/my-bookings" });
+  },
+
   goBooking: function() {
-    wx.navigateTo({ url: "/pages/booking/booking" });
+    wx.switchTab({ url: "/pages/booking/booking" });
   },
 
   goManager: function() {
@@ -207,6 +231,14 @@ Page({
     wx.navigateTo({ url: "/pages/feedback/feedback" });
   },
 
+  onAvatarError: function() {
+    this.setData({ avatarUrl: "" });
+  },
+
+  goToBrand: function() {
+    wx.navigateTo({ url: "/pages/brand/brand" });
+  },
+
   goTransform: function() {
     wx.switchTab({ url: "/pages/transformation/transformation" });
   },
@@ -216,11 +248,13 @@ Page({
       title: "暂时离开",
       content: "离开后需要重新输入邀请码和验证信息才能进入。",
       confirmText: "离开",
-      confirmColor: "#9E2A2B",
+      confirmColor: "#000000",
       cancelText: "留下",
       success: function(res) {
         if (!res.confirm) return;
         try { wx.request({ url: api.getBaseUrl() + "/api/portal/logout", method: "POST" }); } catch (e) {}
+        wx.removeStorageSync("managerRole");
+        wx.removeStorageSync("isManager");
         api.clearSession();
         wx.reLaunch({ url: "/pages/login/login?force=1" });
       }
@@ -228,9 +262,10 @@ Page({
   },
 
   onShareTimeline: function() {
-    return { title: "徕舞女子塑形 · 身体掌权，终生优雅" };
+    return { title: "徕舞女子塑形 · 约一节课" };
   },
+
   onShareAppMessage: function() {
-    return { title: "我的身体手札 · 徕舞", path: "/pages/stars/stars" };
+    return { title: "徕舞女子塑形 · 约一节课", path: "/pages/me/me" };
   }
 });

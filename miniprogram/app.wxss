@@ -1,77 +1,411 @@
-/* app.wxss - 高奢女性品牌「徕舞」全局视觉设计与动效系统 */
+/* app.wxss - 徕舞全局设计系统 v2.2 · lululemon 实拍校正（BRIEF_06） */
 
 page {
-  --bg-gradient:
-    radial-gradient(circle at 85% 10%, rgba(255, 248, 242, 0.78) 0%, transparent 45%),
-    linear-gradient(170deg, #F5E5D9 0%, #E58572 32%, #D4423C 65%, #B82226 100%);
-  --card-glass: rgba(255, 255, 255, 0.90);
-  --card-glass-subtle: rgba(255, 255, 255, 0.78);
-  --card-border: 1rpx solid rgba(255, 255, 255, 0.92);
-  --card-shadow: 0 16rpx 44rpx rgba(186, 36, 40, 0.09), 0 4rpx 12rpx rgba(0, 0, 0, 0.03);
-  --card-shadow-active: 0 8rpx 20rpx rgba(186, 36, 40, 0.12);
-  
-  /* 高对比度清晰文字阶梯：确保在暖红渐变背景下文字极致清晰且融洽 */
-  --text-main: #0D0C0F;       /* 黑曜石高奢主标题，对比度极致清晰 */
-  --text-body: #2B2629;       /* 浓郁深灰正文，阅读舒适 */
-  --text-secondary: #5C5559;  /* 中度沉稳副标，层次分明 */
-  --text-muted: #827A7E;      /* 辅助弱标/说明文字 */
-  --text-white: #FFFFFF;      /* 反白文字 */
-  
-  /* 品牌核心点缀色 */
-  --brand-crimson: #BA2428;
-  --brand-warm-peach: #F6E6DA;
-  --noir-btn: #0D0C0F;
-  
-  /* 背景改由下方 page::before 的固定画布承担，这里只留兜底色 */
-  background-color: #BA2428;
+  /* ===== lululemon 设计规范 token ===== */
+  --c-ink: #000000;
+  --c-text: #111111;
+  --c-text-2: #54555b;
+  --c-text-3: #8a8b90;
+  --c-disabled: #cccccc;
+  --c-line: #ece7df;
+  --c-bg: var(--c-paper);
+  --c-bg-soft: var(--c-sand);
+  --c-surface: #ffffff;
+  --c-surface-2: var(--c-sand);
+  --c-brand: #731b2e;
+  --c-brand-soft: #d791a0;
+  --c-warn: #c8501e;
+  --c-ok: #2e7d4f;
+  --c-on-ink: #ffffff;
+  --c-overlay: rgba(0, 0, 0, 0.45);
+
+  --font-sans: -apple-system, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+  --font-num: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+
+  --fs-display: 48rpx;
+  --fs-h1: 40rpx;
+  --fs-h2: 36rpx;
+  --fs-h3: 32rpx;
+  --fs-body: 28rpx;
+  --fs-caption: 24rpx;
+  --fs-micro: 22rpx;
+  --fs-num-xl: 88rpx;
+  --fs-num-l: 44rpx;
+
+  --r-0: 0;
+  --r-xs: 4rpx;
+  --r-pill: 999rpx;
+
+  --sp-1: 8rpx;
+  --sp-2: 16rpx;
+  --sp-3: 24rpx;
+  --sp-4: 32rpx;
+  --sp-5: 48rpx;
+  --sp-6: 64rpx;
+  --sp-7: 64rpx;
+  --page-x: 40rpx;
+
+  --btn-h: 88rpx;
+  --btn-h-s: 56rpx;
+  --tag-h: 40rpx;
+  --tabbar-h: 104rpx;
+
+
+  /* ===== v2.1 / v2.2 新增 ===== */
+  --c-deep: #141414;
+  --c-deep-2: #1f1f1f;
+  --c-on-deep: #ffffff;
+  --c-on-deep-2: rgba(255, 255, 255, 0.72);
+  --c-on-deep-3: rgba(255, 255, 255, 0.48);
+  --c-deep-line: rgba(255, 255, 255, 0.16);
+  --c-paper: #f3efe8;
+  --c-taupe: #c9c3b9;
+  --c-sand: #efeae2;
+  --c-card: #ffffff;
+  --c-icon: #b5b2ac;
+  --c-select: #000000;
+  --c-accent-pop: #c8374d;
+  --fs-section: 38rpx;
+  --gap-section: 72rpx;
+  --r-card: 24rpx;
+  --r-sheet: 32rpx;
+  --tabbar-gap: 16rpx;
+  --tab-safe: calc(104rpx + 16rpx + env(safe-area-inset-bottom));
+
+  /* ===== 旧变量兼容映射 ===== */
+  --c-accent: #000000;
+  --c-accent-soft: var(--c-sand);
+  --c-blush: var(--c-sand);
+  --c-success: var(--c-ok);
+  --c-success-soft: var(--c-sand);
+  --c-warning: var(--c-text-2);
+  --c-warning-soft: var(--c-sand);
+  --c-danger: var(--c-text-2);
+  --c-info: #54555b;
+
+  --font-serif: var(--font-sans);
+  --font-display: var(--font-sans);
+  --font-numeral: var(--font-num);
+
+  --r-s: 4rpx;
+  --r-m: 24rpx;
+  --radius-s: 4rpx;
+  --radius-m: 24rpx;
+  --radius-pill: 999rpx;
+
+  --color-ink: #000000;
+  --color-ivory: #f3efe8;
+  --color-champagne: #efeae2;
+  --color-accent: #000000;
+  --text-main: #000000;
+  --text-body: #000000;
+  --text-secondary: #54555b;
+  --text-muted: #999999;
+  --text-white: #ffffff;
+  --brand-crimson: #731b2e;
+  --brand-warm-peach: #efeae2;
+  --noir-btn: #000000;
+  --card-glass: #ffffff;
+  --card-glass-subtle: #ffffff;
+  --card-border: none;
+  --card-shadow: none;
+  --card-shadow-active: none;
+  --shadow-float: none;
+  --border: 1px solid #ece7df;
+
+  --fs-hero: 104rpx;
+  --fs-title: 60rpx;
+  --fs-sub: 26rpx;
+  --lh-hero: 1.25;
+  --lh-h1: 1.3;
+  --lh-h2: 1.35;
+  --lh-h3: 1.4;
+  --lh-body: 1.5;
+  --lh-sub: 1.5;
+  --lh-caption: 1.5;
+  --lh-micro: 1.4;
+
+  --space-xs: 8rpx;
+  --space-s: 16rpx;
+  --space-m: 24rpx;
+  --space-l: 32rpx;
+  --space-xl: 64rpx;
+
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-fast: 150ms;
+  --dur-base: 240ms;
+  --dur-slow: 600ms;
+
+  background-color: #f3efe8;
   background-image: none;
   position: relative;
   z-index: 0;
   min-height: 100vh;
   box-sizing: border-box;
-  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-  color: var(--text-body);
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: #111111;
   -webkit-font-smoothing: antialiased;
   -webkit-overflow-scrolling: touch;
 }
 
-/* 全屏固定画布：滚屏时背景纹丝不动，不再拦腰截断、不再重复平铺 */
 page::before {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: -1;
-  background-color: #CE3834;
-  background-image: var(--bg-gradient);
-  background-repeat: no-repeat;
-  background-size: 100% 100%;
-  pointer-events: none;
+  display: none;
 }
 
-/* 全局页面容器与切换动效 */
-.growth-page,
-.booking-page {
-  min-height: 100vh;
-  padding-top: calc(env(safe-area-inset-top) + 124rpx);
-  padding-bottom: calc(env(safe-area-inset-bottom) + 210rpx);
+/* 微信 button 重置 */
+button {
+  margin: 0;
+  padding: 0;
   box-sizing: border-box;
-  animation: pageTransitIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+  font-size: inherit;
+  line-height: normal;
+  background: transparent;
+  border-radius: 0;
 }
 
-/* 页面切换沉静淡入 */
-@keyframes pageTransitIn {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
+button::after {
+  border: none;
 }
 
-/* 卡片微距轻盈淡入：稳健、平缓、杜绝眩晕 */
+/* ===== 通用组件规范 ===== */
+
+/* 主按钮：黑底白字胶囊，高 88rpx */
+.btn-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--btn-h);
+  line-height: var(--btn-h);
+  background: #000000;
+  color: #ffffff;
+  font-size: 28rpx;
+  font-weight: 500;
+  border-radius: 999rpx;
+  border: none;
+  text-align: center;
+  box-sizing: border-box;
+  transition: opacity 150ms ease;
+}
+
+.btn-primary:active {
+  opacity: 0.8;
+}
+
+.btn-primary[disabled] {
+  background: #cccccc;
+  color: #ffffff;
+  opacity: 1;
+}
+
+/* 次按钮：白底 1px 黑描边胶囊 */
+.btn-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--btn-h);
+  line-height: calc(var(--btn-h) - 2px);
+  background: #ffffff;
+  color: #000000;
+  font-size: 28rpx;
+  font-weight: 500;
+  border-radius: 999rpx;
+  border: 1px solid #000000;
+  text-align: center;
+  box-sizing: border-box;
+  transition: opacity 150ms ease;
+}
+
+.btn-secondary:active {
+  opacity: 0.8;
+}
+
+/* 小按钮：高 56rpx */
+.btn-sm {
+  height: var(--btn-h-s);
+  line-height: var(--btn-h-s);
+  font-size: 24rpx;
+  padding: 0 28rpx;
+}
+
+.btn-secondary.btn-sm {
+  line-height: calc(var(--btn-h-s) - 2px);
+}
+
+/* 文字按钮：黑字下划线 */
+.btn-text {
+  display: inline-block;
+  color: #000000;
+  font-size: var(--fs-body);
+  text-decoration: underline;
+  text-underline-offset: 4rpx;
+  background: transparent;
+  border: none;
+  padding: 0;
+  line-height: inherit;
+  transition: opacity 150ms ease;
+}
+
+.btn-text:active {
+  opacity: 0.7;
+}
+
+/* 列表行 */
+.list-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 96rpx;
+  padding: 24rpx 0;
+  border-bottom: 1px solid #ece7df;
+  box-sizing: border-box;
+}
+
+.list-row__arrow {
+  width: 12rpx;
+  height: 12rpx;
+  border-top: 2rpx solid #999999;
+  border-right: 2rpx solid #999999;
+  transform: rotate(45deg);
+  display: inline-block;
+  margin-left: 8rpx;
+}
+
+/* 分隔线 */
+.divider {
+  height: 1px;
+  background: #ece7df;
+  border: none;
+}
+
+/* 区块标题 */
+.section-title {
+  font-size: var(--fs-h2);
+  font-weight: 600;
+  color: #000000;
+  line-height: var(--lh-h2);
+}
+
+/* 标签 */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--tag-h);
+  padding: 0 16rpx;
+  border-radius: 999rpx;
+  font-size: var(--fs-micro);
+  background: #efeae2;
+  color: #000000;
+  box-sizing: border-box;
+  line-height: 1;
+}
+
+.tag--dark {
+  background: #000000;
+  color: #ffffff;
+}
+
+.tag--booked {
+  background: #000000;
+  color: #ffffff;
+}
+
+.tag--warn {
+  background: transparent;
+  color: var(--c-warn);
+}
+
+.tag--ok {
+  background: transparent;
+  color: var(--c-ok);
+}
+
+.tag--success {
+  background: transparent;
+  color: var(--c-ok);
+}
+
+/* 卡片 */
+.card {
+  background: #ffffff;
+  border-radius: 24rpx;
+  border: none;
+  box-shadow: none;
+  box-sizing: border-box;
+}
+
+.card-soft {
+  background: #efeae2;
+  border-radius: 24rpx;
+  border: none;
+  box-shadow: none;
+  box-sizing: border-box;
+}
+
+/* 空状态与报错态 */
+.empty-state {
+  padding: var(--sp-6) var(--sp-4);
+  text-align: center;
+  color: var(--c-text-2);
+  font-size: var(--fs-body);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.error-state {
+  padding: var(--sp-6) var(--sp-4);
+  text-align: center;
+  color: var(--c-text-2);
+  font-size: var(--fs-body);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+/* 骨架屏 */
+.skeleton {
+  background: #efeae2;
+  border-radius: 24rpx;
+  animation: lw-breathe 1.2s var(--ease) infinite alternate;
+}
+
+@keyframes lw-breathe {
+  from { opacity: 1; }
+  to { opacity: 0.55; }
+}
+
+/* 图片占位兜底 */
+.img-fallback {
+  background-color: #efeae2;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* 排版类 */
+.t-hero   { font-family: var(--font-sans); font-size: var(--fs-display); line-height: var(--lh-hero); font-weight: 600; color: #000000; }
+.t-h1     { font-family: var(--font-sans); font-size: var(--fs-h1); line-height: var(--lh-h1); font-weight: 600; color: #000000; }
+.t-h2     { font-family: var(--font-sans); font-size: var(--fs-h2); line-height: var(--lh-h2); font-weight: 600; color: #000000; }
+.t-h3     { font-family: var(--font-sans); font-size: var(--fs-h3); line-height: var(--lh-h3); font-weight: 500; color: #000000; }
+.t-sub    { font-family: var(--font-sans); font-size: var(--fs-sub); line-height: var(--lh-sub); color: var(--c-text-2); }
+.t-cap    { font-family: var(--font-sans); font-size: var(--fs-caption); line-height: var(--lh-caption); color: var(--c-text-2); }
+.t-num-xl { font-family: var(--font-num); font-size: var(--fs-num-xl); line-height: 1; font-weight: 600; color: #000000; font-variant-numeric: tabular-nums; }
+.t-num-l  { font-family: var(--font-num); font-size: var(--fs-num-l); line-height: 1.1; font-weight: 600; color: #000000; font-variant-numeric: tabular-nums; }
+
+/* 动画通用 */
+.stagger-1 { animation: cardFadeSlide 0.24s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.stagger-2 { animation: cardFadeSlide 0.24s cubic-bezier(0.2, 0.8, 0.2, 1) 0.04s both; }
+.stagger-3 { animation: cardFadeSlide 0.24s cubic-bezier(0.2, 0.8, 0.2, 1) 0.08s both; }
+.stagger-4 { animation: cardFadeSlide 0.24s cubic-bezier(0.2, 0.8, 0.2, 1) 0.12s both; }
+.stagger-5 { animation: cardFadeSlide 0.24s cubic-bezier(0.2, 0.8, 0.2, 1) 0.16s both; }
+
 @keyframes cardFadeSlide {
   0% {
     opacity: 0;
@@ -83,86 +417,21 @@ page::before {
   }
 }
 
-/* ================= 稳健微距级联淡入系统 ================= */
-.stagger-1 { animation: cardFadeSlide 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.02s both; }
-.stagger-2 { animation: cardFadeSlide 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.05s both; }
-.stagger-3 { animation: cardFadeSlide 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both; }
-.stagger-4 { animation: cardFadeSlide 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.11s both; }
-.stagger-5 { animation: cardFadeSlide 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.14s both; }
-.stagger-6 { animation: cardFadeSlide 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.17s both; }
-.stagger-7 { animation: cardFadeSlide 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.20s both; }
-
-/* ================= Lululemon & Apple HIG 沉静通透磨砂材质 =================
-   温润通透，边框具有物理微光折射，稳重沉静不晃动 */
-.coach-message-card,
-.milestone-card,
-.whisper-card,
-.feedback-card,
-.photo-compare-card,
-.reply-card,
-.training-item,
-.training-card-luxury,
-.stat-card-dual,
-.profile-card-luxury,
-.latest-card,
-.history-item,
-.booking-entry,
-.data-list,
-.feeling-item,
-.booking-item,
-.stats-grid,
-.empty-state,
-.textarea-field {
-  background: rgba(253, 248, 245, 0.88) !important;
-  backdrop-filter: blur(28px) saturate(150%);
-  -webkit-backdrop-filter: blur(28px) saturate(150%);
-  border-radius: 40rpx !important;
-  border-top: 1.5rpx solid rgba(255, 255, 255, 0.96) !important;
-  border-left: 1rpx solid rgba(255, 255, 255, 0.75) !important;
-  border-right: 1rpx solid rgba(255, 255, 255, 0.75) !important;
-  border-bottom: 1rpx solid rgba(255, 255, 255, 0.45) !important;
-  box-shadow: 
-    0 20rpx 48rpx -10rpx rgba(110, 18, 18, 0.15),
-    0 4rpx 14rpx rgba(110, 18, 18, 0.05),
-    inset 0 1.5rpx 0 rgba(255, 255, 255, 0.92) !important;
-  transition: transform 240ms cubic-bezier(0.2, 0.8, 0.25, 1), box-shadow 240ms cubic-bezier(0.2, 0.8, 0.25, 1);
-  box-sizing: border-box;
-}
-
-/* Lululemon & Apple 细腻触控微交互：轻压微凹微缩，松手弹性回弹 */
-.coach-message-card:active,
-.milestone-card:active,
-.whisper-card:active,
-.feedback-card:active,
-.photo-compare-card:active,
-.reply-card:active,
-.latest-card:active,
-.history-item:active,
-.booking-entry:active,
-.data-list:active,
-.feeling-item:active,
-.booking-item:active,
-.training-item:active,
-.training-card-luxury:active,
-.stat-card-dual:active,
-.profile-card-luxury:active {
-  transform: scale(0.985) translateY(2rpx) !important;
-  box-shadow: 
-    0 10rpx 24rpx -6rpx rgba(110, 18, 18, 0.14),
-    0 2rpx 8rpx rgba(110, 18, 18, 0.04),
-    inset 0 1rpx 0 rgba(255, 255, 255, 0.7) !important;
-  transition: transform 120ms cubic-bezier(0.2, 0.8, 0.25, 1), box-shadow 120ms ease !important;
-}
-
-/* 胶囊主按钮高奢触感交互 */
-.btn-primary,
-.login-btn,
-.splash-cta {
-  transition: transform 140ms cubic-bezier(0.2, 0.8, 0.25, 1), box-shadow 140ms ease, opacity 140ms ease !important;
-}
-.btn-primary:active,
-.login-btn:active,
-.splash-cta:active {
-  transform: scale(0.965) translateY(2rpx) !important;
-  box-shadow: 0 6rpx 16rpx rgba(8, 7, 10, 0.2) !important;
-}
+/* ===== v2.2 公共类（BRIEF_06 §2） ===== */
+.page-title { display: block; font-size: 60rpx; font-weight: 700; line-height: 1.15; letter-spacing: -0.5rpx; color: #111111; }
+.page-sub { display: block; margin-top: 8rpx; font-size: 26rpx; color: #8a8b90; }
+.section-title { font-size: 38rpx; font-weight: 600; color: #111111; }
+.t-num { font-variant-numeric: tabular-nums; }
+.card-sand { background: #efeae2; border-radius: 24rpx; box-sizing: border-box; }
+.page--paper { background: #f3efe8; }
+.page--taupe { background: #c9c3b9; }
+.page--deep { background: #141414; color: #ffffff; }
+.btn-primary--light { background: #ffffff !important; color: #000000 !important; }
+.btn-secondary--light { background: transparent !important; color: #ffffff !important; border: 1px solid #ffffff !important; }
+/* Tab 页底部给悬浮胶囊留位 */
+.tab-safe-space { height: calc(104rpx + 16rpx + env(safe-area-inset-bottom) + 40rpx); }
+/* 胶囊行返回（cards / brand / notes 等 custom 导航的二级页） */
+.nav-row { display: flex; align-items: center; box-sizing: content-box; }
+.nav-back { width: 64rpx; height: 64rpx; display: flex; align-items: center; justify-content: center; margin-left: -12rpx; }
+.nav-back-arrow { width: 20rpx; height: 20rpx; border-left: 4rpx solid #111111; border-bottom: 4rpx solid #111111; transform: rotate(45deg); margin-left: 8rpx; }
+.nav-gap { height: 16px; }
