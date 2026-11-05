@@ -3,6 +3,7 @@ var navUtil = require("../../utils/nav.js");
 // 我的账户：只展示后台真实数据，页面不生产任何数字。
 var api = require("../../utils/api.js");
 var format = require("../../utils/format.js");
+var wxbind = require("../../utils/wxbind.js");
 
 Page({
   data: {
@@ -22,10 +23,12 @@ Page({
     memberCodeText: "",
     statusText: "",
     totalHours: 0,
-    totalHours: 0,
     cardRemaining: 0,
     activeCardCount: 0,
     hasCard: false,
+    isFrozen: false,
+    frozenDays: 0,
+    freezeNote: "",
     courseCounts: [],
     latestTrainingDate: "",
     latestReply: null,
@@ -46,6 +49,8 @@ Page({
   },
 
   onShow: function() {
+    // 老会员可能很久没重新登录，进来就补一次 openid 绑定（内部有 flag，只成功一次）
+    try { wxbind.bind(); } catch (e) {}
     if (typeof this.getTabBar === "function" && this.getTabBar()) {
       var tb = this.getTabBar();
       if (typeof tb.updateTab === "function") {
@@ -105,6 +110,12 @@ Page({
             joinedAtText: m.joinedAt ? format.formatChineseDate(m.joinedAt) : "",
             joinDays: joinDays,
             joinDaysText: (joinDays === null || isNaN(joinDays)) ? "" : (joinDays + " 天"),
+            // 停卡期间天数不累计。如果不说，会员会觉得"天数怎么不涨了"。
+            isFrozen: Boolean(m.isFrozen),
+            frozenDays: Number(m.frozenDays || 0),
+            freezeNote: m.isFrozen
+              ? ("停卡中" + (m.freezeEnd ? " · 预计 " + format.formatShortDate(m.freezeEnd) + " 复卡" : "") + "，陪伴天数暂停累计")
+              : "",
             totalHours: Number(m.totalHours || 0),
             courseCounts: Array.isArray(m.courseCounts) ? m.courseCounts : [],
             cardRemaining: Number(m.cardRemaining || 0),
@@ -262,6 +273,7 @@ Page({
         try { wx.request({ url: api.getBaseUrl() + "/api/portal/logout", method: "POST" }); } catch (e) {}
         wx.removeStorageSync("managerRole");
         wx.removeStorageSync("isManager");
+        try { wxbind.reset(); } catch (e) {}
         api.clearSession();
         wx.reLaunch({ url: "/pages/login/login?force=1" });
       }

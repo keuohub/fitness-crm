@@ -6,6 +6,7 @@ import { eq, desc } from "drizzle-orm";
 import { Button } from "@/components/ui/button";
 import DeleteMemberButton from "./_components/DeleteMemberButton";
 import PortalCodeManager from "./_components/PortalCodeManager";
+import FreezeManager from "./_components/FreezeManager";
 import MemberTabs from "./_components/MemberTabs";
 
 interface Props {
@@ -113,7 +114,10 @@ export default async function MemberDetail({ params }: Props) {
           </div>
         </div>
 
-        <PortalCodeManager memberId={memberId} />
+        <div className="grid md:grid-cols-2 gap-4">
+          <PortalCodeManager memberId={memberId} />
+          <FreezeManager memberId={memberId} />
+        </div>
 
         {/* ═══ Tab 内容区 ═══
             as any: Drizzle schema 有循环引用导致 TS 类型推断失效，

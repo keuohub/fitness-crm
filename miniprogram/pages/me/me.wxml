@@ -21,7 +21,7 @@
         <view class="me-meta-tags">
           <text class="me-tag" wx:if="{{memberCode}}">{{memberCodeText}}</text>
           <text class="me-tag" wx:if="{{status && statusText}}">{{statusText}}</text>
-          <text class="me-tag" wx:if="{{joinDays && joinDaysText}}">相伴 {{joinDaysText}}</text>
+          <text class="me-tag {{isFrozen ? 'me-tag-frozen' : ''}}" wx:if="{{joinDays && joinDaysText}}">相伴 {{joinDaysText}}{{isFrozen ? ' · 停卡中' : ''}}</text>
           <text class="me-tag" wx:if="{{mentorName}}">导师：{{mentorName}}</text>
           <text class="me-tag" wx:if="{{joinedAt}}">入会：{{joinedAtText}}</text>
         </view>
@@ -59,6 +59,10 @@
       </view>
 
       <text class="me-total-note" wx:if="{{latestTrainingDate}}">最近一次 · {{latestTrainingDate}}</text>
+
+      <view class="me-freeze-note" wx:if="{{freezeNote}}">
+        <text>{{freezeNote}}</text>
+      </view>
 
       <view class="me-course-list" wx:if="{{courseCounts.length > 0}}">
         <view class="list-row" wx:for="{{courseCounts}}" wx:key="key">

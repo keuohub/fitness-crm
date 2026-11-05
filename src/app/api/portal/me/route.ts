@@ -5,6 +5,7 @@ import { eq, sql, asc } from "drizzle-orm";
 import { getPortalMemberId } from "@/lib/auth/member-session";
 import { getMemberStage } from "@/lib/member-stage";
 import { autoSettleFinishedBookings } from "@/lib/booking-settle";
+import { settleExpiredFreeze } from "@/lib/member-freeze";
 
 function inferCategoryKey(name: string, enName?: string): string {
   const n = ((name || "") + " " + (enName || "")).toLowerCase();
@@ -33,6 +34,12 @@ export async function GET(request: NextRequest) {
   // 否则会员看到的累计课时和卡内余次会停在上一节之前。
   autoSettleFinishedBookings().catch((e) =>
     console.error("[portal/me] autoSettle error:", e)
+  );
+
+  // 到了预计复卡日就自动复卡并把卡顺延。后台只是"排了"复卡日期，
+  // 到那天没人去点按钮，会员看到的还是"停卡中"、卡也没顺延 —— 这个动作必须自动发生。
+  await settleExpiredFreeze(memberId).catch((e) =>
+    console.error("[portal/me] settleFreeze error:", e)
   );
 
   const [member] = await db.select().from(members).where(eq(members.id, memberId));
@@ -168,12 +175,36 @@ export async function GET(request: NextRequest) {
   const photoCount = Number(photoRow?.n || 0);
 
   // 伴行天数：只有真实入会日期才计算，否则 null（前端显示「待录入」）
+  // 停卡期间不算陪伴：会员交了年费但去外地三个月，那三个月不该算进"相伴"，
+  // 否则天数虚高、阶段晋升也跟着虚高。freeze_start/freeze_end 之前完全没接进业务。
+  const DAY_MS = 86400000;
+  const parseDate = (v: any): number | null => {
+    if (!v) return null;
+    const t = new Date(String(v).replace(/[-/.]/g, "/")).getTime();
+    return Number.isNaN(t) ? null : t;
+  };
   let joinDays: number | null = null;
-  if (member.joinedAt) {
-    const t = new Date(String(member.joinedAt).replace(/[-/.]/g, "/")).getTime();
-    if (!Number.isNaN(t)) {
-      joinDays = Math.max(1, Math.floor((Date.now() - t) / 86400000) + 1);
+  let frozenDays = 0;
+  let isFrozen = false;
+
+  const joinedTs = parseDate(member.joinedAt);
+  if (joinedTs !== null) {
+    const nowTs = Date.now();
+    const rawDays = Math.max(1, Math.floor((nowTs - joinedTs) / DAY_MS) + 1);
+
+    const freezeStartTs = parseDate(member.freezeStart);
+    if (freezeStartTs !== null) {
+      const freezeEndTs = parseDate(member.freezeEnd);
+      // 没有结束日期 = 仍在冻结中，算到今天
+      isFrozen = freezeEndTs === null || freezeEndTs > nowTs;
+      const overlapStart = Math.max(joinedTs, freezeStartTs);
+      const overlapEnd = Math.min(nowTs, freezeEndTs === null ? nowTs : freezeEndTs);
+      if (overlapEnd > overlapStart) {
+        frozenDays = Math.floor((overlapEnd - overlapStart) / DAY_MS);
+      }
     }
+
+    joinDays = Math.max(1, rawDays - frozenDays);
   }
 
   const stage = getMemberStage(totalHours);
@@ -202,6 +233,11 @@ export async function GET(request: NextRequest) {
     gender: member.gender || null,
 
     joinDays,
+    // 停卡信息一并给出：前端要能告诉会员"你在停卡中，陪伴暂停计时"，
+    // 否则天数不涨她会以为系统坏了。
+    isFrozen,
+    frozenDays,
+    freezeEnd: member.freezeEnd || null,
     totalHours,
     courseCounts,
     trainingsByType,

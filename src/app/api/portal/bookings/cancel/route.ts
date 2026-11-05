@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
   // 异步触发取消预约订阅消息（未配模板则安全跳过）
   (async () => {
     try {
-      const [m] = await rawSql`SELECT openid FROM members WHERE id = ${memberId} LIMIT 1`;
+      const [m] = await rawSql`SELECT wechat_open_id AS openid FROM members WHERE id = ${memberId} LIMIT 1`;
       if (m?.openid) {
         await sendSubscribeMessage({
           openid: m.openid,

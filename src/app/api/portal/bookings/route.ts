@@ -174,7 +174,9 @@ export async function POST(request: NextRequest) {
     // 触发微信预约成功订阅消息（未配置模板则自动静默跳过）
     (async () => {
       try {
-        const [m] = await rawSql`SELECT openid, name FROM members WHERE id = ${memberId} LIMIT 1`;
+        // 列名是 wechat_open_id（不是 openid）。写错会整条查询失败，
+        // 又被外层 try/catch 吞掉，结果就是"订阅消息永远不发"且毫无报错。
+        const [m] = await rawSql`SELECT wechat_open_id AS openid, name FROM members WHERE id = ${memberId} LIMIT 1`;
         if (m?.openid) {
           await sendSubscribeMessage({
             openid: m.openid,

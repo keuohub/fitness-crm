@@ -1,4 +1,5 @@
 var api = require("../../utils/api.js");
+var wxbind = require("../../utils/wxbind.js");
 
 Page({
   data: {
@@ -103,6 +104,12 @@ Page({
           if (data.isManager !== undefined) {
             wx.setStorageSync("isManager", Boolean(data.isManager));
           }
+          // 登录成功后静默绑定微信 openid（推送能力的前提，会员无感）
+          try {
+            wxbind.reset();
+            wxbind.bind();
+          } catch (e) {}
+
           // from=booking 时跳回约课 Tab，否则默认回到首页
           if (that.optionsFrom === "booking") {
             wx.switchTab({ url: "/pages/booking/booking" });

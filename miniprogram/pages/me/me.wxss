@@ -238,6 +238,22 @@ page {
   display: block;
 }
 
+/* 停卡中：把粉色标签压成中性灰，避免"相伴 · 停卡中"看起来像营销徽章 */
+.me-tag-frozen {
+  color: #6b6259;
+  background: #ece7e0;
+}
+
+.me-freeze-note {
+  margin-top: 16rpx;
+  padding: 18rpx 22rpx;
+  background: #f4f1ec;
+  border-radius: 16rpx;
+  font-size: 23rpx;
+  color: #6b6259;
+  line-height: 1.6;
+}
+
 /* ── 我的训练：双栏数字（累计上课 / 卡内剩余）── */
 .me-stat-grid {
   display: flex;

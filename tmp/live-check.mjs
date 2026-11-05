@@ -1,0 +1,12 @@
+import { neon } from "@neondatabase/serverless";
+import fs from "node:fs";
+const env = fs.readFileSync("/Users/qiao/Documents/徕舞工作/fitness-crm/.env.local", "utf8");
+const url = (env.match(/^DATABASE_URL=(.*)$/m) || [])[1]?.trim();
+const sql = neon(url);
+const host = new URL(url).hostname;
+console.log("host:", host);
+console.log("card_types:", JSON.stringify(await sql`SELECT id,name,category,total_count,validity_days,price_cents,is_active,sort_order FROM card_types ORDER BY id`));
+console.log("course_categories:", JSON.stringify(await sql`SELECT id,key,name,is_active,duration_minutes,default_capacity FROM course_categories ORDER BY id`));
+console.log("member_cards:", JSON.stringify(await sql`SELECT mc.id,mc.member_id,ct.name AS ct,mc.total_count,mc.remaining_count,mc.valid_until,mc.status FROM member_cards mc JOIN card_types ct ON ct.id=mc.card_type_id ORDER BY mc.id`));
+console.log("sessions:", JSON.stringify(await sql`SELECT s.id,s.session_date,s.start_time,cc.key,s.booked_count,s.capacity,s.status FROM class_sessions s JOIN course_categories cc ON cc.id=s.course_category_id ORDER BY s.session_date,s.start_time`));
+console.log("tables:", JSON.stringify(await sql`SELECT table_name FROM information_schema.tables WHERE table_schema='public' ORDER BY table_name`));
