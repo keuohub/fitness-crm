@@ -64,6 +64,22 @@
       <text class="success-warm-text">{{warmNote}}</text>
     </view>
 
+    <!-- 上课提醒订阅 -->
+    <view class="success-remind" wx:if="{{!reminderOn}}" bindtap="tapReminder">
+      <view class="success-remind-left">
+        <text class="success-remind-title">开启上课提醒</text>
+        <text class="success-remind-desc">开课前 2 小时提醒你，不用自己记</text>
+      </view>
+      <text class="success-remind-action">开启</text>
+    </view>
+    <view class="success-remind success-remind-on" wx:else>
+      <view class="success-remind-left">
+        <text class="success-remind-title">上课提醒已开启</text>
+        <text class="success-remind-desc">开课前会收到一条服务通知</text>
+      </view>
+      <text class="success-remind-action">已开</text>
+    </view>
+
     <!-- 底部行动按钮组 -->
     <view class="success-actions">
       <button class="btn-primary success-btn-main" bindtap="addToCalendar">加入手机日历</button>

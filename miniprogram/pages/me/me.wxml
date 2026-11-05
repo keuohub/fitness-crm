@@ -40,27 +40,36 @@
       <text class="me-manager-arrow">›</text>
     </view>
 
-    <!-- 训练数据（累计节数 num-xl + 各课种行） -->
+    <!-- 训练数据（累计节数 + 卡内剩余） -->
     <view class="me-section">
       <view class="me-section-head">
-        <text class="me-section-title">训练数据</text>
+        <text class="me-section-title">我的训练</text>
       </view>
 
-      <view class="me-total-block card-soft">
-        <text class="me-total-label">累计上课</text>
-        <view class="me-total-num-wrap">
-          <text class="t-num-xl me-total-num">{{totalHours}}</text>
-          <text class="me-total-unit">节</text>
+      <view class="me-stat-grid">
+        <view class="me-stat-cell">
+          <text class="me-stat-num">{{totalHours}}</text>
+          <text class="me-stat-label">累计上课 · 节</text>
         </view>
-        <text class="me-total-note" wx:if="{{latestTrainingDate}}">最近一次 · {{latestTrainingDate}}</text>
-        <text class="me-total-note" wx:else>上完第一节课后开始记录</text>
+        <view class="me-stat-divider"></view>
+        <view class="me-stat-cell">
+          <text class="me-stat-num {{hasCard ? '' : 'me-stat-num-muted'}}">{{hasCard ? cardRemaining : '—'}}</text>
+          <text class="me-stat-label">{{hasCard ? '卡内剩余 · 节' : '还没有开卡'}}</text>
+        </view>
       </view>
+
+      <text class="me-total-note" wx:if="{{latestTrainingDate}}">最近一次 · {{latestTrainingDate}}</text>
 
       <view class="me-course-list" wx:if="{{courseCounts.length > 0}}">
         <view class="list-row" wx:for="{{courseCounts}}" wx:key="key">
           <text class="me-course-name">{{item.label}}</text>
           <text class="me-course-count">{{item.count}} 节</text>
         </view>
+      </view>
+
+      <view class="me-nocard-cta" wx:if="{{!hasCard}}" bindtap="goCards">
+        <text class="me-nocard-text">还没有开卡 · 看看卡项</text>
+        <view class="list-row__arrow"></view>
       </view>
     </view>
 

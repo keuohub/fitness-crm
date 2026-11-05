@@ -15,23 +15,14 @@ function inferCategoryKey(name: string, enName?: string): string {
   return name.trim();
 }
 
-function getMemberBaseline(member: any, key: string): number {
-  if (key === "pilates") return Number(member.hoursPilates || 0);
-  if (key === "equipment") return Number(member.hoursEquipment || 0);
-  if (key === "fat_burn") return Number(member.hoursFatBurn || 0);
-  if (key === "private") return Number(member.hoursPrivate || 0);
-  if (key === "yoga") return Number(member.hoursYoga || 0);
-  return 0;
-}
-
 /**
  * 会员本人档案 · 唯一真实数据源
  *
- * 核心逻辑：
- * 1) 课时基线：以主理人在后台维护的历史课时基准（hoursPilates / hoursEquipment / hoursFatBurn / hoursPrivate）为底座。
- * 2) 动态约课/出勤累加：每次约课（booked/completed）并在到课或未取消时，自动按所属课程分类增加 1 节课时。
- * 3) 累计总课时：普拉提 + 高定大器械 + 维密超模班 + 私教课等各项单项课时的总和，自动联动提升。
- * 4) 各单项课时明确分开，顺序与后台课程项目类目（course_offerings）排序保持一致。
+ * 课时口径（2026-11-05 重定）：
+ * 1) 累计上课 = 卡内已消耗（Σ 总次数 − 剩余次数）+ 未走卡的出勤记录。
+ * 2) 不再使用 members.hours_* / total_hours —— 那批字段只有 2 行有值，
+ *    且是 42=18+16+8 的旧灌数，会员看到的数字必须能在 member_cards 里核对。
+ * 3) 分项课时只在有真实出勤明细时给出；拆不出来就不显示，不编分摊。
  */
 export async function GET(request: NextRequest) {
   const memberId = await getPortalMemberId(request);
@@ -93,53 +84,56 @@ export async function GET(request: NextRequest) {
     console.error("Query course offerings error:", err);
   }
 
+  // 3.5 卡内真实消耗：已消耗 = Σ(总次数 − 剩余次数)
+  // 这是导入 275 位会员时唯一带过来的历史痕迹（189 张卡 / 共 1824 节已消耗），
+  // 比 members.total_hours 可信：后者只有 2 行有值，且是 42=18+16+8 那套灌进去的假数。
+  let cardUsed = 0;
+  let cardRemaining = 0;
+  let activeCardCount = 0;
+  try {
+    const [row] = await rawSql`
+      SELECT COALESCE(SUM(total_count - remaining_count), 0)::int AS used,
+             COALESCE(SUM(remaining_count), 0)::int AS remaining,
+             COUNT(*)::int AS cards
+        FROM member_cards
+       WHERE member_id = ${memberId}
+         AND status = 'active'`;
+    cardUsed = Number(row?.used || 0);
+    cardRemaining = Number(row?.remaining || 0);
+    activeCardCount = Number(row?.cards || 0);
+  } catch (err) {
+    console.error("Query member_cards error:", err);
+  }
+
+  const attendedTotal = Array.from(bookingCountsMap.values()).reduce((a, b) => a + b, 0);
+
+  // 出勤里有一部分是走卡扣的，避免与 cardUsed 重复计数：
+  // 只把"超出卡消耗"的那部分算作额外记录（无卡免费课、体验课等）。
+  const standaloneAttended = Math.max(0, attendedTotal - cardUsed);
+
   const seenKeys = new Set<string>();
   const courseCounts: Array<{ key: string; label: string; count: number }> = [];
 
-  if (activeOfferings && activeOfferings.length > 0) {
-    for (const off of activeOfferings) {
-      const key = inferCategoryKey(off.name, off.enName);
-      // 同一个 key 可能被多个后台类目命中（如「维密减脂超模班」+「维密减脂小班」都归 fat_burn）。
-      // 课时是按 key 汇总的整份数字，重复 push 会让 totalHours 翻倍，因此同 key 只取第一条。
-      if (seenKeys.has(key)) continue;
-      seenKeys.add(key);
-      const baselineCount = getMemberBaseline(member, key);
-      const attendedCount = bookingCountsMap.get(key) || 0;
-      // 课时以单一事实来源计算：以考勤出勤/已结课为准，加历史导入基线；手工录入记录只补计未关联约课的差额，杜绝三路相加重复累加
-      const standaloneTraining = Math.max(0, (trainingCountsMap.get(key) || 0) - attendedCount);
-      const count = baselineCount + attendedCount + standaloneTraining;
-
-      courseCounts.push({
-        key,
-        label: off.name,
-        count,
-      });
+  // 分项统计只在有真实出勤/训练明细时才给。
+  // 卡消耗无法拆分到课种（一张卡通常通用于多个课种），硬拆就是编造，
+  // 因此没有明细时返回空数组，由前端隐藏该区块，而不是显示一排 0。
+  if (attendedTotal > 0 || trainingCountsMap.size > 0) {
+    if (activeOfferings && activeOfferings.length > 0) {
+      for (const off of activeOfferings) {
+        const key = inferCategoryKey(off.name, off.enName);
+        if (seenKeys.has(key)) continue;
+        seenKeys.add(key);
+        const attendedCount = bookingCountsMap.get(key) || 0;
+        const standaloneTraining = Math.max(0, (trainingCountsMap.get(key) || 0) - attendedCount);
+        courseCounts.push({ key, label: off.name, count: attendedCount + standaloneTraining });
+      }
     }
   }
 
-  // 兜底保障：五大核心课程即使后台未显式配置，也确保展示（补齐瑜伽）
-  const standardCategories = [
-    { key: "pilates", label: "精品普拉提" },
-    { key: "equipment", label: "高定大器械" },
-    { key: "fat_burn", label: "维密超模班" },
-    { key: "private", label: "私教课" },
-    { key: "yoga", label: "瑜伽" },
-  ];
-  for (const sc of standardCategories) {
-    if (!seenKeys.has(sc.key)) {
-      const baselineCount = getMemberBaseline(member, sc.key);
-      const attendedCount = bookingCountsMap.get(sc.key) || 0;
-      const standaloneTraining = Math.max(0, (trainingCountsMap.get(sc.key) || 0) - attendedCount);
-      courseCounts.push({
-        key: sc.key,
-        label: sc.label,
-        count: baselineCount + attendedCount + standaloneTraining,
-      });
-    }
-  }
-
-  // 累计课时 = 所有分类课时的总和（自动联动提升）
-  const totalHours = courseCounts.reduce((sum, item) => sum + item.count, 0);
+  // 累计课时 = 卡内真实消耗 + 未走卡的出勤记录
+  // 不再累加 members.hours_*（import 时只有 2 行有值且是 42=18+16+8 的旧假数）
+  const dividedTotal = courseCounts.reduce((sum, item) => sum + item.count, 0);
+  const totalHours = cardUsed + standaloneAttended > 0 ? cardUsed + standaloneAttended : dividedTotal;
 
   const trainingsByType = courseCounts
     .filter((item) => item.count > 0)
@@ -207,6 +201,10 @@ export async function GET(request: NextRequest) {
     lastTrainingDate,
     questionnaireCount,
     photoCount,
+
+    // 卡内余额：会员最关心的数字，直接给出总额，不用前端再算
+    cardRemaining,
+    activeCardCount,
 
     stage,
     isManager,

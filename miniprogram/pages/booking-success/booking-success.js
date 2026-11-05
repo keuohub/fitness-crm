@@ -1,6 +1,7 @@
 // pages/booking-success/booking-success.js
 var api = require("../../utils/api.js");
 var rules = require("../../utils/booking-rules.js");
+var subscribe = require("../../utils/subscribe.js");
 
 var WARM_NOTES = [
   "到时候见。提前十分钟到，换好衣服，先喝口水。",
@@ -16,7 +17,8 @@ Page({
     sessionId: null,
     sessionInfo: null,
     cardInfoText: "",
-    warmNote: ""
+    warmNote: "",
+    reminderOn: false
   },
 
   onLoad: function(options) {
@@ -150,6 +152,42 @@ Page({
       fail: function() {
         hasError = true;
         finish();
+      }
+    });
+  },
+
+  /**
+   * 开启上课提醒。
+   * 必须在用户点击手势里调 wx.requestSubscribeMessage，所以只能挂在按钮 bindtap 上。
+   * 模板 ID 还没配置时，不假装成功，直接引导到手机日历。
+   */
+  tapReminder: function () {
+    var that = this;
+
+    subscribe.request(["classReminder"], function (result) {
+      if (result && result.skipped) {
+        wx.showModal({
+          title: "提醒服务正在开通",
+          content: "微信模板消息还在配置中。先用手机日历提醒你？到点手机会响。",
+          confirmText: "加入日历",
+          cancelText: "不用了",
+          success: function (res) {
+            if (res.confirm) that.addToCalendar();
+          }
+        });
+        return;
+      }
+
+      if (!result || !result.ok) {
+        wx.showToast({ title: "没开成功，可以加入手机日历", icon: "none", duration: 2500 });
+        return;
+      }
+
+      if (result.accepted && result.accepted.length > 0) {
+        that.setData({ reminderOn: true });
+        wx.showToast({ title: "已开启，开课前提醒你", icon: "success", duration: 2200 });
+      } else {
+        wx.showToast({ title: "你拒绝了提醒，可随时再来点一次", icon: "none", duration: 2500 });
       }
     });
   },

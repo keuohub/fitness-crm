@@ -50,6 +50,8 @@ Page({
     listOffering: null,
     introExpanded: false,
     catNoneIn7: false,
+    allEnded: false,
+    allEndedText: "",
     teamList: [],
     sessions: [],
     shownSessions: [],
@@ -635,7 +637,13 @@ Page({
       });
     });
 
-    this.setData({ shownSessions: processed, catNoneIn7: !anyIn7 });
+    var allEnded = processed.length > 0 && processed.every(function(x) { return x.isEnded; });
+    this.setData({
+      shownSessions: processed,
+      catNoneIn7: !anyIn7,
+      allEnded: allEnded,
+      allEndedText: allEnded ? (date === nowDate ? "今天的课都结束了" : "这天的课已经结束") : ""
+    });
   },
 
   // 须知弹层控制

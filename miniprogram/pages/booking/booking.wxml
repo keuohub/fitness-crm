@@ -144,6 +144,10 @@
 
       <!-- 课程卡（实拍：课种标 + 难度三格 → 课名 → 教室/老师 → 时间 + 状态胶囊） -->
       <view wx:else class="bk-list">
+        <view wx:if="{{allEnded}}" class="bk-ended-hint">
+          <text class="bk-ended-text">{{allEndedText}}</text>
+          <text class="bk-ended-action" bindtap="selectNextDay">看明天 ›</text>
+        </view>
         <view
           wx:for="{{shownSessions}}"
           wx:key="id"

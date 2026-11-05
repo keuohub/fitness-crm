@@ -238,6 +238,68 @@ page {
   display: block;
 }
 
+/* ── 我的训练：双栏数字（累计上课 / 卡内剩余）── */
+.me-stat-grid {
+  display: flex;
+  align-items: stretch;
+  padding: 40rpx 24rpx;
+  background: #ffffff;
+  border-radius: 28rpx;
+  border: 1px solid #efe4dc;
+  box-shadow: 0 8rpx 24rpx rgba(138, 58, 72, 0.05);
+  box-sizing: border-box;
+}
+
+.me-stat-cell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.me-stat-divider {
+  width: 1rpx;
+  background: linear-gradient(180deg, rgba(239, 228, 220, 0) 0%, #efe4dc 50%, rgba(239, 228, 220, 0) 100%);
+  margin: 6rpx 8rpx;
+}
+
+.me-stat-num {
+  font-family: var(--font-num);
+  font-size: 68rpx;
+  font-weight: 600;
+  color: #8a3a48;
+  line-height: 1.1;
+}
+
+.me-stat-num-muted {
+  color: #cbb9bb;
+}
+
+.me-stat-label {
+  font-size: 23rpx;
+  color: #7a6a6c;
+  letter-spacing: 0.5rpx;
+  margin-top: 10rpx;
+}
+
+.me-nocard-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16rpx;
+  padding: 26rpx 28rpx;
+  background: #ffffff;
+  border: 1px dashed #e4d3cb;
+  border-radius: 24rpx;
+}
+
+.me-nocard-text {
+  font-size: 26rpx;
+  color: #8a3a48;
+  letter-spacing: 0.5rpx;
+}
+
 .me-course-list {
   background: #ffffff;
   border-radius: 24rpx;

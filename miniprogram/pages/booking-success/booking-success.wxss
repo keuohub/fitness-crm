@@ -228,3 +228,53 @@
   margin-top: 12rpx;
   padding: 12rpx 0;
 }
+
+/* 上课提醒订阅条 */
+.success-remind {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28rpx 30rpx;
+  margin-bottom: 20rpx;
+  box-sizing: border-box;
+  background: #FFFFFF;
+  border: 1rpx solid #EFE4DC;
+  border-radius: 24rpx;
+  box-shadow: 0 6rpx 18rpx rgba(138, 58, 72, 0.04);
+}
+
+.success-remind-on {
+  background: #FBF7F4;
+  border-color: #E8DCD3;
+}
+
+.success-remind-left {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.success-remind-title {
+  font-size: 27rpx;
+  font-weight: 500;
+  color: #2D2727;
+  letter-spacing: 0.5rpx;
+}
+
+.success-remind-desc {
+  font-size: 22rpx;
+  color: #A8999B;
+  letter-spacing: 0.3rpx;
+}
+
+.success-remind-action {
+  font-size: 25rpx;
+  color: #8A3A48;
+  letter-spacing: 1rpx;
+  padding-left: 20rpx;
+}
+
+.success-remind-on .success-remind-action {
+  color: #A8999B;
+}
