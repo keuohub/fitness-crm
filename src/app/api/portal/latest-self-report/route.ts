@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { noStore } from "@/lib/http/no-store";
 import { db } from "@/db";
 import { memberMemories } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
@@ -12,7 +13,7 @@ const clean = (s: string) => (s || "")
 
 export async function GET(request: NextRequest) {
   const memberId = await getPortalMemberId(request);
-  if (!memberId) return NextResponse.json({ error: "未登录" }, { status: 401 });
+  if (!memberId) return noStore({ error: "未登录" }, { status: 401 });
 
   const [latest] = await db
     .select({
@@ -26,7 +27,7 @@ export async function GET(request: NextRequest) {
     .orderBy(desc(memberMemories.createdAt))
     .limit(1);
 
-  if (!latest) return NextResponse.json(null);
+  if (!latest) return noStore(null);
 
   const fullContent = clean(latest.content || "");
   const lines = fullContent.split("\n").filter(Boolean);
@@ -41,7 +42,7 @@ export async function GET(request: NextRequest) {
     ai_summary: "成长记录",
   };
 
-  return NextResponse.json({
+  return noStore({
     id: latest.id,
     typeLabel: typeLabel[latest.memoryType] || latest.memoryType,
     excerpt: excerpt || "查看记录",

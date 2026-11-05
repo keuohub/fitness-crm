@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { noStore } from "@/lib/http/no-store";
 import { requireAdmin } from "@/lib/auth/admin-session";
 import { rawSql } from "@/db";
 
-const bad = (msg: string, status = 400) => NextResponse.json({ error: msg }, { status });
+const bad = (msg: string, status = 400) => noStore({ error: msg }, { status });
 
 function calcDurationHours(start: string, end: string): number {
   if (!start || !end) return 1;
@@ -187,7 +188,7 @@ export async function GET(request: NextRequest) {
   // 按已上课时数降序排列（绩效与课时排行）
   coachStats.sort((a: any, b: any) => b.completedHours - a.completedHours || b.totalSessions - a.totalSessions);
 
-  return NextResponse.json({
+  return noStore({
     period: { from, to, month: month || from.slice(0, 7) },
     summary: {
       totalCoaches: coaches.length,

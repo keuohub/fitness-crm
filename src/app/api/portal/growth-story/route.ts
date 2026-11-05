@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { noStore } from "@/lib/http/no-store";
 import { db } from "@/db";
 import { memberMemories } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
@@ -6,7 +7,7 @@ import { getPortalMemberId } from "@/lib/auth/member-session";
 
 export async function GET(request: NextRequest) {
   const memberId = await getPortalMemberId(request);
-  if (!memberId) return NextResponse.json({ error: "未登录" }, { status: 401 });
+  if (!memberId) return noStore({ error: "未登录" }, { status: 401 });
 
   const records = await db
     .select({
@@ -33,7 +34,7 @@ export async function GET(request: NextRequest) {
     date: r.createdAt?.slice(0, 10) || "",
   }));
 
-  return NextResponse.json({
+  return noStore({
     records: cleaned,
     selfReports: cleaned.filter((r) => r.memoryType === "self_report"),
     milestones: cleaned.filter((r) => r.memoryType === "milestone"),

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { noStore } from "@/lib/http/no-store";
 import { db } from "@/db";
 import { teamMembers } from "@/db/schema";
 import { eq, asc } from "drizzle-orm";
@@ -12,13 +12,13 @@ export async function GET() {
       .orderBy(asc(teamMembers.sortOrder));
 
     if (rows && rows.length > 0) {
-      return NextResponse.json(rows);
+      return noStore(rows);
     }
 
     // 空表返回空数组，不自动灌入默认导师
-    return NextResponse.json([]);
+    return noStore([]);
   } catch (err) {
     console.error("portal/team error:", err);
-    return NextResponse.json([]);
+    return noStore([]);
   }
 }

@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { noStore } from "@/lib/http/no-store";
 import { requireAdmin } from "@/lib/auth/admin-session";
 import { getAdminUser, requireRole } from "@/lib/auth/rbac";
 import { rawSql } from "@/db";
 
-const bad = (msg: string, status = 400) => NextResponse.json({ error: msg }, { status });
+const bad = (msg: string, status = 400) => noStore({ error: msg }, { status });
 const isDate = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s);
 const isTime = (s: string) => /^\d{2}:\d{2}$/.test(s);
 function addMinutes(time: string, minutes: number) {
@@ -56,7 +57,7 @@ export async function GET(request: NextRequest) {
         LEFT JOIN rooms r ON r.id = s.room_id
         WHERE s.tenant_id = 1 AND s.session_date BETWEEN ${from} AND ${to}
         ORDER BY s.session_date, s.start_time`;
-  return NextResponse.json(rows);
+  return noStore(rows);
 }
 
 export async function POST(request: NextRequest) {
@@ -84,7 +85,7 @@ export async function POST(request: NextRequest) {
     VALUES
       (1, ${courseId}, ${coachId}, ${roomId}, ${b.title || course.name}, ${date}, ${start}, ${end}, ${capacity}, 'open', ${b.note || null})
     RETURNING *`;
-  return NextResponse.json({ session: row, warnings }, { status: 201 });
+  return noStore({ session: row, warnings }, { status: 201 });
 }
 
 export async function PUT(request: NextRequest) {
@@ -114,7 +115,7 @@ export async function PUT(request: NextRequest) {
       capacity = ${capacity}, note = ${b.note !== undefined ? b.note : existing.note},
       status = ${b.status || existing.status}, updated_at = NOW()
     WHERE id = ${id} AND tenant_id = 1 RETURNING *`;
-  return NextResponse.json({ session: row, warnings });
+  return noStore({ session: row, warnings });
 }
 
 export async function DELETE(request: NextRequest) {
@@ -125,9 +126,9 @@ export async function DELETE(request: NextRequest) {
   const [used] = await rawSql`SELECT id FROM bookings WHERE session_id = ${id} AND status = 'booked' LIMIT 1`;
   if (used) {
     const [row] = await rawSql`UPDATE class_sessions SET status = 'cancelled', updated_at = NOW() WHERE id = ${id} AND tenant_id = 1 RETURNING *`;
-    return NextResponse.json({ success: true, mode: "cancelled", session: row });
+    return noStore({ success: true, mode: "cancelled", session: row });
   }
   const [row] = await rawSql`DELETE FROM class_sessions WHERE id = ${id} AND tenant_id = 1 RETURNING *`;
   if (!row) return bad("课次不存在", 404);
-  return NextResponse.json({ success: true, mode: "deleted" });
+  return noStore({ success: true, mode: "deleted" });
 }

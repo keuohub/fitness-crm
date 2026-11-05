@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { noStore } from "@/lib/http/no-store";
 import { requireAdmin } from "@/lib/auth/admin-session";
 import { rawSql } from "@/db";
 import {
@@ -38,17 +39,17 @@ async function loadCards(memberId: number) {
 
 export async function GET(request: NextRequest) {
   if (!(await requireAdmin(request))) {
-    return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
+    return noStore({ error: "需要管理员登录" }, { status: 401 });
   }
 
   const memberId = Number(request.nextUrl.searchParams.get("memberId") || 0);
-  if (!memberId) return NextResponse.json({ error: "缺少 memberId" }, { status: 400 });
+  if (!memberId) return noStore({ error: "缺少 memberId" }, { status: 400 });
 
   // 到了预计复卡日就先自动复卡，避免后台显示"停卡中"但实际早该回来
   await settleExpiredFreeze(memberId).catch(() => {});
 
   const member = await loadState(memberId);
-  if (!member) return NextResponse.json({ error: "会员不存在" }, { status: 404 });
+  if (!member) return noStore({ error: "会员不存在" }, { status: 404 });
 
   const cards = await loadCards(memberId);
   const startTs = parseDay(member.freezeStart);
@@ -62,7 +63,7 @@ export async function GET(request: NextRequest) {
       ? 0
       : frozenDaysOf(startTs, ongoing ? todayTs : endTs === null ? todayTs : endTs);
 
-  return NextResponse.json({
+  return noStore({
     memberId,
     memberName: member.name,
     joinedAt: member.joinedAt || null,
@@ -82,13 +83,13 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   if (!(await requireAdmin(request))) {
-    return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
+    return noStore({ error: "需要管理员登录" }, { status: 401 });
   }
 
   try {
     const body = await request.json();
     const memberId = Number(body.memberId || 0);
-    if (!memberId) return NextResponse.json({ error: "缺少 memberId" }, { status: 400 });
+    if (!memberId) return noStore({ error: "缺少 memberId" }, { status: 400 });
 
     const action = String(body.action || "").trim();
 
@@ -97,7 +98,7 @@ export async function POST(request: NextRequest) {
       const endDate = body.endDate ? String(body.endDate) : null;
       const reason = body.reason ? String(body.reason) : undefined;
       const result = await freezeMember(memberId, startDate, endDate, reason);
-      if (!result.ok) return NextResponse.json({ error: result.error }, { status: 409 });
+      if (!result.ok) return noStore({ error: result.error }, { status: 409 });
 
       // 补办历史停卡（开始和结束都在过去）时，直接结算并把卡顺延到位
       const endTs = parseDay(endDate);
@@ -106,7 +107,7 @@ export async function POST(request: NextRequest) {
         await unfreezeMember(memberId, endDate!, reason);
       }
 
-      return NextResponse.json({ success: true });
+      return noStore({ success: true });
     }
 
     if (action === "unfreeze") {
@@ -115,18 +116,18 @@ export async function POST(request: NextRequest) {
         body.endDate ? String(body.endDate) : undefined,
         body.reason
       );
-      if (!result.ok) return NextResponse.json({ error: result.error }, { status: 409 });
-      return NextResponse.json({
+      if (!result.ok) return noStore({ error: result.error }, { status: 409 });
+      return noStore({
         success: true,
         frozenDays: result.frozenDays,
         extendedCards: result.extendedCards,
       });
     }
 
-    return NextResponse.json({ error: "未知操作" }, { status: 400 });
+    return noStore({ error: "未知操作" }, { status: 400 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "操作失败";
     console.error("[admin/member-freeze] error:", error);
-    return NextResponse.json({ error: message }, { status: 500 });
+    return noStore({ error: message }, { status: 500 });
   }
 }

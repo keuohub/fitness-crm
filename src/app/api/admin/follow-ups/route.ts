@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { noStore } from "@/lib/http/no-store";
 import { requireAdmin } from "@/lib/auth/admin-session";
 import { rawSql } from "@/db";
 
@@ -11,7 +12,7 @@ function addDays(date: string, days: number) {
 const today = () => new Date().toISOString().slice(0, 10);
 
 export async function GET(request: NextRequest) {
-  if (!(await requireAdmin(request))) return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
+  if (!(await requireAdmin(request))) return noStore({ error: "需要管理员登录" }, { status: 401 });
   const t = today();
   const in30 = addDays(t, 30);
 
@@ -62,7 +63,7 @@ export async function GET(request: NextRequest) {
     .sort((a: any, b: any) => a.days_until - b.days_until)
     .slice(0, 100);
 
-  return NextResponse.json({
+  return noStore({
     counts: { lowBalance: lowBalance.length, inactive30d: inactive30d.length, expiring: expiring.length, birthdays: birthdays.length },
     lowBalance, inactive30d, expiring, birthdays,
   });

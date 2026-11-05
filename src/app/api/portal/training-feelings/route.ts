@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { noStore } from "@/lib/http/no-store";
 import { db } from "@/db";
 import { trainingFeelings } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
@@ -58,13 +59,13 @@ export async function POST(request: NextRequest) {
     const { memberId, trainingId, feeling } = await request.json();
 
     if (!memberId || !feeling || typeof feeling !== "string" || feeling.trim().length === 0) {
-      return NextResponse.json({ error: "缺少 memberId 或 feeling" }, { status: 400 });
+      return noStore({ error: "缺少 memberId 或 feeling" }, { status: 400 });
     }
 
     // 权限检查
     const access = await verifyMemberAccess(request, memberId);
     if (!access.allowed) {
-      return NextResponse.json({ error: "无权操作" }, { status: 401 });
+      return noStore({ error: "无权操作" }, { status: 401 });
     }
 
     // 写入感受 —— 只有会员本人写下的一句话，不带任何拼装
@@ -91,7 +92,7 @@ export async function POST(request: NextRequest) {
         .where(eq(trainingFeelings.id, record.id));
     }
 
-    return NextResponse.json({
+    return noStore({
       id: record.id,
       feeling: record.feeling,
       replyStatus: "pending",
@@ -99,7 +100,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (err) {
     console.error("[training-feelings] POST error:", err);
-    return NextResponse.json({ error: "服务器错误" }, { status: 500 });
+    return noStore({ error: "服务器错误" }, { status: 500 });
   }
 }
 
@@ -108,17 +109,17 @@ export async function GET(request: NextRequest) {
   const memberIdParam = searchParams.get("memberId");
 
   if (!memberIdParam) {
-    return NextResponse.json({ error: "缺少 memberId" }, { status: 400 });
+    return noStore({ error: "缺少 memberId" }, { status: 400 });
   }
 
   const memberId = parseInt(memberIdParam, 10);
   if (isNaN(memberId)) {
-    return NextResponse.json({ error: "memberId 无效" }, { status: 400 });
+    return noStore({ error: "memberId 无效" }, { status: 400 });
   }
 
   const access = await verifyMemberAccess(request, memberId);
   if (!access.allowed) {
-    return NextResponse.json({ error: "无权访问" }, { status: 401 });
+    return noStore({ error: "无权访问" }, { status: 401 });
   }
 
   // 显式列出字段：ai_draft 是小桥的内参底稿，绝不能下发到会员端
@@ -136,5 +137,5 @@ export async function GET(request: NextRequest) {
     .where(eq(trainingFeelings.memberId, memberId))
     .orderBy(desc(trainingFeelings.createdAt));
 
-  return NextResponse.json(feelings);
+  return noStore(feelings);
 }

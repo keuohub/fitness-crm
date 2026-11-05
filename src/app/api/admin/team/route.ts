@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { noStore } from "@/lib/http/no-store";
 import { requireAdmin } from "@/lib/auth/admin-session";
 import { db, rawSql } from "@/db";
 import { teamMembers } from "@/db/schema";
@@ -7,7 +8,7 @@ import { invalidateCache } from "@/lib/api-cache";
 
 export async function GET(request: NextRequest) {
   if (!(await requireAdmin(request))) {
-    return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
+    return noStore({ error: "需要管理员登录" }, { status: 401 });
   }
   try {
     await rawSql`
@@ -28,23 +29,23 @@ export async function GET(request: NextRequest) {
       .from(teamMembers)
       .orderBy(asc(teamMembers.sortOrder), desc(teamMembers.id));
 
-    return NextResponse.json(rows);
+    return noStore(rows);
   } catch (err: any) {
     console.error("GET /api/admin/team error:", err);
-    return NextResponse.json({ error: err.message || "获取团队成员列表失败" }, { status: 500 });
+    return noStore({ error: err.message || "获取团队成员列表失败" }, { status: 500 });
   }
 }
 
 export async function POST(req: NextRequest) {
   if (!(await requireAdmin(req))) {
-    return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
+    return noStore({ error: "需要管理员登录" }, { status: 401 });
   }
   try {
     const body = await req.json();
     const { name, roleTitle, avatarUrl, bio, experience, creds, quote, sortOrder = 0, isActive = 1 } = body;
 
     if (!name || !roleTitle || !avatarUrl) {
-      return NextResponse.json({ error: "姓名、称谓与照片为必填项" }, { status: 400 });
+      return noStore({ error: "姓名、称谓与照片为必填项" }, { status: 400 });
     }
 
     const [created] = await db
@@ -76,23 +77,23 @@ export async function POST(req: NextRequest) {
     }
 
     invalidateCache("team");
-    return NextResponse.json(created);
+    return noStore(created);
   } catch (err: any) {
     console.error("POST /api/admin/team error:", err);
-    return NextResponse.json({ error: err.message || "添加团队成员失败" }, { status: 500 });
+    return noStore({ error: err.message || "添加团队成员失败" }, { status: 500 });
   }
 }
 
 export async function PUT(req: NextRequest) {
   if (!(await requireAdmin(req))) {
-    return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
+    return noStore({ error: "需要管理员登录" }, { status: 401 });
   }
   try {
     const body = await req.json();
     const { id, name, roleTitle, avatarUrl, bio, experience, creds, quote, sortOrder, isActive } = body;
 
     if (!id) {
-      return NextResponse.json({ error: "ID 为必填项" }, { status: 400 });
+      return noStore({ error: "ID 为必填项" }, { status: 400 });
     }
 
     const updateData: any = {};
@@ -124,31 +125,31 @@ export async function PUT(req: NextRequest) {
     }
 
     invalidateCache("team");
-    return NextResponse.json(updated);
+    return noStore(updated);
   } catch (err: any) {
     console.error("PUT /api/admin/team error:", err);
-    return NextResponse.json({ error: err.message || "更新团队成员失败" }, { status: 500 });
+    return noStore({ error: err.message || "更新团队成员失败" }, { status: 500 });
   }
 }
 
 export async function DELETE(req: NextRequest) {
   if (!(await requireAdmin(req))) {
-    return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
+    return noStore({ error: "需要管理员登录" }, { status: 401 });
   }
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
 
     if (!id) {
-      return NextResponse.json({ error: "ID 为必填项" }, { status: 400 });
+      return noStore({ error: "ID 为必填项" }, { status: 400 });
     }
 
     await db.delete(teamMembers).where(eq(teamMembers.id, Number(id)));
 
     invalidateCache("team");
-    return NextResponse.json({ success: true });
+    return noStore({ success: true });
   } catch (err: any) {
     console.error("DELETE /api/admin/team error:", err);
-    return NextResponse.json({ error: err.message || "删除团队成员失败" }, { status: 500 });
+    return noStore({ error: err.message || "删除团队成员失败" }, { status: 500 });
   }
 }

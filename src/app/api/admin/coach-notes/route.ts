@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { noStore } from "@/lib/http/no-store";
 import { db } from "@/db";
 import { coachNotes, members, trainings, questionnaireSubmissions } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
@@ -58,13 +59,13 @@ async function generateCoachMessage(
 export async function POST(request: NextRequest) {
   const admin = await getValidAdminSession(request);
   if (!admin) {
-    return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
+    return noStore({ error: "需要管理员登录" }, { status: 401 });
   }
 
   try {
     const { memberId, trainingId, tags, coachNote } = await request.json();
     if (!memberId) {
-      return NextResponse.json({ error: "缺少 memberId" }, { status: 400 });
+      return noStore({ error: "缺少 memberId" }, { status: 400 });
     }
 
     // 只查需要的字段
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest) {
       .from(members)
       .where(eq(members.id, memberId));
     if (!member) {
-      return NextResponse.json({ error: "会员不存在" }, { status: 404 });
+      return noStore({ error: "会员不存在" }, { status: 404 });
     }
 
     const [q] = await db
@@ -110,7 +111,7 @@ export async function POST(request: NextRequest) {
       })
       .returning();
 
-    return NextResponse.json({
+    return noStore({
       id: inserted.id,
       tags: tagList,
       coachNote: coachNote || "",
@@ -119,14 +120,14 @@ export async function POST(request: NextRequest) {
     });
   } catch (err) {
     console.error("coach-notes POST error:", err);
-    return NextResponse.json({ error: "服务器错误" }, { status: 500 });
+    return noStore({ error: "服务器错误" }, { status: 500 });
   }
 }
 
 export async function GET(request: NextRequest) {
   const admin = await getValidAdminSession(request);
   if (!admin) {
-    return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
+    return noStore({ error: "需要管理员登录" }, { status: 401 });
   }
 
   const { searchParams } = new URL(request.url);
@@ -139,7 +140,7 @@ export async function GET(request: NextRequest) {
       .where(eq(coachNotes.memberId, parseInt(memberId, 10)))
       .orderBy(desc(coachNotes.createdAt))
       .limit(20);
-    return NextResponse.json(notes.map((n) => ({
+    return noStore(notes.map((n) => ({
       ...n,
       tags: JSON.parse(n.tags || "[]"),
     })));
@@ -150,7 +151,7 @@ export async function GET(request: NextRequest) {
     .from(coachNotes)
     .orderBy(desc(coachNotes.createdAt))
     .limit(50);
-  return NextResponse.json(notes.map((n) => ({
+  return noStore(notes.map((n) => ({
     ...n,
     tags: JSON.parse(n.tags || "[]"),
   })));

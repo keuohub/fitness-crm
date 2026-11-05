@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { noStore } from "@/lib/http/no-store";
 import { db } from "@/db";
 import { members, trainings, coachNotes, questionnaireSubmissions, aiFeedbackReports } from "@/db/schema";
 import { eq, gte, lte, desc, and } from "drizzle-orm";
@@ -21,14 +22,14 @@ async function callDeepSeek(prompt: string, maxTokens: number): Promise<string> 
 
 export async function POST(request: NextRequest) {
   const admin = await getValidAdminSession(request);
-  if (!admin) return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
+  if (!admin) return noStore({ error: "需要管理员登录" }, { status: 401 });
 
   try {
     const { memberId, reportType } = await request.json();
-    if (!memberId) return NextResponse.json({ error: "缺少 memberId" }, { status: 400 });
+    if (!memberId) return noStore({ error: "缺少 memberId" }, { status: 400 });
 
     const [member] = await db.select({ id: members.id, name: members.name }).from(members).where(eq(members.id, memberId));
-    if (!member) return NextResponse.json({ error: "会员不存在" }, { status: 404 });
+    if (!member) return noStore({ error: "会员不存在" }, { status: 404 });
 
     const [q] = await db.select({ desiredState: questionnaireSubmissions.desiredState }).from(questionnaireSubmissions).where(eq(questionnaireSubmissions.memberId, memberId)).orderBy(desc(questionnaireSubmissions.submittedAt)).limit(1);
 
@@ -63,9 +64,9 @@ export async function POST(request: NextRequest) {
       tenantId: 1, memberId, reportType: typeLabel, content, questionnaireData: goal, generatedAt: new Date().toISOString(),
     }).returning();
 
-    return NextResponse.json({ id: inserted.id, reportType: typeLabel, content, createdAt: inserted.createdAt });
+    return noStore({ id: inserted.id, reportType: typeLabel, content, createdAt: inserted.createdAt });
   } catch (err) {
     console.error("weekly-report error:", err);
-    return NextResponse.json({ error: "服务器错误" }, { status: 500 });
+    return noStore({ error: "服务器错误" }, { status: 500 });
   }
 }

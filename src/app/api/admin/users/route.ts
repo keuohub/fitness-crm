@@ -3,7 +3,8 @@
 // POST: Create new admin user (require owner)
 // PATCH: Update role/status (require owner)
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { noStore } from "@/lib/http/no-store";
 import { db } from "@/db";
 import { users, adminSessions } from "@/db/schema";
 import { eq, not } from "drizzle-orm";
@@ -12,7 +13,7 @@ import { hashSync } from "bcryptjs";
 
 export async function GET(request: NextRequest) {
   const admin = await getAdminUser(request);
-  if (!admin) return NextResponse.json({ error: "未登录" }, { status: 401 });
+  if (!admin) return noStore({ error: "未登录" }, { status: 401 });
 
   const all = await db
     .select({
@@ -26,17 +27,17 @@ export async function GET(request: NextRequest) {
     .from(users)
     .orderBy(users.createdAt);
 
-  return NextResponse.json(all);
+  return noStore(all);
 }
 
 export async function POST(request: NextRequest) {
   const owner = await requireRole(request, "owner");
-  if (!owner) return NextResponse.json({ error: "权限不足" }, { status: 403 });
+  if (!owner) return noStore({ error: "权限不足" }, { status: 403 });
 
   const { name, email, password, role } = await request.json();
 
   if (!name || !email || !password) {
-    return NextResponse.json({ error: "缺少必要字段" }, { status: 400 });
+    return noStore({ error: "缺少必要字段" }, { status: 400 });
   }
 
   const validRoles = ["owner", "manager", "coach", "viewer"];
@@ -44,7 +45,7 @@ export async function POST(request: NextRequest) {
 
   // Check duplicate
   const [existing] = await db.select({ id: users.id }).from(users).where(eq(users.email, email));
-  if (existing) return NextResponse.json({ error: "该邮箱已存在" }, { status: 409 });
+  if (existing) return noStore({ error: "该邮箱已存在" }, { status: 409 });
 
   const [newUser] = await db.insert(users).values({
     tenantId: 1,
@@ -54,15 +55,15 @@ export async function POST(request: NextRequest) {
     role: assignedRole,
   }).returning({ id: users.id });
 
-  return NextResponse.json({ id: newUser.id, name, email, role: assignedRole }, { status: 201 });
+  return noStore({ id: newUser.id, name, email, role: assignedRole }, { status: 201 });
 }
 
 export async function PATCH(request: NextRequest) {
   const owner = await requireRole(request, "owner");
-  if (!owner) return NextResponse.json({ error: "权限不足" }, { status: 403 });
+  if (!owner) return noStore({ error: "权限不足" }, { status: 403 });
 
   const { id, role, status, password } = await request.json();
-  if (!id) return NextResponse.json({ error: "缺少用户ID" }, { status: 400 });
+  if (!id) return noStore({ error: "缺少用户ID" }, { status: 400 });
 
   const validRoles = ["owner", "manager", "coach", "viewer"];
 
@@ -84,31 +85,31 @@ export async function PATCH(request: NextRequest) {
     }
   }
 
-  return NextResponse.json({ success: true });
+  return noStore({ success: true });
 }
 
 export async function DELETE(request: NextRequest) {
   const owner = await requireRole(request, "owner");
-  if (!owner) return NextResponse.json({ error: "权限不足" }, { status: 403 });
+  if (!owner) return noStore({ error: "权限不足" }, { status: 403 });
 
   const { searchParams } = new URL(request.url);
   const id = parseInt(searchParams.get("id") || "", 10);
-  if (!id) return NextResponse.json({ error: "缺少用户ID" }, { status: 400 });
+  if (!id) return noStore({ error: "缺少用户ID" }, { status: 400 });
 
   // 不能删除自己
-  if (id === owner.id) return NextResponse.json({ error: "不能删除自己" }, { status: 400 });
+  if (id === owner.id) return noStore({ error: "不能删除自己" }, { status: 400 });
 
   // 不能删除最后一个 owner
   const [target] = await db.select({ role: users.role }).from(users).where(eq(users.id, id));
   if (target?.role === "owner") {
     const ownerCount = await db.select().from(users).where(eq(users.role, "owner"));
     if (ownerCount.length <= 1) {
-      return NextResponse.json({ error: "不能删除最后一个 Owner" }, { status: 400 });
+      return noStore({ error: "不能删除最后一个 Owner" }, { status: 400 });
     }
   }
 
   // 物理删除前吊销其所有服务端会话
   await db.delete(adminSessions).where(eq(adminSessions.adminId, id));
   await db.delete(users).where(eq(users.id, id));
-  return NextResponse.json({ success: true });
+  return noStore({ success: true });
 }

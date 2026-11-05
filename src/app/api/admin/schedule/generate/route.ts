@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { noStore } from "@/lib/http/no-store";
 import { requireAdmin } from "@/lib/auth/admin-session";
 import { rawSql } from "@/db";
-const bad = (msg: string, status = 400) => NextResponse.json({ error: msg }, { status });
+const bad = (msg: string, status = 400) => noStore({ error: msg }, { status });
 const isDate = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s);
 function addDays(date: string, days: number) {
   const [y, m, d] = date.split("-").map(Number);
@@ -51,5 +52,5 @@ export async function POST(request: NextRequest) {
          ${date}, ${t.start_time}, ${t.end_time}, ${t.capacity}, 'open')`;
     created++;
   }
-  return NextResponse.json({ created, skipped, warnings });
+  return noStore({ created, skipped, warnings });
 }

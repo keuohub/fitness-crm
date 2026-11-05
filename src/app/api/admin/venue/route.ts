@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { noStore } from "@/lib/http/no-store";
 import { requireAdmin } from "@/lib/auth/admin-session";
 import { db, rawSql } from "@/db";
 import { venueItems } from "@/db/schema";
@@ -23,7 +24,7 @@ async function ensureVenueSchema() {
 
 export async function GET(request: NextRequest) {
   if (!(await requireAdmin(request))) {
-    return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
+    return noStore({ error: "需要管理员登录" }, { status: 401 });
   }
   try {
     await ensureVenueSchema();
@@ -33,16 +34,16 @@ export async function GET(request: NextRequest) {
       .from(venueItems)
       .orderBy(asc(venueItems.sortOrder), desc(venueItems.id));
 
-    return NextResponse.json(rows);
+    return noStore(rows);
   } catch (err: any) {
     console.error("GET /api/admin/venue error:", err);
-    return NextResponse.json({ error: err.message || "获取场馆空间列表失败" }, { status: 500 });
+    return noStore({ error: err.message || "获取场馆空间列表失败" }, { status: 500 });
   }
 }
 
 export async function POST(req: NextRequest) {
   if (!(await requireAdmin(req))) {
-    return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
+    return noStore({ error: "需要管理员登录" }, { status: 401 });
   }
   try {
     await ensureVenueSchema();
@@ -51,7 +52,7 @@ export async function POST(req: NextRequest) {
 
     const displayTitle = (title || name || "空间实景").trim();
     if (!imageUrl) {
-      return NextResponse.json({ error: "照片为必填项" }, { status: 400 });
+      return noStore({ error: "照片为必填项" }, { status: 400 });
     }
 
     const order = Number(sortOrder) || 1;
@@ -72,16 +73,16 @@ export async function POST(req: NextRequest) {
       .returning();
 
     invalidateCache("venue");
-    return NextResponse.json(created);
+    return noStore(created);
   } catch (err: any) {
     console.error("POST /api/admin/venue error:", err);
-    return NextResponse.json({ error: err.message || "创建场馆项目失败" }, { status: 500 });
+    return noStore({ error: err.message || "创建场馆项目失败" }, { status: 500 });
   }
 }
 
 export async function PUT(req: NextRequest) {
   if (!(await requireAdmin(req))) {
-    return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
+    return noStore({ error: "需要管理员登录" }, { status: 401 });
   }
   try {
     await ensureVenueSchema();
@@ -89,7 +90,7 @@ export async function PUT(req: NextRequest) {
     const { id, title, name, tag, desc: descText, imageUrl, sortOrder, isActive } = body;
 
     if (!id) {
-      return NextResponse.json({ error: "ID 为必填项" }, { status: 400 });
+      return noStore({ error: "ID 为必填项" }, { status: 400 });
     }
 
     const updateData: any = {};
@@ -116,31 +117,31 @@ export async function PUT(req: NextRequest) {
       .returning();
 
     invalidateCache("venue");
-    return NextResponse.json(updated);
+    return noStore(updated);
   } catch (err: any) {
     console.error("PUT /api/admin/venue error:", err);
-    return NextResponse.json({ error: err.message || "更新场馆项目失败" }, { status: 500 });
+    return noStore({ error: err.message || "更新场馆项目失败" }, { status: 500 });
   }
 }
 
 export async function DELETE(req: NextRequest) {
   if (!(await requireAdmin(req))) {
-    return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
+    return noStore({ error: "需要管理员登录" }, { status: 401 });
   }
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
 
     if (!id) {
-      return NextResponse.json({ error: "ID 为必填项" }, { status: 400 });
+      return noStore({ error: "ID 为必填项" }, { status: 400 });
     }
 
     await db.delete(venueItems).where(eq(venueItems.id, Number(id)));
 
     invalidateCache("venue");
-    return NextResponse.json({ success: true });
+    return noStore({ success: true });
   } catch (err: any) {
     console.error("DELETE /api/admin/venue error:", err);
-    return NextResponse.json({ error: err.message || "删除场馆项目失败" }, { status: 500 });
+    return noStore({ error: err.message || "删除场馆项目失败" }, { status: 500 });
   }
 }

@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { noStore } from "@/lib/http/no-store";
 import { db, rawSql } from "@/db";
 import { members } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -6,7 +7,7 @@ import { getValidAdminSession } from "@/lib/auth/admin-session";
 
 export async function GET(request: NextRequest) {
   const admin = await getValidAdminSession(request);
-  if (!admin) return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
+  if (!admin) return noStore({ error: "需要管理员登录" }, { status: 401 });
 
   try {
     await rawSql`ALTER TABLE photo_comparisons ADD COLUMN IF NOT EXISTS photo1_url TEXT;`;
@@ -42,16 +43,16 @@ export async function GET(request: NextRequest) {
            LIMIT 50
         `;
 
-    return NextResponse.json(rows);
+    return noStore(rows);
   } catch (err: any) {
     console.error("admin photo-compare error:", err);
-    return NextResponse.json([]);
+    return noStore([]);
   }
 }
 
 export async function POST(request: NextRequest) {
   const admin = await getValidAdminSession(request);
-  if (!admin) return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
+  if (!admin) return noStore({ error: "需要管理员登录" }, { status: 401 });
 
   try {
     await rawSql`ALTER TABLE photo_comparisons ADD COLUMN IF NOT EXISTS photo1_url TEXT;`;
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
     } = body;
 
     if (!memberId || !photo1_url || !photo2_url) {
-      return NextResponse.json({ error: "会员与两张对比照片为必填" }, { status: 400 });
+      return noStore({ error: "会员与两张对比照片为必填" }, { status: 400 });
     }
 
     const mid = Number(memberId);
@@ -86,21 +87,21 @@ export async function POST(request: NextRequest) {
       ) RETURNING id
     `;
 
-    return NextResponse.json({ success: true, id: result[0]?.id }, { status: 201 });
+    return noStore({ success: true, id: result[0]?.id }, { status: 201 });
   } catch (err: any) {
     console.error("admin photo-compare POST error:", err);
-    return NextResponse.json({ error: err.message || "创建对比失败" }, { status: 500 });
+    return noStore({ error: err.message || "创建对比失败" }, { status: 500 });
   }
 }
 
 export async function PUT(request: NextRequest) {
   const admin = await getValidAdminSession(request);
-  if (!admin) return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
+  if (!admin) return noStore({ error: "需要管理员登录" }, { status: 401 });
 
   try {
     const body = await request.json();
     const { id, photo1_url, photo2_url, photo1_date, photo2_date, photo1_type, photo2_type, analysis } = body;
-    if (!id) return NextResponse.json({ error: "缺少对比 ID" }, { status: 400 });
+    if (!id) return noStore({ error: "缺少对比 ID" }, { status: 400 });
 
     await rawSql`
       UPDATE photo_comparisons
@@ -114,26 +115,26 @@ export async function PUT(request: NextRequest) {
        WHERE id = ${Number(id)}
     `;
 
-    return NextResponse.json({ success: true });
+    return noStore({ success: true });
   } catch (err: any) {
     console.error("admin photo-compare PUT error:", err);
-    return NextResponse.json({ error: err.message || "更新对比失败" }, { status: 500 });
+    return noStore({ error: err.message || "更新对比失败" }, { status: 500 });
   }
 }
 
 export async function DELETE(request: NextRequest) {
   const admin = await getValidAdminSession(request);
-  if (!admin) return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
+  if (!admin) return noStore({ error: "需要管理员登录" }, { status: 401 });
 
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
-    if (!id) return NextResponse.json({ error: "缺少对比 ID" }, { status: 400 });
+    if (!id) return noStore({ error: "缺少对比 ID" }, { status: 400 });
 
     await rawSql`DELETE FROM photo_comparisons WHERE id = ${Number(id)}`;
-    return NextResponse.json({ success: true });
+    return noStore({ success: true });
   } catch (err: any) {
     console.error("admin photo-compare DELETE error:", err);
-    return NextResponse.json({ error: err.message || "删除对比失败" }, { status: 500 });
+    return noStore({ error: err.message || "删除对比失败" }, { status: 500 });
   }
 }

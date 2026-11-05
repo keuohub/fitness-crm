@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { noStore } from "@/lib/http/no-store";
 import { requireAdmin } from "@/lib/auth/admin-session";
 import { rawSql } from "@/db";
-const bad = (msg: string, status = 400) => NextResponse.json({ error: msg }, { status });
+const bad = (msg: string, status = 400) => noStore({ error: msg }, { status });
 const isTime = (s: string) => /^\d{2}:\d{2}$/.test(s);
 function addMinutes(time: string, minutes: number) {
   const [h, m] = time.split(":").map(Number);
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest) {
     LEFT JOIN users u ON u.id = t.coach_id
     LEFT JOIN rooms r ON r.id = t.room_id
     WHERE t.tenant_id = 1 ORDER BY t.weekday, t.start_time`;
-  return NextResponse.json(rows);
+  return noStore(rows);
 }
 
 export async function POST(request: NextRequest) {
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
        ${Math.max(1, Number(b.capacity || course.default_capacity || 6))},
        ${b.effectiveFrom || null}, ${b.effectiveTo || null}, ${b.isActive === 0 ? 0 : 1})
     RETURNING *`;
-  return NextResponse.json(row, { status: 201 });
+  return noStore(row, { status: 201 });
 }
 
 export async function PUT(request: NextRequest) {
@@ -70,7 +71,7 @@ export async function PUT(request: NextRequest) {
       effective_to = ${b.effectiveTo !== undefined ? b.effectiveTo : existing.effective_to},
       is_active = ${b.isActive !== undefined ? (b.isActive ? 1 : 0) : existing.is_active}
     WHERE id = ${id} AND tenant_id = 1 RETURNING *`;
-  return NextResponse.json(row);
+  return noStore(row);
 }
 
 export async function DELETE(request: NextRequest) {
@@ -79,5 +80,5 @@ export async function DELETE(request: NextRequest) {
   if (!id) return bad("缺少 id");
   const [row] = await rawSql`DELETE FROM schedule_templates WHERE id = ${id} AND tenant_id = 1 RETURNING *`;
   if (!row) return bad("模板不存在", 404);
-  return NextResponse.json({ success: true });
+  return noStore({ success: true });
 }

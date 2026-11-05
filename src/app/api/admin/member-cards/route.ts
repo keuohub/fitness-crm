@@ -1,10 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { noStore } from "@/lib/http/no-store";
 import { requireAdmin } from "@/lib/auth/admin-session";
 import { getAdminUser, requireRole } from "@/lib/auth/rbac";
 import { rawSql } from "@/db";
 
 function bad(msg: string, status = 400) {
-  return NextResponse.json({ error: msg }, { status });
+  return noStore({ error: msg }, { status });
 }
 const today = () => new Date().toISOString().slice(0, 10);
 function addDays(dateStr: string, days: number) {
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
         JOIN members m ON m.id = mc.member_id
         WHERE mc.tenant_id = 1
         ORDER BY mc.id DESC LIMIT 100`;
-  return NextResponse.json(rows);
+  return noStore(rows);
 }
 
 export async function POST(request: NextRequest) {
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
   const key = body.idempotencyKey ? String(body.idempotencyKey) : null;
   if (key) {
     const [existing] = await rawSql`SELECT * FROM member_cards WHERE tenant_id = 1 AND idempotency_key = ${key}`;
-    if (existing) return NextResponse.json(existing, { status: 200 });
+    if (existing) return noStore(existing, { status: 200 });
   }
 
   const validFrom = String(body.validFrom || today());
@@ -118,15 +119,15 @@ export async function POST(request: NextRequest) {
     if (!rows.length) {
       if (key) {
         const [existing] = await rawSql`SELECT * FROM member_cards WHERE tenant_id = 1 AND idempotency_key = ${key}`;
-        if (existing) return NextResponse.json(existing, { status: 200 });
+        if (existing) return noStore(existing, { status: 200 });
       }
       return bad("开卡失败");
     }
-    return NextResponse.json(rows[0], { status: 201 });
+    return noStore(rows[0], { status: 201 });
   } catch (err: any) {
     if (String(err?.message || "").includes("uniq_member_card_idem") && key) {
       const [existing] = await rawSql`SELECT * FROM member_cards WHERE tenant_id = 1 AND idempotency_key = ${key}`;
-      if (existing) return NextResponse.json(existing, { status: 200 });
+      if (existing) return noStore(existing, { status: 200 });
     }
     console.error("[admin/member-cards] issue error", err);
     return bad("开卡失败，请重试", 500);
@@ -149,7 +150,7 @@ export async function PUT(request: NextRequest) {
   const key = body.idempotencyKey ? String(body.idempotencyKey) : null;
   if (key) {
     const [existingTx] = await rawSql`SELECT id FROM card_transactions WHERE tenant_id = 1 AND idempotency_key = ${key}`;
-    if (existingTx) return NextResponse.json(card, { status: 200 });
+    if (existingTx) return noStore(card, { status: 200 });
   }
 
   let totalCount = card.total_count;
@@ -191,9 +192,9 @@ export async function PUT(request: NextRequest) {
 
   if (!rows.length) {
     const [fresh] = await rawSql`SELECT * FROM member_cards WHERE id = ${memberCardId} AND tenant_id = 1`;
-    return NextResponse.json(fresh, { status: 200 });
+    return noStore(fresh, { status: 200 });
   }
-  return NextResponse.json(rows[0]);
+  return noStore(rows[0]);
 }
 
 export async function PATCH(request: NextRequest) {
@@ -223,7 +224,7 @@ export async function PATCH(request: NextRequest) {
     await rawSql`
       INSERT INTO card_transactions (tenant_id, member_card_id, member_id, type, amount, balance_after, note, created_at)
       VALUES (1, ${id}, ${row.member_id}, 'adjust', 0, ${row.remaining_count}, ${action === "freeze" ? "冻结" : "解冻"}, NOW())`;
-    return NextResponse.json(row);
+    return noStore(row);
   }
 
   // 临时调次：delta 正负整数，只改剩余次数，不动 total_count（运营临时补救用）
@@ -240,7 +241,7 @@ export async function PATCH(request: NextRequest) {
     await rawSql`
       INSERT INTO card_transactions (tenant_id, member_card_id, member_id, type, amount, balance_after, note, created_at)
       VALUES (1, ${id}, ${row.member_id}, 'adjust', ${delta}, ${after}, ${note}, NOW())`;
-    return NextResponse.json(row);
+    return noStore(row);
   }
 
   // 延长有效期：从「今天与当前截止日期的较晚者」往后加天数
@@ -255,7 +256,7 @@ export async function PATCH(request: NextRequest) {
     await rawSql`
       INSERT INTO card_transactions (tenant_id, member_card_id, member_id, type, amount, balance_after, note, created_at)
       VALUES (1, ${id}, ${row.member_id}, 'adjust', 0, ${row.remaining_count}, ${`延期 +${days} 天至 ${validUntil}`}, NOW())`;
-    return NextResponse.json(row);
+    return noStore(row);
   }
 
   // 直接指定到期日
@@ -267,5 +268,5 @@ export async function PATCH(request: NextRequest) {
   await rawSql`
     INSERT INTO card_transactions (tenant_id, member_card_id, member_id, type, amount, balance_after, note, created_at)
     VALUES (1, ${id}, ${row.member_id}, 'adjust', 0, ${row.remaining_count}, ${`有效期改为 ${validUntil}`}, NOW())`;
-  return NextResponse.json(row);
+  return noStore(row);
 }

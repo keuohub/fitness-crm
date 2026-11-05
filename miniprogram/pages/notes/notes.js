@@ -12,6 +12,10 @@ Page({
 
   onLoad: function() {
     this.setData({ nav: navUtil.getNavMetrics() });
+  },
+  // 教练可能在你翻便签的这几分钟里又写了一条。
+  // 只靠 onLoad 的话，切出去再回来看到的还是进页面那一刻的旧列表。
+  onShow: function() {
     if (!wx.getStorageSync("memberToken")) { wx.reLaunch({ url: "/pages/login/login?force=1" }); return; }
     this.load();
   },

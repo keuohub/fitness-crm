@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { noStore } from "@/lib/http/no-store";
 import { db } from "@/db";
 import { courseBookings } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
@@ -9,7 +10,7 @@ export async function POST(request: NextRequest) {
     const { memberId, courseType, bookingDate, bookingTime, notes } = await request.json();
 
     if (!memberId || !courseType || !bookingDate || !bookingTime) {
-      return NextResponse.json(
+      return noStore(
         { error: "缺少必填字段：memberId, courseType, bookingDate, bookingTime" },
         { status: 400 }
       );
@@ -17,7 +18,7 @@ export async function POST(request: NextRequest) {
 
     const access = await verifyMemberAccess(request, memberId);
     if (!access.allowed) {
-      return NextResponse.json({ error: "无权操作" }, { status: 401 });
+      return noStore({ error: "无权操作" }, { status: 401 });
     }
 
     const [booking] = await db
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
       })
       .returning();
 
-    return NextResponse.json({
+    return noStore({
       id: booking.id,
       status: booking.status,
       courseType: booking.courseType,
@@ -44,7 +45,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (err) {
     console.error("[course-booking] POST error:", err);
-    return NextResponse.json({ error: "服务器错误" }, { status: 500 });
+    return noStore({ error: "服务器错误" }, { status: 500 });
   }
 }
 
@@ -53,17 +54,17 @@ export async function GET(request: NextRequest) {
   const memberIdParam = searchParams.get("memberId");
 
   if (!memberIdParam) {
-    return NextResponse.json({ error: "缺少 memberId" }, { status: 400 });
+    return noStore({ error: "缺少 memberId" }, { status: 400 });
   }
 
   const memberId = parseInt(memberIdParam, 10);
   if (isNaN(memberId)) {
-    return NextResponse.json({ error: "memberId 无效" }, { status: 400 });
+    return noStore({ error: "memberId 无效" }, { status: 400 });
   }
 
   const access = await verifyMemberAccess(request, memberId);
   if (!access.allowed) {
-    return NextResponse.json({ error: "无权访问" }, { status: 401 });
+    return noStore({ error: "无权访问" }, { status: 401 });
   }
 
   const bookings = await db
@@ -72,5 +73,5 @@ export async function GET(request: NextRequest) {
     .where(eq(courseBookings.memberId, memberId))
     .orderBy(desc(courseBookings.bookingDate), desc(courseBookings.createdAt));
 
-  return NextResponse.json(bookings);
+  return noStore(bookings);
 }

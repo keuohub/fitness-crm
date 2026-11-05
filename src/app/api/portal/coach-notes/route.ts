@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { noStore } from "@/lib/http/no-store";
 import { db } from "@/db";
 import { coachNotes } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
@@ -9,17 +10,17 @@ export async function GET(request: NextRequest) {
   const memberIdParam = searchParams.get("memberId");
 
   if (!memberIdParam) {
-    return NextResponse.json({ error: "缺少 memberId" }, { status: 400 });
+    return noStore({ error: "缺少 memberId" }, { status: 400 });
   }
 
   const memberId = parseInt(memberIdParam, 10);
   if (isNaN(memberId)) {
-    return NextResponse.json({ error: "memberId 无效" }, { status: 400 });
+    return noStore({ error: "memberId 无效" }, { status: 400 });
   }
 
   const access = await verifyMemberAccess(request, memberId);
   if (!access.allowed) {
-    return NextResponse.json({ error: "无权访问" }, { status: 401 });
+    return noStore({ error: "无权访问" }, { status: 401 });
   }
 
   const notes = await db
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest) {
     .orderBy(desc(coachNotes.createdAt))
     .limit(10);
 
-  return NextResponse.json(
+  return noStore(
     notes.map((n) => ({
       id: n.id,
       tags: JSON.parse(n.tags || "[]"),

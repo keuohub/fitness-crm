@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { noStore } from "@/lib/http/no-store";
 import { db, rawSql } from "@/db";
 import { trainingFeelings } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -15,7 +16,7 @@ import { requireAdmin } from "@/lib/auth/admin-session";
  */
 export async function GET(request: NextRequest) {
   if (!(await requireAdmin(request))) {
-    return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
+    return noStore({ error: "需要管理员登录" }, { status: 401 });
   }
 
   const { searchParams } = new URL(request.url);
@@ -59,10 +60,10 @@ export async function GET(request: NextRequest) {
       (r) => r.reply_status === "pending" || r.reply_status === "auto_legacy"
     ).length;
 
-    return NextResponse.json({ items: list, pendingCount, total: list.length });
+    return noStore({ items: list, pendingCount, total: list.length });
   } catch (err: any) {
     console.error("[admin/training-feelings] GET error:", err);
-    return NextResponse.json({ error: err.message, items: [], pendingCount: 0 }, { status: 500 });
+    return noStore({ error: err.message, items: [], pendingCount: 0 }, { status: 500 });
   }
 }
 
@@ -71,7 +72,7 @@ export async function GET(request: NextRequest) {
  */
 export async function PUT(request: NextRequest) {
   if (!(await requireAdmin(request))) {
-    return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
+    return noStore({ error: "需要管理员登录" }, { status: 401 });
   }
 
   try {
@@ -81,7 +82,7 @@ export async function PUT(request: NextRequest) {
     const reply = body.reply ?? body.xiaoqiaoReply;
 
     if (!id) {
-      return NextResponse.json({ error: "缺少便签 id" }, { status: 400 });
+      return noStore({ error: "缺少便签 id" }, { status: 400 });
     }
 
     // 划掉：这条便签不回了（已当面聊过、或只是打卡）
@@ -90,15 +91,15 @@ export async function PUT(request: NextRequest) {
         .update(trainingFeelings)
         .set({ replyStatus: "dismissed" })
         .where(eq(trainingFeelings.id, id));
-      return NextResponse.json({ success: true, id, replyStatus: "dismissed" });
+      return noStore({ success: true, id, replyStatus: "dismissed" });
     }
 
     if (typeof reply !== "string" || reply.trim().length === 0) {
-      return NextResponse.json({ error: "回复内容不能为空" }, { status: 400 });
+      return noStore({ error: "回复内容不能为空" }, { status: 400 });
     }
 
     if (reply.trim().length > 500) {
-      return NextResponse.json({ error: "回复超过 500 字，便签里说话短一点更像人" }, { status: 400 });
+      return noStore({ error: "回复超过 500 字，便签里说话短一点更像人" }, { status: 400 });
     }
 
     const [updated] = await db
@@ -107,7 +108,7 @@ export async function PUT(request: NextRequest) {
       .where(eq(trainingFeelings.id, id))
       .returning();
 
-    return NextResponse.json({
+    return noStore({
       success: true,
       id,
       replyStatus: "replied",
@@ -115,7 +116,7 @@ export async function PUT(request: NextRequest) {
     });
   } catch (err: any) {
     console.error("[admin/training-feelings] PUT error:", err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return noStore({ error: err.message }, { status: 500 });
   }
 }
 
@@ -124,7 +125,7 @@ export async function PUT(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   if (!(await requireAdmin(request))) {
-    return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
+    return noStore({ error: "需要管理员登录" }, { status: 401 });
   }
 
   try {
@@ -133,7 +134,7 @@ export async function POST(request: NextRequest) {
     const reply = body.reply ?? body.xiaoqiaoReply;
 
     if (!memberId || !feeling || !String(feeling).trim()) {
-      return NextResponse.json({ error: "缺少 memberId 或 feeling" }, { status: 400 });
+      return noStore({ error: "缺少 memberId 或 feeling" }, { status: 400 });
     }
 
     const hasReply = typeof reply === "string" && reply.trim().length > 0;
@@ -149,8 +150,8 @@ export async function POST(request: NextRequest) {
       })
       .returning();
 
-    return NextResponse.json(created, { status: 201 });
+    return noStore(created, { status: 201 });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return noStore({ error: err.message }, { status: 500 });
   }
 }

@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { noStore } from "@/lib/http/no-store";
 import { requireAdmin } from "@/lib/auth/admin-session";
 import { db, rawSql } from "@/db";
 import { courseOfferings } from "@/db/schema";
@@ -107,7 +108,7 @@ async function ensureTableAndSeed() {
 
 export async function GET(request: NextRequest) {
   if (!(await requireAdmin(request))) {
-    return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
+    return noStore({ error: "需要管理员登录" }, { status: 401 });
   }
   try {
     await ensureTableAndSeed();
@@ -115,23 +116,23 @@ export async function GET(request: NextRequest) {
       .select()
       .from(courseOfferings)
       .orderBy(asc(courseOfferings.sortOrder));
-    return NextResponse.json(rows);
+    return noStore(rows);
   } catch (err: any) {
     console.error("GET /api/admin/offerings error:", err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return noStore({ error: err.message }, { status: 500 });
   }
 }
 
 export async function POST(req: NextRequest) {
   if (!(await requireAdmin(req))) {
-    return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
+    return noStore({ error: "需要管理员登录" }, { status: 401 });
   }
   try {
     await ensureTableAndSeed();
     const body = await req.json();
     const { num, name, enName, summary, target, highlight, imageUrl, sortOrder = 0, isActive = 1 } = body;
     if (!name || !summary) {
-      return NextResponse.json({ error: "项目名称和核心概要为必填项" }, { status: 400 });
+      return noStore({ error: "项目名称和核心概要为必填项" }, { status: 400 });
     }
 
     const [created] = await db
@@ -150,22 +151,22 @@ export async function POST(req: NextRequest) {
       .returning();
 
     invalidateCache("offerings");
-    return NextResponse.json(created, { status: 201 });
+    return noStore(created, { status: 201 });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return noStore({ error: err.message }, { status: 500 });
   }
 }
 
 export async function PUT(req: NextRequest) {
   if (!(await requireAdmin(req))) {
-    return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
+    return noStore({ error: "需要管理员登录" }, { status: 401 });
   }
   try {
     await ensureTableAndSeed();
     const body = await req.json();
     const { id, num, name, enName, summary, target, highlight, imageUrl, sortOrder, isActive } = body;
     if (!id) {
-      return NextResponse.json({ error: "ID 为必填项" }, { status: 400 });
+      return noStore({ error: "ID 为必填项" }, { status: 400 });
     }
 
     const updateData: any = {};
@@ -186,25 +187,25 @@ export async function PUT(req: NextRequest) {
       .returning();
 
     invalidateCache("offerings");
-    return NextResponse.json(updated);
+    return noStore(updated);
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return noStore({ error: err.message }, { status: 500 });
   }
 }
 
 export async function DELETE(req: NextRequest) {
   if (!(await requireAdmin(req))) {
-    return NextResponse.json({ error: "需要管理员登录" }, { status: 401 });
+    return noStore({ error: "需要管理员登录" }, { status: 401 });
   }
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
-    if (!id) return NextResponse.json({ error: "缺少 ID" }, { status: 400 });
+    if (!id) return noStore({ error: "缺少 ID" }, { status: 400 });
 
     await db.delete(courseOfferings).where(eq(courseOfferings.id, Number(id)));
     invalidateCache("offerings");
-    return NextResponse.json({ success: true });
+    return noStore({ success: true });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return noStore({ error: err.message }, { status: 500 });
   }
 }

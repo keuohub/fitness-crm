@@ -1,13 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { noStore } from "@/lib/http/no-store";
 import { requireAdmin } from "@/lib/auth/admin-session";
 import { rawSql } from "@/db";
 
-const bad = (msg: string, status = 400) => NextResponse.json({ error: msg }, { status });
+const bad = (msg: string, status = 400) => noStore({ error: msg }, { status });
 
 export async function GET(request: NextRequest) {
   if (!(await requireAdmin(request))) return bad("需要管理员登录", 401);
   const rows = await rawSql`SELECT * FROM course_categories WHERE tenant_id = 1 ORDER BY sort_order, id`;
-  return NextResponse.json(rows);
+  return noStore(rows);
 }
 
 export async function POST(request: NextRequest) {
@@ -25,7 +26,7 @@ export async function POST(request: NextRequest) {
             ${b.color || null}, ${b.categoryType || 'boutique'}, ${Math.min(5, Math.max(1, Number(b.difficultyStars || 3)))},
             ${b.coverImage || ''}, ${b.description || ''}, ${Number(b.sortOrder || 0)}, ${b.isActive === 0 ? 0 : 1})
     RETURNING *`;
-  return NextResponse.json(row, { status: 201 });
+  return noStore(row, { status: 201 });
 }
 
 export async function PUT(request: NextRequest) {
@@ -48,7 +49,7 @@ export async function PUT(request: NextRequest) {
       sort_order = ${b.sortOrder !== undefined ? Number(b.sortOrder) : existing.sort_order},
       is_active = ${b.isActive !== undefined ? (b.isActive ? 1 : 0) : existing.is_active}
     WHERE id = ${id} AND tenant_id = 1 RETURNING *`;
-  return NextResponse.json(row);
+  return noStore(row);
 }
 
 export async function DELETE(request: NextRequest) {
@@ -62,5 +63,5 @@ export async function DELETE(request: NextRequest) {
   if (linkedCount > 0) return bad(`已有 ${linkedCount} 个卡种勾选该课种，不能删除；可改为停用`, 409);
   const [row] = await rawSql`DELETE FROM course_categories WHERE id = ${id} AND tenant_id = 1 RETURNING *`;
   if (!row) return bad("课程不存在", 404);
-  return NextResponse.json({ success: true, row });
+  return noStore({ success: true, row });
 }

@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { noStore } from "@/lib/http/no-store";
 import { requireRole } from "@/lib/auth/rbac";
 import { rawSql } from "@/db";
 import { generatePortalCode, generateLoginPin } from "@/lib/auth/member-credentials";
@@ -146,12 +147,12 @@ function mapGender(v: string): string | null {
 
 export async function POST(request: NextRequest) {
   const admin = await requireRole(request, "manager");
-  if (!admin) return NextResponse.json({ error: "权限不足，仅店长或店主可批量导入会员" }, { status: 403 });
+  if (!admin) return noStore({ error: "权限不足，仅店长或店主可批量导入会员" }, { status: 403 });
 
   const body = await request.json().catch(() => ({}));
   const rows: RawRow[] = Array.isArray(body.rows) ? body.rows : [];
-  if (!rows.length) return NextResponse.json({ error: "没有可导入的行" }, { status: 400 });
-  if (rows.length > MAX_ROWS) return NextResponse.json({ error: `一次最多导入 ${MAX_ROWS} 行，请拆成多个文件` }, { status: 400 });
+  if (!rows.length) return noStore({ error: "没有可导入的行" }, { status: 400 });
+  if (rows.length > MAX_ROWS) return noStore({ error: `一次最多导入 ${MAX_ROWS} 行，请拆成多个文件` }, { status: 400 });
 
   const cardTypes = await rawSql`SELECT id, name, category, total_count, validity_days FROM card_types WHERE tenant_id = 1 AND is_active = 1`;
   const typeByName = new Map<string, any>(cardTypes.map((t: any) => [String(t.name).trim(), t]));
@@ -416,5 +417,5 @@ export async function POST(request: NextRequest) {
     cardsSupplemented: results.filter((r) => r.matchedBy !== "new" && r.status === "created").length,
   };
 
-  return NextResponse.json({ summary, results });
+  return noStore({ summary, results });
 }

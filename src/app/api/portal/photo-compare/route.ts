@@ -1,15 +1,16 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { noStore } from "@/lib/http/no-store";
 import { verifyMemberAccess } from "@/lib/auth/member-ownership";
 import { rawSql } from "@/db";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const mid = searchParams.get("memberId");
-  if (!mid) return NextResponse.json({ error: "缺少 memberId" }, { status: 400 });
+  if (!mid) return noStore({ error: "缺少 memberId" }, { status: 400 });
   const memberId = parseInt(mid, 10);
-  if (isNaN(memberId)) return NextResponse.json({ error: "invalid" }, { status: 400 });
+  if (isNaN(memberId)) return noStore({ error: "invalid" }, { status: 400 });
   const access = await verifyMemberAccess(request, memberId);
-  if (!access.allowed) return NextResponse.json({ error: "无权访问" }, { status: 401 });
+  if (!access.allowed) return noStore({ error: "无权访问" }, { status: 401 });
   // 可指定条数（照片会一直累积，前端不该被写死的 5 条卡住）
   const limitParam = parseInt(searchParams.get("limit") || "50", 10);
   const limit = isNaN(limitParam) ? 50 : Math.min(Math.max(limitParam, 1), 200);
@@ -32,15 +33,15 @@ export async function GET(request: NextRequest) {
        LIMIT ${limit}
     `;
     if (rows && rows.length > 0) {
-      return NextResponse.json(rows);
+      return noStore(rows);
     }
 
     // 没有真实对比照就返回空数组。
     // 绝不返回示范体态照：那会让从未拍过照的新会员看到别人的身体，
     // 并配上一段「骨盆前倾改善约 6°」的伪造诊断。空状态由前端负责。
-    return NextResponse.json([]);
+    return noStore([]);
   } catch (err) {
     console.error("portal/photo-compare error:", err);
-    return NextResponse.json([]);
+    return noStore([]);
   }
 }

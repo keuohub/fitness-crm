@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { noStore } from "@/lib/http/no-store";
 import { db } from "@/db";
 import { monthlyStars } from "@/db/schema";
 import { eq, asc } from "drizzle-orm";
@@ -22,13 +22,13 @@ export async function GET() {
           journey: j || "",
         };
       });
-      return NextResponse.json(formatted);
+      return noStore(formatted);
     }
 
     // 无真实数据就返回空数组，由前端空状态承接；绝不自动播种虚构会员
-    return NextResponse.json([]);
+    return noStore([]);
   } catch (err) {
     console.error("portal/stars error:", err);
-    return NextResponse.json([]);
+    return noStore([]);
   }
 }

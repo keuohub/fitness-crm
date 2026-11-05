@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { noStore } from "@/lib/http/no-store";
 import crypto from "crypto";
 import { hashSync } from "bcryptjs";
 import { requireAdmin } from "@/lib/auth/admin-session";
 import { rawSql } from "@/db";
-const bad = (msg: string, status = 400) => NextResponse.json({ error: msg }, { status });
+const bad = (msg: string, status = 400) => noStore({ error: msg }, { status });
 
 export async function GET(request: NextRequest) {
   if (!(await requireAdmin(request))) return bad("需要管理员登录", 401);
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest) {
     return true;
   });
 
-  return NextResponse.json(uniqueRows);
+  return noStore(uniqueRows);
 }
 
 export async function POST(request: NextRequest) {
@@ -81,7 +82,7 @@ export async function POST(request: NextRequest) {
     console.error("Sync to team_members error:", e);
   }
 
-  return NextResponse.json(row, { status: 201 });
+  return noStore(row, { status: 201 });
 }
 
 export async function DELETE(request: NextRequest) {
@@ -94,8 +95,8 @@ export async function DELETE(request: NextRequest) {
   if (used) {
     // 课表中已有排课，软注销教练排课身份，确保历史课次仍保留记录
     await rawSql`UPDATE users SET is_coach = 0 WHERE id = ${id} AND tenant_id = 1`;
-    return NextResponse.json({ success: true, mode: "deactivated" });
+    return noStore({ success: true, mode: "deactivated" });
   }
   await rawSql`UPDATE users SET is_coach = 0, status = 'inactive' WHERE id = ${id} AND tenant_id = 1`;
-  return NextResponse.json({ success: true, mode: "removed" });
+  return noStore({ success: true, mode: "removed" });
 }

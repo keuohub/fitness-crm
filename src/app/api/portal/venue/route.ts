@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { noStore } from "@/lib/http/no-store";
 import { db } from "@/db";
 import { venueItems } from "@/db/schema";
 import { eq, asc } from "drizzle-orm";
@@ -26,13 +26,13 @@ export async function GET() {
           isActive: r.isActive,
         };
       });
-      return NextResponse.json(formatted);
+      return noStore(formatted);
     }
 
     // 空表返回空数组，不自动灌入默认场馆
-    return NextResponse.json([]);
+    return noStore([]);
   } catch (err: any) {
     console.error("GET /api/portal/venue error:", err);
-    return NextResponse.json([]);
+    return noStore([]);
   }
 }

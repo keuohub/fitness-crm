@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { noStore } from "@/lib/http/no-store";
 import { requireAdmin } from "@/lib/auth/admin-session";
 import { rawSql } from "@/db";
 import { autoSettleFinishedBookings } from "@/lib/booking-settle";
-const bad = (msg: string, status = 400) => NextResponse.json({ error: msg }, { status });
+const bad = (msg: string, status = 400) => noStore({ error: msg }, { status });
 const today = () => new Date().toISOString().slice(0, 10);
 const isDate = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s);
 
@@ -56,7 +57,7 @@ export async function GET(request: NextRequest) {
           SELECT id FROM class_sessions WHERE tenant_id = 1 AND session_date = ${date}
         ) ORDER BY b.id DESC`;
 
-  return NextResponse.json({ date, sessions, bookings });
+  return noStore({ date, sessions, bookings });
 }
 
 export async function POST(request: NextRequest) {
@@ -72,7 +73,7 @@ export async function POST(request: NextRequest) {
   // 会员没预约就来了、或系统判定 unsettled（无匹配卡）时，需要主理人手动补签。
   if (String(body.action || "") === "checkin") {
     if (booking.status === "attended") {
-      return NextResponse.json({ ok: true, duplicate: true, message: "已经签到过了" });
+      return noStore({ ok: true, duplicate: true, message: "已经签到过了" });
     }
     if (booking.status === "cancelled") {
       return bad("这笔预约已取消，不能签到", 409);
@@ -132,7 +133,7 @@ export async function POST(request: NextRequest) {
     await rawSql`
       UPDATE bookings SET status = 'attended', updated_at = NOW() WHERE id = ${bookingId}`;
 
-    return NextResponse.json({
+    return noStore({
       ok: true,
       bookingId,
       status: "attended",
@@ -141,7 +142,7 @@ export async function POST(request: NextRequest) {
   }
 
   // ── 取消预约 ────────────────────────────────────────────
-  if (booking.status === "cancelled") return NextResponse.json({ booking, duplicate: true });
+  if (booking.status === "cancelled") return noStore({ booking, duplicate: true });
   if (booking.status !== "booked") return bad("该预约不可取消", 409);
   const rows = await rawSql`
     WITH updated AS (
@@ -152,5 +153,5 @@ export async function POST(request: NextRequest) {
       UPDATE class_sessions SET booked_count = GREATEST(booked_count - 1, 0), updated_at = NOW()
       WHERE id IN (SELECT session_id FROM updated) RETURNING id
     ) SELECT * FROM updated`;
-  return NextResponse.json({ booking: rows[0] || booking });
+  return noStore({ booking: rows[0] || booking });
 }

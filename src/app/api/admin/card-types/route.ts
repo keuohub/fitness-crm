@@ -1,11 +1,12 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { noStore } from "@/lib/http/no-store";
 import { requireAdmin } from "@/lib/auth/admin-session";
 import { db, rawSql } from "@/db";
 import { cardTypes, cardTypeCourses } from "@/db/schema";
 import { asc, eq } from "drizzle-orm";
 
 function bad(msg: string, status = 400) {
-  return NextResponse.json({ error: msg }, { status });
+  return noStore({ error: msg }, { status });
 }
 
 export async function GET(request: NextRequest) {
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest) {
     courseCategoryIds: courseMap.get(r.id) || [],
   }));
 
-  return NextResponse.json(result);
+  return noStore(result);
 }
 
 export async function POST(request: NextRequest) {
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  return NextResponse.json({ ...row, courseCategoryIds }, { status: 201 });
+  return noStore({ ...row, courseCategoryIds }, { status: 201 });
 }
 
 export async function PUT(request: NextRequest) {
@@ -124,7 +125,7 @@ export async function PUT(request: NextRequest) {
     courseCategoryIds = existingCourses.map((c: any) => Number(c.course_category_id));
   }
 
-  return NextResponse.json({ ...row, courseCategoryIds });
+  return noStore({ ...row, courseCategoryIds });
 }
 
 export async function DELETE(request: NextRequest) {
@@ -138,5 +139,5 @@ export async function DELETE(request: NextRequest) {
   if (usedCount > 0) return bad(`已有 ${usedCount} 张会员卡引用该卡种，不能删除，请改用停用`, 409);
   await rawSql`DELETE FROM card_type_courses WHERE card_type_id = ${id}`;
   await db.delete(cardTypes).where(eq(cardTypes.id, id));
-  return NextResponse.json({ success: true });
+  return noStore({ success: true });
 }
