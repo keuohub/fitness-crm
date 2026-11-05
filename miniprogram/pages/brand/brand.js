@@ -133,10 +133,13 @@ Page({
     });
 
     // 1. 同步空间列表
+    // 注意：只要接口正常返回，就以接口为准——哪怕是空数组。
+    // 以前写成 `res.data.length > 0` 才覆盖，后台把场馆全部停用后，
+    // 前端会退回包内这份旧快照，会员看到的还是已经删掉的空间。
     api.request({
       url: "/api/portal/venue",
       success: function(res) {
-        if (res.statusCode === 200 && Array.isArray(res.data) && res.data.length > 0) {
+        if (res.statusCode === 200 && Array.isArray(res.data)) {
           var mapped = res.data.map(function(v) {
             return {
               id: v.id,
@@ -154,11 +157,11 @@ Page({
       }
     });
 
-    // 2. 同步导师阵容
+    // 2. 同步导师阵容（同上：接口说了算，停用的导师必须立刻消失）
     api.request({
       url: "/api/portal/team",
       success: function(res) {
-        if (res.statusCode === 200 && Array.isArray(res.data) && res.data.length > 0) {
+        if (res.statusCode === 200 && Array.isArray(res.data)) {
           var mappedTeam = res.data.map(function(t) {
             return {
               id: t.id,
@@ -179,11 +182,11 @@ Page({
       }
     });
 
-    // 3. 同步课程介绍
+    // 3. 同步课程介绍（同上）
     api.request({
       url: "/api/portal/offerings",
       success: function(res) {
-        if (res.statusCode === 200 && Array.isArray(res.data) && res.data.length > 0) {
+        if (res.statusCode === 200 && Array.isArray(res.data)) {
           var mappedOfferings = res.data.map(function(o) {
             var rawImg = o.imageUrl || o.image_url || "";
             var name = o.name || "";

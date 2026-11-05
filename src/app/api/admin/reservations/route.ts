@@ -3,6 +3,7 @@ import { noStore } from "@/lib/http/no-store";
 import { requireAdmin } from "@/lib/auth/admin-session";
 import { rawSql } from "@/db";
 import { autoSettleFinishedBookings } from "@/lib/booking-settle";
+import { reconcileBookedCounts } from "@/lib/booked-count";
 const bad = (msg: string, status = 400) => noStore({ error: msg }, { status });
 const today = () => new Date().toISOString().slice(0, 10);
 const isDate = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s);
@@ -22,6 +23,9 @@ export async function GET(request: NextRequest) {
   } catch (e) {
     console.error("[admin/reservations] autoSettle error:", e);
   }
+
+  // 名额计数是派生值，和真实预约数对齐后再展示，避免后台显示"已约 1"实际无人
+  await reconcileBookedCounts();
 
   const sessions = sessionId
     ? await rawSql`

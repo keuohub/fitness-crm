@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPortalMemberId } from "@/lib/auth/member-session";
 import { rawSql } from "@/db";
+import { reconcileBookedCounts } from "@/lib/booked-count";
 
 // 严格按北京时间 (Asia/Shanghai UTC+8) 计算当前日期
 const beijingToday = () => new Date(Date.now() + 8 * 3600_000).toISOString().slice(0, 10);
@@ -19,6 +20,9 @@ export async function GET(request: NextRequest) {
   const from = u.searchParams.get("from") || beijingToday();
   const to = u.searchParams.get("to") || addDays(from, 7);
   if (!isDate(from) || !isDate(to)) return NextResponse.json({ error: "日期格式错误" }, { status: 400 });
+
+  // 会员正要看"还剩几个位"，先把名额计数和真实预约对齐（内部有 60 秒节流）
+  await reconcileBookedCounts();
 
   const sessions = await rawSql`
     SELECT s.id, s.course_category_id, s.coach_id, s.room_id, s.title,
