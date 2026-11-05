@@ -87,6 +87,7 @@ export default function AdminReservationsPage() {
   const [cancellingBooking, setCancellingBooking] = useState<Booking | null>(null);
   const [cancelReason, setCancelReason] = useState("后台手动取消");
   const [submitting, setSubmitting] = useState(false);
+  const [checkingId, setCheckingId] = useState<number | null>(null);
 
   const load = async () => {
     try {
@@ -124,6 +125,31 @@ export default function AdminReservationsPage() {
       showToast(e.message, "error");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  // 手动签到：会员来了但没约、或自动结课判定无卡待补时使用
+  const doCheckin = async (b: Booking) => {
+    if (checkingId) return;
+    setCheckingId(b.id);
+    try {
+      const r = await jf("/api/admin/reservations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookingId: b.id, action: "checkin" }),
+      });
+      const left = r && r.cardRemaining;
+      showToast(
+        typeof left === "number"
+          ? `已签到 · ${b.member_name} 卡内剩 ${left} 次`
+          : `已签到 · ${b.member_name}`,
+        "success"
+      );
+      await load();
+    } catch (e: any) {
+      showToast(e.message || "签到失败", "error");
+    } finally {
+      setCheckingId(null);
     }
   };
 
@@ -352,16 +378,25 @@ export default function AdminReservationsPage() {
                               </td>
 
                               <td className="px-5 py-3 text-right">
-                                {b.status === "booked" ? (
-                                  <button
-                                    onClick={() => {
-                                      setCancellingBooking(b);
-                                      setCancelReason("后台取消");
-                                    }}
-                                    className="px-2.5 py-1 text-xs text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded transition-colors"
-                                  >
-                                    取消预约
-                                  </button>
+                                {b.status === "booked" || b.status === "unsettled" ? (
+                                  <div className="flex items-center justify-end gap-2">
+                                    <button
+                                      onClick={() => doCheckin(b)}
+                                      disabled={checkingId === b.id}
+                                      className="px-2.5 py-1 text-xs text-white bg-[#0E0D10] hover:opacity-90 rounded transition-opacity disabled:opacity-50"
+                                    >
+                                      {checkingId === b.id ? "签到中…" : "签到"}
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setCancellingBooking(b);
+                                        setCancelReason("后台取消");
+                                      }}
+                                      className="px-2.5 py-1 text-xs text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded transition-colors"
+                                    >
+                                      取消预约
+                                    </button>
+                                  </div>
                                 ) : (
                                   <span className="text-xs text-gray-400">已完结</span>
                                 )}

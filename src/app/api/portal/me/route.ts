@@ -4,6 +4,7 @@ import { members, trainings, questionnaireSubmissions, photos, courseOfferings }
 import { eq, sql, asc } from "drizzle-orm";
 import { getPortalMemberId } from "@/lib/auth/member-session";
 import { getMemberStage } from "@/lib/member-stage";
+import { autoSettleFinishedBookings } from "@/lib/booking-settle";
 
 function inferCategoryKey(name: string, enName?: string): string {
   const n = ((name || "") + " " + (enName || "")).toLowerCase();
@@ -27,6 +28,12 @@ function inferCategoryKey(name: string, enName?: string): string {
 export async function GET(request: NextRequest) {
   const memberId = await getPortalMemberId(request);
   if (!memberId) return NextResponse.json({ error: "未登录" }, { status: 401 });
+
+  // 会员打开「我的账户」时顺手结算已下课的课次（不阻塞返回），
+  // 否则会员看到的累计课时和卡内余次会停在上一节之前。
+  autoSettleFinishedBookings().catch((e) =>
+    console.error("[portal/me] autoSettle error:", e)
+  );
 
   const [member] = await db.select().from(members).where(eq(members.id, memberId));
   if (!member) return NextResponse.json({ error: "会员不存在" }, { status: 404 });
