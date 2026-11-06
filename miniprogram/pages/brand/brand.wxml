@@ -23,46 +23,32 @@
       </view>
       <text class="section-intro" wx:if="{{sec1Intro}}">{{sec1Intro}}</text>
 
-      <!-- 第一张满宽 4:3 大图 -->
-      <view class="venue-hero-card" bindtap="previewVenueImage" data-src="{{venueList[0].imageUrl}}">
-        <image
-          wx:if="{{!venueList[0].imgFailed}}"
-          class="venue-hero-img"
-          src="{{venueList[0].imageUrl}}"
-          mode="aspectFill"
-          lazy-load="{{true}}"
-          binderror="onImgError"
-          data-key="venueList"
-          data-index="0"
-        />
-        <view wx:else class="img-fallback venue-hero-img"></view>
-        <view class="venue-meta">
-          <text class="venue-name">{{venueList[0].name}}</text>
-          <text class="venue-desc" wx:if="{{venueList[0].desc}}">{{venueList[0].desc}}</text>
-        </view>
-      </view>
-
-      <!-- 其余横滑（宽 600rpx，4:3） -->
-      <scroll-view wx:if="{{venueList.length > 1}}" class="venue-scroll" scroll-x="{{true}}" enable-flex="{{true}}" show-scrollbar="{{false}}">
+      <!-- 场馆空间：统一横向并排，与「同行导师」同一展示形式
+           之前是第一张满宽大图 + 其余横滑，视觉上把一个板块切成了两种规格，
+           会员滑到第二张才知道后面还有内容。现在全部等宽并排，一眼看完。 -->
+      <scroll-view class="venue-scroll" scroll-x="{{true}}" enable-flex="{{true}}" show-scrollbar="{{false}}">
         <view
           wx:for="{{venueList}}"
           wx:key="id"
-          wx:if="{{index > 0}}"
-          class="venue-scroll-card"
-          bindtap="previewVenueImage"
-          data-src="{{item.imageUrl}}"
+          class="venue-card"
+          bindtap="previewVenueItem"
+          data-index="{{index}}"
         >
-          <image
-            wx:if="{{!item.imgFailed}}"
-            class="venue-scroll-img"
-            src="{{item.imageUrl}}"
-            mode="aspectFill"
-            lazy-load="{{true}}"
-            binderror="onImgError"
-            data-key="venueList"
-            data-index="{{index}}"
-          />
-          <view wx:else class="img-fallback venue-scroll-img"></view>
+          <view class="venue-card-media">
+            <image
+              wx:if="{{!item.imgFailed}}"
+              class="venue-card-img"
+              src="{{item.imageUrl}}"
+              mode="aspectFill"
+              lazy-load="{{true}}"
+              binderror="onImgError"
+              data-key="venueList"
+              data-index="{{index}}"
+            />
+            <view wx:else class="img-fallback venue-card-img"></view>
+            <text class="venue-card-tag" wx:if="{{item.tag}}">{{item.tag}}</text>
+            <text class="venue-card-count" wx:if="{{item.imageCount > 1}}">{{item.imageCount}} 张</text>
+          </view>
           <view class="venue-meta">
             <text class="venue-name">{{item.name}}</text>
             <text class="venue-desc" wx:if="{{item.desc}}">{{item.desc}}</text>

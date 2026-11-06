@@ -4,8 +4,8 @@
    ============================================================ */
 
 page {
-  background-color: #f6f0ea;
-  color: #3a2a2d;
+  background-color: #FDFCF9;
+  color: #1A1A1A;
   font-family: var(--font-sans);
   min-height: 100vh;
   box-sizing: border-box;
@@ -24,12 +24,12 @@ page {
 
 .me-loading-text {
   font-size: 26rpx;
-  color: #7a6a6c;
+  color: #6B6B6B;
 }
 
 .me-error-text {
   font-size: 26rpx;
-  color: #7a6a6c;
+  color: #6B6B6B;
 }
 
 /* 顶部头像与问候语 */
@@ -54,21 +54,21 @@ page {
   border-radius: 50%;
   object-fit: cover;
   display: block;
-  box-shadow: 0 0 0 4rpx #f6e3df, 0 6rpx 16rpx rgba(138, 58, 72, 0.12);
+  box-shadow: 0 0 0 4rpx #F0EEE8, 0 6rpx 16rpx rgba(26, 26, 26, 0.08);
 }
 
 .me-avatar-placeholder {
   width: 108rpx;
   height: 108rpx;
   border-radius: 50%;
-  background: #f6e3df;
-  color: #8a3a48;
+  background: #F0EEE8;
+  color: #1A1A1A;
   font-size: 40rpx;
   font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 0 4rpx #f6e3df;
+  box-shadow: 0 0 0 4rpx #F0EEE8;
 }
 
 /* 头像右下小圆「+」 */
@@ -79,7 +79,7 @@ page {
   width: 34rpx;
   height: 34rpx;
   border-radius: 50%;
-  background: #8a3a48;
+  background: #1A1A1A;
   border: 3rpx solid #ffffff;
   display: flex;
   align-items: center;
@@ -112,7 +112,7 @@ page {
 .me-greeting {
   font-size: 40rpx;
   font-weight: 600;
-  color: #3a2a2d;
+  color: #1A1A1A;
   display: block;
   margin-bottom: 12rpx;
   letter-spacing: 0.5rpx;
@@ -126,26 +126,26 @@ page {
 
 .me-tag {
   font-size: 22rpx;
-  color: #8a3a48;
-  background: #f6e3df;
+  color: #1A1A1A;
+  background: #F0EEE8;
   padding: 4rpx 16rpx;
   border-radius: 999rpx;
   line-height: 1.4;
   font-weight: 500;
 }
 
-/* 管理员专享入口 (黑金高定典藏卡) */
+/* 管理员专享入口（纯黑质感卡，不掺任何酒红/金） */
 .me-manager-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 28rpx 32rpx;
-  background: linear-gradient(135deg, #2D1418 0%, #1A0B0E 100%);
-  border: 1px solid rgba(248, 223, 176, 0.35);
+  background: linear-gradient(135deg, #232323 0%, #141414 100%);
+  border: 1px solid rgba(26, 26, 26, 0.06);
   border-radius: 24rpx;
   margin-top: 24rpx;
   margin-bottom: 32rpx;
-  box-shadow: 0 10rpx 28rpx rgba(45, 20, 24, 0.25);
+  box-shadow: 0 10rpx 28rpx rgba(0, 0, 0, 0.16);
   cursor: pointer;
   transition: transform 0.15s ease;
 }
@@ -163,18 +163,18 @@ page {
 .me-manager-title {
   font-size: 28rpx;
   font-weight: 600;
-  color: #F8DFB0;
+  color: #EDEAE3;
   letter-spacing: 1rpx;
 }
 
 .me-manager-desc {
   font-size: 22rpx;
-  color: rgba(248, 223, 176, 0.75);
+  color: rgba(26, 26, 26, 0.12);
 }
 
 .me-manager-arrow {
   font-size: 36rpx;
-  color: #F8DFB0;
+  color: #EDEAE3;
   font-weight: 300;
 }
 
@@ -190,7 +190,7 @@ page {
 .me-section-title {
   font-size: 32rpx;
   font-weight: 600;
-  color: #3a2a2d;
+  color: #1A1A1A;
   letter-spacing: 0.5rpx;
 }
 
@@ -198,14 +198,14 @@ page {
   padding: 36rpx;
   background: #ffffff;
   border-radius: 28rpx;
-  border: 1px solid #efe4dc;
-  box-shadow: 0 8rpx 24rpx rgba(138, 58, 72, 0.05);
+  border: 1px solid #F2F0EA;
+  box-shadow: 0 8rpx 24rpx rgba(26, 26, 26, 0.04);
   box-sizing: border-box;
 }
 
 .me-total-label {
   font-size: 24rpx;
-  color: #7a6a6c;
+  color: #6B6B6B;
   display: block;
   margin-bottom: 12rpx;
   letter-spacing: 1rpx;
@@ -222,25 +222,25 @@ page {
   font-family: var(--font-num);
   font-size: 80rpx;
   font-weight: 600;
-  color: #8a3a48;
+  color: #1A1A1A;
   line-height: 1;
 }
 
 .me-total-unit {
   font-size: 28rpx;
-  color: #8a3a48;
+  color: #1A1A1A;
   font-weight: 500;
 }
 
 .me-total-note {
   font-size: 23rpx;
-  color: #a8999b;
+  color: #9A9A9A;
   display: block;
 }
 
 /* 停卡中：把粉色标签压成中性灰，避免"相伴 · 停卡中"看起来像营销徽章 */
 .me-tag-frozen {
-  color: #6b6259;
+  color: #6B6B6B;
   background: #ece7e0;
 }
 
@@ -250,7 +250,7 @@ page {
   background: #f4f1ec;
   border-radius: 16rpx;
   font-size: 23rpx;
-  color: #6b6259;
+  color: #6B6B6B;
   line-height: 1.6;
 }
 
@@ -261,8 +261,8 @@ page {
   padding: 40rpx 24rpx;
   background: #ffffff;
   border-radius: 28rpx;
-  border: 1px solid #efe4dc;
-  box-shadow: 0 8rpx 24rpx rgba(138, 58, 72, 0.05);
+  border: 1px solid #F2F0EA;
+  box-shadow: 0 8rpx 24rpx rgba(26, 26, 26, 0.04);
   box-sizing: border-box;
 }
 
@@ -276,7 +276,7 @@ page {
 
 .me-stat-divider {
   width: 1rpx;
-  background: linear-gradient(180deg, rgba(239, 228, 220, 0) 0%, #efe4dc 50%, rgba(239, 228, 220, 0) 100%);
+  background: linear-gradient(180deg, rgba(244, 242, 237, 0) 0%, #F2F0EA 50%, rgba(244, 242, 237, 0) 100%);
   margin: 6rpx 8rpx;
 }
 
@@ -284,7 +284,7 @@ page {
   font-family: var(--font-num);
   font-size: 68rpx;
   font-weight: 600;
-  color: #8a3a48;
+  color: #1A1A1A;
   line-height: 1.1;
 }
 
@@ -294,7 +294,7 @@ page {
 
 .me-stat-label {
   font-size: 23rpx;
-  color: #7a6a6c;
+  color: #6B6B6B;
   letter-spacing: 0.5rpx;
   margin-top: 10rpx;
 }
@@ -312,38 +312,38 @@ page {
 
 .me-nocard-text {
   font-size: 26rpx;
-  color: #8a3a48;
+  color: #1A1A1A;
   letter-spacing: 0.5rpx;
 }
 
 .me-course-list {
   background: #ffffff;
   border-radius: 24rpx;
-  border: 1px solid #efe4dc;
+  border: 1px solid #F2F0EA;
   margin-top: 16rpx;
   overflow: hidden;
-  box-shadow: 0 6rpx 18rpx rgba(138, 58, 72, 0.04);
+  box-shadow: 0 6rpx 18rpx rgba(26, 26, 26, 0.03);
 }
 
 .me-course-name {
   font-size: 28rpx;
-  color: #3a2a2d;
+  color: #1A1A1A;
 }
 
 .me-course-count {
   font-family: var(--font-num);
   font-size: 32rpx;
   font-weight: 600;
-  color: #8a3a48;
+  color: #1A1A1A;
 }
 
 /* 列表行导航菜单 */
 .me-menu-section {
   background: #ffffff;
   border-radius: 28rpx;
-  border: 1px solid #efe4dc;
+  border: 1px solid #F2F0EA;
   overflow: hidden;
-  box-shadow: 0 8rpx 24rpx rgba(138, 58, 72, 0.05);
+  box-shadow: 0 8rpx 24rpx rgba(26, 26, 26, 0.04);
 }
 
 .list-row {
@@ -351,7 +351,7 @@ page {
   align-items: center;
   justify-content: space-between;
   padding: 32rpx;
-  border-bottom: 1px solid #f6f0ea;
+  border-bottom: 1px solid #FDFCF9;
   box-sizing: border-box;
   transition: background-color 0.15s ease;
 }
@@ -366,25 +366,25 @@ page {
 
 .me-menu-title {
   font-size: 28rpx;
-  color: #3a2a2d;
+  color: #1A1A1A;
   letter-spacing: 0.5rpx;
 }
 
 .list-row__arrow {
   width: 14rpx;
   height: 14rpx;
-  border-top: 2px solid #c9c0b8;
-  border-right: 2px solid #c9c0b8;
+  border-top: 2px solid #D8D5CE;
+  border-right: 2px solid #D8D5CE;
   transform: rotate(45deg);
 }
 
 .me-logout-row {
   margin-top: 8rpx;
-  border-top: 1px solid #f6f0ea;
+  border-top: 1px solid #FDFCF9;
 }
 
 .me-logout-text {
-  color: #a8999b !important;
+  color: #9A9A9A !important;
   font-size: 26rpx;
 }
 

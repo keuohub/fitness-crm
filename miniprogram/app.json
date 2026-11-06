@@ -18,7 +18,7 @@
     "custom": true,
     "color": "#5C5559",
     "selectedColor": "#0D0C0F",
-    "backgroundColor": "#F6E6DA",
+    "backgroundColor": "#FDFCF9",
     "borderStyle": "white",
     "list": [
       {
@@ -45,10 +45,10 @@
   },
   "window": {
     "navigationStyle": "custom",
-    "navigationBarBackgroundColor": "#F6E6DA",
+    "navigationBarBackgroundColor": "#FDFCF9",
     "navigationBarTextStyle": "black",
     "navigationBarTitleText": "徕舞 LAIWU",
-    "backgroundColor": "#F6E6DA"
+    "backgroundColor": "#FDFCF9"
   },
   "networkTimeout": {
     "request": 5000,

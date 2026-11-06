@@ -1,7 +1,7 @@
 /* pages/my-bookings/my-bookings.wxss */
 .my-page {
   min-height: 100vh;
-  background-color: #c9c3b9;
+  background-color: #FDFCF9;
   color: var(--c-text, #222222);
   font-family: var(--font-sans);
   box-sizing: border-box;

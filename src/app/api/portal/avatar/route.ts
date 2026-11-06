@@ -37,15 +37,18 @@ export async function POST(request: NextRequest) {
     }
     const filename = `member-avatar-${memberId}-${Date.now()}.${ext}`;
     const bytes = await file.arrayBuffer();
-    const { url: avatarUrl, storageType, warning } = await uploadFileToStorage(
-      Buffer.from(bytes),
-      filename,
-      "avatars"
-    );
+    const uploaded = await uploadFileToStorage(Buffer.from(bytes), filename, "avatars");
+    if (!uploaded.ok) {
+      return NextResponse.json({ error: uploaded.error || "图片存储不可用" }, { status: 502 });
+    }
+    const avatarUrl = uploaded.url;
 
-    await db.update(members).set({ avatarUrl }).where(eq(members.id, memberId));
+    // 带上传时间戳：同名替换头像时，客户端与微信的图片缓存会认旧图，
+    // 加版本参让「换了头像立刻生效」成立。
+    const versioned = `${avatarUrl}${avatarUrl.includes("?") ? "&" : "?"}v=${Date.now()}`;
+    await db.update(members).set({ avatarUrl: versioned }).where(eq(members.id, memberId));
 
-    return NextResponse.json({ avatarUrl, storage: storageType, warning });
+    return NextResponse.json({ avatarUrl: versioned, storage: uploaded.storageType, warning: uploaded.warning });
   } catch (err) {
     console.error("avatar upload error:", err);
     return NextResponse.json({ error: "服务器错误" }, { status: 500 });

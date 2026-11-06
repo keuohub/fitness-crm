@@ -69,10 +69,14 @@ export async function POST(request: NextRequest) {
       const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
       const filename = `brand-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
       const bytes = await file.arrayBuffer();
-      const { url, storageType, warning } = await uploadFileToStorage(Buffer.from(bytes), filename, "brand");
+      const uploaded = await uploadFileToStorage(Buffer.from(bytes), filename, "brand");
+      if (!uploaded.ok) {
+        // 绝不能返回 201：那会让运营以为传上去了，实际会员端一片空白
+        return NextResponse.json({ error: uploaded.error || "图片存储不可用" }, { status: 502 });
+      }
 
       return NextResponse.json(
-        { url, localMiniprogramUrl: url, storage: storageType, warning },
+        { url: uploaded.url, localMiniprogramUrl: uploaded.url, storage: uploaded.storageType, warning: uploaded.warning },
         { status: 201 }
       );
     }
@@ -88,7 +92,11 @@ export async function POST(request: NextRequest) {
     const timestamp = Date.now();
     const filename = `member-photo-${mid}-${timestamp}.${ext}`;
     const bytes = await file.arrayBuffer();
-    const { url, storageType, warning } = await uploadFileToStorage(Buffer.from(bytes), filename, "member-photos");
+    const uploaded = await uploadFileToStorage(Buffer.from(bytes), filename, "member-photos");
+    if (!uploaded.ok) {
+      return NextResponse.json({ error: uploaded.error || "图片存储不可用" }, { status: 502 });
+    }
+    const url = uploaded.url;
 
     const __r_record = await db
       .insert(photos)
@@ -106,7 +114,7 @@ export async function POST(request: NextRequest) {
     deleteCache(`photos:${mid}`);
 
     return NextResponse.json(
-      { id: record.id, url, photoType: record.photoType, takenAt: record.takenAt, storage: storageType, warning },
+      { id: record.id, url, photoType: record.photoType, takenAt: record.takenAt, storage: uploaded.storageType, warning: uploaded.warning },
       { status: 201 }
     );
   } catch (error) {

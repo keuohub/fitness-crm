@@ -54,7 +54,7 @@
         <view class="me-stat-divider"></view>
         <view class="me-stat-cell">
           <text class="me-stat-num {{hasCard ? '' : 'me-stat-num-muted'}}">{{hasCard ? cardRemaining : '—'}}</text>
-          <text class="me-stat-label">{{hasCard ? '卡内剩余 · 节' : '还没有开卡'}}</text>
+          <text class="me-stat-label">{{cardLabel}}</text>
         </view>
       </view>
 
@@ -71,8 +71,8 @@
         </view>
       </view>
 
-      <view class="me-nocard-cta" wx:if="{{!hasCard}}" bindtap="goCards">
-        <text class="me-nocard-text">还没有开卡 · 看看卡项</text>
+      <view class="me-nocard-cta" wx:if="{{cardCta}}" bindtap="goCards">
+        <text class="me-nocard-text">{{cardCta}}</text>
         <view class="list-row__arrow"></view>
       </view>
     </view>

@@ -4,7 +4,7 @@
    ============================================================ */
 
 page {
-  background-color: #f3efe8;
+  background-color: #FDFCF9;
   color: #000000;
   font-family: var(--font-sans);
   min-height: 100vh;

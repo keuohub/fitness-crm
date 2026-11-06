@@ -111,12 +111,38 @@ export async function GET(request: NextRequest) {
              COUNT(*)::int AS cards
         FROM member_cards
        WHERE member_id = ${memberId}
-         AND status = 'active'`;
+         AND status = 'active'
+         -- 已过期的卡不能算进「卡内剩余」：
+         -- 会员 5 月就过期的卡如果还挂着 active，那 10 次余量会一直算在这儿，
+         -- 她以为自己还有 10 节，去约课却被告知卡已过期。
+         -- 正则先挡一道，避免 valid_until 里出现脏数据时整条查询报错。
+         AND (
+           valid_until IS NULL
+           OR valid_until::text !~ '^\\d{4}-\\d{1,2}-\\d{1,2}'
+           OR valid_until::date >= CURRENT_DATE
+         )`;
     cardUsed = Number(row?.used || 0);
     cardRemaining = Number(row?.remaining || 0);
     activeCardCount = Number(row?.cards || 0);
   } catch (err) {
     console.error("Query member_cards error:", err);
+  }
+
+  // 已过期的卡单独数一下：全部过期的人不该被显示成"还没有开卡"，
+  // 她开过卡、只是到期了，提示语要指向"续卡"而不是"去看看卡项"。
+  let expiredCardCount = 0;
+  try {
+    const [exp] = await rawSql`
+      SELECT COUNT(*)::int AS n
+        FROM member_cards
+       WHERE member_id = ${memberId}
+         AND status = 'active'
+         AND valid_until IS NOT NULL
+         AND valid_until::text ~ '^\\d{4}-\\d{1,2}-\\d{1,2}'
+         AND valid_until::date < CURRENT_DATE`;
+    expiredCardCount = Number(exp?.n || 0);
+  } catch (err) {
+    console.error("Query expired cards error:", err);
   }
 
   const attendedTotal = Array.from(bookingCountsMap.values()).reduce((a, b) => a + b, 0);
@@ -248,6 +274,7 @@ export async function GET(request: NextRequest) {
     // 卡内余额：会员最关心的数字，直接给出总额，不用前端再算
     cardRemaining,
     activeCardCount,
+    expiredCardCount,
 
     stage,
     isManager,

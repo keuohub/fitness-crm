@@ -26,6 +26,9 @@ Page({
     cardRemaining: 0,
     activeCardCount: 0,
     hasCard: false,
+    expiredCardCount: 0,
+    cardLabel: "还没有开卡",
+    cardCta: "还没有开卡 · 看看卡项",
     isFrozen: false,
     frozenDays: 0,
     freezeNote: "",
@@ -120,7 +123,14 @@ Page({
             courseCounts: Array.isArray(m.courseCounts) ? m.courseCounts : [],
             cardRemaining: Number(m.cardRemaining || 0),
             activeCardCount: Number(m.activeCardCount || 0),
+            expiredCardCount: Number(m.expiredCardCount || 0),
             hasCard: Number(m.activeCardCount || 0) > 0,
+            cardLabel: (Number(m.activeCardCount || 0) > 0)
+              ? "卡内剩余 · 节"
+              : (Number(m.expiredCardCount || 0) > 0 ? "卡已到期" : "还没有开卡"),
+            cardCta: (Number(m.activeCardCount || 0) > 0)
+              ? ""
+              : (Number(m.expiredCardCount || 0) > 0 ? "卡已到期 · 看看续卡" : "还没有开卡 · 看看卡项"),
             latestTrainingDate: m.lastTrainingDate ? format.formatShortDate(m.lastTrainingDate) : "",
             isManager: Boolean(m.isManager),
             managerRole: m.managerRole || ""

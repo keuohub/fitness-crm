@@ -346,6 +346,8 @@ export const venueItems = pgTable("venue_items", {
   tag: text("tag"),
   desc: text("desc"),
   imageUrl: text("image_url").notNull(),
+  /** 该空间的全部实景图（JSON 数组，第 1 张为封面）；为空时回退 imageUrl */
+  images: text("images"),
   sortOrder: integer("sort_order").default(0),
   isActive: integer("is_active").default(1),
   createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),

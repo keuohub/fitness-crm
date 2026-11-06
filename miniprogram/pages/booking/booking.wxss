@@ -1,6 +1,6 @@
 /* pages/booking/booking.wxss · BRIEF_05 landing + list（v2.2 实拍：taupe 底、24rpx 圆角卡） */
 page {
-  background: #c9c3b9;
+  background: #FDFCF9;
 }
 .bk-container {
   min-height: 100vh;

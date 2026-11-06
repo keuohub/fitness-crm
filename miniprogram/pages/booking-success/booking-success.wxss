@@ -1,7 +1,7 @@
 /* pages/booking-success/booking-success.wxss */
 .success-page {
   min-height: 100vh;
-  background-color: #f3efe8;
+  background-color: #FDFCF9;
   padding: 48rpx 36rpx calc(env(safe-area-inset-bottom) + 60rpx);
   box-sizing: border-box;
 }

@@ -141,9 +141,15 @@ Page({
       success: function(res) {
         if (res.statusCode === 200 && Array.isArray(res.data)) {
           var mapped = res.data.map(function(v) {
+            // 一个空间可以有多张实景：images[0] 是封面，点开看全部
+            var raw = (v.images && v.images.length ? v.images : (v.imageUrl ? [v.imageUrl] : []));
+            var full = raw.map(function(u) { return api.fullUrl(u); });
             return {
               id: v.id,
-              imageUrl: api.fullUrl(v.imageUrl),
+              imageUrl: full[0] || "",
+              images: full,
+              imageCount: full.length,
+              tag: v.tag || "",
               name: v.title || v.name || "空间实景",
               desc: v.desc || "",
               imgFailed: false
@@ -216,14 +222,16 @@ Page({
     });
   },
 
-  previewVenueImage: function(e) {
-    var current = e.currentTarget.dataset.src;
-    var urls = this.data.venueList.map(function(v) {
-      return v.imageUrl;
-    }).filter(Boolean);
+  // 点击某个空间：先看这个空间自己的全部实景，而不是把所有空间的图混在一起。
+  // 一个空间只有一张时，行为和普通大图预览一致。
+  previewVenueItem: function(e) {
+    var index = Number(e.currentTarget.dataset.index);
+    var item = this.data.venueList[index];
+    if (!item) return;
+    var urls = (item.images && item.images.length) ? item.images : (item.imageUrl ? [item.imageUrl] : []);
     if (!urls.length) return;
     wx.previewImage({
-      current: current,
+      current: urls[0],
       urls: urls
     });
   },

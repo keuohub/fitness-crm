@@ -1,7 +1,7 @@
 /* pages/feedback/feedback.wxss - 小桥来信 · 私享手札 */
 
 page {
-  background-color: #f3efe8;
+  background-color: #FDFCF9;
   color: var(--c-text, #222222);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
