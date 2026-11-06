@@ -19,6 +19,16 @@ page {
   --c-on-ink: #ffffff;
   --c-overlay: rgba(0, 0, 0, 0.45);
 
+  /* ===== 粉白渐变主题（参考 lululemon 一起好状态）===== */
+  --rose-deep: #C03438;
+  --rose: #DA3D41;
+  --rose-soft: #EE7472;
+  --blush: #E3B5AF;
+  --blush-2: #DFC3BF;
+  --grad-page: linear-gradient(180deg, #C03438 0%, #DA3D41 14%, #E96A67 32%, #ED9A94 50%, #EFC2BD 68%, #F9E9E5 84%, #FDFCF9 100%);
+  --card-glass: rgba(255, 255, 255, 0.95);
+  --line-rose: rgba(192, 52, 56, 0.14);
+
   --font-sans: -apple-system, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
   --font-num: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
 
@@ -435,3 +445,18 @@ button::after {
 .nav-back { width: 64rpx; height: 64rpx; display: flex; align-items: center; justify-content: center; margin-left: -12rpx; }
 .nav-back-arrow { width: 20rpx; height: 20rpx; border-left: 4rpx solid #111111; border-bottom: 4rpx solid #111111; transform: rotate(45deg); margin-left: 8rpx; }
 .nav-gap { height: 16px; }
+
+
+/* ── 粉白渐变固定底图：蜕变 / 账户两页共用 ──
+   参考图整页就是这条渐变：尘粉 → 珊瑚 → 绛红。
+   内容区浮在白卡上，hero 文字直接压在绛红上，这就是颜色对撞。 */
+.page-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+  background: var(--grad-page);
+  pointer-events: none;
+}

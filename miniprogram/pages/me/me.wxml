@@ -1,120 +1,132 @@
 <view class="me-page">
-  <view style="height: {{nav.navBottom + 16}}px;"></view>
+  <!-- 绛红 hero：参考图的底色，白字压红，下缘被白卡叠住形成对撞 -->
+  <view class="me-hero">
+    <view style="height: {{nav.navBottom + 16}}px;"></view>
 
-  <view wx:if="{{loading}}" class="me-loading">
-    <text class="me-loading-text">正在打开你的账户…</text>
+    <view wx:if="{{loading}}" class="me-loading">
+      <text class="me-loading-text">正在打开你的账户…</text>
+    </view>
+
+    <block wx:else>
+      <state-view wx:if="{{loadError}}" type="error" icon="wifi" title="没连上网络" desc="检查一下网络，再试一次" actionText="重新加载" bindaction="onRetry" compact="{{true}}" />
+
+      <!-- 顶部：一句话说清她是谁 -->
+      <view class="me-header">
+        <view class="me-avatar-wrap" bindtap="handleAvatarTap">
+          <image wx:if="{{avatarUrl}}" class="me-avatar" src="{{avatarUrl}}" mode="aspectFill" binderror="onAvatarError" />
+          <text wx:else class="me-avatar-placeholder">{{initial || '你'}}</text>
+          <view class="me-avatar-plus"></view>
+        </view>
+        <view class="me-header-info">
+          <text class="me-greeting">你好{{memberName ? '，' + memberName : ''}}</text>
+          <text class="me-header-sub" wx:if="{{memberCode || joinDaysText}}">{{memberCode ? '卡号 ' + memberCode : ''}}{{memberCode && joinDaysText ? ' · ' : ''}}{{joinDaysText ? '相伴 ' + joinDaysText : ''}}{{isFrozen ? '（停卡中）' : ''}}</text>
+          <text class="me-header-sub" wx:if="{{mentorName}}">导师 {{mentorName}}</text>
+        </view>
+      </view>
+    </block>
   </view>
 
-  <block wx:else>
-
+  <block wx:if="{{!loading}}">
     <state-view wx:if="{{loadError}}" type="error" icon="wifi" title="没连上网络" desc="检查一下网络，再试一次" actionText="重新加载" bindaction="onRetry" compact="{{true}}" />
 
-    <!-- 顶部头像与问候语 -->
-    <view class="me-header">
-      <view class="me-avatar-wrap" bindtap="handleAvatarTap">
-        <image wx:if="{{avatarUrl}}" class="me-avatar" src="{{avatarUrl}}" mode="aspectFill" binderror="onAvatarError" />
-        <text wx:else class="me-avatar-placeholder">{{initial || '你'}}</text>
-        <view class="me-avatar-plus"></view>
-      </view>
-      <view class="me-header-info">
-        <text class="me-greeting">你好{{memberName ? '，' + memberName : ''}}</text>
-        <view class="me-meta-tags">
-          <text class="me-tag" wx:if="{{memberCode}}">{{memberCodeText}}</text>
-          <text class="me-tag" wx:if="{{status && statusText}}">{{statusText}}</text>
-          <text class="me-tag {{isFrozen ? 'me-tag-frozen' : ''}}" wx:if="{{joinDays && joinDaysText}}">相伴 {{joinDaysText}}{{isFrozen ? ' · 停卡中' : ''}}</text>
-          <text class="me-tag" wx:if="{{mentorName}}">导师：{{mentorName}}</text>
-          <text class="me-tag" wx:if="{{joinedAt}}">入会：{{joinedAtText}}</text>
+    <view class="me-body">
+      <!-- 下一节课：白卡叠在 hero 下缘 -->
+      <next-class id="nextClass" />
+
+      <!-- 管理员入口 -->
+      <view wx:if="{{isManager}}" class="me-manager-row" bindtap="goManager">
+        <view class="me-manager-left">
+          <text class="me-manager-title">进入手机端管家工作台</text>
+          <text class="me-manager-desc">预约 · 排课 · 会员管理</text>
         </view>
-      </view>
-    </view>
-
-    <!-- 顶部下一节课提醒卡片（完整模式） -->
-    <next-class id="nextClass" />
-
-    <!-- 管理员专享入口 (黑底白字整行) -->
-    <view wx:if="{{isManager}}" class="me-manager-row" bindtap="goManager">
-      <view class="me-manager-left">
-        <text class="me-manager-title">进入手机端管家工作台</text>
-        <text class="me-manager-desc">预约 · 排课 · 会员管理</text>
-      </view>
-      <text class="me-manager-arrow">›</text>
-    </view>
-
-    <!-- 训练数据（累计节数 + 卡内剩余） -->
-    <view class="me-section">
-      <view class="me-section-head">
-        <text class="me-section-title">我的训练</text>
+        <text class="me-manager-arrow">›</text>
       </view>
 
-      <view class="me-stat-grid">
-        <view class="me-stat-cell">
-          <text class="me-stat-num">{{totalHours}}</text>
-          <text class="me-stat-label">累计上课 · 节</text>
+      <!-- 我的训练 -->
+      <view class="me-section">
+        <view class="me-section-head">
+          <text class="me-section-title">我的训练</text>
+          <text class="me-section-en">TRAINING</text>
         </view>
-        <view class="me-stat-divider"></view>
-        <view class="me-stat-cell">
-          <text class="me-stat-num {{hasCard ? '' : 'me-stat-num-muted'}}">{{hasCard ? cardRemaining : '—'}}</text>
-          <text class="me-stat-label">{{cardLabel}}</text>
+
+        <view class="me-stat-grid">
+          <view class="me-stat-cell">
+            <text class="me-stat-num">{{totalHours}}</text>
+            <text class="me-stat-label">累计上课 · 节</text>
+          </view>
+          <view class="me-stat-divider"></view>
+          <view class="me-stat-cell">
+            <text class="me-stat-num {{hasCard ? '' : 'me-stat-num-muted'}}">{{hasCard ? cardRemaining : '—'}}</text>
+            <text class="me-stat-label">{{cardLabel}}</text>
+          </view>
         </view>
-      </view>
 
-      <text class="me-total-note" wx:if="{{latestTrainingDate}}">最近一次 · {{latestTrainingDate}}</text>
+        <view class="me-course-grid" wx:if="{{courseCounts.length > 0}}">
+          <view class="me-course-cell" wx:for="{{courseCounts}}" wx:key="key">
+            <view class="me-course-num-row">
+              <text class="me-course-num">{{item.count}}</text>
+              <text class="me-course-unit">节</text>
+            </view>
+            <text class="me-course-name">{{item.label}}</text>
+          </view>
+        </view>
 
-      <view class="me-freeze-note" wx:if="{{freezeNote}}">
-        <text>{{freezeNote}}</text>
-      </view>
+        <text class="me-total-note" wx:if="{{latestTrainingDate}}">最近一次 · {{latestTrainingDate}}</text>
 
-      <view class="me-course-list" wx:if="{{courseCounts.length > 0}}">
-        <view class="list-row" wx:for="{{courseCounts}}" wx:key="key">
-          <text class="me-course-name">{{item.label}}</text>
-          <text class="me-course-count">{{item.count}} 节</text>
+        <view class="me-freeze-note" wx:if="{{freezeNote}}">
+          <text>{{freezeNote}}</text>
+        </view>
+
+        <view class="me-nocard-cta" wx:if="{{cardCta}}" bindtap="goCards">
+          <text class="me-nocard-text">{{cardCta}}</text>
+          <view class="list-row__arrow"></view>
         </view>
       </view>
 
-      <view class="me-nocard-cta" wx:if="{{cardCta}}" bindtap="goCards">
-        <text class="me-nocard-text">{{cardCta}}</text>
-        <view class="list-row__arrow"></view>
+      <!-- 菜单：按意图分三组，退出登录沉底弱化 -->
+      <view class="me-section me-menu-section">
+        <view class="me-group-label">会员服务</view>
+        <view class="me-menu-card">
+          <view class="list-row" bindtap="goMyBookings">
+            <text class="me-menu-title">我的预约</text>
+            <view class="list-row__arrow"></view>
+          </view>
+          <view class="list-row" bindtap="goCards">
+            <text class="me-menu-title">我的卡</text>
+            <view class="list-row__arrow"></view>
+          </view>
+          <view class="list-row" bindtap="goNotes">
+            <text class="me-menu-title">课后记录</text>
+            <view class="list-row__arrow"></view>
+          </view>
+        </view>
+
+        <view class="me-group-label">与小桥</view>
+        <view class="me-menu-card">
+          <view class="list-row" bindtap="goLetters">
+            <text class="me-menu-title">小桥的来信</text>
+            <view class="list-row__arrow"></view>
+          </view>
+          <view class="list-row" bindtap="copyConciergeWechat">
+            <text class="me-menu-title">添加小桥微信</text>
+            <view class="list-row__arrow"></view>
+          </view>
+        </view>
+
+        <view class="me-group-label">关于</view>
+        <view class="me-menu-card">
+          <view class="list-row" bindtap="goToBrand">
+            <text class="me-menu-title">了解徕舞</text>
+            <view class="list-row__arrow"></view>
+          </view>
+          <view class="list-row me-logout-row" bindtap="handleLogout">
+            <text class="me-menu-title me-logout-text">退出登录</text>
+            <view class="list-row__arrow"></view>
+          </view>
+        </view>
       </view>
+
+      <view class="me-bottom-space"></view>
     </view>
-
-    <!-- 列表行导航 -->
-    <view class="me-section me-menu-section">
-      <view class="list-row" bindtap="goMyBookings">
-        <text class="me-menu-title">我的预约</text>
-        <view class="list-row__arrow"></view>
-      </view>
-
-      <view class="list-row" bindtap="goCards">
-        <text class="me-menu-title">我的卡</text>
-        <view class="list-row__arrow"></view>
-      </view>
-
-      <view class="list-row" bindtap="goNotes">
-        <text class="me-menu-title">课后记录</text>
-        <view class="list-row__arrow"></view>
-      </view>
-
-      <view class="list-row" bindtap="goLetters">
-        <text class="me-menu-title">小桥的来信</text>
-        <view class="list-row__arrow"></view>
-      </view>
-
-      <view class="list-row" bindtap="goToBrand">
-        <text class="me-menu-title">了解徕舞</text>
-        <view class="list-row__arrow"></view>
-      </view>
-
-      <view class="list-row" bindtap="copyConciergeWechat">
-        <text class="me-menu-title">添加小桥微信</text>
-        <view class="list-row__arrow"></view>
-      </view>
-
-      <view class="list-row me-logout-row" bindtap="handleLogout">
-        <text class="me-menu-title me-logout-text">退出登录</text>
-        <view class="list-row__arrow"></view>
-      </view>
-    </view>
-
-    <view class="me-bottom-space"></view>
   </block>
 </view>

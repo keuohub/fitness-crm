@@ -1,123 +1,132 @@
 /* pages/transformation/transformation.wxss
-   成长板块 · lululemon 规范
-   直角体态照 · #F4F2ED 底块 · 无序号装饰
+   我的蜕变 · 粉白渐变主题（与「我的账户」同一套）
+   绛红 hero 压顶（白字）→ 奶油白正文（墨字）→ 白玻璃卡片
+   课程数字与按钮统一绛红 #C03438
    ============================================================ */
 
 page {
   background-color: #FDFCF9;
-  color: #000000;
+  color: #1A1A1A;
   font-family: var(--font-sans);
   min-height: 100vh;
   box-sizing: border-box;
 }
 
 .tf-page {
-  padding: 0 40rpx;
-  box-sizing: border-box;
+  min-height: 100vh;
 }
 
-.tf-loading,
-.tf-error {
-  padding: 80rpx 0;
+/* ── hero：绛红压顶 ──
+   渐变取自参考图实测色，与 me 页完全一致。 */
+.tf-hero {
+  margin: 0;
+  padding: 0 40rpx 110rpx;
+  background: linear-gradient(180deg, #B92E32 0%, #C93337 42%, #E96A67 80%, #E3B5AF 100%);
+}
+
+.tf-loading {
+  padding: 60rpx 0 20rpx;
   text-align: center;
 }
 
 .tf-loading-text {
   font-size: 26rpx;
-  color: #54555b;
+  color: rgba(255, 255, 255, 0.9);
 }
 
-.tf-error-text {
-  font-size: 26rpx;
-  color: #54555b;
-}
-
-/* 顶部 */
-.tf-hero {
-  padding-bottom: 32rpx;
+.tf-hero-head {
+  padding-top: 16rpx;
 }
 
 .tf-name-row {
   display: flex;
   align-items: baseline;
   gap: 12rpx;
-  margin-bottom: 8rpx;
+  margin-bottom: 10rpx;
 }
 
 .tf-name {
-  font-size: 40rpx;
-  font-weight: 600;
-  color: #000000;
+  font-size: 46rpx;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 1rpx;
 }
 
 .tf-honorific {
   font-size: 28rpx;
-  color: #54555b;
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .tf-days {
-  font-size: 26rpx;
-  color: #54555b;
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 0.5rpx;
 }
 
-/* 核心数字 */
+/* ── 正文：白卡浮层，向上叠住 hero 下缘 ── */
+.tf-body {
+  position: relative;
+  margin-top: -64rpx;
+  padding: 0 40rpx;
+}
+
+/* 训练档案主卡 */
 .tf-total-card {
-  padding: 32rpx;
-  margin-bottom: 24rpx;
+  padding: 36rpx 34rpx;
+  background: var(--card-glass);
+  border-radius: 28rpx;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 10rpx 30rpx rgba(150, 45, 48, 0.10);
   box-sizing: border-box;
+  margin-bottom: 16rpx;
 }
 
 .tf-total-label {
-  font-size: 24rpx;
-  color: #54555b;
+  font-size: 23rpx;
+  color: #6B6B6B;
+  letter-spacing: 0.5rpx;
   display: block;
-  margin-bottom: 8rpx;
+  margin-bottom: 10rpx;
 }
 
 .tf-total-row {
   display: flex;
   align-items: baseline;
   gap: 8rpx;
-  margin-bottom: 8rpx;
+  margin-bottom: 10rpx;
 }
 
 .tf-total-num {
-  font-family: var(--font-num);
-  font-size: 72rpx;
-  font-weight: 600;
-  color: #000000;
-  line-height: 1;
+  color: #1A1A1A;
+  font-weight: 700;
 }
 
 .tf-total-unit {
   font-size: 28rpx;
-  color: #000000;
+  color: #1A1A1A;
 }
 
 .tf-total-note {
   font-size: 22rpx;
-  color: #999999;
+  color: #9A9A9A;
   display: block;
 }
 
-/* 四类课 */
+/* 四类课：2×2 小卡（全部课程，绛红数字） */
 .tf-course-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: 1fr 1fr;
   gap: 16rpx;
   margin-bottom: 48rpx;
 }
 
 .tf-course-card {
-  padding: 24rpx;
+  background: var(--card-glass);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 22rpx;
+  padding: 24rpx 26rpx;
+  box-shadow: 0 6rpx 18rpx rgba(150, 45, 48, 0.07);
   box-sizing: border-box;
-}
-
-.tf-course-name {
-  font-size: 26rpx;
-  color: #54555b;
-  display: block;
-  margin-bottom: 8rpx;
 }
 
 .tf-course-num-row {
@@ -129,49 +138,83 @@ page {
 .tf-course-num {
   font-family: var(--font-num);
   font-size: 40rpx;
-  font-weight: 600;
-  color: #000000;
+  font-weight: 700;
+  color: #C03438;
+  line-height: 1;
 }
 
 .tf-course-unit {
+  font-size: 22rpx;
+  color: #6B6B6B;
+}
+
+.tf-course-name {
   font-size: 24rpx;
-  color: #000000;
+  color: #1A1A1A;
+  margin-top: 10rpx;
+  display: block;
 }
 
 /* 区块通用 */
 .tf-section {
-  margin-bottom: 56rpx;
+  margin-bottom: 52rpx;
 }
 
 .tf-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
   margin-bottom: 20rpx;
+  padding: 0 6rpx;
 }
 
-/* 角度切换 Tab */
+.tf-section-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #1A1A1A;
+  letter-spacing: 1rpx;
+}
+
+.tf-section-en {
+  font-size: 20rpx;
+  color: #C03438;
+  letter-spacing: 3rpx;
+  font-weight: 600;
+}
+
+/* 角度切换 Tab：白玻璃未选 · 绛红选中 */
 .tf-angle-tabs {
   display: flex;
-  gap: 16rpx;
+  gap: 14rpx;
   margin-bottom: 24rpx;
 }
 
 .tf-angle-tab {
   font-size: 24rpx;
-  color: #54555b;
-  padding: 8rpx 24rpx;
+  color: #1A1A1A;
+  padding: 12rpx 28rpx;
   border-radius: 999rpx;
-  background: #F4F2ED;
+  background: var(--card-glass);
+  border: 1px solid rgba(227, 181, 175, 0.4);
+  box-sizing: border-box;
 }
 
 .tf-angle-tab-active {
   color: #ffffff;
-  background: #000000;
-  font-weight: 500;
+  background: #C03438;
+  border-color: #C03438;
+  font-weight: 600;
+  box-shadow: 0 8rpx 20rpx rgba(192, 52, 56, 0.28);
 }
 
-/* 体态对比卡片：直角、并排、标签黑底白字小胶囊 */
+/* 体态对比卡片：白玻璃、并排、标签胶囊压图 */
 .tf-compare-card {
   padding: 24rpx;
   margin-bottom: 24rpx;
+  background: var(--card-glass);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 24rpx;
+  box-shadow: 0 8rpx 24rpx rgba(150, 45, 48, 0.08);
   box-sizing: border-box;
 }
 
@@ -184,8 +227,9 @@ page {
   flex: 1;
   position: relative;
   overflow: hidden;
-  height: calc((100vw - 112rpx) / 2 * 4 / 3);
-  background: #ffffff;
+  height: calc((100vw - 152rpx) / 2 * 4 / 3);
+  background: #F7ECEA;
+  border-radius: 14rpx;
 }
 
 .tf-compare-img {
@@ -193,7 +237,7 @@ page {
   height: 100%;
   object-fit: cover;
   display: block;
-  border-radius: 0;
+  border-radius: 14rpx;
 }
 
 .tf-compare-tag {
@@ -213,10 +257,11 @@ page {
   right: 12rpx;
   font-size: 20rpx;
   color: #ffffff;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(20, 10, 10, 0.45);
   padding: 4rpx 10rpx;
   z-index: 2;
   text-align: center;
+  border-radius: 10rpx;
 }
 
 .tf-compare-analysis {
@@ -224,12 +269,12 @@ page {
   margin-top: 16rpx;
   font-size: 26rpx;
   line-height: 1.6;
-  color: #000000;
+  color: #1A1A1A;
 }
 
 .tf-empty-compare-text {
   font-size: 24rpx;
-  color: #54555b;
+  color: #6B6B6B;
   line-height: 1.6;
   display: block;
 }
@@ -242,21 +287,26 @@ page {
 }
 
 .tf-note-card {
-  padding: 24rpx;
+  padding: 28rpx;
+  background: var(--card-glass);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 24rpx;
+  box-shadow: 0 8rpx 24rpx rgba(150, 45, 48, 0.08);
   box-sizing: border-box;
 }
 
 .tf-note-date {
   font-size: 22rpx;
-  color: #999999;
+  color: #B98A87;
   font-family: var(--font-num);
   display: block;
-  margin-bottom: 8rpx;
+  margin-bottom: 10rpx;
+  letter-spacing: 1rpx;
 }
 
 .tf-note-content {
   font-size: 26rpx;
-  color: #000000;
+  color: #1A1A1A;
   line-height: 1.6;
   display: block;
   margin-bottom: 8rpx;
@@ -264,86 +314,120 @@ page {
 
 .tf-note-tags {
   font-size: 22rpx;
-  color: #54555b;
+  color: #C03438;
   display: block;
 }
 
 .tf-empty {
-  padding: 48rpx 24rpx;
+  padding: 48rpx 28rpx;
 }
 
 .tf-empty-title {
   font-size: 28rpx;
-  font-weight: 500;
-  color: #000000;
-  margin-bottom: 8rpx;
+  font-weight: 600;
+  color: #1A1A1A;
+  margin-bottom: 10rpx;
+  display: block;
 }
 
 .tf-empty-body {
   font-size: 24rpx;
-  color: #54555b;
+  color: #6B6B6B;
   line-height: 1.5;
 }
 
 /* 跟小桥说句话 */
 .tf-reply-card {
-  padding: 24rpx;
+  padding: 28rpx;
   margin-bottom: 24rpx;
+  background: var(--card-glass);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 24rpx;
+  box-shadow: 0 8rpx 24rpx rgba(150, 45, 48, 0.08);
   box-sizing: border-box;
 }
 
 .tf-reply-label {
   font-size: 22rpx;
-  color: #999999;
+  color: #B98A87;
   display: block;
-  margin-bottom: 8rpx;
+  margin-bottom: 10rpx;
+  letter-spacing: 1rpx;
 }
 
 .tf-reply-text {
   font-size: 26rpx;
-  color: #000000;
+  color: #1A1A1A;
   line-height: 1.6;
   display: block;
 }
 
+/* 心情标签：腮粉未选 · 绛红选中 */
 .tf-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 12rpx;
+  gap: 14rpx;
   margin-bottom: 20rpx;
 }
 
+.tf-feel-tag {
+  font-size: 24rpx;
+  color: #1A1A1A;
+  padding: 12rpx 28rpx;
+  border-radius: 999rpx;
+  background: var(--card-glass);
+  border: 1px solid rgba(227, 181, 175, 0.4);
+  box-sizing: border-box;
+}
+
+.tf-feel-tag-active {
+  color: #ffffff;
+  background: #C03438;
+  border-color: #C03438;
+  font-weight: 600;
+  box-shadow: 0 8rpx 20rpx rgba(192, 52, 56, 0.28);
+}
+
+/* 输入框：白底、腮粉描边 */
 .tf-textarea {
   width: 100%;
   height: 180rpx;
-  padding: 20rpx;
-  border: 1px solid #EFEDE7;
-  border-radius: 4rpx;
+  padding: 22rpx;
+  border: 1px solid rgba(227, 181, 175, 0.55);
+  border-radius: 20rpx;
   font-size: 26rpx;
   box-sizing: border-box;
   margin-bottom: 20rpx;
   background: #ffffff;
+  color: #1A1A1A;
 }
 
 .tf-placeholder {
-  color: #999999;
+  color: #B98A87;
 }
 
+/* 发给小桥：绛红胶囊（覆盖全局黑色按钮） */
 .tf-submit {
   width: 100%;
   height: 88rpx;
   line-height: 88rpx;
+  background: #C03438;
+  box-shadow: 0 10rpx 26rpx rgba(192, 52, 56, 0.32);
+}
+
+.tf-submit[disabled] {
+  opacity: 0.6;
 }
 
 .tf-receipt {
   display: block;
   margin-top: 16rpx;
   font-size: 24rpx;
-  color: #54555b;
+  color: #6B6B6B;
   line-height: 1.5;
   text-align: center;
 }
 
 .tf-bottom-space {
-  height: calc(104rpx + 16rpx + env(safe-area-inset-bottom) + 40rpx);
+  height: calc(104rpx + 28rpx + env(safe-area-inset-bottom) + 40rpx);
 }

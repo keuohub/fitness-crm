@@ -1,6 +1,6 @@
 /* pages/me/me.wxss
-   我的账户 · 女子塑形高奢温润版（Cin v3 规范）
-   暖米底色 · 胭脂玫瑰主色 · 柔和圆角 · 典藏管家入口
+   我的账户 · 粉白渐变主题（参考 lululemon「一起好状态」）
+   绛红 hero 压顶（白字）→ 奶油白正文（墨字）→ 白玻璃卡片
    ============================================================ */
 
 page {
@@ -12,32 +12,34 @@ page {
 }
 
 .me-page {
-  padding: 0 40rpx;
-  box-sizing: border-box;
+  min-height: 100vh;
 }
 
-.me-loading,
-.me-error {
-  padding: 80rpx 0;
+/* ── hero：绛红压顶 ──
+   渐变取自参考图实测色：#B92E32 → #C93337 → #E96A67 → #E3B5AF。
+   白字只出现在深红区，往下自然过渡到腮粉，再接奶油白正文。 */
+.me-hero {
+  margin: 0;
+  padding: 0 40rpx 110rpx;
+  background: linear-gradient(180deg, #B92E32 0%, #C93337 42%, #E96A67 80%, #E3B5AF 100%);
+}
+
+.me-loading {
+  padding: 60rpx 0 20rpx;
   text-align: center;
 }
 
 .me-loading-text {
   font-size: 26rpx;
-  color: #6B6B6B;
+  color: rgba(255, 255, 255, 0.9);
 }
 
-.me-error-text {
-  font-size: 26rpx;
-  color: #6B6B6B;
-}
-
-/* 顶部头像与问候语 */
+/* 顶部头像与问候语（白字） */
 .me-header {
   display: flex;
   align-items: center;
   gap: 28rpx;
-  padding-bottom: 40rpx;
+  padding-top: 16rpx;
 }
 
 .me-avatar-wrap {
@@ -45,7 +47,6 @@ page {
   height: 108rpx;
   position: relative;
   flex-shrink: 0;
-  cursor: pointer;
 }
 
 .me-avatar {
@@ -54,24 +55,23 @@ page {
   border-radius: 50%;
   object-fit: cover;
   display: block;
-  box-shadow: 0 0 0 4rpx #F0EEE8, 0 6rpx 16rpx rgba(26, 26, 26, 0.08);
+  box-shadow: 0 0 0 4rpx rgba(255, 255, 255, 0.55), 0 8rpx 20rpx rgba(0, 0, 0, 0.18);
 }
 
 .me-avatar-placeholder {
   width: 108rpx;
   height: 108rpx;
   border-radius: 50%;
-  background: #F0EEE8;
-  color: #1A1A1A;
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
   font-size: 40rpx;
   font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 0 4rpx #F0EEE8;
+  box-shadow: 0 0 0 4rpx rgba(255, 255, 255, 0.55);
 }
 
-/* 头像右下小圆「+」 */
 .me-avatar-plus {
   position: absolute;
   right: -4rpx;
@@ -79,13 +79,12 @@ page {
   width: 34rpx;
   height: 34rpx;
   border-radius: 50%;
-  background: #1A1A1A;
-  border: 3rpx solid #ffffff;
+  background: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.18);
 }
 
 .me-avatar-plus::before {
@@ -93,7 +92,7 @@ page {
   position: absolute;
   width: 14rpx;
   height: 2rpx;
-  background: #ffffff;
+  background: #C03438;
 }
 
 .me-avatar-plus::after {
@@ -101,7 +100,7 @@ page {
   position: absolute;
   width: 2rpx;
   height: 14rpx;
-  background: #ffffff;
+  background: #C03438;
 }
 
 .me-header-info {
@@ -110,44 +109,39 @@ page {
 }
 
 .me-greeting {
-  font-size: 40rpx;
-  font-weight: 600;
-  color: #1A1A1A;
+  font-size: 42rpx;
+  font-weight: 700;
+  color: #ffffff;
   display: block;
-  margin-bottom: 12rpx;
+  margin-bottom: 10rpx;
+  letter-spacing: 1rpx;
+}
+
+.me-header-sub {
+  font-size: 23rpx;
+  color: rgba(255, 255, 255, 0.85);
+  display: block;
+  line-height: 1.7;
   letter-spacing: 0.5rpx;
 }
 
-.me-meta-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10rpx;
+/* ── 正文：白卡浮层，向上叠住 hero 下缘 ── */
+.me-body {
+  position: relative;
+  margin-top: -64rpx;
+  padding: 0 40rpx;
 }
 
-.me-tag {
-  font-size: 22rpx;
-  color: #1A1A1A;
-  background: #F0EEE8;
-  padding: 4rpx 16rpx;
-  border-radius: 999rpx;
-  line-height: 1.4;
-  font-weight: 500;
-}
-
-/* 管理员专享入口（纯黑质感卡，不掺任何酒红/金） */
+/* 管理员入口（墨黑卡，压在腮粉过渡带上） */
 .me-manager-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 28rpx 32rpx;
   background: linear-gradient(135deg, #232323 0%, #141414 100%);
-  border: 1px solid rgba(26, 26, 26, 0.06);
   border-radius: 24rpx;
-  margin-top: 24rpx;
-  margin-bottom: 32rpx;
-  box-shadow: 0 10rpx 28rpx rgba(0, 0, 0, 0.16);
-  cursor: pointer;
-  transition: transform 0.15s ease;
+  margin-bottom: 36rpx;
+  box-shadow: 0 10rpx 28rpx rgba(120, 30, 32, 0.18);
 }
 
 .me-manager-row:active {
@@ -163,106 +157,57 @@ page {
 .me-manager-title {
   font-size: 28rpx;
   font-weight: 600;
-  color: #EDEAE3;
+  color: #ffffff;
   letter-spacing: 1rpx;
 }
 
 .me-manager-desc {
   font-size: 22rpx;
-  color: rgba(26, 26, 26, 0.12);
+  color: rgba(255, 255, 255, 0.55);
 }
 
 .me-manager-arrow {
   font-size: 36rpx;
-  color: #EDEAE3;
+  color: rgba(255, 255, 255, 0.8);
   font-weight: 300;
 }
 
 /* 训练数据 */
 .me-section {
-  margin-bottom: 40rpx;
+  margin-bottom: 44rpx;
 }
 
 .me-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
   margin-bottom: 20rpx;
+  padding: 0 6rpx;
 }
 
 .me-section-title {
   font-size: 32rpx;
-  font-weight: 600;
+  font-weight: 700;
   color: #1A1A1A;
-  letter-spacing: 0.5rpx;
-}
-
-.me-total-block {
-  padding: 36rpx;
-  background: #ffffff;
-  border-radius: 28rpx;
-  border: 1px solid #F2F0EA;
-  box-shadow: 0 8rpx 24rpx rgba(26, 26, 26, 0.04);
-  box-sizing: border-box;
-}
-
-.me-total-label {
-  font-size: 24rpx;
-  color: #6B6B6B;
-  display: block;
-  margin-bottom: 12rpx;
   letter-spacing: 1rpx;
 }
 
-.me-total-num-wrap {
-  display: flex;
-  align-items: baseline;
-  gap: 8rpx;
-  margin-bottom: 12rpx;
-}
-
-.me-total-num {
-  font-family: var(--font-num);
-  font-size: 80rpx;
+.me-section-en {
+  font-size: 20rpx;
+  color: #C03438;
+  letter-spacing: 3rpx;
   font-weight: 600;
-  color: #1A1A1A;
-  line-height: 1;
 }
 
-.me-total-unit {
-  font-size: 28rpx;
-  color: #1A1A1A;
-  font-weight: 500;
-}
-
-.me-total-note {
-  font-size: 23rpx;
-  color: #9A9A9A;
-  display: block;
-}
-
-/* 停卡中：把粉色标签压成中性灰，避免"相伴 · 停卡中"看起来像营销徽章 */
-.me-tag-frozen {
-  color: #6B6B6B;
-  background: #ece7e0;
-}
-
-.me-freeze-note {
-  margin-top: 16rpx;
-  padding: 18rpx 22rpx;
-  background: #f4f1ec;
-  border-radius: 16rpx;
-  font-size: 23rpx;
-  color: #6B6B6B;
-  line-height: 1.6;
-}
-
-/* ── 我的训练：双栏数字（累计上课 / 卡内剩余）── */
+/* 双栏数字 */
 .me-stat-grid {
   display: flex;
   align-items: stretch;
   padding: 40rpx 24rpx;
-  background: #ffffff;
+  background: var(--card-glass);
   border-radius: 28rpx;
-  border: 1px solid #F2F0EA;
-  box-shadow: 0 8rpx 24rpx rgba(26, 26, 26, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 10rpx 30rpx rgba(150, 45, 48, 0.10);
   box-sizing: border-box;
 }
 
@@ -276,20 +221,20 @@ page {
 
 .me-stat-divider {
   width: 1rpx;
-  background: linear-gradient(180deg, rgba(244, 242, 237, 0) 0%, #F2F0EA 50%, rgba(244, 242, 237, 0) 100%);
+  background: linear-gradient(180deg, rgba(227, 181, 175, 0) 0%, #E3B5AF 50%, rgba(227, 181, 175, 0) 100%);
   margin: 6rpx 8rpx;
 }
 
 .me-stat-num {
   font-family: var(--font-num);
   font-size: 68rpx;
-  font-weight: 600;
+  font-weight: 700;
   color: #1A1A1A;
   line-height: 1.1;
 }
 
 .me-stat-num-muted {
-  color: #cbb9bb;
+  color: #D9B8B4;
 }
 
 .me-stat-label {
@@ -299,51 +244,104 @@ page {
   margin-top: 10rpx;
 }
 
+/* 四类课：2×2 小卡，恢复全部课程 */
+.me-course-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16rpx;
+  margin-top: 16rpx;
+}
+
+.me-course-cell {
+  background: var(--card-glass);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 22rpx;
+  padding: 24rpx 26rpx;
+  box-shadow: 0 6rpx 18rpx rgba(150, 45, 48, 0.07);
+  box-sizing: border-box;
+}
+
+.me-course-num-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6rpx;
+}
+
+.me-course-num {
+  font-family: var(--font-num);
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #C03438;
+  line-height: 1;
+}
+
+.me-course-unit {
+  font-size: 22rpx;
+  color: #6B6B6B;
+}
+
+.me-course-name {
+  font-size: 24rpx;
+  color: #1A1A1A;
+  margin-top: 10rpx;
+  display: block;
+}
+
+.me-total-note {
+  font-size: 23rpx;
+  color: #9A9A9A;
+  display: block;
+  margin-top: 16rpx;
+  padding: 0 6rpx;
+}
+
+.me-freeze-note {
+  margin-top: 16rpx;
+  padding: 18rpx 22rpx;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(192, 52, 56, 0.16);
+  border-radius: 16rpx;
+  font-size: 23rpx;
+  color: #A8433F;
+  line-height: 1.6;
+}
+
 .me-nocard-cta {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-top: 16rpx;
   padding: 26rpx 28rpx;
-  background: #ffffff;
-  border: 1px dashed #e4d3cb;
+  background: var(--card-glass);
+  border: 1px dashed rgba(192, 52, 56, 0.4);
   border-radius: 24rpx;
 }
 
 .me-nocard-text {
   font-size: 26rpx;
-  color: #1A1A1A;
+  color: #C03438;
+  font-weight: 600;
   letter-spacing: 0.5rpx;
 }
 
-.me-course-list {
-  background: #ffffff;
-  border-radius: 24rpx;
-  border: 1px solid #F2F0EA;
-  margin-top: 16rpx;
-  overflow: hidden;
-  box-shadow: 0 6rpx 18rpx rgba(26, 26, 26, 0.03);
-}
-
-.me-course-name {
-  font-size: 28rpx;
-  color: #1A1A1A;
-}
-
-.me-course-count {
-  font-family: var(--font-num);
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #1A1A1A;
-}
-
-/* 列表行导航菜单 */
+/* ── 菜单：三组，白卡分组 ── */
 .me-menu-section {
-  background: #ffffff;
-  border-radius: 28rpx;
-  border: 1px solid #F2F0EA;
+  margin-bottom: 44rpx;
+}
+
+.me-group-label {
+  font-size: 22rpx;
+  color: #B98A87;
+  letter-spacing: 3rpx;
+  margin: 26rpx 6rpx 12rpx;
+}
+
+.me-menu-card {
+  background: var(--card-glass);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 24rpx;
   overflow: hidden;
-  box-shadow: 0 8rpx 24rpx rgba(26, 26, 26, 0.04);
+  box-shadow: 0 8rpx 24rpx rgba(150, 45, 48, 0.08);
 }
 
 .list-row {
@@ -351,7 +349,7 @@ page {
   align-items: center;
   justify-content: space-between;
   padding: 32rpx;
-  border-bottom: 1px solid #FDFCF9;
+  border-bottom: 1px solid rgba(227, 181, 175, 0.22);
   box-sizing: border-box;
   transition: background-color 0.15s ease;
 }
@@ -361,7 +359,7 @@ page {
 }
 
 .list-row:active {
-  background-color: #fdfaf7;
+  background-color: rgba(239, 194, 189, 0.18);
 }
 
 .me-menu-title {
@@ -373,18 +371,17 @@ page {
 .list-row__arrow {
   width: 14rpx;
   height: 14rpx;
-  border-top: 2px solid #D8D5CE;
-  border-right: 2px solid #D8D5CE;
+  border-top: 2px solid #DBAEAA;
+  border-right: 2px solid #DBAEAA;
   transform: rotate(45deg);
 }
 
 .me-logout-row {
-  margin-top: 8rpx;
-  border-top: 1px solid #FDFCF9;
+  border-top: 1px solid rgba(227, 181, 175, 0.22);
 }
 
 .me-logout-text {
-  color: #9A9A9A !important;
+  color: #B98A87 !important;
   font-size: 26rpx;
 }
 
