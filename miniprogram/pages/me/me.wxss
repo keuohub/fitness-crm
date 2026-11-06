@@ -20,8 +20,8 @@ page {
    白字只出现在深红区，往下自然过渡到腮粉，再接奶油白正文。 */
 .me-hero {
   margin: 0;
-  padding: 0 40rpx 110rpx;
-  background: linear-gradient(180deg, #B92E32 0%, #C93337 42%, #E96A67 80%, #E3B5AF 100%);
+  padding: 0 40rpx 170rpx;
+  background: linear-gradient(180deg, #B92E32 0%, #C93337 36%, #E96A67 62%, #E3B5AF 80%, #F7E3DF 90%, #FDFCF9 100%);
 }
 
 .me-loading {

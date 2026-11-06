@@ -159,7 +159,7 @@ page {
   object-fit: cover;
   display: block;
   border-radius: 0;
-  background-color: #efeae2;
+  background-color: #F7ECEA;
 }
 
 .mentor-meta {
@@ -200,7 +200,7 @@ page {
   object-fit: cover;
   display: block;
   border-radius: 0;
-  background-color: #efeae2;
+  background-color: #F7ECEA;
 }
 
 .offering-content {

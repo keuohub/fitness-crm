@@ -1,6 +1,6 @@
 /* pages/cards/cards.wxss
    卡包 · lululemon 规范
-   会员卡为全站唯一大色块 #731b2e 直角白字 · 流水 list-row
+   会员卡为全站唯一大色块 绛红渐变直角白字 · 流水 list-row
    ============================================================ */
 
 page {
@@ -61,9 +61,9 @@ page {
   margin-bottom: 64rpx;
 }
 
-/* 会员卡整卡：全站唯一允许出现 #731b2e 的地方，直角，白字 */
+/* 会员卡整卡：绛红渐变卡面（与两页 hero 同源），直角，白字 */
 .member-card {
-  background-color: #731b2e;
+  background: linear-gradient(135deg, #B92E32 0%, #C93337 55%, #8A2830 100%);
   border-radius: 0;
   padding: 36rpx;
   color: #ffffff;

@@ -1,6 +1,7 @@
 /* components/next-class/next-class.wxss
-   lululemon 规范下一节课组件
-   完整模式 #efeae2 底块、无描边、直角 · 7天黑实心/灰描边圆点
+   下一节课组件 · 粉白渐变主题
+   完整模式（「我的账户」hero 下缘）：白玻璃圆角卡 + 绛红点缀
+   紧凑模式（约课页顶部）：白条 + 腮粉分隔
    ============================================================ */
 
 .next-class-wrapper {
@@ -8,10 +9,10 @@
   box-sizing: border-box;
 }
 
-/* 骨架屏 */
+/* 骨架屏：腮粉浅底，不再是旧砂色直角块 */
 .next-skeleton-box {
-  border-radius: 0;
-  background-color: #efeae2;
+  border-radius: 28rpx;
+  background-color: #F7ECEA;
 }
 
 .next-skeleton-compact {
@@ -31,7 +32,7 @@
   justify-content: space-between;
   padding: 16rpx 32rpx;
   background: #ffffff;
-  border-bottom: 1px solid #ece7df;
+  border-bottom: 1px solid rgba(227, 181, 175, 0.25);
   box-sizing: border-box;
 }
 
@@ -46,27 +47,27 @@
 
 .compact-tag {
   font-size: 22rpx;
-  color: #000000;
-  background: #efeae2;
+  color: #C03438;
+  background: #F7ECEA;
   padding: 2rpx 10rpx;
   border-radius: 4rpx;
   margin-right: 14rpx;
   flex-shrink: 0;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .compact-time {
   font-family: var(--font-num);
   font-size: 26rpx;
   font-weight: 600;
-  color: #000000;
+  color: #1A1A1A;
   margin-right: 14rpx;
   flex-shrink: 0;
 }
 
 .compact-course {
   font-size: 26rpx;
-  color: #54555b;
+  color: #6B6B6B;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -79,17 +80,18 @@
 
 .compact-link {
   font-size: 24rpx;
-  color: #000000;
+  color: #C03438;
   font-weight: 500;
 }
 
-/* ── 完整模式（「我的」页顶部）：#efeae2 底块、无描边、直角 ── */
+/* ── 完整模式（「我的账户」页顶部）：白玻璃卡，叠住 hero 下缘 ── */
 .next-card {
-  background: #efeae2;
-  border: none;
-  border-radius: 0;
-  padding: 28rpx 32rpx;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 28rpx;
+  padding: 30rpx 34rpx;
   margin-bottom: 28rpx;
+  box-shadow: 0 10rpx 30rpx rgba(150, 45, 48, 0.10);
   box-sizing: border-box;
 }
 
@@ -107,7 +109,8 @@
 
 .nc-label {
   font-size: 22rpx;
-  color: #54555b;
+  color: #B98A87;
+  letter-spacing: 1rpx;
   margin-bottom: 6rpx;
 }
 
@@ -115,14 +118,14 @@
   font-family: var(--font-num);
   font-size: 36rpx;
   line-height: 1.35;
-  font-weight: 600;
-  color: #000000;
+  font-weight: 700;
+  color: #1A1A1A;
 }
 
 .nc-course-line {
   margin-top: 6rpx;
   font-size: 26rpx;
-  color: #000000;
+  color: #1A1A1A;
 }
 
 .nc-course-name {
@@ -130,7 +133,7 @@
 }
 
 .nc-coach-name {
-  color: #54555b;
+  color: #6B6B6B;
 }
 
 .nc-right-col {
@@ -141,17 +144,18 @@
 
 .nc-card-text {
   font-size: 24rpx;
-  color: #54555b;
+  color: #C03438;
   font-family: var(--font-num);
+  font-weight: 600;
 }
 
-/* 7天点列：本周 7 点黑实心/灰描边 */
+/* 7天点列：本周 7 点绛红实心/腮粉描边 */
 .nc-week-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-top: 16rpx;
-  border-top: 1px solid #ece7df;
+  padding-top: 18rpx;
+  border-top: 1px solid rgba(227, 181, 175, 0.28);
 }
 
 .nc-day-col {
@@ -163,7 +167,7 @@
 
 .nc-day-name {
   font-size: 22rpx;
-  color: #999999;
+  color: #9A9A9A;
   margin-bottom: 8rpx;
 }
 
@@ -175,13 +179,13 @@
 }
 
 .nc-dot-active {
-  background: #000000;
+  background: #C03438;
   border: none;
 }
 
 .nc-dot-idle {
   background: transparent;
-  border: 2rpx solid #cccccc;
+  border: 2rpx solid #E3B5AF;
 }
 
 .nc-today-bar {
@@ -193,19 +197,20 @@
 }
 
 .nc-today-bar-show {
-  background: #000000;
+  background: #C03438;
 }
 
-/* 暂无课空状态卡片 */
+/* 暂无课空状态卡：白玻璃 + 绛红小胶囊 */
 .next-empty-card {
-  background: #efeae2;
-  border: none;
-  border-radius: 0;
-  padding: 28rpx 32rpx;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 28rpx;
+  padding: 30rpx 34rpx;
   margin-bottom: 28rpx;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  box-shadow: 0 10rpx 30rpx rgba(150, 45, 48, 0.10);
   box-sizing: border-box;
 }
 
@@ -217,7 +222,7 @@
 .nc-empty-title {
   font-size: 28rpx;
   font-weight: 500;
-  color: #000000;
+  color: #1A1A1A;
 }
 
 .nc-empty-btn {
@@ -226,7 +231,8 @@
   padding: 0 28rpx;
   font-size: 24rpx;
   border-radius: 999rpx;
-  background: #000000;
+  background: #C03438;
   color: #ffffff;
+  box-shadow: 0 8rpx 18rpx rgba(192, 52, 56, 0.28);
   margin: 0;
 }

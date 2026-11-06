@@ -8,8 +8,6 @@
     </view>
 
     <block wx:else>
-      <state-view wx:if="{{loadError}}" type="error" icon="wifi" title="没连上网络" desc="检查一下网络，再试一次" actionText="重新加载" bindaction="onRetry" compact="{{true}}" />
-
       <!-- 顶部：一句话说清她是谁 -->
       <view class="me-header">
         <view class="me-avatar-wrap" bindtap="handleAvatarTap">

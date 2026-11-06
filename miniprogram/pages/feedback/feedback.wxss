@@ -104,7 +104,7 @@ page {
 
 /* ================= 最新一封手札信笺 ================= */
 .stationery-letter-sheet {
-  background: var(--c-card-soft, #efeae2);
+  background: var(--c-card-soft);
   border-radius: 0;
   border: none;
   box-shadow: none;
@@ -292,7 +292,7 @@ page {
 .timeline-spine-card {
   padding: 32rpx;
   border-radius: 0;
-  background: var(--c-card-soft, #efeae2);
+  background: var(--c-card-soft);
   border: none;
   box-shadow: none;
 }
@@ -397,7 +397,7 @@ page {
 .history-epistle-card {
   padding: 28rpx;
   border-radius: 0;
-  background: var(--c-card-soft, #efeae2);
+  background: var(--c-card-soft);
   border: none;
   box-shadow: none;
 }
@@ -472,7 +472,7 @@ page {
 .epistle-empty-state {
   padding: 60rpx 36rpx;
   border-radius: 0;
-  background: var(--c-card-soft, #efeae2);
+  background: var(--c-card-soft);
   border: none;
   text-align: center;
 }

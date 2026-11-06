@@ -5,7 +5,7 @@
   },
   "navigationStyle": "custom",
   "enablePullDownRefresh": true,
-  "backgroundColor": "#EFC2BD",
+  "backgroundColor": "#B92E32",
   "backgroundTextStyle": "dark",
   "navigationBarTextStyle": "white"
 }

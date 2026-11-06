@@ -10,7 +10,7 @@
 /* 顶部简明卡次条 */
 .my-header-bar {
   padding: 16rpx 32rpx 14rpx;
-  background: var(--c-card-soft, #efeae2);
+  background: var(--c-card-soft);
 }
 
 .my-header-card-text {
@@ -98,7 +98,7 @@
 }
 
 .my-card {
-  background: var(--c-card-soft, #efeae2);
+  background: var(--c-card-soft);
   border: none;
   border-radius: 0;
   padding: 24rpx 28rpx;

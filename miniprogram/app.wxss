@@ -8,6 +8,7 @@ page {
   --c-text-3: #8a8b90;
   --c-disabled: #cccccc;
   --c-line: #EFEDE7;
+--c-card-soft: #F7ECEA;
   --c-bg: var(--c-paper);
   --c-bg-soft: var(--c-sand);
   --c-surface: #ffffff;

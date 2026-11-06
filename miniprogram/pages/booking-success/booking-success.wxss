@@ -125,7 +125,7 @@
 /* 课次信息卡片 */
 .success-card {
   width: 100%;
-  background: var(--c-card-soft, #efeae2);
+  background: var(--c-card-soft);
   border: none;
   border-radius: 0;
   padding: 36rpx;

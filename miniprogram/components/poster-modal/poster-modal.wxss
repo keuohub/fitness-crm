@@ -146,7 +146,7 @@
   padding: 56rpx 28rpx;
   margin-bottom: 24rpx;
   border-radius: 0;
-  background: #efeae2;
+  background: #F7ECEA;
   border: 1px solid #ece7df;
   text-align: center;
 }
@@ -175,7 +175,7 @@
 
 .poster-analysis-box {
   position: relative;
-  background: #efeae2;
+  background: #F7ECEA;
   border-radius: 0;
   padding: 20rpx 24rpx 20rpx 44rpx;
   margin-bottom: 28rpx;
