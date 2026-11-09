@@ -7,12 +7,12 @@
   </view>
 
 
-  <!-- 专属卡号 / 邀请码 + 6位安全PIN码 -->
+  <!-- 手机号 + 手机后4位密码 -->
   <view class="input-card">
     <input
       class="invite-input"
       value="{{inviteCode}}"
-      placeholder="会员卡号 / 专属邀请码 (如 LW8866)"
+      placeholder="请输入入会登记的 11 位手机号"
       placeholder-class="input-placeholder"
       bindinput="onCodeInput"
       maxlength="20"
@@ -21,7 +21,7 @@
     <input
       class="invite-input phone-suffix-input"
       value="{{phoneSuffix}}"
-      placeholder="会员登录 PIN 码"
+      placeholder="请输入手机后 4 位密码"
       placeholder-class="input-placeholder"
       bindinput="onPhoneSuffixInput"
       maxlength="6"
@@ -31,7 +31,7 @@
     />
   </view>
 
-  <text class="login-hint">老会员请使用馆长小桥为你配置的卡号与 6 位专属 PIN 码登录</text>
+  <text class="login-hint">老会员请使用在馆内登记的手机号与后 4 位直接登录</text>
 
   <!-- 登录按钮 -->
   <button class="btn-primary login-btn" bindtap="handleLogin" loading="{{submitting}}" disabled="{{submitting}}">
@@ -48,7 +48,7 @@
 
   <!-- 底部说明 -->
   <view class="footer-wrap">
-    <text class="footer-note">还未取得专属卡号？加小桥微信，约一节体验课</text>
+    <text class="footer-note">还未在馆内建档？加小桥微信，约一节体验课</text>
   </view>
 
 </view>

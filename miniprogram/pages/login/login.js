@@ -66,7 +66,11 @@ Page({
     var suffix = (that.data.phoneSuffix || "").trim();
 
     if (!code) {
-      that.setData({ error: "请输入专属邀请码" });
+      that.setData({ error: "请输入手机号" });
+      return;
+    }
+    if (!suffix) {
+      that.setData({ error: "请输入手机后 4 位密码" });
       return;
     }
 

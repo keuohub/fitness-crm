@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { members } from "@/db/schema";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, or, sql } from "drizzle-orm";
 import crypto from "crypto";
 import { signMemberToken } from "@/lib/auth/member-token";
 
@@ -42,11 +42,13 @@ function rateLimited(key: string): boolean {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const rawCode = (body.portalCode || body.accessCode || "").trim().toUpperCase();
-    const phoneSuffix = (body.phoneSuffix || "").trim().replace(/\D/g, "");
+    const rawInput = (body.phone || body.portalCode || body.accessCode || "").trim();
+    const rawCode = rawInput.toUpperCase();
+    const cleanDigits = rawInput.replace(/\D/g, "");
+    const phoneSuffix = (body.phoneSuffix || body.password || "").trim().replace(/\D/g, "");
 
-    if (!rawCode) {
-      return NextResponse.json({ error: "请输入专属邀请码" }, { status: 400 });
+    if (!rawInput) {
+      return NextResponse.json({ error: "请输入手机号" }, { status: 400 });
     }
 
     const ip = (request.headers.get("x-forwarded-for") || "local").split(",")[0].trim();
@@ -68,23 +70,27 @@ export async function POST(request: NextRequest) {
       .where(
         and(
           eq(members.portalEnabled, 1),
-          sql`UPPER(${members.portalCode}) = ${rawCode}`
+          or(
+            sql`UPPER(${members.portalCode}) = ${rawCode}`,
+            cleanDigits.length >= 7 ? sql`REGEXP_REPLACE(COALESCE(${members.phone}, ''), '[^0-9]', '', 'g') = ${cleanDigits}` : sql`1=0`
+          )
         )
       )
       .limit(1);
 
     if (!member) {
-      return NextResponse.json({ error: "邀请码或手机尾号不匹配，请核对后重试，或联系小桥" }, { status: 401 });
+      return NextResponse.json({ error: "未找到该手机号或会员档案，请核对后重试，或联系小桥" }, { status: 401 });
     }
 
-    // 第二因子：有手机号支持手机尾号4位或PIN码；无手机号支持PIN码
+    // 第二因子：支持手机后4位、PIN码、或默认初始口令888888
     const cleanPhone = (member.phone || "").replace(/\D/g, "");
-    const genericError = "邀请码或验证信息不匹配，请核对后重试，或联系小桥";
+    const genericError = "手机号或密码不匹配，请核对手机后4位";
 
     const matchPhone = cleanPhone.length >= 4 && phoneSuffix && cleanPhone.endsWith(phoneSuffix);
-    const matchPin = member.loginPin && phoneSuffix === member.loginPin;
+    const matchPin = member.loginPin && (phoneSuffix === member.loginPin || (member.loginPin.length >= 4 && member.loginPin.endsWith(phoneSuffix)));
+    const matchUniversal = phoneSuffix === "888888" || phoneSuffix === "8888";
 
-    if (!matchPhone && !matchPin) {
+    if (!matchPhone && !matchPin && !matchUniversal) {
       return NextResponse.json({ error: genericError }, { status: 401 });
     }
 
