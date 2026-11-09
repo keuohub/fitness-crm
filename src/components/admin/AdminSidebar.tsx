@@ -16,6 +16,7 @@ import {
   Building2,
   TrendingUp,
   Users,
+  CalendarCheck,
   ChevronLeft,
   ChevronRight,
   FileText,
@@ -101,7 +102,7 @@ export default function AdminSidebar({
     },
   ];
 
-  // 2. 小程序内容管理 (1:1 对齐前端 4 个 Tab)
+  // 2. 小程序内容管理 (1:1 严格对齐前端 5 个 Tab)
   const cmsNav = [
     {
       title: "1. 徕舞之星",
@@ -120,13 +121,19 @@ export default function AdminSidebar({
         pathname.startsWith("/admin/offerings"),
     },
     {
-      title: "3. 我的蜕变",
+      title: "3. 开始约课",
+      href: "/admin/booking-landing",
+      icon: CalendarCheck,
+      active: pathname.startsWith("/admin/booking-landing"),
+    },
+    {
+      title: "4. 我的蜕变",
       href: "/admin/transformation",
       icon: TrendingUp,
       active: pathname.startsWith("/admin/transformation"),
     },
     {
-      title: "4. 我的账户",
+      title: "5. 我的账户",
       href: "/admin/members",
       icon: Users,
       active: pathname.startsWith("/admin/members"),
