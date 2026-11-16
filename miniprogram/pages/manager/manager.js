@@ -129,9 +129,19 @@ Page({
     newCoachTitle: "资深塑形教练",
     submittingCoach: false,
 
-    // ── 账号权限 (admins) ──
+    // ── 账号权限与操作留痕寻迹 (admins & audit) ──
+    isManagerLoggedIn: false,
+    managerUsername: "",
+    managerPassword: "",
+    managerLoginSubmitting: false,
+    managerLoginError: "",
+    currentManagerUser: null,
+    adminsTab: "logs", // 'logs' (留痕寻迹) | 'accounts' (专用管理员)
     adminsList: [],
     loadingAdmins: false,
+    auditLogsList: [],
+    loadingAuditLogs: false,
+    auditLogsTotal: 0,
 
     // ── 代客约课 (bookForMember) ──
     showBookForMemberModal: false,
@@ -148,26 +158,144 @@ Page({
   },
 
   checkManagerAccess: function() {
-    var role = wx.getStorageSync("managerRole");
-    var isMgr = wx.getStorageSync("isManager");
-    var hasAccess = Boolean((role && String(role).trim().length > 0) || isMgr === true || isMgr === "true");
-    if (!hasAccess) {
-      if (this._denyShown) return false;
-      this._denyShown = true;
-      var self = this;
-      wx.showModal({
-        title: "提示",
-        content: "工作台仅限场馆主理人与管理员访问",
-        showCancel: false,
-        confirmText: "知道了",
-        success: function() {
-          self._denyShown = false;
-          wx.switchTab({ url: "/pages/stars/stars" });
-        }
+    var mgrToken = wx.getStorageSync("managerToken");
+    var mgrProfile = wx.getStorageSync("managerProfile");
+    if (mgrToken && mgrProfile && mgrProfile.id !== 11 && mgrProfile.username !== "xiaoqiao") {
+      this.setData({
+        isManagerLoggedIn: true,
+        currentManagerUser: mgrProfile,
+        managerName: mgrProfile.name || "管理员",
+        managerRole: mgrProfile.role || "admin",
+        navTitle: "工作台"
       });
-      return false;
+      return true;
     }
-    return true;
+    // 未登录管理员：停留在本页展示管理员专属密码登录界面，杜绝普通会员手机号免密进入
+    this.setData({
+      isManagerLoggedIn: false,
+      loading: false,
+      currentManagerUser: null,
+      navTitle: "管家安全登录"
+    });
+    return false;
+  },
+
+  onManagerUsernameInput: function(e) {
+    this.setData({ managerUsername: e.detail.value, managerLoginError: "" });
+  },
+
+  onManagerPasswordInput: function(e) {
+    this.setData({ managerPassword: e.detail.value, managerLoginError: "" });
+  },
+
+  fillPresetAccount: function(e) {
+    var user = e.currentTarget.dataset.user;
+    this.setData({ managerUsername: user, managerLoginError: "" });
+  },
+
+  submitManagerLogin: function() {
+    var that = this;
+    var username = (this.data.managerUsername || "").trim();
+    var password = (this.data.managerPassword || "").trim();
+    if (!username) {
+      this.setData({ managerLoginError: "请输入管理员专用账号" });
+      return;
+    }
+    if (!password) {
+      this.setData({ managerLoginError: "请输入登录口令密码" });
+      return;
+    }
+    this.setData({ managerLoginSubmitting: true, managerLoginError: "" });
+    api.request({
+      url: "/api/portal/manager/auth",
+      method: "POST",
+      data: { username: username, password: password },
+      success: function(res) {
+        if (res && res.statusCode === 200 && res.data && res.data.ok) {
+          wx.setStorageSync("managerToken", res.data.token);
+          wx.setStorageSync("managerProfile", res.data.admin);
+          that.setData({
+            isManagerLoggedIn: true,
+            currentManagerUser: res.data.admin,
+            managerName: res.data.admin.name || "管理员",
+            managerRole: res.data.admin.role || "admin",
+            managerPassword: "",
+            managerLoginSubmitting: false,
+            loading: true,
+            navTitle: "工作台"
+          });
+          wx.showToast({ title: "安全验证成功", icon: "success" });
+          that.initDate();
+          that.initDateTabs();
+          that.loadDashboard();
+          that.loadSessionOptions();
+        } else {
+          var errMsg = (res && res.data && res.data.error) || "登录失败，账号或密码错误";
+          that.setData({ managerLoginError: errMsg, managerLoginSubmitting: false });
+        }
+      },
+      fail: function() {
+        that.setData({ managerLoginError: "网络连接失败，请重试", managerLoginSubmitting: false });
+      }
+    });
+  },
+
+  doManagerLogout: function() {
+    var that = this;
+    wx.showModal({
+      title: "退出管理工作台",
+      content: "确认安全退出当前管理员账号？退出后需重新验证账号密码。",
+      confirmText: "安全退出",
+      confirmColor: "#B92E32",
+      success: function(res) {
+        if (res.confirm) {
+          wx.removeStorageSync("managerToken");
+          wx.removeStorageSync("managerProfile");
+          that.setData({
+            isManagerLoggedIn: false,
+            currentManagerUser: null,
+            currentView: "home",
+            navTitle: "管家安全登录",
+            loading: false,
+          });
+          wx.showToast({ title: "已安全退出", icon: "none" });
+        }
+      }
+    });
+  },
+
+  onAdminsTabChange: function(e) {
+    var tab = e.currentTarget.dataset.tab;
+    this.setData({ adminsTab: tab });
+    if (tab === "logs") {
+      this.fetchAuditLogs();
+    } else {
+      this.fetchAdmins();
+    }
+  },
+
+  fetchAuditLogs: function(done) {
+    var that = this;
+    var cb = typeof done === "function" ? done : function() {};
+    this.setData({ loadingAuditLogs: true });
+    api.request({
+      url: "/api/portal/manager/actions?action=audit_logs",
+      success: function(res) {
+        if (res && res.statusCode === 200 && res.data) {
+          that.setData({
+            auditLogsList: res.data.logs || [],
+            auditLogsTotal: res.data.total || 0,
+            loadingAuditLogs: false,
+          });
+        } else {
+          that.setData({ loadingAuditLogs: false });
+        }
+      },
+      fail: function() {
+        that.setData({ loadingAuditLogs: false });
+      },
+      complete: cb
+    });
   },
 
   onLoad: function() {
@@ -341,8 +469,10 @@ Page({
   switchToAdmins: function() {
     this.setData({
       currentView: "admins",
-      navTitle: "账号与权限"
+      navTitle: "账号与留痕",
+      adminsTab: "logs"
     });
+    this.fetchAuditLogs();
     this.fetchAdmins();
   },
 

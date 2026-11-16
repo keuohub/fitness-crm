@@ -70,8 +70,19 @@ function request(options) {
   var complete = options.complete || function() {};
 
   var token = wx.getStorageSync("memberToken") || "";
+  var mgrToken = wx.getStorageSync("managerToken") || "";
   var header = Object.assign({ "content-type": "application/json" }, options.header || {});
-  if (token) header.Authorization = "Bearer " + token;
+
+  if (mgrToken) {
+    header["x-manager-token"] = mgrToken;
+  }
+
+  // 若请求管理端专属接口且具备管理员 token，则优先使用管理员鉴权凭证
+  if (url.indexOf("/manager/") >= 0 && mgrToken) {
+    header.Authorization = "Bearer " + mgrToken;
+  } else if (token) {
+    header.Authorization = "Bearer " + token;
+  }
 
   function handleSuccess(res) {
     if (res && res.statusCode === 401 && token && !isLoginUrl(url)) {

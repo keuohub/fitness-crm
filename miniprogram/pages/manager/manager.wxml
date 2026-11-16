@@ -3,23 +3,107 @@
 
   <!-- 顶部自定义状态栏与全局导航 -->
   <view class="mgr-navbar" style="padding-top: {{nav.navBottom + 4}}px; height: 88rpx; box-sizing: content-box;">
-    <view class="mgr-nav-left" bindtap="{{currentView === 'home' ? 'goBackMember' : (currentView === 'memberDetail' ? 'goBackToMembers' : 'goHomeView')}}">
+    <view class="mgr-nav-left" bindtap="{{!isManagerLoggedIn || currentView === 'home' ? 'goBackMember' : (currentView === 'memberDetail' ? 'goBackToMembers' : 'goHomeView')}}">
       <text class="mgr-nav-back">‹</text>
-      <text class="mgr-nav-back-text">{{currentView === 'home' ? '会员端' : (currentView === 'memberDetail' ? (prevDetailView === 'home' ? '今日名单' : '会员列表') : '工作台')}}</text>
+      <text class="mgr-nav-back-text">{{!isManagerLoggedIn ? '会员端' : (currentView === 'home' ? '会员端' : (currentView === 'memberDetail' ? (prevDetailView === 'home' ? '今日名单' : '会员列表') : '工作台'))}}</text>
     </view>
     <view class="mgr-nav-title">
       <text class="mgr-nav-brand">{{navTitle}}</text>
-      <text class="mgr-nav-badge">管家端</text>
+      <text class="mgr-nav-badge">{{isManagerLoggedIn ? (currentManagerUser.name || '管家端') : '安全专线'}}</text>
     </view>
     <view class="mgr-nav-right">
-      <view wx:if="{{currentView !== 'home'}}" class="mgr-nav-home-pill" bindtap="goHomeView">
+      <view wx:if="{{isManagerLoggedIn && currentView !== 'home'}}" class="mgr-nav-home-pill" bindtap="goHomeView">
         主页
+      </view>
+      <view wx:elif="{{isManagerLoggedIn}}" class="mgr-nav-logout-pill" bindtap="doManagerLogout">
+        安全退出
       </view>
     </view>
   </view>
 
-  <!-- 全局加载与错误 -->
-  <view wx:if="{{loading}}" class="mgr-loading">
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <!-- 视图 0：管理员专属安全登录面板 (未登录时展示，杜绝手机号免密进入) -->
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <view wx:if="{{!isManagerLoggedIn}}" class="mgr-login-container">
+    <view class="mgr-login-card">
+      <view class="mgr-login-header">
+        <view class="mgr-login-brand">LAIWU 徕舞普拉提</view>
+        <view class="mgr-login-subtitle">女子塑形 · 智能中枢管家专线</view>
+        <view class="mgr-login-badge">严格留痕寻迹保护</view>
+      </view>
+
+      <view class="mgr-login-body">
+        <view class="mgr-login-security-tip">
+          <text class="mgr-tip-icon">🛡</text>
+          <text class="mgr-tip-text">仅限3位专职管理人员凭账号密码登录，普通会员手机号无法免密进入。</text>
+        </view>
+
+        <!-- 快捷填入专用账号 -->
+        <view class="mgr-preset-group">
+          <text class="mgr-preset-label">快捷填入专用账号：</text>
+          <view class="mgr-preset-pills">
+            <view class="mgr-preset-pill {{managerUsername === 'laiwu_admin' ? 'is-active' : ''}}" data-user="laiwu_admin" bindtap="fillPresetAccount">
+              总店长 (admin)
+            </view>
+            <view class="mgr-preset-pill {{managerUsername === 'laiwu_front' ? 'is-active' : ''}}" data-user="laiwu_front" bindtap="fillPresetAccount">
+              前台管家 (front)
+            </view>
+            <view class="mgr-preset-pill {{managerUsername === 'laiwu_teach' ? 'is-active' : ''}}" data-user="laiwu_teach" bindtap="fillPresetAccount">
+              教务督导 (teach)
+            </view>
+          </view>
+        </view>
+
+        <!-- 输入表单 -->
+        <view class="mgr-login-field">
+          <text class="mgr-field-label">管理员专属账号</text>
+          <input
+            class="mgr-field-input"
+            type="text"
+            placeholder="如：laiwu_admin"
+            placeholder-class="mgr-field-ph"
+            value="{{managerUsername}}"
+            bindinput="onManagerUsernameInput"
+          />
+        </view>
+
+        <view class="mgr-login-field">
+          <text class="mgr-field-label">管理员登录密码</text>
+          <input
+            class="mgr-field-input"
+            password="true"
+            placeholder="请输入管理员登录密码"
+            placeholder-class="mgr-field-ph"
+            value="{{managerPassword}}"
+            bindinput="onManagerPasswordInput"
+          />
+        </view>
+
+        <!-- 错误提示 -->
+        <view wx:if="{{managerLoginError}}" class="mgr-login-error">
+          <text class="mgr-error-icon">⚠️</text>
+          <text class="mgr-error-msg">{{managerLoginError}}</text>
+        </view>
+
+        <button
+          class="mgr-login-btn"
+          loading="{{managerLoginSubmitting}}"
+          disabled="{{managerLoginSubmitting}}"
+          bindtap="submitManagerLogin"
+        >
+          安全验证并进入工作台
+        </button>
+
+        <view class="mgr-login-footnote">
+          <view class="mgr-fn-item">● 店主小桥管理权限已彻底撤销，杜绝越权</view>
+          <view class="mgr-fn-item">● 每一笔到课签到、发卡退卡与约课均全流程留痕寻迹</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 全局加载与错误 (已登录后) -->
+  <view wx:elif="{{loading}}" class="mgr-loading">
     <text class="mgr-loading-text">正在同步会馆实时数据…</text>
   </view>
 
@@ -31,7 +115,7 @@
   <!-- 视图 1：主工作台九宫格与实时概览 (currentView === 'home') -->
   <!-- ════════════════════════════════════════════════════════════ -->
   <view wx:elif="{{currentView === 'home'}}" class="mgr-view-container">
-    <!-- 头部黑金卡片 -->
+    <!-- 头部高定绛红卡片 -->
     <view class="mgr-hero-card">
       <view class="mgr-hero-top">
         <view class="mgr-hero-brand-wrap">
@@ -156,13 +240,13 @@
           <text class="mgr-item-sub">+录新会员</text>
         </view>
 
-        <!-- 6. 账号权限 -->
+        <!-- 6. 账号权限与留痕寻迹 -->
         <view class="mgr-grid-item" bindtap="switchToAdmins">
           <view class="mgr-item-icon-box bg-slate">
             <text class="mgr-item-char">权</text>
           </view>
-          <text class="mgr-item-title">账号权限</text>
-          <text class="mgr-item-sub">系统管理</text>
+          <text class="mgr-item-title">账号留痕</text>
+          <text class="mgr-item-sub">留痕寻迹</text>
         </view>
 
         <!-- 7. 会员卡 -->
@@ -1335,39 +1419,84 @@
 
 
   <!-- ════════════════════════════════════════════════════════════ -->
-  <!-- 视图 7.6：管理员与系统权限全屏工作台 (currentView === 'admins') -->
+  <!-- 视图 7.6：管理员与全链路留痕寻迹全屏工作台 (currentView === 'admins') -->
   <!-- ════════════════════════════════════════════════════════════ -->
   <view wx:elif="{{currentView === 'admins'}}" class="mgr-view-container">
     <view class="mgr-sub-header">
       <view class="mgr-sub-title-row">
-        <text class="mgr-sub-view-title">账号与系统权限</text>
+        <text class="mgr-sub-view-title">账号权限与操作留痕寻迹</text>
       </view>
-      <text class="mgr-sub-view-sub">门店主理人与管理员授权清单，严格守护会馆经营资产</text>
+      <text class="mgr-sub-view-sub">全链路记录每一次签到、发卡、退卡与约课，全程防篡改</text>
     </view>
 
-    <view wx:if="{{loadingAdmins}}" class="mgr-inner-loading">正在核验管理员授权…</view>
-    <block wx:else>
-      <view wx:for="{{adminsList}}" wx:key="id" class="mgr-admin-card">
-        <view class="mgr-admin-card-top">
-          <view class="mgr-admin-name-box">
-            <text class="mgr-admin-name">{{item.name}}</text>
-            <text class="mgr-admin-badge">{{item.role === 'owner' ? '核心主理人' : '系统管理员'}}</text>
-          </view>
-          <text class="mgr-admin-status">权限生效中</text>
-        </view>
-        <view class="mgr-admin-meta-row">
-          <text class="mgr-admin-meta-label">账号：</text>
-          <text class="mgr-admin-meta-val">{{item.email || ('admin_' + item.id)}}</text>
-        </view>
+    <!-- 顶部二级切页选项卡 -->
+    <view class="mgr-admins-tabs">
+      <view
+        class="mgr-adm-tab {{adminsTab === 'logs' ? 'is-active' : ''}}"
+        data-tab="logs"
+        bindtap="onAdminsTabChange"
+      >
+        留痕寻迹 ({{auditLogsTotal}})
       </view>
+      <view
+        class="mgr-adm-tab {{adminsTab === 'accounts' ? 'is-active' : ''}}"
+        data-tab="accounts"
+        bindtap="onAdminsTabChange"
+      >
+        专职管理员 (3位)
+      </view>
+    </view>
 
-      <view class="mgr-engine-card">
-        <view class="mgr-engine-title">权限安全隔离机制</view>
-        <view class="mgr-engine-badge">安全生效中</view>
-        <text class="mgr-engine-desc">
-          管理端采用独立 manager_accounts 权限控制表与会话加密，与普通学员端物理隔离。普通会员即使得知管理页面路径也无法进入或调用任何后台接口。
-        </text>
+    <!-- 选项卡 1：留痕寻迹实时流 -->
+    <block wx:if="{{adminsTab === 'logs'}}">
+      <view wx:if="{{loadingAuditLogs}}" class="mgr-inner-loading">正在拉取全链路操作留痕…</view>
+      <view wx:elif="{{auditLogsList.length === 0}}" class="mgr-empty-box">
+        <text class="mgr-empty-text">暂无操作留痕记录</text>
       </view>
+      <view wx:else class="mgr-audit-list">
+        <view wx:for="{{auditLogsList}}" wx:key="id" class="mgr-audit-card">
+          <view class="mgr-audit-card-top">
+            <view class="mgr-audit-actor">
+              <text class="mgr-audit-name">{{item.actorName}}</text>
+              <text class="mgr-audit-user">({{item.actorUsername}})</text>
+            </view>
+            <text class="mgr-audit-badge {{item.action === 'checkin' ? 'badge-green' : (item.action === 'no_show' ? 'badge-red' : (item.action === 'issue_card' ? 'badge-gold' : (item.action === 'return_card' ? 'badge-orange' : (item.action === 'cancel_booking' ? 'badge-blue' : (item.action === 'book_for_member' ? 'badge-teal' : (item.action === 'manager_login' ? 'badge-purple' : 'badge-slate'))))))}}">{{item.action === 'checkin' ? '到课签到' : (item.action === 'no_show' ? '旷课未到' : (item.action === 'issue_card' ? '开卡办理' : (item.action === 'return_card' ? '退卡停卡' : (item.action === 'cancel_booking' ? '代客退课' : (item.action === 'book_for_member' ? '代客约课' : (item.action === 'manager_login' ? '管家登录' : '系统操作'))))))}}</text>
+          </view>
+          <view class="mgr-audit-summary">{{item.summary}}</view>
+          <view class="mgr-audit-footer">
+            <text class="mgr-audit-time">{{item.createdAt}}</text>
+            <text class="mgr-audit-ip" wx:if="{{item.ip}}">IP: {{item.ip}}</text>
+          </view>
+        </view>
+      </view>
+    </block>
+
+    <!-- 选项卡 2：专职管理账号清单 -->
+    <block wx:else>
+      <view wx:if="{{loadingAdmins}}" class="mgr-inner-loading">正在核验管理员授权…</view>
+      <block wx:else>
+        <view wx:for="{{adminsList}}" wx:key="id" class="mgr-admin-card">
+          <view class="mgr-admin-card-top">
+            <view class="mgr-admin-name-box">
+              <text class="mgr-admin-name">{{item.name}}</text>
+              <text class="mgr-admin-badge">{{item.role === 'owner' ? '总店长 · 核心主理' : (item.email.indexOf('front') >= 0 ? '前台管家 · 接待约课' : '教务督导 · 教学排课')}}</text>
+            </view>
+            <text class="mgr-admin-status">权限生效中</text>
+          </view>
+          <view class="mgr-admin-meta-row">
+            <text class="mgr-admin-meta-label">专属账号：</text>
+            <text class="mgr-admin-meta-val">{{item.email || ('admin_' + item.id)}}</text>
+          </view>
+        </view>
+
+        <view class="mgr-engine-card">
+          <view class="mgr-engine-title">权限安全隔离与小桥权限说明</view>
+          <view class="mgr-engine-badge">安全生效中</view>
+          <text class="mgr-engine-desc">
+            1. 专职管理员凭专属账号+密码登录，严禁普通学员手机号免密进入工作台。\n2. 店主小桥的管理权限已彻底撤销停用，小桥手机号无法访问后台与管理端。\n3. 每一次签到扣次、发卡、退卡、代约均实时写入数据库留痕寻迹，责任到人。
+          </text>
+        </view>
+      </block>
     </block>
   </view>
 

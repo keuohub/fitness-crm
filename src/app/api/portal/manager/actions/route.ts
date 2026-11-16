@@ -3,28 +3,58 @@ import { db, rawSql } from "@/db";
 import { members } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { getPortalMemberId } from "@/lib/auth/member-session";
+import { getManagerSessionFromRequest } from "@/lib/auth/manager-session";
+import { logAdminAction } from "@/lib/audit/log";
 
 export const dynamic = "force-dynamic";
 
 const bad = (msg: string, status = 400) => NextResponse.json({ error: msg }, { status });
 
-// 校验管家/管理权限（通过独立 manager_accounts 权限表严格绑定，杜绝硬编码）
+// 校验管家/管理权限（优先管理员专用 Token，杜绝普通会员手机号登录免密越权）
 async function checkManagerAuth(request: NextRequest) {
+  // 1. 优先校验专属管理员 Token (manager_session)
+  const managerSession = getManagerSessionFromRequest(request);
+  if (managerSession) {
+    // 明确硬防线：小桥 (id 11) 严禁作为管理权限通过
+    if (managerSession.adminId === 11 || managerSession.username === "xiaoqiao" || managerSession.name === "小桥") {
+      return null;
+    }
+    return {
+      id: managerSession.adminId,
+      name: managerSession.name,
+      managerRole: managerSession.role,
+      managerUserId: managerSession.adminId,
+      managerUsername: managerSession.username,
+    };
+  }
+
+  // 2. 兼容过渡：会员 Token，但严格剔除店主小桥 (id 11 / member 36)
   const memberId = await getPortalMemberId(request);
-  if (!memberId) return null;
+  if (!memberId || memberId === 36) return null;
 
   const [member] = await db.select().from(members).where(eq(members.id, memberId));
-  if (!member) return null;
+  if (!member || member.name === "小桥" || member.phone === "13788902598") return null;
 
   const [managerAccount] = await rawSql`
-    SELECT ma.role, ma.user_id
+    SELECT ma.role, ma.user_id, u.name as user_name, u.email as user_email
     FROM manager_accounts ma
+    JOIN users u ON u.id = ma.user_id
     WHERE ma.member_id = ${member.id}
       AND ma.is_active = 1
+      AND ma.user_id <> 11
+      AND u.status = 'active'
     LIMIT 1
   `.catch(() => []);
 
-  return managerAccount ? { ...member, managerRole: managerAccount.role, managerUserId: managerAccount.user_id } : null;
+  if (!managerAccount) return null;
+
+  return {
+    ...member,
+    name: managerAccount.user_name || member.name,
+    managerRole: managerAccount.role,
+    managerUserId: managerAccount.user_id,
+    managerUsername: (managerAccount.user_email || "staff").replace(/@.*$/, ""),
+  };
 }
 
 export async function GET(request: NextRequest) {
@@ -358,15 +388,52 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ cardTypes: result });
   }
 
-  // 6.7. 管理员与系统权限账号列表
+  // 6.7. 管理员与系统权限账号列表（严格排除小桥，仅显示经授权专职管理员）
   if (action === "admins") {
     const list = await rawSql`
       SELECT id, name, email, role, status, created_at
       FROM users
-      WHERE tenant_id = 1 AND (role IN ('admin', 'owner') OR id IN (1, 11, 26, 27))
+      WHERE tenant_id = 1 
+        AND role IN ('admin', 'owner') 
+        AND id <> 11 
+        AND LOWER(TRIM(name)) <> '小桥'
+        AND status = 'active'
       ORDER BY id ASC
     `.catch(() => []);
     return NextResponse.json({ admins: list });
+  }
+
+  // 6.8. 全链路操作留痕寻迹（审计日志实时流）
+  if (action === "audit_logs") {
+    const page = Math.max(1, Number(u.searchParams.get("page") || 1));
+    const limit = Math.min(100, Math.max(10, Number(u.searchParams.get("limit") || 50)));
+    const offset = (page - 1) * limit;
+
+    const logs = await rawSql`
+      SELECT id, actor_name, actor_username, action, entity_type, entity_id, summary, after_json, ip, created_at
+      FROM audit_logs
+      ORDER BY id DESC
+      LIMIT ${limit} OFFSET ${offset}
+    `.catch(() => []);
+
+    const [{ count }] = await rawSql`
+      SELECT COUNT(*)::int as count FROM audit_logs
+    `.catch(() => [{ count: 0 }]);
+
+    return NextResponse.json({
+      logs: logs.map((l: any) => ({
+        id: l.id,
+        actorName: l.actor_name || "管理员",
+        actorUsername: l.actor_username || "admin",
+        action: l.action,
+        entityType: l.entity_type,
+        entityId: l.entity_id,
+        summary: l.summary || "操作留痕记录",
+        ip: l.ip,
+        createdAt: l.created_at,
+      })),
+      total: count,
+    });
   }
 
   // 7. 经营数据与报表概览（在册且开通约课会员口径准确）
@@ -530,6 +597,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const actText = status === "attended" ? "完成到课签到" : "标记未到（旷课）";
+    await logAdminAction({
+      adminId: operatorId,
+      adminName: manager.name || "管理员",
+      adminUsername: manager.managerUsername || "admin",
+      action: status === "attended" ? "checkin" : "no_show",
+      entityType: "attendance",
+      entityId: bookingId,
+      summary: `为会员【${booking.member_name || "学员"}】${actText}《${booking.course_name || "普拉提课程"}》${r.card_category === "count" ? `，扣减1次，卡余${r.card_remaining}次` : "（期限卡）"}`,
+      details: { bookingId, memberId: booking.member_id, status, cardId: r.card_id, remaining: r.card_remaining },
+      ip: request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "127.0.0.1",
+    });
+
     return NextResponse.json({
       success: true,
       bookingId,
@@ -613,6 +693,18 @@ export async function POST(request: NextRequest) {
       SET booked_count = GREATEST(booked_count - 1, 0), updated_at = NOW()
       WHERE id = ${booking.session_id}
     `;
+
+    await logAdminAction({
+      adminId: Number(manager.managerUserId || 1) || 1,
+      adminName: manager.name || "管理员",
+      adminUsername: manager.managerUsername || "admin",
+      action: "cancel_booking",
+      entityType: "booking",
+      entityId: bookingId,
+      summary: `代客退课：取消预约 #${bookingId}《${booking.session_title || "课程"}》，席位已释放`,
+      details: { bookingId, sessionDate: booking.session_date, deductTx: !!deductTx },
+      ip: request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "127.0.0.1",
+    });
 
     return NextResponse.json({
       success: true,
@@ -990,6 +1082,18 @@ export async function POST(request: NextRequest) {
       ON CONFLICT (member_card_id) DO NOTHING
     `.catch(() => {});
 
+    await logAdminAction({
+      adminId: Number(manager.managerUserId || 1) || 1,
+      adminName: manager.name || "管理员",
+      adminUsername: manager.managerUsername || "admin",
+      action: "issue_card",
+      entityType: "member_card",
+      entityId: newCard.id,
+      summary: `现场发卡：为会员【${member.name}】开通【${ct.name}】${totalCount ? `（${totalCount}次）` : "（期限卡）"}，实收¥${(priceCents/100).toFixed(2)}`,
+      details: { memberId, cardTypeId, totalCount, validUntil, cardId: newCard.id },
+      ip: request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "127.0.0.1",
+    });
+
     return NextResponse.json({
       success: true,
       card: newCard,
@@ -1100,6 +1204,18 @@ export async function POST(request: NextRequest) {
       )
     `.catch(() => {});
 
+    await logAdminAction({
+      adminId: Number(manager.managerUserId || 1) || 1,
+      adminName: manager.name || "管理员",
+      adminUsername: manager.managerUsername || "admin",
+      action: "return_card",
+      entityType: "member_card",
+      entityId: cardId,
+      summary: `卡项退停：为会员卡 #${cardId} 办理退卡注销，原因：${reason}`,
+      details: { cardId, reason },
+      ip: request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "127.0.0.1",
+    });
+
     return NextResponse.json({ success: true, message: "已成功办理退卡/停用" });
   }
 
@@ -1157,6 +1273,19 @@ export async function POST(request: NextRequest) {
     `;
 
     const [m] = await rawSql`SELECT name FROM members WHERE id = ${memberId}`;
+
+    await logAdminAction({
+      adminId: Number(manager.managerUserId || 1) || 1,
+      adminName: manager.name || "管理员",
+      adminUsername: manager.managerUsername || "admin",
+      action: "book_for_member",
+      entityType: "booking",
+      entityId: booking.id,
+      summary: `代客约课：为会员【${m?.name || "学员"}】代约《${sess.title || "课程"}》（使用卡项：${card.card_name}）`,
+      details: { sessionId, memberId, bookingId: booking.id, cardName: card.card_name },
+      ip: request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "127.0.0.1",
+    });
+
     return NextResponse.json({
       success: true,
       booking,

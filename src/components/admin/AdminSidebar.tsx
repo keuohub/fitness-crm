@@ -169,6 +169,12 @@ export default function AdminSidebar({
       icon: ShieldCheck,
       active: pathname.startsWith("/admin/settings"),
     },
+    {
+      title: "操作留痕寻迹",
+      href: "/admin/audit-logs",
+      icon: ShieldCheck,
+      active: pathname.startsWith("/admin/audit-logs"),
+    },
   ];
 
   const sidebarWidth = collapsed ? 64 : 220;

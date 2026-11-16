@@ -37,7 +37,8 @@ Page({
     latestReply: null,
     updatingAvatar: false,
     isManager: false,
-    managerRole: ""
+    managerRole: "",
+    hasManagerToken: false
   },
 
   onLoad: function() {
@@ -52,6 +53,7 @@ Page({
   },
 
   onShow: function() {
+    this.setData({ hasManagerToken: Boolean(wx.getStorageSync("managerToken")) });
     // 老会员可能很久没重新登录，进来就补一次 openid 绑定（内部有 flag，只成功一次）
     try { wxbind.bind(); } catch (e) {}
     if (typeof this.getTabBar === "function" && this.getTabBar()) {

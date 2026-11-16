@@ -32,7 +32,7 @@
       <next-class id="nextClass" />
 
       <!-- 管理员入口 -->
-      <view wx:if="{{isManager}}" class="me-manager-row" bindtap="goManager">
+      <view wx:if="{{isManager || hasManagerToken}}" class="me-manager-row" bindtap="goManager">
         <view class="me-manager-left">
           <text class="me-manager-title">进入手机端管家工作台</text>
           <text class="me-manager-desc">预约 · 排课 · 会员管理</text>
@@ -111,10 +111,14 @@
           </view>
         </view>
 
-        <view class="me-group-label">关于</view>
+        <view class="me-group-label">关于与管理</view>
         <view class="me-menu-card">
           <view class="list-row" bindtap="goToBrand">
             <text class="me-menu-title">了解徕舞</text>
+            <view class="list-row__arrow"></view>
+          </view>
+          <view class="list-row" bindtap="goManager">
+            <text class="me-menu-title">管家工作台（管理员专线）</text>
             <view class="list-row__arrow"></view>
           </view>
           <view class="list-row me-logout-row" bindtap="handleLogout">
