@@ -1,10 +1,11 @@
-/* pages/login · 登录 */
+/* pages/login · 统一登录（粉白美学版） */
 
 page {
-  background-color: var(--c-bg, #ffffff);
-  color: var(--c-text, #222222);
+  background-color: #FDFCF9;
+  color: #1A1A1A;
   font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  box-sizing: border-box;
 }
 
 .login-container {
@@ -14,11 +15,13 @@ page {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  background: linear-gradient(180deg, #FBF1EE 0%, #FDF7F5 28%, #FDFCF9 65%, #FFFFFF 100%);
 }
 
+/* 品牌区 */
 .brand {
   text-align: center;
-  margin-bottom: 56rpx;
+  margin-bottom: 64rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -26,85 +29,100 @@ page {
 
 .brand-name {
   display: block;
-  font-family: var(--font-sans);
-  font-size: 56rpx;
-  font-weight: 700;
-  color: var(--c-title, #000000);
-  letter-spacing: 0;
-  line-height: 1.2;
+  font-size: 88rpx;
+  font-weight: 800;
+  color: #1A1A1A;
+  letter-spacing: 2rpx;
+  line-height: 1.15;
 }
 
 .brand-subtitle {
   display: block;
-  margin-top: 12rpx;
+  margin-top: 14rpx;
   font-size: 24rpx;
-  color: var(--c-muted, #666666);
-  letter-spacing: 0;
+  font-weight: 500;
+  color: #B92E32;
+  letter-spacing: 6rpx;
 }
 
-.guide {
-  text-align: center;
-  margin-bottom: 40rpx;
-}
-
-.guide-text {
-  font-size: var(--fs-sub, 26rpx);
-  color: var(--c-muted, #666666);
-  letter-spacing: 0;
-}
-
+/* 输入表单 */
 .input-card {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 20rpx;
+  gap: 24rpx;
 }
 
 .invite-input {
   width: 100%;
   box-sizing: border-box;
-  height: 96rpx;
-  padding: 0 32rpx;
-  background: #ffffff;
-  border: 4rpx solid var(--c-line, #e8e8e8);
-  border-radius: 0;
-  text-align: center;
+  height: 104rpx;
+  padding: 0 36rpx;
+  background: #FFFFFF;
+  border: 2rpx solid rgba(185, 46, 50, 0.16);
+  border-radius: 22rpx;
   font-size: 28rpx;
-  color: var(--c-title, #000000);
-  box-shadow: none;
-  transition: border-color var(--dur-fast) var(--ease);
+  color: #1A1A1A;
+  box-shadow: 0 6rpx 20rpx rgba(185, 46, 50, 0.04);
+  transition: all 0.2s ease;
 }
 
 .invite-input:focus {
-  border-color: #000000;
+  border-color: #B92E32;
+  box-shadow: 0 8rpx 24rpx rgba(185, 46, 50, 0.1);
+  background: #FFFFFF;
 }
 
 .phone-suffix-input {
-  font-size: 28rpx;
-  background: #ffffff;
+  background: #FFFFFF;
 }
 
 .input-placeholder {
-  color: var(--c-hint, #999999);
-  font-size: var(--fs-caption, 24rpx);
+  color: #A39B95;
+  font-size: 26rpx;
 }
 
+/* 提示文案 */
 .login-hint {
   display: block;
-  margin-top: 20rpx;
+  margin-top: 24rpx;
   font-size: 22rpx;
-  line-height: 1.7;
-  color: var(--c-muted, #666666);
+  line-height: 1.6;
+  color: #8C827A;
   text-align: center;
 }
 
+/* 主登录按钮：徕舞胭脂绛红渐变 */
 .login-btn {
-  margin-top: 36rpx;
+  margin-top: 40rpx;
   width: 100%;
+  height: 96rpx;
+  line-height: 96rpx;
+  background: linear-gradient(135deg, #8C1C20 0%, #B92E32 50%, #C93337 100%);
+  color: #FFFFFF;
+  font-size: 30rpx;
+  font-weight: 600;
+  letter-spacing: 6rpx;
+  border-radius: 999rpx;
+  border: none;
+  box-shadow: 0 10rpx 28rpx rgba(185, 46, 50, 0.28);
+  transition: all 0.15s ease;
 }
 
+.login-btn:active {
+  opacity: 0.92;
+  transform: scale(0.99);
+}
+
+.login-btn[disabled] {
+  background: #E8D7D5 !important;
+  color: #FFFFFF !important;
+  box-shadow: none !important;
+}
+
+/* 先逛逛 */
 .guest-skip-wrap {
-  margin-top: 28rpx;
+  margin-top: 32rpx;
   padding: 16rpx 0;
   display: flex;
   justify-content: center;
@@ -112,53 +130,44 @@ page {
 }
 
 .guest-skip-text {
-  font-size: var(--fs-caption, 24rpx);
-  color: var(--c-title, #000000);
-  letter-spacing: 0;
+  font-size: 24rpx;
+  color: #B92E32;
+  letter-spacing: 1rpx;
   text-decoration: underline;
   text-underline-offset: 6rpx;
+  font-weight: 500;
 }
 
 .guest-skip-wrap:active .guest-skip-text {
   opacity: 0.7;
 }
 
+/* 错误提示卡片 */
 .error-text {
   display: block;
   margin-top: 24rpx;
-  padding: 16rpx 20rpx;
+  padding: 16rpx 24rpx;
   text-align: center;
-  font-size: var(--fs-caption, 24rpx);
-  color: var(--c-text, #222222);
-  background: var(--c-card-soft, #f6f6f6);
-  border: 1px solid var(--c-line, #e8e8e8);
-  border-radius: 0;
+  font-size: 24rpx;
+  color: #B91C1C;
+  background: #FDF2F2;
+  border: 1rpx solid #FACDCD;
+  border-radius: 16rpx;
+  line-height: 1.5;
 }
 
+/* 底部说明 */
 .footer-wrap {
-  margin-top: 56rpx;
+  margin-top: 64rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20rpx;
+  gap: 16rpx;
 }
 
 .footer-note {
   display: block;
   text-align: center;
-  font-size: var(--fs-micro, 22rpx);
-  color: var(--c-hint, #999999);
+  font-size: 22rpx;
+  color: #A39B95;
 }
-
-/* ===== v2.2 深色沉浸（BRIEF_06 §5.6） ===== */
-page, .login-container { background-color: #141414 !important; color: #ffffff; }
-.brand-name { color: #ffffff !important; font-size: 104rpx !important; font-weight: 700 !important; letter-spacing: -1rpx; line-height: 1.1; }
-.brand-subtitle, .guide-text, .login-hint, .footer-note { color: rgba(255, 255, 255, 0.72) !important; }
-.input-card { background: transparent !important; border: none !important; }
-.invite-input { background: #1f1f1f !important; color: #ffffff !important; border: 1px solid rgba(255, 255, 255, 0.16) !important; border-radius: 0 !important; }
-.invite-input:focus { border-color: #ffffff !important; }
-.input-placeholder { color: rgba(255, 255, 255, 0.48) !important; }
-.login-btn { background: #ffffff !important; color: #000000 !important; }
-.login-btn[disabled] { background: rgba(255, 255, 255, 0.48) !important; color: #000000 !important; }
-.guest-skip-text { color: rgba(255, 255, 255, 0.72) !important; }
-.error-text { color: #ffffff !important; background: #1f1f1f !important; border: none !important; }
