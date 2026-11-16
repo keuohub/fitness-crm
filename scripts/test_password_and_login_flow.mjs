@@ -55,8 +55,8 @@ async function run() {
 
   console.log("\n=== 3. 检查小程序页面配置与输入长度 ===");
   const loginWxml = fs.readFileSync("miniprogram/pages/login/login.wxml", "utf-8");
-  if (!loginWxml.includes("login-mode-tabs")) throw new Error("缺少登录双模选项卡");
-  if (!loginWxml.includes("管家管理中枢")) throw new Error("缺少管家管理中枢通道");
+  // 已优化为单入口统一登录
+  if (!loginWxml.includes("handleUnifiedLogin")) throw new Error("缺少统一登录接口");
   console.log("小程序学员/管家双通道配置校验通过");
 
   console.log("\n ALL TESTS PASSED SUCCESSFULLY! ✅");

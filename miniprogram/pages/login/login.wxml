@@ -3,101 +3,43 @@
   <!-- 品牌标识区 -->
   <view class="brand">
     <text class="brand-name">徕舞</text>
-    <text class="brand-subtitle">女子塑形 · 会员与管家服务中枢</text>
+    <text class="brand-subtitle">女子塑形</text>
   </view>
 
-  <!-- 登录角色双模切换器 -->
-  <view class="login-mode-tabs">
-    <view
-      class="login-mode-tab {{loginMode === 'member' ? 'is-active' : ''}}"
-      data-mode="member"
-      bindtap="switchLoginMode"
-    >
-      学员档案开启
-    </view>
-    <view
-      class="login-mode-tab {{loginMode === 'manager' ? 'is-active' : ''}}"
-      data-mode="manager"
-      bindtap="switchLoginMode"
-    >
-      管家管理中枢
-    </view>
+  <!-- 统一登录卡片：同唯一登录入口，输入学员信息进学员端，输入管理员账号密码进管理端 -->
+  <view class="input-card">
+    <input
+      class="invite-input"
+      value="{{accountInput}}"
+      placeholder="请输入手机号或管理员账号"
+      placeholder-class="input-placeholder"
+      bindinput="onAccountInput"
+      maxlength="50"
+      confirm-type="next"
+    />
+    <input
+      class="invite-input phone-suffix-input"
+      value="{{passwordInput}}"
+      password="true"
+      placeholder="请输入密码（手机后4位或管理密码）"
+      placeholder-class="input-placeholder"
+      bindinput="onPasswordInput"
+      maxlength="50"
+      confirm-type="go"
+      bindconfirm="handleUnifiedLogin"
+    />
   </view>
 
-  <!-- 模式 1：学员手机号登录 -->
-  <block wx:if="{{loginMode === 'member'}}">
-    <view class="input-card">
-      <input
-        class="invite-input"
-        value="{{inviteCode}}"
-        placeholder="请输入入会登记的 11 位手机号"
-        placeholder-class="input-placeholder"
-        bindinput="onCodeInput"
-        maxlength="20"
-        confirm-type="next"
-      />
-      <input
-        class="invite-input phone-suffix-input"
-        value="{{phoneSuffix}}"
-        placeholder="请输入手机后 4 位密码"
-        placeholder-class="input-placeholder"
-        bindinput="onPhoneSuffixInput"
-        maxlength="6"
-        type="number"
-        confirm-type="go"
-        bindconfirm="handleLogin"
-      />
-    </view>
+  <text class="login-hint">老会员请输入入会手机号与后4位；管理人员输入管理账号与密码</text>
 
-    <text class="login-hint">老会员请使用在馆内登记的手机号与后 4 位直接登录</text>
-
-    <!-- 登录按钮 -->
-    <button class="btn-primary login-btn" bindtap="handleLogin" loading="{{submitting}}" disabled="{{submitting}}">
-      {{submitting ? "正在开启档案..." : "开启专属成长手札"}}
-    </button>
-  </block>
-
-  <!-- 模式 2：专职管理员/店长专属登录 (无长度截断，支持全字符安全密码) -->
-  <block wx:else>
-    <view class="input-card">
-      <input
-        class="invite-input"
-        value="{{managerUsername}}"
-        placeholder="请输入管理员专属账号（如 laiwu_admin）"
-        placeholder-class="input-placeholder"
-        bindinput="onManagerUsernameInput"
-        maxlength="50"
-        confirm-type="next"
-      />
-      <input
-        class="invite-input"
-        value="{{managerPassword}}"
-        password="true"
-        placeholder="请输入管理员登录密码"
-        placeholder-class="input-placeholder"
-        bindinput="onManagerPasswordInput"
-        maxlength="50"
-        confirm-type="go"
-        bindconfirm="handleManagerLogin"
-      />
-    </view>
-
-    <text class="login-hint">专职管家凭授权账号登录，所有关键操作均严格留痕寻迹</text>
-
-    <!-- 管家登录按钮 -->
-    <button class="btn-primary login-btn mgr-login-btn" bindtap="handleManagerLogin" loading="{{managerSubmitting}}" disabled="{{managerSubmitting}}">
-      {{managerSubmitting ? "正在验证管家身份..." : "安全进入管家工作台"}}
-    </button>
-  </block>
+  <!-- 登录按钮 -->
+  <button class="btn-primary login-btn" bindtap="handleUnifiedLogin" loading="{{submitting}}" disabled="{{submitting}}">
+    {{submitting ? "正在验证身份..." : "登 录"}}
+  </button>
 
   <!-- 暂不登录 / 返回首页体验 -->
   <view class="guest-skip-wrap" bindtap="handleSkipLogin">
     <text class="btn-text guest-skip-text">先逛逛，看看徕舞的课</text>
-  </view>
-
-  <!-- 底部快捷切换管家入口 (当在学员模式时提醒) -->
-  <view wx:if="{{loginMode === 'member'}}" class="guest-skip-wrap" bindtap="switchToManagerMode">
-    <text class="guest-skip-text mgr-toggle-text">🔑 专职管家与店长登录通道 ›</text>
   </view>
 
   <!-- 错误提示 -->
