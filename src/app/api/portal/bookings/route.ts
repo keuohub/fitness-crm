@@ -37,9 +37,22 @@ export async function GET(request: NextRequest) {
     LEFT JOIN users u2 ON u2.id = s.coach_id
     LEFT JOIN rooms r ON r.id = s.room_id
     WHERE b.tenant_id = 1 AND b.member_id = ${memberId}
-      AND (${scope !== "upcoming"} OR (b.status = 'booked' AND s.session_date >= ${beijingToday()}))
+      AND (${scope !== "upcoming"} OR (b.status IN ('booked', 'waitlist') AND s.session_date >= ${beijingToday()}))
     ORDER BY s.session_date DESC, s.start_time DESC LIMIT 100`;
-  const response = NextResponse.json({ bookings: rows });
+
+  // 为候补订单计算排队序号
+  const enrichedRows = await Promise.all(rows.map(async (b: any) => {
+    if (b.status === 'waitlist') {
+      const [pos] = await rawSql`
+        SELECT COUNT(*)::int AS pos FROM bookings
+        WHERE tenant_id = 1 AND session_id = ${b.session_id} AND status = 'waitlist'
+          AND booked_at <= ${b.booked_at}`;
+      return { ...b, waitlistPosition: Number(pos?.pos || 1) };
+    }
+    return b;
+  }));
+
+  const response = NextResponse.json({ bookings: enrichedRows });
   response.headers.set("Cache-Control", "private, no-store");
   return response;
 }
@@ -54,8 +67,23 @@ export async function POST(request: NextRequest) {
 
   const [existing] = await rawSql`
     SELECT * FROM bookings WHERE tenant_id = 1 AND member_id = ${memberId}
-      AND session_id = ${sessionId} AND status = 'booked' LIMIT 1`;
-  if (existing) return NextResponse.json({ booking: existing, duplicate: true }, { status: 200 });
+      AND session_id = ${sessionId} AND status IN ('booked', 'waitlist') LIMIT 1`;
+  if (existing) {
+    if (existing.status === "waitlist") {
+      const [posRow] = await rawSql`
+        SELECT COUNT(*)::int AS pos FROM bookings
+        WHERE tenant_id = 1 AND session_id = ${sessionId} AND status = 'waitlist'
+          AND booked_at <= ${existing.booked_at}`;
+      return NextResponse.json({
+        booking: existing,
+        duplicate: true,
+        status: "waitlist",
+        waitlistPosition: Number(posRow?.pos || 1),
+        message: `您已在候补队列中（第 ${posRow?.pos || 1} 位）`
+      }, { status: 200 });
+    }
+    return NextResponse.json({ booking: existing, duplicate: true, status: "booked" }, { status: 200 });
+  }
 
   const [session] = await rawSql`
     SELECT s.*, c.name AS course_name FROM class_sessions s
@@ -165,9 +193,25 @@ export async function POST(request: NextRequest) {
     if (!rows.length) {
       const [again] = await rawSql`
         SELECT * FROM bookings WHERE tenant_id = 1 AND member_id = ${memberId}
-          AND session_id = ${sessionId} AND status = 'booked' LIMIT 1`;
+          AND session_id = ${sessionId} AND status IN ('booked', 'waitlist') LIMIT 1`;
       if (again) return NextResponse.json({ booking: again, duplicate: true }, { status: 200 });
-      return bad("名额已满", 409);
+
+      // 正选名额已满，自动排入候补队列 (Waitlist)
+      const [waitlistBooking] = await rawSql`
+        INSERT INTO bookings (tenant_id, session_id, member_id, status, idempotency_key)
+        VALUES (1, ${sessionId}, ${memberId}, 'waitlist', ${key})
+        RETURNING *`;
+      const [posRow] = await rawSql`
+        SELECT COUNT(*)::int AS pos FROM bookings
+        WHERE tenant_id = 1 AND session_id = ${sessionId} AND status = 'waitlist'
+          AND booked_at <= ${waitlistBooking.booked_at}`;
+      const pos = Number(posRow?.pos || 1);
+      return NextResponse.json({
+        booking: waitlistBooking,
+        status: "waitlist",
+        waitlistPosition: pos,
+        message: `名额已满，已为您加入候补排队（第 ${pos} 位），若有席位释放将自动替补`
+      }, { status: 201 });
     }
     const booking = rows[0];
 

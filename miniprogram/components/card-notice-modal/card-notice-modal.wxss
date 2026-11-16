@@ -1,0 +1,308 @@
+/* 新开卡尊享通知与礼盒弹窗样式 (LAIWU Luxury Card Onboarding Style) */
+
+.cnm-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.cnm-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(13, 12, 15, 0.72);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.cnm-container {
+  position: relative;
+  z-index: 2;
+  width: 630rpx;
+  max-width: 90vw;
+  background: linear-gradient(175deg, #FFFFFF 0%, #FAF8F5 60%, #F5EFEB 100%);
+  border-radius: 40rpx;
+  padding: 56rpx 40rpx 48rpx;
+  box-shadow: 0 32rpx 96rpx rgba(0, 0, 0, 0.35), 0 0 0 1rpx rgba(255, 255, 255, 0.8) inset;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+  animation: cnmPopIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes cnmPopIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(40rpx);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* 右上角关闭按钮 (×) */
+.cnm-close-btn {
+  position: absolute;
+  top: 28rpx;
+  right: 28rpx;
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.cnm-close-icon {
+  font-size: 26rpx;
+  color: #8A8588;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.cnm-btn-hover {
+  opacity: 0.85;
+  transform: scale(0.97);
+}
+
+/* 顶部致辞区 */
+.cnm-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+}
+
+.cnm-brand-capsule {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 6rpx 20rpx;
+  background: rgba(185, 46, 50, 0.06);
+  border-radius: 99rpx;
+  margin-bottom: 16rpx;
+}
+
+.cnm-brand-dot {
+  width: 6rpx;
+  height: 6rpx;
+  border-radius: 50%;
+  background: #B92E32;
+}
+
+.cnm-brand-title {
+  font-size: 20rpx;
+  font-weight: 600;
+  letter-spacing: 4rpx;
+  color: #B92E32;
+}
+
+.cnm-main-title {
+  font-size: 42rpx;
+  font-weight: 700;
+  color: #1A1719;
+  letter-spacing: 6rpx;
+  margin-bottom: 20rpx;
+  font-family: serif;
+}
+
+.cnm-greeting {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #2D282A;
+  margin-bottom: 12rpx;
+}
+
+.cnm-blessing {
+  font-size: 24rpx;
+  line-height: 1.65;
+  color: #6E686C;
+  padding: 0 10rpx;
+  margin-bottom: 36rpx;
+}
+
+/* 实体金卡信息区 */
+.cnm-card-item {
+  position: relative;
+  width: 100%;
+  background: linear-gradient(135deg, #262124 0%, #151214 100%);
+  border-radius: 28rpx;
+  padding: 36rpx 32rpx;
+  color: #FFFFFF;
+  box-sizing: border-box;
+  box-shadow: 0 16rpx 40rpx rgba(185, 46, 50, 0.15), 0 0 0 1rpx rgba(226, 185, 140, 0.25) inset;
+  overflow: hidden;
+  margin-bottom: 36rpx;
+}
+
+.cnm-card-head {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 28rpx;
+}
+
+.cnm-card-badge-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 10rpx;
+}
+
+.cnm-card-badge {
+  font-size: 19rpx;
+  color: #E6BC8B;
+  background: rgba(230, 188, 139, 0.18);
+  padding: 4rpx 14rpx;
+  border-radius: 8rpx;
+  letter-spacing: 2rpx;
+}
+
+.cnm-vip-badge {
+  font-size: 18rpx;
+  color: #FFFFFF;
+  background: #B92E32;
+  padding: 4rpx 12rpx;
+  border-radius: 6rpx;
+  letter-spacing: 1rpx;
+}
+
+.cnm-card-name {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #FFFFFF;
+  letter-spacing: 2rpx;
+}
+
+/* 核心课时数字区 */
+.cnm-card-quota-row {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 0;
+  border-top: 1rpx solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1rpx solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 24rpx;
+}
+
+.cnm-quota-block {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.cnm-quota-num {
+  font-size: 48rpx;
+  font-weight: 700;
+  color: #E6BC8B;
+  line-height: 1;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  margin-bottom: 8rpx;
+}
+
+.cnm-quota-num-sub {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1;
+  margin-bottom: 8rpx;
+}
+
+.cnm-quota-label {
+  font-size: 20rpx;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 1rpx;
+}
+
+.cnm-quota-divider {
+  width: 1rpx;
+  height: 50rpx;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* 适用课种与有效期明细行 */
+.cnm-card-details {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.cnm-detail-line {
+  display: flex;
+  align-items: flex-start;
+  font-size: 22rpx;
+  line-height: 1.4;
+}
+
+.cnm-detail-k {
+  width: 120rpx;
+  color: rgba(255, 255, 255, 0.45);
+  flex-shrink: 0;
+}
+
+.cnm-detail-v {
+  flex: 1;
+  color: rgba(255, 255, 255, 0.88);
+  font-weight: 500;
+}
+
+/* 背景品牌水印 */
+.cnm-card-watermark {
+  position: absolute;
+  right: -20rpx;
+  bottom: -15rpx;
+  font-size: 40rpx;
+  font-weight: 900;
+  letter-spacing: 4rpx;
+  color: rgba(255, 255, 255, 0.03);
+  pointer-events: none;
+}
+
+/* 底部行动按键 */
+.cnm-footer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.cnm-btn-primary {
+  width: 100% !important;
+  height: 92rpx;
+  line-height: 92rpx;
+  background: linear-gradient(135deg, #C2383C 0%, #A32226 100%);
+  color: #FFFFFF;
+  font-size: 30rpx;
+  font-weight: 600;
+  border-radius: 46rpx;
+  text-align: center;
+  letter-spacing: 3rpx;
+  box-shadow: 0 12rpx 28rpx rgba(185, 46, 50, 0.35);
+  margin-bottom: 20rpx;
+  border: none;
+}
+
+.cnm-btn-primary::after {
+  border: none;
+}
+
+.cnm-footer-tip {
+  font-size: 21rpx;
+  color: #A39D9F;
+  letter-spacing: 1rpx;
+}

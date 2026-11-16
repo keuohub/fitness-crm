@@ -105,8 +105,15 @@ export async function POST(request: NextRequest) {
                       AND ctc.course_category_id = ${session?.course_category_id || 0})
            OR NOT EXISTS (SELECT 1 FROM card_type_courses ctc2 WHERE ctc2.card_type_id = ct.id)
          )
-       ORDER BY CASE WHEN ct.category = 'period' THEN 0 ELSE 1 END,
-                mc.remaining_count DESC, mc.id
+       ORDER BY
+         -- 与教练端 coach/check-in、手机端 manager/checkin 保持同一套扣卡优先级：
+         -- ① 专用卡优于通卡（有课种绑定的排前面，绑定越少越专用）
+         -- ② 同类多张时最早到期的先扣，避免好卡放过期
+         ((SELECT COUNT(*)::int FROM card_type_courses ctc_o WHERE ctc_o.card_type_id = ct.id) = 0) ASC,
+         (SELECT COUNT(*)::int FROM card_type_courses ctc_o WHERE ctc_o.card_type_id = ct.id) ASC,
+         CASE WHEN ct.category = 'period' THEN 0 ELSE 1 END,
+         CASE WHEN mc.valid_until IS NULL THEN 1 ELSE 0 END,
+         mc.valid_until, mc.id
        LIMIT 1
        FOR UPDATE OF mc`;
 

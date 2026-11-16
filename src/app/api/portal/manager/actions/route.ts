@@ -73,11 +73,39 @@ export async function GET(request: NextRequest) {
             THEN CONCAT(SUBSTRING(m.phone, 1, 3), '****', SUBSTRING(m.phone, 8, 4))
             ELSE COALESCE(m.member_code, '学员')
           END as member_phone,
-          m.member_code
+          m.member_code,
+          -- 名单上要显示"她用哪张卡"，约刻的做法是每行标卡名，前台一眼看出余次从哪扣。
+          -- 取当前最该扣的那张：针对本节课课种，专用卡优先，其次最早到期的卡。
+          (
+            SELECT ct.name
+            FROM member_cards mc
+            JOIN card_types ct ON ct.id = mc.card_type_id
+            WHERE mc.tenant_id = 1
+              AND mc.member_id = m.id
+              AND mc.status = 'active'
+              AND (
+                mc.valid_until IS NULL
+                OR mc.valid_until::text !~ '^[0-9]{4}'
+                OR mc.valid_until::date >= CURRENT_DATE
+              )
+              AND (
+                EXISTS (SELECT 1 FROM card_type_courses ctc WHERE ctc.card_type_id = ct.id AND ctc.course_category_id = cs.course_category_id)
+                OR NOT EXISTS (SELECT 1 FROM card_type_courses ctc2 WHERE ctc2.card_type_id = ct.id)
+              )
+            ORDER BY 
+              ((SELECT COUNT(*)::int FROM card_type_courses ctc_o WHERE ctc_o.card_type_id = ct.id) = 0) ASC,
+              (SELECT COUNT(*)::int FROM card_type_courses ctc_o WHERE ctc_o.card_type_id = ct.id) ASC,
+              CASE WHEN ct.category = 'period' THEN 0 ELSE 1 END,
+              CASE WHEN mc.valid_until IS NULL THEN 1 ELSE 0 END,
+              mc.valid_until, mc.id
+            LIMIT 1
+          ) as card_name,
+          (SELECT COUNT(*)::int FROM attendance a WHERE a.booking_id = b.id) as attendance_count
         FROM bookings b
         JOIN members m ON b.member_id = m.id
+        JOIN class_sessions cs ON cs.id = b.session_id
         WHERE b.session_id = ANY(${sessionIds})
-          AND b.status IN ('booked', 'attended')
+          AND b.status IN ('booked', 'attended', 'no_show')
         ORDER BY b.id ASC
       `.catch(() => []);
     }
@@ -165,6 +193,89 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ members: list, total, page, pageSize });
   }
 
+  // 4.5 会员详情（手机端"点进一个人"看全部）
+  // 约刻的会员信息页只有 6 个只读字段，点行没有任何反应，馆长想知道"她还剩几次、上次来是什么时候"
+  // 只能靠导出表格去翻。这里一次性给她画像：卡、余次、有效期、到课率、最近记录、下次预约。
+  if (action === "member_detail") {
+    const id = Number(u.searchParams.get("id") || 0);
+    if (!id) return bad("缺少会员 id");
+
+    const [member] = await rawSql`
+      SELECT id, name, gender, phone, birthday, joined_at, member_code, status,
+             freeze_status, freeze_start, freeze_end, portal_enabled,
+             mentor_name, avatar_url, notes
+      FROM members
+      WHERE id = ${id} AND tenant_id = 1
+      LIMIT 1
+    `.catch(() => []);
+    if (!member) return bad("会员不存在", 404);
+
+    // 卡列表：active 排前面，其余按 id 倒序
+    const cards = await rawSql`
+      SELECT mc.id, ct.name AS card_name, ct.category,
+             mc.total_count, mc.remaining_count,
+             mc.valid_from, mc.valid_until, mc.status, mc.created_at,
+             (mc.total_count - mc.remaining_count) AS used_count
+      FROM member_cards mc
+      LEFT JOIN card_types ct ON ct.id = mc.card_type_id
+      WHERE mc.tenant_id = 1 AND mc.member_id = ${id}
+      ORDER BY CASE WHEN mc.status = 'active' THEN 0 ELSE 1 END, mc.id DESC
+    `.catch(() => []);
+
+    // 到课画像：到课数 / 未到数 / 最近一次到课
+    const [stat] = await rawSql`
+      SELECT
+        COUNT(*) FILTER (WHERE b.status = 'attended')::int AS attended,
+        COUNT(*) FILTER (WHERE b.status = 'no_show')::int  AS no_show,
+        COUNT(*) FILTER (WHERE b.status = 'cancelled')::int AS cancelled,
+        MAX(s.session_date) FILTER (WHERE b.status = 'attended') AS last_attended_date
+      FROM bookings b
+      JOIN class_sessions s ON s.id = b.session_id
+      WHERE b.tenant_id = 1 AND b.member_id = ${id}
+    `.catch(() => [{ attended: 0, no_show: 0, cancelled: 0, last_attended_date: null }]);
+
+    // 最近 10 条约课记录（含未到，馆长要能看出"她约了但不来"）
+    const recent = await rawSql`
+      SELECT b.id AS booking_id, b.status, b.booked_at,
+             s.id AS session_id, s.session_date, s.start_time, s.end_time,
+             COALESCE(c.name, s.title) AS course_name,
+             COALESCE(u.name, '') AS coach_name
+      FROM bookings b
+      JOIN class_sessions s ON s.id = b.session_id
+      LEFT JOIN course_categories c ON c.id = s.course_category_id
+      LEFT JOIN users u ON u.id = s.coach_id
+      WHERE b.tenant_id = 1 AND b.member_id = ${id}
+      ORDER BY s.session_date DESC, s.start_time DESC
+      LIMIT 10
+    `.catch(() => []);
+
+    // 下次要来的是哪节
+    const upcoming = await rawSql`
+      SELECT b.id AS booking_id, s.session_date, s.start_time,
+             COALESCE(c.name, s.title) AS course_name, b.status
+      FROM bookings b
+      JOIN class_sessions s ON s.id = b.session_id
+      LEFT JOIN course_categories c ON c.id = s.course_category_id
+      WHERE b.tenant_id = 1 AND b.member_id = ${id}
+        AND b.status IN ('booked', 'waitlist')
+        AND s.session_date >= to_char((NOW() AT TIME ZONE 'Asia/Shanghai'), 'YYYY-MM-DD')
+      ORDER BY s.session_date ASC, s.start_time ASC
+      LIMIT 3
+    `.catch(() => []);
+
+    // 当前可扣的那张卡（用于"还剩几次"的大字展示）
+    const activeCard = cards.find((c: any) => c.status === "active") || null;
+
+    return NextResponse.json({
+      member,
+      cards,
+      activeCard,
+      stat: stat || {},
+      recent,
+      upcoming,
+    });
+  }
+
   // 5. 获取会员卡明细（手机号脱敏）
   if (action === "cards") {
     const list = await rawSql`
@@ -225,6 +336,163 @@ export async function POST(request: NextRequest) {
   const u = new URL(request.url);
   const action = u.searchParams.get("action") || "";
   const body = await request.json().catch(() => ({}));
+
+  // 0. 签到 / 标记未到（馆长在手机端代签）
+  // 约刻的做法是名单每行一个「签到」，点了就扣次记出勤。我们这条链路原来只对教练开放
+  // （coach/check-in 里硬校验 booking.coach_id === 当前教练），馆长拿手机签不了，
+  // 会员没预约就来了也没法补签，只能跑去电脑后台。这里按约刻的方式开放给馆长。
+  // status: attended = 到课（扣次）｜ no_show = 未到（不扣次，但必须记，
+  // 否则 autoSettleFinishedBookings 会把它当默认到课扣掉）。
+  if (action === "checkin") {
+    const bookingId = Number(body.bookingId || 0);
+    const status = String(body.status || "attended");
+    if (!bookingId) return bad("缺少 bookingId");
+    if (!["attended", "no_show"].includes(status)) return bad("status 只能是 attended 或 no_show");
+
+    const [booking] = await rawSql`
+      SELECT b.*, s.coach_id, s.session_date, s.course_category_id,
+             COALESCE(c.name, s.title) AS course_name
+      FROM bookings b
+      JOIN class_sessions s ON s.id = b.session_id
+      LEFT JOIN course_categories c ON c.id = s.course_category_id
+      WHERE b.id = ${bookingId} AND b.tenant_id = 1
+      LIMIT 1
+    `.catch(() => []);
+    if (!booking) return bad("预约不存在", 404);
+    if (booking.status === "cancelled") return bad("这笔预约已取消，不能签到", 409);
+
+    // 先挡一道重复签到：没有这条判断，连点两次就会扣两次次卡
+    const [dup] = await rawSql`
+      SELECT id, status FROM attendance WHERE booking_id = ${bookingId} LIMIT 1
+    `.catch(() => []);
+    if (dup) {
+      return NextResponse.json({
+        success: true, duplicate: true, status: dup.status,
+        message: dup.status === "no_show" ? "已经标记过未到" : "已经签到过了",
+      });
+    }
+
+    const operatorId = Number(manager.managerUserId || 1) || 1;
+    const noteText = (status === "attended" ? "馆长代签到 · " : "馆长标记未到 · ") + (booking.course_name || "");
+    const txNote = (status === "attended" ? "馆长代签到扣次 · " : "馆长标记未到扣次 · ") + (booking.course_name || "");
+
+    // 一条 CTE 走完：锁卡 → 写考勤 → 扣次 → 写流水 → 改预约状态。
+    // 中途任何一步没数据（比如这张卡不能上这种课），整条语句不出行，账不会半截。
+    const rows = await rawSql`
+      WITH booking_ok AS (
+        SELECT id, session_id, member_id FROM bookings
+        WHERE id = ${bookingId} AND tenant_id = 1
+          AND status IN ('booked', 'unsettled')
+        FOR UPDATE
+      ), candidate AS (
+        SELECT mc.id, mc.remaining_count, ct.category,
+               COALESCE((SELECT COUNT(*)::int FROM card_type_courses ctc_cnt
+                          WHERE ctc_cnt.card_type_id = ct.id), 0) AS course_scope
+        FROM member_cards mc
+        JOIN card_types ct ON ct.id = mc.card_type_id
+        JOIN booking_ok bo ON bo.member_id = mc.member_id
+        JOIN class_sessions s ON s.id = bo.session_id
+        WHERE mc.tenant_id = 1
+          AND mc.status = 'active'
+          AND (mc.valid_from IS NULL OR mc.valid_from::text !~ '^[0-9]{4}' OR mc.valid_from::date <= s.session_date::date)
+          AND (mc.valid_until IS NULL OR mc.valid_until::text !~ '^[0-9]{4}' OR mc.valid_until::date >= s.session_date::date)
+          AND (ct.category = 'period' OR mc.remaining_count > 0)
+          AND (
+            EXISTS (SELECT 1 FROM card_type_courses ctc
+                     WHERE ctc.card_type_id = ct.id
+                       AND ctc.course_category_id = s.course_category_id)
+            OR NOT EXISTS (SELECT 1 FROM card_type_courses ctc2 WHERE ctc2.card_type_id = ct.id)
+          )
+        -- 扣卡优先级与教练端 coach/check-in 完全一致（项目档案硬规则）：
+        -- ① 专用卡优于通卡（有课种绑定的一律排前面，绑定越少越专用）
+        -- ② 同类多张时，最早到期的先扣，避免好卡放过期
+        ORDER BY
+          ((SELECT COUNT(*)::int FROM card_type_courses ctc_o WHERE ctc_o.card_type_id = ct.id) = 0) ASC,
+          (SELECT COUNT(*)::int FROM card_type_courses ctc_o WHERE ctc_o.card_type_id = ct.id) ASC,
+          CASE WHEN ct.category = 'period' THEN 0 ELSE 1 END,
+          CASE WHEN mc.valid_until IS NULL THEN 1 ELSE 0 END,
+          mc.valid_until, mc.id
+        LIMIT 1
+        FOR UPDATE OF mc
+      ), att AS (
+        INSERT INTO attendance
+          (tenant_id, session_id, member_id, booking_id, status, marked_by, marked_at, note)
+        SELECT 1, bo.session_id, bo.member_id, bo.id, ${status}, ${operatorId}, NOW(), ${noteText}
+        FROM booking_ok bo
+        -- 标记未到不需要有卡（爽约也要留记录），到课才必须能挑出一张可扣的卡
+        WHERE ${status} = 'no_show' OR EXISTS (SELECT 1 FROM candidate)
+        ON CONFLICT DO NOTHING
+        RETURNING id
+      ), deduct AS (
+        UPDATE member_cards
+           SET remaining_count = GREATEST(remaining_count - 1, 0), updated_at = NOW()
+         WHERE id = (SELECT id FROM candidate WHERE category = 'count')
+           AND EXISTS (SELECT 1 FROM att)
+        RETURNING id, remaining_count
+      ), tx AS (
+        INSERT INTO card_transactions
+          (tenant_id, member_card_id, member_id, booking_id, type, amount, balance_after, note, created_by)
+        SELECT 1, ca.id, bo.member_id, bo.id, 'deduct',
+               CASE WHEN ca.category = 'count' THEN -1 ELSE 0 END,
+               COALESCE((SELECT remaining_count FROM deduct), ca.remaining_count),
+               ${txNote}, ${operatorId}
+        FROM candidate ca, booking_ok bo
+        WHERE EXISTS (SELECT 1 FROM att)
+        RETURNING id
+      ), upd AS (
+        UPDATE bookings SET status = ${status}, updated_at = NOW()
+        WHERE id = ${bookingId} AND EXISTS (SELECT 1 FROM att)
+        RETURNING id, status
+      )
+      SELECT
+        (SELECT count(*)::int FROM att)                  AS inserted,
+        (SELECT id FROM candidate)                       AS card_id,
+        (SELECT category FROM candidate)                 AS card_category,
+        COALESCE((SELECT remaining_count FROM deduct), (SELECT remaining_count FROM candidate)) AS card_remaining
+    `.catch((e: any) => {
+      console.error("[manager/checkin] cte error", e?.message);
+      return [];
+    });
+
+    const r: any = (rows && rows[0]) || null;
+    if (!r) return bad("签到失败，请重试", 500);
+
+    if (Number(r.inserted) === 0) {
+      // 上面已经挡过一次重复签到，走到这里要么是并发重复，要么是真没卡可扣
+      const [again] = await rawSql`
+        SELECT id, status FROM attendance WHERE booking_id = ${bookingId} LIMIT 1
+      `.catch(() => []);
+      if (again) {
+        return NextResponse.json({
+          success: true, duplicate: true, status: again.status,
+          message: "这条预约已经处理过了",
+        });
+      }
+      return bad(
+        "这个学员没有能上这节课的有效卡，没法扣次。请先给她开卡或补次，再签到。",
+        409
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      bookingId,
+      status,
+      memberName: booking.member_name || "",
+      cardCategory: r.card_category,
+      cardRemaining: r.card_category === "count" ? Number(r.card_remaining || 0) : null,
+      message: (function() {
+        // 按项目档案硬规则：旷课（未到）同样计入未到记录并扣 1 次课时，
+        // 只有"她名下根本没有可用卡"时才出现未扣次的情况。
+        var act = status === "attended" ? "已签到" : "已记未到（旷课）";
+        if (r.card_category === "count") {
+          return act + "，次卡扣 1 节，卡内还剩 " + Number(r.card_remaining || 0) + " 节";
+        }
+        if (r.card_category === "period") return act + "（期限卡不扣次）";
+        return act + "（名下无可用卡，本次未扣次）";
+      })(),
+    });
+  }
 
   // 1. 取消预约并释放席位（校验预约原状态，已扣次课时原路退回，杜绝死锁与账实不符）
   if (action === "cancel_booking") {
@@ -657,6 +925,13 @@ export async function POST(request: NextRequest) {
         1, ${newCard.id}, ${memberId}, 'purchase', ${remaining ?? 0},
         ${remaining}, '管家手机端现场发卡', NOW()
       )
+    `.catch(() => {});
+
+    // 写入会员开卡礼盒待通知记录（会员登录/进入小程序自动弹窗送祝福）
+    await rawSql`
+      INSERT INTO member_card_notices (tenant_id, member_id, member_card_id, is_read, created_at)
+      VALUES (1, ${memberId}, ${newCard.id}, 0, NOW())
+      ON CONFLICT (member_card_id) DO NOTHING
     `.catch(() => {});
 
     return NextResponse.json({

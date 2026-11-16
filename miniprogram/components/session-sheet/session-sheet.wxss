@@ -127,6 +127,26 @@
   flex-shrink: 0;
 }
 
+.sheet-waitlist-tag {
+  height: 88rpx;
+  line-height: 88rpx;
+  padding: 0 32rpx;
+  font-size: 26rpx;
+  font-weight: 600;
+  border-radius: 999rpx;
+  background: #FAF0E6;
+  color: #B35C3A;
+  border: 1rpx solid #E29F84;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.sheet-btn-waitlist {
+  background: #B35C3A !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
 .sheet-btn-cancel {
   flex: 1;
   height: 88rpx;

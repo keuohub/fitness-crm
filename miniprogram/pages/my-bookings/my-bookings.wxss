@@ -147,6 +147,13 @@
   flex-direction: column;
 }
 
+.my-course-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  flex-wrap: wrap;
+}
+
 .my-course-name {
   font-size: var(--fs-h3, 30rpx);
   font-weight: 600;
@@ -154,6 +161,18 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.my-waitlist-pill {
+  display: inline-block;
+  padding: 2rpx 14rpx;
+  background: #FAF0E6;
+  color: #B35C3A;
+  font-size: 20rpx;
+  font-weight: 600;
+  border-radius: 4rpx;
+  letter-spacing: 0.5rpx;
+  line-height: 32rpx;
 }
 
 .my-time-range {

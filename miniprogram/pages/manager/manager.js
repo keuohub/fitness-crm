@@ -83,6 +83,18 @@ Page({
     loadingMembers: false,
     errorMembers: "",
 
+    // ── 会员详情 (memberDetail) ──
+    loadingMemberDetail: false,
+    errorMemberDetail: "",
+    currentDetailMemberId: 0,
+    detailMember: {},
+    detailCards: [],
+    detailActiveCard: null,
+    detailStat: {},
+    detailRecent: [],
+    detailUpcoming: [],
+    checkinSubmitting: false,
+
     // ── 会员卡项 (cards) ──
     cardsList: [],
     loadingCards: false,
@@ -159,6 +171,9 @@ Page({
       this.fetchCards(function() { wx.stopPullDownRefresh(); });
     } else if (this.data.currentView === "venue") {
       this.fetchVenue(function() { wx.stopPullDownRefresh(); });
+    } else if (this.data.currentView === "memberDetail") {
+      this.fetchMemberDetail(this.data.currentDetailMemberId);
+      wx.stopPullDownRefresh();
     } else if (this.data.currentView === "reports") {
       this.fetchReports(function() { wx.stopPullDownRefresh(); });
     } else {
@@ -287,6 +302,158 @@ Page({
 
   tapTeam: function() {
     wx.navigateTo({ url: "/pages/brand/brand" });
+  },
+
+  // ════════════════════════════════════════════════════════════
+  // 0. 会员详情（点进一个人看全部）
+  // 约刻的会员信息页只有 6 个只读字段、点行无反应，馆长想查"她还剩几次、
+  // 上次来是什么时候"只能导出表格翻。这里把档案、卡、到课画像一次给全。
+  // ════════════════════════════════════════════════════════════
+  openMemberDetail: function(e) {
+    var id = Number(e.currentTarget.dataset.id || 0);
+    if (!id) return;
+    var prev = this.data.currentView || "members";
+    this.setData({
+      currentView: "memberDetail",
+      prevDetailView: prev,
+      navTitle: "会员详情",
+      currentDetailMemberId: id,
+      loadingMemberDetail: true,
+      errorMemberDetail: "",
+      detailMember: {},
+      detailCards: [],
+      detailActiveCard: null,
+      detailStat: {},
+      detailRecent: [],
+      detailUpcoming: []
+    });
+    this.fetchMemberDetail(id);
+  },
+
+  retryMemberDetail: function() {
+    this.fetchMemberDetail(this.data.currentDetailMemberId);
+  },
+
+  goBackToMembers: function() {
+    // 回退到点进来的来源页面（如果在今日预约点进来就回今日预约，在会员列表点进来就回会员列表）
+    var prev = this.data.prevDetailView || "members";
+    var title = prev === "home" ? "管家工作台" : "会员中心";
+    this.setData({ currentView: prev, navTitle: title });
+  },
+
+  fetchMemberDetail: function(id) {
+    if (!id) return;
+    var that = this;
+    this.setData({ loadingMemberDetail: true, errorMemberDetail: "" });
+    api.request({
+      url: "/api/portal/manager/actions?action=member_detail&id=" + id,
+      success: function(res) {
+        if (res.statusCode === 200 && res.data) {
+          var d = res.data;
+          that.setData({
+            loadingMemberDetail: false,
+            errorMemberDetail: "",
+            detailMember: d.member || {},
+            detailCards: d.cards || [],
+            detailActiveCard: d.activeCard || null,
+            detailStat: d.stat || {},
+            detailRecent: d.recent || [],
+            detailUpcoming: d.upcoming || []
+          });
+        } else {
+          that.setData({
+            loadingMemberDetail: false,
+            errorMemberDetail: (res.data && res.data.error) || ("读取失败 HTTP " + res.statusCode)
+          });
+        }
+      },
+      fail: function() {
+        that.setData({ loadingMemberDetail: false, errorMemberDetail: "网络连接失败，点击重试" });
+      }
+    });
+  },
+
+  callMember: function() {
+    var phone = this.data.detailMember && this.data.detailMember.phone;
+    if (!phone) {
+      wx.showToast({ title: "没留手机号", icon: "none" });
+      return;
+    }
+    wx.makePhoneCall({ phoneNumber: String(phone) });
+  },
+
+  openIssueCardForDetail: function() {
+    var m = this.data.detailMember;
+    if (!m || !m.id) return;
+    this.openIssueCardWithMember({ id: m.id, name: m.name, phone: m.phone });
+  },
+
+  // ── 签到 / 标记未到 ──
+  // 约刻的名单每行一个「签到」，点了就扣次记出勤。我们原来只有教练能签
+  // （且必须是这节课的教练），馆长拿手机签不了。这里按约刻的方式开放给馆长。
+  doCheckin: function(e) {
+    var that = this;
+    var bookingId = e.currentTarget.dataset.id;
+    var name = e.currentTarget.dataset.name || "该学员";
+    var card = e.currentTarget.dataset.card || "会员卡";
+
+    wx.showActionSheet({
+      itemList: ["已到课（扣 1 节）", "未到 / 旷课（同样扣 1 节）"],
+      success: function(res) {
+        var status = res.tapIndex === 0 ? "attended" : "no_show";
+        var confirmText = status === "attended"
+          ? "确认【" + name + "】已到课？\n\n将从「" + card + "」扣 1 节课时。"
+          : "确认【" + name + "】没来？\n\n按馆内规则，旷课同样扣 1 次课时，并计入未到记录。";
+        wx.showModal({
+          title: status === "attended" ? "签到确认" : "未到确认",
+          content: confirmText,
+          confirmText: status === "attended" ? "确认签到" : "确认未到",
+          confirmColor: status === "attended" ? "#B92E32" : "#8A8A8E",
+          success: function(sm) {
+            if (!sm.confirm) return;
+            that.submitCheckin(bookingId, status);
+          }
+        });
+      }
+    });
+  },
+
+  submitCheckin: function(bookingId, status) {
+    var that = this;
+    if (this.data.checkinSubmitting) return;
+    this.setData({ checkinSubmitting: true });
+    wx.showLoading({ title: status === "attended" ? "正在签到扣次…" : "正在标记…" });
+
+    api.request({
+      url: "/api/portal/manager/actions?action=checkin",
+      method: "POST",
+      data: { bookingId: Number(bookingId), status: status },
+      success: function(res) {
+        wx.hideLoading();
+        that.setData({ checkinSubmitting: false });
+        if (res.statusCode === 200 && res.data && res.data.success) {
+          wx.showToast({ title: res.data.message || "已处理", icon: "none" });
+          // 名单、工作台、会员详情三处都可能受影响，一起刷
+          that.fetchBookings(that.data.selectedBookingDate);
+          that.loadDashboard();
+          if (that.data.currentView === "memberDetail" && that.data.currentDetailMemberId) {
+            that.fetchMemberDetail(that.data.currentDetailMemberId);
+          }
+        } else {
+          wx.showModal({
+            title: "没签上",
+            content: (res.data && res.data.error) || "签到失败，请重试",
+            showCancel: false,
+            confirmText: "知道了"
+          });
+        }
+      },
+      fail: function() {
+        wx.hideLoading();
+        that.setData({ checkinSubmitting: false });
+        wx.showToast({ title: "网络连接失败", icon: "none" });
+      }
+    });
   },
 
   // ── 主工作台数据加载 (P0-7 修复：取真实 totalCardsCount，删除 || 5 假数据) ──
@@ -1002,6 +1169,10 @@ Page({
               that.closeIssueCard();
               that.fetchMembers();
               that.loadDashboard();
+              // 从会员详情页开的卡，开完要立刻看到新卡，否则还得退出去再点进来
+              if (that.data.currentView === "memberDetail" && that.data.currentDetailMemberId) {
+                that.fetchMemberDetail(that.data.currentDetailMemberId);
+              }
             }
           });
         } else {

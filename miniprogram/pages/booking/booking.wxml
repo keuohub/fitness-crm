@@ -39,12 +39,13 @@
         </view>
       </scroll-view>
 
+      <view wx:if="{{landingSettings.show_tagline !== 0 && currentTagline}}" class="bk-tagline-text">{{currentTagline}}</view>
       <view class="bk-landing-actions">
         <view class="bk-progress">
           <view class="bk-progress-line"></view>
           <text class="bk-progress-text">{{landingIndex + 1}} / {{landingCats.length}}</text>
         </view>
-        <view class="bk-landing-btn" catchtap="enterList">{{landingKey === 'all' ? '预约全部课程' : '预约' + landingLabel}}</view>
+        <view class="bk-landing-btn" catchtap="enterList">{{currentBtnText || (landingKey === 'all' ? '预约全部课程' : '预约' + landingLabel)}}</view>
         <view class="bk-progress bk-progress--ghost"></view>
       </view>
     </view>
@@ -170,10 +171,11 @@
           <view class="bk-card-bottom">
             <text class="bk-card-time">{{item.dateLine}}</text>
             <view class="bk-card-act">
-              <text wx:if="{{!item.bookedByMe && !item.isEnded && item.remaining > 0 && item.remaining <= 3}}" class="bk-remain-warn">仅剩 {{item.remaining}} 位</text>
+              <text wx:if="{{!item.bookedByMe && !item.waitlistedByMe && !item.isEnded && item.remaining > 0 && item.remaining <= 3}}" class="bk-remain-warn">仅剩 {{item.remaining}} 位</text>
               <view wx:if="{{item.bookedByMe}}" class="bk-pill bk-pill--dark">已预约</view>
+              <view wx:elif="{{item.waitlistedByMe}}" class="bk-pill bk-pill--warning">排队中·第{{item.waitlistPosition}}位</view>
               <view wx:elif="{{item.isEnded}}" class="bk-pill bk-pill--muted">已开课</view>
-              <view wx:elif="{{item.remaining <= 0}}" class="bk-pill bk-pill--muted">已满</view>
+              <view wx:elif="{{item.remaining <= 0}}" class="bk-pill bk-pill--warning">排队候补{{item.waitlistCount > 0 ? '(' + item.waitlistCount + '人)' : ''}}</view>
               <view wx:elif="{{!isLoggedIn}}" class="bk-pill">查看/预约</view>
               <view wx:else class="bk-pill">立即预约</view>
             </view>
@@ -219,4 +221,6 @@
     </view>
   </view>
 
+  <!-- 新开卡尊享通知与礼盒弹窗 -->
+  <card-notice-modal id="cardNoticeModal"></card-notice-modal>
 </view>

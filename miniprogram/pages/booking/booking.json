@@ -2,7 +2,8 @@
   "usingComponents": {
     "session-sheet": "/components/session-sheet/session-sheet",
     "next-class": "/components/next-class/next-class",
-    "state-view": "/components/state-view/state-view"
+    "state-view": "/components/state-view/state-view",
+    "card-notice-modal": "/components/card-notice-modal/card-notice-modal"
   },
   "navigationStyle": "custom",
   "enablePullDownRefresh": true,

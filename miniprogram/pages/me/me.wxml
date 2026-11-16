@@ -127,4 +127,7 @@
       <view class="me-bottom-space"></view>
     </view>
   </block>
+
+  <!-- 新开卡尊享通知与礼盒弹窗 -->
+  <card-notice-modal id="cardNoticeModal"></card-notice-modal>
 </view>

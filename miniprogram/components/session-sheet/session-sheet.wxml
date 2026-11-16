@@ -142,14 +142,26 @@
         </view>
       </block>
 
+      <!-- 2.5 排队候补中 -->
+      <block wx:elif="{{session.waitlistedByMe}}">
+        <view class="sheet-booked-actions">
+          <view class="sheet-waitlist-tag">候补中 · 第{{session.waitlistPosition}}位</view>
+          <button class="btn-secondary sheet-btn-cancel" bindtap="onCancelBooking">取消候补</button>
+        </view>
+      </block>
+
       <!-- 3. 已开课 -->
       <block wx:elif="{{isEnded}}">
         <button class="btn-primary sheet-btn-main sheet-btn-disabled" disabled="{{true}}">已开课</button>
       </block>
 
-      <!-- 4. 满员 -->
+      <!-- 4. 满员 -> 允许排队候补 -->
       <block wx:elif="{{session.remaining <= 0}}">
-        <button class="btn-primary sheet-btn-main sheet-btn-disabled" disabled="{{true}}">已满</button>
+        <button
+          class="btn-primary sheet-btn-main sheet-btn-waitlist"
+          bindtap="onReserve"
+          disabled="{{submitting}}"
+        >{{submitting ? '正在加入候补…' : (session.waitlistCount > 0 ? '排队候补 (已有' + session.waitlistCount + '人候补)' : '满员 · 加入排队候补')}}</button>
       </block>
 
       <!-- 5. 无可用卡 -->

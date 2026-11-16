@@ -1,4 +1,7 @@
 {
   "enablePullDownRefresh": true,
-  "navigationStyle": "custom"
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "card-notice-modal": "/components/card-notice-modal/card-notice-modal"
+  }
 }

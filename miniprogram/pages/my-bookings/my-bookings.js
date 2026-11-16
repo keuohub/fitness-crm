@@ -163,6 +163,14 @@ Page({
         item.statusTag = "unsettled";
         item.statusTagText = "待前台结算";
         attended.push(item);
+      } else if (b.status === "waitlist") {
+        item.waitlistPosition = b.waitlistPosition || 1;
+        item.canCancel = true;
+        if (endTs > 0 && endTs <= nowTs) {
+          // 课程已结束但仍在排队中（未顺延成功），标记为已取消或不展示
+        } else {
+          upcoming.push(item);
+        }
       } else if (b.status === "booked") {
         // 若 status 为 booked 但当前时间已超过结束时间，归为已完成（待结课）
         if (endTs > 0 && endTs <= nowTs) {
@@ -210,14 +218,20 @@ Page({
     var item = e.currentTarget.dataset.item;
     if (!item) return;
 
-    var content = rules.formatDateCN(item.session_date) + " " + item.start_time + " " + item.course_name + "\n开课前取消不扣次，名额会释放给其他同学。";
+    var isWaitlist = item.status === "waitlist";
+    var title = isWaitlist ? "取消候补排队？" : "取消这节课？";
+    var content = isWaitlist
+      ? rules.formatDateCN(item.session_date) + " " + item.start_time + " " + item.course_name + "\n确认取消排队吗？取消后若有名额将优先顺延给后面的会员。"
+      : rules.formatDateCN(item.session_date) + " " + item.start_time + " " + item.course_name + "\n开课前取消不扣次，名额会释放给其他同学。";
+    var confirmText = "确认取消";
+    var cancelText = isWaitlist ? "继续排队" : "保留预约";
 
     wx.showModal({
-      title: "取消这节课？",
+      title: title,
       content: content,
-      confirmText: "确认取消",
+      confirmText: confirmText,
       confirmColor: "#000000",
-      cancelText: "保留预约",
+      cancelText: cancelText,
       success: function(res) {
         if (!res.confirm) return;
 
@@ -226,11 +240,11 @@ Page({
           url: "/api/portal/bookings/cancel",
           method: "POST",
           header: { "Content-Type": "application/json" },
-          data: { bookingId: item.id, reason: "会员主动取消" },
+          data: { bookingId: item.id, reason: isWaitlist ? "会员主动取消候补" : "会员主动取消" },
           success: function(resCancel) {
             that.setData({ cancellingId: null });
             if (resCancel.statusCode === 200) {
-              wx.showToast({ title: "已取消，未扣次", icon: "none" });
+              wx.showToast({ title: isWaitlist ? "已取消排队" : "已取消，未扣次", icon: "none" });
               that.loadAll();
             } else {
               var err = (resCancel.data && resCancel.data.error) || "取消失败";

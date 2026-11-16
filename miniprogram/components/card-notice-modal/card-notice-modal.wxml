@@ -1,0 +1,71 @@
+<!-- 新开卡尊享通知与礼盒弹窗 (Card Onboarding Gift Modal) -->
+<view wx:if="{{showModal && notice}}" class="cnm-mask" catchtouchmove="noop">
+  <view class="cnm-backdrop" bindtap="handleClose"></view>
+
+  <view class="cnm-container">
+    <!-- 右上角优雅关闭按钮 (×) -->
+    <view class="cnm-close-btn" bindtap="handleClose" hover-class="cnm-btn-hover">
+      <text class="cnm-close-icon">✕</text>
+    </view>
+
+    <!-- 顶部奢华光晕与品牌微印 -->
+    <view class="cnm-header">
+      <view class="cnm-brand-capsule">
+        <text class="cnm-brand-dot"></text>
+        <text class="cnm-brand-title">L A I W U · 高 定 礼 遇</text>
+        <text class="cnm-brand-dot"></text>
+      </view>
+      <text class="cnm-main-title">新 卡 启 封</text>
+      <text class="cnm-greeting">{{notice.greeting}}</text>
+      <text class="cnm-blessing">{{notice.blessing}}</text>
+    </view>
+
+    <!-- 实体金卡信息区（把卡项信息全部放进去） -->
+    <view class="cnm-card-item">
+      <!-- 卡头：卡名与分类 -->
+      <view class="cnm-card-head">
+        <view class="cnm-card-badge-wrap">
+          <text class="cnm-card-badge">{{notice.categoryName}}</text>
+          <text wx:if="{{notice.category === 'period'}}" class="cnm-vip-badge">尊享</text>
+        </view>
+        <text class="cnm-card-name">{{notice.cardName}}</text>
+      </view>
+
+      <!-- 卡中：核心课时与额度 -->
+      <view class="cnm-card-quota-row">
+        <view class="cnm-quota-block">
+          <text class="cnm-quota-num">{{notice.category === 'count' ? notice.remainingCount : '不限次'}}</text>
+          <text class="cnm-quota-label">{{notice.category === 'count' ? '可用节数（节）' : '尊享额度'}}</text>
+        </view>
+        <view wx:if="{{notice.category === 'count'}}" class="cnm-quota-divider"></view>
+        <view wx:if="{{notice.category === 'count'}}" class="cnm-quota-block">
+          <text class="cnm-quota-num-sub">{{notice.totalCount}} 节</text>
+          <text class="cnm-quota-label">初始总节数</text>
+        </view>
+      </view>
+
+      <!-- 卡底：适用课程与有效期 -->
+      <view class="cnm-card-details">
+        <view class="cnm-detail-line">
+          <text class="cnm-detail-k">适用课种</text>
+          <text class="cnm-detail-v">{{notice.courseScopeText}}</text>
+        </view>
+        <view class="cnm-detail-line">
+          <text class="cnm-detail-k">有效期限</text>
+          <text class="cnm-detail-v">{{notice.validFrom}} 至 {{notice.validUntil}}</text>
+        </view>
+      </view>
+
+      <!-- 底部微光水印纹理 -->
+      <text class="cnm-card-watermark">LAIWU PILATES</text>
+    </view>
+
+    <!-- 底部行动按键 -->
+    <view class="cnm-footer">
+      <button class="cnm-btn-primary" bindtap="handleGoBooking" hover-class="cnm-btn-hover">
+        立即开启专属约课
+      </button>
+      <text class="cnm-footer-tip">已存入「我的账户 · 我的卡」· 随时可查</text>
+    </view>
+  </view>
+</view>

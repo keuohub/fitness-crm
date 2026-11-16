@@ -37,34 +37,67 @@ export async function GET(request: NextRequest) {
     WHERE s.tenant_id = 1 AND s.session_date BETWEEN ${from} AND ${to} AND s.status <> 'cancelled'
     ORDER BY s.session_date, s.start_time`;
 
+  // 查每个课次的排队人数 (waitlist count)
+  const waitlistCounts = await rawSql`
+    SELECT session_id, COUNT(*)::int AS cnt
+    FROM bookings
+    WHERE tenant_id = 1 AND status = 'waitlist'
+    GROUP BY session_id
+  `;
+  const waitlistMap = new Map(waitlistCounts.map((w: any) => [w.session_id, Number(w.cnt || 0)]));
+
   const mine = await rawSql`
-    SELECT b.id, b.session_id, b.status
+    SELECT b.id, b.session_id, b.status, b.booked_at
     FROM bookings b JOIN class_sessions s ON s.id = b.session_id
     WHERE b.tenant_id = 1 AND b.member_id = ${memberId}
-      AND b.status = 'booked' AND s.session_date BETWEEN ${from} AND ${to}`;
+      AND b.status IN ('booked', 'waitlist') AND s.session_date BETWEEN ${from} AND ${to}`;
   const mineMap = new Map(mine.map((b: any) => [b.session_id, b]));
 
-  const rows = sessions.map((s: any) => ({
-    id: s.id,
-    courseName: s.course_name,
-    courseKey: s.course_key || "",
-    categoryType: s.category_type || "boutique",
-    difficultyStars: Number(s.difficulty_stars || 3),
-    coverImage: s.cover_image || "",
-    description: s.course_desc || "",
-    coachName: s.coach_name,
-    roomName: s.room_name,
-    title: s.title,
-    sessionDate: s.session_date,
-    startTime: s.start_time,
-    endTime: s.end_time,
-    capacity: s.capacity,
-    bookedCount: s.booked_count,
-    remaining: Math.max(0, Number(s.capacity) - Number(s.booked_count)),
-    status: s.status,
-    bookedByMe: mineMap.has(s.id),
-    bookingId: mineMap.get(s.id)?.id || null,
-  }));
+  const waitlistPositions = new Map<number, number>();
+  for (const m of mine) {
+    if (m.status === 'waitlist') {
+      const [posRow] = await rawSql`
+        SELECT COUNT(*)::int AS pos
+        FROM bookings
+        WHERE tenant_id = 1 AND session_id = ${m.session_id} AND status = 'waitlist'
+          AND booked_at <= ${m.booked_at}
+      `;
+      waitlistPositions.set(m.session_id, Number(posRow?.pos || 1));
+    }
+  }
+
+  const rows = sessions.map((s: any) => {
+    const myRec = mineMap.get(s.id);
+    const bookedByMe = myRec?.status === 'booked';
+    const waitlistedByMe = myRec?.status === 'waitlist';
+    const waitlistCount = waitlistMap.get(s.id) || 0;
+    const waitlistPosition = waitlistPositions.get(s.id) || 0;
+    return {
+      id: s.id,
+      courseName: s.course_name,
+      courseKey: s.course_key || "",
+      categoryType: s.category_type || "boutique",
+      difficultyStars: Number(s.difficulty_stars || 3),
+      coverImage: s.cover_image || "",
+      description: s.course_desc || "",
+      coachName: s.coach_name,
+      roomName: s.room_name,
+      title: s.title,
+      sessionDate: s.session_date,
+      startTime: s.start_time,
+      endTime: s.end_time,
+      capacity: s.capacity,
+      bookedCount: s.booked_count,
+      remaining: Math.max(0, Number(s.capacity) - Number(s.booked_count)),
+      waitlistCount,
+      status: s.status,
+      bookedByMe,
+      waitlistedByMe,
+      waitlistPosition,
+      bookingId: myRec?.id || null,
+      bookingStatus: myRec?.status || null,
+    };
+  });
 
   const response = NextResponse.json({ from, to, sessions: rows });
   response.headers.set("Cache-Control", "private, no-store");

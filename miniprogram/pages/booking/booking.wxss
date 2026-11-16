@@ -123,6 +123,15 @@ page {
 }
 .bk-vcat--on .bk-vcat-ch { color: #C03438; }
 .bk-vcat--on .bk-vcat-ch { font-weight: 700; }
+.bk-tagline-text {
+  text-align: center;
+  font-size: 22rpx;
+  color: rgba(255, 255, 255, 0.88);
+  letter-spacing: 2rpx;
+  margin-top: 14rpx;
+  padding: 0 40rpx;
+  text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.4);
+}
 .bk-landing-actions {
   display: flex;
   align-items: center;
@@ -459,6 +468,7 @@ page {
 }
 .bk-pill--dark { background: #000000; color: #ffffff; }
 .bk-pill--muted { border-color: #d9d4cb; color: #8a8b90; }
+.bk-pill--warning { background: #FAF0E6; border-color: #E29F84; color: #B35C3A; font-weight: 600; }
 
 /* 骨架 */
 .bk-skeleton-list { padding-top: 8rpx; }

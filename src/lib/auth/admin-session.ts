@@ -3,7 +3,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { users, adminSessions } from "@/db/schema";
-import { eq, and, gte, lt } from "drizzle-orm";
+import { eq, and, or, gte, lt } from "drizzle-orm";
 import crypto from "crypto";
 import { hashSync, compareSync } from "bcryptjs";
 
@@ -82,7 +82,14 @@ export async function verifyAdminLogin(
     const [user] = await db
       .select({ id: users.id, email: users.email, passwordHash: users.passwordHash, role: users.role, status: users.status })
       .from(users)
-      .where(eq(users.email, lookupEmail));
+      .where(
+        or(
+          eq(users.email, lookupEmail),
+          eq(users.email, cleanEmail),
+          eq(users.email, `${cleanEmail}@laiwu.fitness`),
+          eq(users.email, `${cleanEmail}@laiwu.com`)
+        )
+      );
 
     if (user) {
       let isValid = false;

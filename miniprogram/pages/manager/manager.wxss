@@ -1508,3 +1508,380 @@ page {
   line-height: 1.5;
   display: block;
 }
+
+/* ════════════════════════════════════════════════════════════
+   名单行 · 签到改造（对标约刻：卡名 + 签到 + 取消）
+   ════════════════════════════════════════════════════════════ */
+.mgr-att-name-row {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+}
+
+.mgr-att-badge-ok {
+  font-size: 17rpx;
+  color: #16794A;
+  background: #E6F4EC;
+  border: 1rpx solid #A8D8BE;
+  padding: 1rpx 10rpx;
+  border-radius: 6rpx;
+  font-weight: 600;
+}
+
+.mgr-att-badge-miss {
+  font-size: 17rpx;
+  color: #8A5A00;
+  background: #FCF1DC;
+  border: 1rpx solid #E8C98A;
+  padding: 1rpx 10rpx;
+  border-radius: 6rpx;
+  font-weight: 600;
+}
+
+.mgr-att-right {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  flex-shrink: 0;
+}
+
+.mgr-att-checkin-pill {
+  font-size: 20rpx;
+  color: #FFFFFF;
+  background: linear-gradient(135deg, #B92E32 0%, #C93337 100%);
+  padding: 9rpx 24rpx;
+  border-radius: 20rpx;
+  font-weight: 700;
+  box-shadow: 0 4rpx 12rpx rgba(185, 46, 50, 0.24);
+}
+
+.mgr-att-done-pill {
+  font-size: 19rpx;
+  color: #8A8578;
+  background: #F1EFEA;
+  padding: 8rpx 18rpx;
+  border-radius: 20rpx;
+  font-weight: 500;
+}
+
+.mgr-attendee-cell.is-done {
+  opacity: 0.62;
+}
+
+/* 会员卡 · 详情入口提示 */
+.mgr-member-detail-hint {
+  font-size: 19rpx;
+  color: #B89358;
+  font-weight: 600;
+}
+
+/* ════════════════════════════════════════════════════════════
+   会员详情页
+   ════════════════════════════════════════════════════════════ */
+.mgr-detail-hero {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 28rpx 26rpx;
+  background: linear-gradient(135deg, #1B1917 0%, #2B2723 100%);
+  border-radius: 24rpx;
+  margin-bottom: 18rpx;
+}
+
+.mgr-detail-avatar {
+  width: 92rpx;
+  height: 92rpx;
+  border-radius: 50%;
+  background: rgba(184, 147, 88, 0.16);
+  border: 2rpx solid #B89358;
+  color: #E8D7B6;
+  font-size: 38rpx;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mgr-detail-hero-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+  min-width: 0;
+}
+
+.mgr-detail-name-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.mgr-detail-name {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #FFFFFF;
+  letter-spacing: 1rpx;
+}
+
+.mgr-detail-tag-warn {
+  font-size: 17rpx;
+  color: #FFD9A0;
+  background: rgba(255, 190, 100, 0.16);
+  border: 1rpx solid rgba(255, 190, 100, 0.45);
+  padding: 2rpx 10rpx;
+  border-radius: 6rpx;
+  font-weight: 600;
+}
+
+.mgr-detail-sub {
+  font-size: 20rpx;
+  color: rgba(255, 255, 255, 0.62);
+  line-height: 1.4;
+}
+
+.mgr-detail-call {
+  font-size: 20rpx;
+  color: #E8D7B6;
+  border: 1rpx solid rgba(184, 147, 88, 0.6);
+  padding: 10rpx 20rpx;
+  border-radius: 20rpx;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* 三个关键数字 */
+.mgr-detail-stats {
+  display: flex;
+  align-items: center;
+  background: #FFFFFF;
+  border: 1rpx solid rgba(13, 12, 15, 0.06);
+  border-radius: 22rpx;
+  padding: 26rpx 0;
+  margin-bottom: 14rpx;
+  box-shadow: 0 6rpx 20rpx rgba(120, 90, 40, 0.05);
+}
+
+.mgr-detail-stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.mgr-detail-stat-divider {
+  width: 1rpx;
+  height: 52rpx;
+  background: rgba(13, 12, 15, 0.07);
+}
+
+.mgr-detail-stat-num {
+  font-size: 42rpx;
+  font-weight: 700;
+  color: #B92E32;
+  line-height: 1;
+  font-family: "SF Pro Display", -apple-system, sans-serif;
+}
+
+.mgr-detail-stat-num.is-warn {
+  color: #B4713A;
+}
+
+.mgr-detail-stat-label {
+  font-size: 19rpx;
+  color: #8A8578;
+  letter-spacing: 0.5rpx;
+}
+
+.mgr-detail-last {
+  font-size: 20rpx;
+  color: #8A8578;
+  padding: 0 8rpx 16rpx;
+}
+
+/* 分区 */
+.mgr-detail-section {
+  background: #FFFFFF;
+  border: 1rpx solid rgba(13, 12, 15, 0.06);
+  border-radius: 22rpx;
+  padding: 22rpx 24rpx;
+  margin-bottom: 16rpx;
+  box-shadow: 0 6rpx 20rpx rgba(120, 90, 40, 0.04);
+}
+
+.mgr-detail-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16rpx;
+}
+
+.mgr-detail-section-title {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #1B1917;
+  letter-spacing: 0.5rpx;
+}
+
+.mgr-detail-section-act {
+  font-size: 20rpx;
+  color: #B92E32;
+  font-weight: 700;
+  padding: 6rpx 16rpx;
+  background: #FBEDEC;
+  border-radius: 16rpx;
+}
+
+.mgr-detail-empty {
+  font-size: 21rpx;
+  color: #A8A29A;
+  padding: 12rpx 0;
+}
+
+/* 卡项行 */
+.mgr-detail-card-item {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  padding: 16rpx 18rpx;
+  background: #FAF7F3;
+  border-radius: 16rpx;
+  margin-bottom: 12rpx;
+  border: 1rpx solid transparent;
+}
+
+.mgr-detail-card-item.is-active {
+  background: #FDF6F3;
+  border-color: rgba(185, 46, 50, 0.16);
+}
+
+.mgr-detail-card-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+  flex: 1;
+  min-width: 0;
+}
+
+.mgr-detail-card-name {
+  font-size: 23rpx;
+  font-weight: 700;
+  color: #1B1917;
+}
+
+.mgr-detail-card-type {
+  font-size: 18rpx;
+  color: #9A9287;
+}
+
+.mgr-detail-card-nums {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4rpx;
+}
+
+.mgr-detail-card-remain {
+  font-size: 22rpx;
+  font-weight: 700;
+  color: #B92E32;
+}
+
+.mgr-detail-card-date {
+  font-size: 17rpx;
+  color: #9A9287;
+}
+
+.mgr-detail-card-off {
+  font-size: 17rpx;
+  color: #8A8578;
+  background: #EFEDE8;
+  padding: 3rpx 10rpx;
+  border-radius: 6rpx;
+  flex-shrink: 0;
+}
+
+/* 下次要上 */
+.mgr-detail-up-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 10rpx 0;
+  border-bottom: 1rpx solid rgba(13, 12, 15, 0.04);
+}
+
+.mgr-detail-up-date {
+  font-size: 20rpx;
+  color: #B92E32;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.mgr-detail-up-course {
+  font-size: 22rpx;
+  color: #2B2723;
+}
+
+/* 最近记录 */
+.mgr-detail-rec-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13rpx 0;
+  border-bottom: 1rpx solid rgba(13, 12, 15, 0.04);
+}
+
+.mgr-detail-rec-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+  min-width: 0;
+}
+
+.mgr-detail-rec-course {
+  font-size: 22rpx;
+  color: #1B1917;
+  font-weight: 600;
+}
+
+.mgr-detail-rec-meta {
+  font-size: 18rpx;
+  color: #9A9287;
+}
+
+.mgr-detail-rec-status {
+  font-size: 18rpx;
+  font-weight: 700;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+  flex-shrink: 0;
+}
+
+.mgr-detail-rec-status.status-attended {
+  color: #16794A;
+  background: #E6F4EC;
+}
+
+.mgr-detail-rec-status.status-no_show {
+  color: #8A5A00;
+  background: #FCF1DC;
+}
+
+.mgr-detail-rec-status.status-cancelled {
+  color: #9A9287;
+  background: #F1EFEA;
+}
+
+.mgr-detail-rec-status.status-booked,
+.mgr-detail-rec-status.status-waitlist {
+  color: #B92E32;
+  background: #FBEDEC;
+}
+
+.mgr-detail-foot {
+  text-align: center;
+  font-size: 18rpx;
+  color: #B8B2A8;
+  padding: 8rpx 0 40rpx;
+}

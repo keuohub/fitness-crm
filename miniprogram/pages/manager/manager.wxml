@@ -3,9 +3,9 @@
 
   <!-- 顶部自定义状态栏与全局导航 -->
   <view class="mgr-navbar" style="padding-top: {{nav.navBottom + 4}}px; height: 88rpx; box-sizing: content-box;">
-    <view class="mgr-nav-left" bindtap="{{currentView === 'home' ? 'goBackMember' : 'goHomeView'}}">
+    <view class="mgr-nav-left" bindtap="{{currentView === 'home' ? 'goBackMember' : (currentView === 'memberDetail' ? 'goBackToMembers' : 'goHomeView')}}">
       <text class="mgr-nav-back">‹</text>
-      <text class="mgr-nav-back-text">{{currentView === 'home' ? '会员端' : '工作台'}}</text>
+      <text class="mgr-nav-back-text">{{currentView === 'home' ? '会员端' : (currentView === 'memberDetail' ? (prevDetailView === 'home' ? '今日名单' : '会员列表') : '工作台')}}</text>
     </view>
     <view class="mgr-nav-title">
       <text class="mgr-nav-brand">{{navTitle}}</text>
@@ -279,22 +279,41 @@
               wx:for="{{item.attendees}}"
               wx:for-item="att"
               wx:key="id"
-              class="mgr-attendee-cell"
+              class="mgr-attendee-cell {{att.status === 'attended' ? 'is-done' : ''}}"
             >
-              <view class="mgr-att-left">
-                <text class="mgr-att-avatar-circle">{{att.member_name[0]}}</text>
-                <view class="mgr-att-text-col">
-                  <text class="mgr-att-name">{{att.member_name}}</text>
-                  <text class="mgr-att-meta">{{att.member_phone || att.member_code || '会员'}}</text>
-                </view>
-              </view>
               <view
-                class="mgr-att-cancel-pill"
-                bindtap="cancelBookingAttendee"
-                data-id="{{att.id}}"
+                class="mgr-att-left"
+                bindtap="openMemberDetail"
+                data-id="{{att.member_id}}"
                 data-name="{{att.member_name}}"
               >
-                代客取消
+                <text class="mgr-att-avatar-circle">{{att.member_name[0]}}</text>
+                <view class="mgr-att-text-col">
+                  <view class="mgr-att-name-row">
+                    <text class="mgr-att-name">{{att.member_name}}</text>
+                    <text wx:if="{{att.status === 'attended'}}" class="mgr-att-badge-ok">已签到</text>
+                    <text wx:elif="{{att.status === 'no_show'}}" class="mgr-att-badge-miss">未到</text>
+                  </view>
+                  <text class="mgr-att-meta">{{att.card_name || '未开卡'}} · {{att.member_phone || att.member_code || '会员'}}</text>
+                </view>
+              </view>
+              <view class="mgr-att-right">
+                <view
+                  wx:if="{{att.status === 'booked'}}"
+                  class="mgr-att-checkin-pill"
+                  catchtap="doCheckin"
+                  data-id="{{att.id}}"
+                  data-name="{{att.member_name}}"
+                  data-card="{{att.card_name}}"
+                >签到</view>
+                <view wx:else class="mgr-att-done-pill">{{att.status === 'no_show' ? '未到' : '已完成'}}</view>
+                <view
+                  wx:if="{{att.status === 'booked'}}"
+                  class="mgr-att-cancel-pill"
+                  catchtap="cancelBookingAttendee"
+                  data-id="{{att.id}}"
+                  data-name="{{att.member_name}}"
+                >取消</view>
               </view>
             </view>
           </block>
@@ -755,7 +774,14 @@
       <view wx:if="{{membersList.length === 0}}" class="mgr-empty-card-sm">
         <text class="mgr-empty-text">未找到符合条件的会员</text>
       </view>
-      <view wx:for="{{membersList}}" wx:key="id" class="mgr-member-card">
+      <view
+        wx:for="{{membersList}}"
+        wx:key="id"
+        class="mgr-member-card"
+        bindtap="openMemberDetail"
+        data-id="{{item.id}}"
+        data-name="{{item.name}}"
+      >
         <view class="mgr-member-card-left">
           <text class="mgr-member-avatar-circle">{{item.name[0]}}</text>
           <view class="mgr-member-info">
@@ -770,13 +796,113 @@
           <text class="mgr-member-cards-num">{{item.active_cards_count}} 张有效卡</text>
           <view class="mgr-member-action-pills">
             <view class="mgr-pill-issue-card" catchtap="openIssueCard" data-item="{{item}}">+发卡</view>
-            <text class="mgr-member-status-tag">{{item.status === 'active' ? '正常在籍' : item.status}}</text>
+            <text class="mgr-member-detail-hint">详情 ›</text>
           </view>
         </view>
       </view>
       <view wx:if="{{membersList.length > 0}}" class="mgr-list-footnote">
         <text>当前展示前 {{membersList.length}} 位会员{{totalMembersDb > 0 ? '（共 ' + totalMembersDb + ' 位）' : ''}}，如需精准查找可在上方搜索</text>
       </view>
+    </block>
+  </view>
+
+
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <!-- 视图 5.5：会员详情 (currentView === 'memberDetail')           -->
+  <!-- 约刻的会员信息页只有 6 个只读字段、点行无反应；这里补齐馆长真正要看的东西 -->
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <view wx:elif="{{currentView === 'memberDetail'}}" class="mgr-view-container">
+    <view wx:if="{{loadingMemberDetail}}" class="mgr-inner-loading">正在读取会员档案…</view>
+    <view wx:elif="{{errorMemberDetail}}" class="mgr-error-card" bindtap="retryMemberDetail">
+      <text class="mgr-error-card-text">{{errorMemberDetail}}（点击重试）</text>
+    </view>
+    <block wx:else>
+
+      <!-- 档案头 -->
+      <view class="mgr-detail-hero">
+        <text class="mgr-detail-avatar">{{detailMember.name[0]}}</text>
+        <view class="mgr-detail-hero-col">
+          <view class="mgr-detail-name-row">
+            <text class="mgr-detail-name">{{detailMember.name}}</text>
+            <text wx:if="{{detailMember.freeze_status === 'frozen' || detailMember.freeze_status === 'freezing'}}" class="mgr-detail-tag-warn">停卡中</text>
+            <text wx:elif="{{detailMember.status !== 'active'}}" class="mgr-detail-tag-warn">{{detailMember.status}}</text>
+          </view>
+          <text class="mgr-detail-sub">{{detailMember.member_code || '无编号'}} · {{detailMember.gender === 'female' ? '女' : (detailMember.gender === 'male' ? '男' : '性别未录')}}</text>
+          <text class="mgr-detail-sub">{{detailMember.phone || '未留手机号'}} · 入会 {{detailMember.joined_at || '未录'}}</text>
+        </view>
+        <view wx:if="{{detailMember.phone}}" class="mgr-detail-call" bindtap="callMember">拨号</view>
+      </view>
+
+      <!-- 三个关键数字 -->
+      <view class="mgr-detail-stats">
+        <view class="mgr-detail-stat">
+          <text class="mgr-detail-stat-num">{{detailActiveCard ? (detailActiveCard.category === 'count' ? detailActiveCard.remaining_count : '不限') : '0'}}</text>
+          <text class="mgr-detail-stat-label">{{detailActiveCard ? (detailActiveCard.category === 'count' ? '卡内剩余节数' : '期限卡 · 不限次') : '无有效卡'}}</text>
+        </view>
+        <view class="mgr-detail-stat-divider"></view>
+        <view class="mgr-detail-stat">
+          <text class="mgr-detail-stat-num">{{detailStat.attended || 0}}</text>
+          <text class="mgr-detail-stat-label">累计到课</text>
+        </view>
+        <view class="mgr-detail-stat-divider"></view>
+        <view class="mgr-detail-stat">
+          <text class="mgr-detail-stat-num {{detailStat.no_show > 0 ? 'is-warn' : ''}}">{{detailStat.no_show || 0}}</text>
+          <text class="mgr-detail-stat-label">爽约次数</text>
+        </view>
+      </view>
+
+      <view wx:if="{{detailStat.last_attended_date}}" class="mgr-detail-last">
+        <text>最近一次到课：{{detailStat.last_attended_date}}</text>
+      </view>
+
+      <!-- 卡项 -->
+      <view class="mgr-detail-section">
+        <view class="mgr-detail-section-head">
+          <text class="mgr-detail-section-title">持有卡项</text>
+          <view class="mgr-detail-section-act" bindtap="openIssueCardForDetail">+ 为她开卡</view>
+        </view>
+        <view wx:if="{{detailCards.length === 0}}" class="mgr-detail-empty">还没有开过卡，点右上角开一张</view>
+        <view wx:for="{{detailCards}}" wx:for-item="cd" wx:key="id" class="mgr-detail-card-item {{cd.status === 'active' ? 'is-active' : ''}}">
+          <view class="mgr-detail-card-main">
+            <text class="mgr-detail-card-name">{{cd.card_name || '未命名卡'}}</text>
+            <text class="mgr-detail-card-type">{{cd.category === 'period' ? '期限卡' : '次数卡'}}</text>
+          </view>
+          <view class="mgr-detail-card-nums">
+            <text wx:if="{{cd.category === 'count'}}" class="mgr-detail-card-remain">剩 {{cd.remaining_count}} / {{cd.total_count}} 节</text>
+            <text wx:else class="mgr-detail-card-remain">有效期内不限次</text>
+            <text class="mgr-detail-card-date">{{cd.valid_until ? ('至 ' + cd.valid_until) : '无到期日'}}</text>
+          </view>
+          <text wx:if="{{cd.status !== 'active'}}" class="mgr-detail-card-off">{{cd.status === 'expired' ? '已过期' : cd.status}}</text>
+        </view>
+      </view>
+
+      <!-- 下次要来 -->
+      <view wx:if="{{detailUpcoming.length > 0}}" class="mgr-detail-section">
+        <view class="mgr-detail-section-head">
+          <text class="mgr-detail-section-title">接下来要上</text>
+        </view>
+        <view wx:for="{{detailUpcoming}}" wx:for-item="up" wx:key="booking_id" class="mgr-detail-up-row">
+          <text class="mgr-detail-up-date">{{up.session_date}} {{up.start_time}}</text>
+          <text class="mgr-detail-up-course">{{up.course_name}}</text>
+        </view>
+      </view>
+
+      <!-- 最近记录 -->
+      <view class="mgr-detail-section">
+        <view class="mgr-detail-section-head">
+          <text class="mgr-detail-section-title">最近约课记录</text>
+        </view>
+        <view wx:if="{{detailRecent.length === 0}}" class="mgr-detail-empty">还没有约课记录</view>
+        <view wx:for="{{detailRecent}}" wx:for-item="rc" wx:key="booking_id" class="mgr-detail-rec-row">
+          <view class="mgr-detail-rec-left">
+            <text class="mgr-detail-rec-course">{{rc.course_name || '课程'}}</text>
+            <text class="mgr-detail-rec-meta">{{rc.session_date}} {{rc.start_time}} · {{rc.coach_name || '导师'}}</text>
+          </view>
+          <text class="mgr-detail-rec-status status-{{rc.status}}">{{rc.status === 'attended' ? '到课' : (rc.status === 'no_show' ? '未到' : (rc.status === 'cancelled' ? '已取消' : '待上'))}}</text>
+        </view>
+      </view>
+
+      <view class="mgr-detail-foot">档案编号 #{{detailMember.id}} · 仅馆长可见</view>
     </block>
   </view>
 

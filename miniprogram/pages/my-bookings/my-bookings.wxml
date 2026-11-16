@@ -66,7 +66,10 @@
 
           <!-- 中间课程与时间 -->
           <view class="my-info-col">
-            <text class="my-course-name">{{item.course_name}}</text>
+            <view class="my-course-row">
+              <text class="my-course-name">{{item.course_name}}</text>
+              <view class="my-waitlist-pill" wx:if="{{item.status === 'waitlist'}}">候补中 · 第{{item.waitlistPosition}}位</view>
+            </view>
             <text class="my-time-range">{{item.start_time}}–{{item.end_time}}</text>
             <view class="my-coach-row" wx:if="{{item.coach_name || item.room_name}}">
               <text wx:if="{{item.coach_name}}">{{item.coach_name}}</text>
@@ -76,7 +79,10 @@
 
           <!-- 右侧操作与取消按钮 -->
           <view class="my-action-col">
-            <block wx:if="{{item.canCancel}}">
+            <block wx:if="{{item.status === 'waitlist'}}">
+              <text class="my-cancel-link" data-item="{{item}}" bindtap="handleCancel">取消候补</text>
+            </block>
+            <block wx:elif="{{item.canCancel}}">
               <text class="my-cancel-link" data-item="{{item}}" bindtap="handleCancel">取消</text>
             </block>
             <block wx:else>

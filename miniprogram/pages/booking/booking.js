@@ -40,6 +40,9 @@ Page({
     landingIndex: 0,
     landingKey: "all",
     landingLabel: "全部",
+    currentBtnText: "预约全部课程",
+    currentTagline: "",
+    landingSettings: { font_family: "song", capsule_style: "glass", show_tagline: 1 },
     bgA: "",
     bgB: "",
     bgFront: "A",
@@ -108,6 +111,7 @@ Page({
   },
 
   onShow: function() {
+    this.loadLandingConfig();
     if (typeof this.getTabBar === "function" && this.getTabBar()) {
       var tb = this.getTabBar();
       if (typeof tb.updateTab === "function") {
@@ -139,6 +143,7 @@ Page({
 
   onPullDownRefresh: function() {
     var that = this;
+    this.loadLandingConfig();
     if (this.data.isLoggedIn) {
       this.loadAll(function() { wx.stopPullDownRefresh(); });
     } else {
@@ -160,6 +165,7 @@ Page({
     this.loadAll();
     // landing 背景与课程介绍需要 offerings（游客与会员都加载）
     this.loadOfferings();
+    this.loadLandingConfig();
   },
 
   // ===== BRIEF_05：landing 首屏 =====
@@ -170,21 +176,32 @@ Page({
   },
 
   applyLandingBackground: function(key) {
+    var cat = null;
+    var cats = this.data.landingCats || [];
+    for (var i = 0; i < cats.length; i++) {
+      if (cats[i].key === key) { cat = cats[i]; break; }
+    }
     var level = this.data.bgLevels[key] || 0;
-    var bg = cc.pickBackground(key, this.data.offerings, level);
-    if (!bg.src) {
+    var src = "";
+    if (level === 0 && cat && cat.imageUrl && !cc.isBrokenUrl(cat.imageUrl)) {
+      src = cat.imageUrl;
+    } else {
+      var bg = cc.pickBackground(key, this.data.offerings, level);
+      src = bg.src;
+    }
+    if (!src) {
       this.setData({ bgSolid: true });
       return;
     }
     var front = this.data.bgFront;
     var curSrc = front === "A" ? this.data.bgA : this.data.bgB;
-    if (curSrc === bg.src) {
+    if (curSrc === src) {
       this.setData({ bgSolid: false });
       return;
     }
     // 新图放到背面，加载完成后再切到前面淡入
-    if (front === "A") this.setData({ bgB: bg.src, bgSolid: false });
-    else this.setData({ bgA: bg.src, bgSolid: false });
+    if (front === "A") this.setData({ bgB: src, bgSolid: false });
+    else this.setData({ bgA: src, bgSolid: false });
   },
 
   onBgLoad: function(e) {
@@ -213,7 +230,13 @@ Page({
     var cats = this.data.landingCats;
     if (idx < 0 || idx >= cats.length || idx === this.data.landingIndex) return;
     var c = cats[idx];
-    this.setData({ landingIndex: idx, landingKey: c.key, landingLabel: c.label });
+    this.setData({
+      landingIndex: idx,
+      landingKey: c.key,
+      landingLabel: c.label,
+      currentBtnText: c.buttonText || (c.key === "all" ? "预约全部课程" : "预约" + c.label),
+      currentTagline: c.tagline || ""
+    });
     this.applyLandingBackground(c.key);
     try { if (wx.vibrateShort) wx.vibrateShort({ type: "light" }); } catch (err) {}
   },
@@ -281,7 +304,7 @@ Page({
     var o = cc.offeringFor(key, this.data.offerings);
     if (!o) return null;
     var imgUrl = o.imageUrl || "";
-    if (!imgUrl || imgUrl.indexOf("laiwu-media-1513635286") >= 0) {
+    if (!imgUrl || cc.isBrokenUrl(imgUrl)) {
       imgUrl = cc.localCover(key);
     }
     return {
@@ -386,6 +409,44 @@ Page({
       },
       fail: function() {
         that.setData({ guestLoading: false, guestError: "网络没有连上，请重试" });
+        finished();
+      }
+    });
+  },
+
+  // 约课首屏分类与大片动态配置（云端实时驱动，免审一劳永逸）
+  loadLandingConfig: function(done) {
+    var that = this;
+    var finished = typeof done === "function" ? done : function() {};
+    api.request({
+      url: "/api/portal/booking-landing",
+      success: function(res) {
+        if (res.statusCode === 200 && res.data && Array.isArray(res.data.categories) && res.data.categories.length > 0) {
+          var cats = res.data.categories.map(function(c) {
+            return {
+              key: c.key,
+              label: c.name,
+              short: c.short_name,
+              chars: cc.toChars(c.short_name || c.name),
+              imageUrl: c.image_url ? api.fullUrl(c.image_url) : cc.localCover(c.key),
+              tagline: c.tagline || "",
+              buttonText: c.button_text || ("预约" + c.name)
+            };
+          });
+          var settings = res.data.settings || {};
+          var curCat = cats[that.data.landingIndex] || cats[0];
+          that.setData({
+            landingCats: cats,
+            landingSettings: settings,
+            currentBtnText: curCat ? curCat.buttonText : (curCat && curCat.key === "all" ? "预约全部课程" : "预约" + (curCat ? curCat.label : "")),
+            currentTagline: curCat ? curCat.tagline : ""
+          }, function() {
+            that.applyLandingBackground(that.data.landingKey);
+          });
+        }
+        finished();
+      },
+      fail: function() {
         finished();
       }
     });
@@ -732,6 +793,17 @@ Page({
         if (res.statusCode === 201 || res.statusCode === 200) {
           that.setData({ sheetVisible: false });
           that.setTabBarHidden(false);
+          if (res.data && res.data.status === "waitlist") {
+            var pos = res.data.waitlistPosition || 1;
+            wx.showModal({
+              title: "已加入候补排队",
+              content: "您当前排在候补第 " + pos + " 位。若有正选学员退课，系统将自动为您替补锁定席位！",
+              showCancel: false,
+              confirmText: "知道了"
+            });
+            that.loadAll();
+            return;
+          }
           if (!res.preview) { try { wx.setStorageSync("lastBookedSession", session); } catch (e) {} }
           var bId = (res.data && res.data.booking && res.data.booking.id) || "";
           wx.navigateTo({
@@ -770,24 +842,30 @@ Page({
     var bookingId = Number(session.bookingId);
     if (!bookingId) return;
 
-    var content = rules.formatDateCN(session.sessionDate) + " " + session.startTime + " " + session.courseName + "\n开课前取消不扣次，名额会释放给其他同学。";
+    var isWaitlist = session.waitlistedByMe || session.bookingStatus === "waitlist";
+    var title = isWaitlist ? "取消候补排队？" : "取消这节课？";
+    var content = isWaitlist
+      ? rules.formatDateCN(session.sessionDate) + " " + session.startTime + " " + session.courseName + "\n确认取消排队吗？取消后若有名额将优先顺延给后面的会员。"
+      : rules.formatDateCN(session.sessionDate) + " " + session.startTime + " " + session.courseName + "\n开课前取消不扣次，名额会释放给其他同学。";
+    var confirmText = "确认取消";
+    var cancelText = isWaitlist ? "继续排队" : "保留预约";
 
     wx.showModal({
-      title: "取消这节课？",
+      title: title,
       content: content,
-      confirmText: "确认取消",
+      confirmText: confirmText,
       confirmColor: "#000000",
-      cancelText: "保留预约",
+      cancelText: cancelText,
       success: function(r) {
         if (!r.confirm) return;
         api.request({
           url: "/api/portal/bookings/cancel",
           method: "POST",
           header: { "Content-Type": "application/json" },
-          data: { bookingId: bookingId, reason: "会员主动取消" },
+          data: { bookingId: bookingId, reason: isWaitlist ? "会员主动取消候补" : "会员主动取消" },
           success: function(res) {
             if (res.statusCode === 200) {
-              wx.showToast({ title: "已取消，未扣次", icon: "none" });
+              wx.showToast({ title: isWaitlist ? "已取消排队" : "已取消，未扣次", icon: "none" });
               that.setData({ sheetVisible: false });
               that.setTabBarHidden(false);
               that.loadAll();

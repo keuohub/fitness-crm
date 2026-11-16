@@ -123,7 +123,14 @@ export async function POST(request: NextRequest) {
       }
       return bad("开卡失败");
     }
-    return noStore(rows[0], { status: 201 });
+    const createdCard = rows[0];
+    // 写入新开卡待通知记录（会员登录/进入小程序自动弹出贺卡与卡项全信息）
+    await rawSql`
+      INSERT INTO member_card_notices (tenant_id, member_id, member_card_id, is_read, created_at)
+      VALUES (1, ${memberId}, ${createdCard.id}, 0, NOW())
+      ON CONFLICT (member_card_id) DO NOTHING
+    `.catch(() => {});
+    return noStore(createdCard, { status: 201 });
   } catch (err: any) {
     if (String(err?.message || "").includes("uniq_member_card_idem") && key) {
       const [existing] = await rawSql`SELECT * FROM member_cards WHERE tenant_id = 1 AND idempotency_key = ${key}`;

@@ -53,10 +53,11 @@ function offeringFor(key, offerings) {
   return best;
 }
 
-// 检查是否为已失效/不可用的 COS 域名
+// 检查是否为无效 URL
 function isBrokenUrl(url) {
   if (!url || typeof url !== "string") return true;
-  if (url.indexOf("laiwu-media-1513635286") >= 0) return true;
+  var u = url.trim();
+  if (!u || u === "null" || u === "undefined") return true;
   return false;
 }
 
@@ -69,21 +70,21 @@ function localCover(key) {
 }
 
 // 背景图档位：
-// 0 = 包内 9:16 高清定制大片（首选，秒开无延迟，零闪烁）
-// 1 = 后台 offering 图（若已配置有效云端且非失效 COS）
+// 0 = 后台用户上传配置的云端大片（最高优先级，后台随时换，前端随时生效）
+// 1 = 本地参考大片（仅作为无上传时的兜底参考，绝不堵塞用户真实图片）
 // 2 = 纯色温润底兜底
 function pickBackground(key, offerings, level) {
   var lv = Number(level) || 0;
   if (lv <= 0) {
-    var loc = localCover(key);
-    if (loc) return { src: loc, level: 0 };
+    var o = (key === "all") ? null : offeringFor(key, offerings);
+    if (o && o.imageUrl && !isBrokenUrl(o.imageUrl)) {
+      return { src: api.fullUrl(o.imageUrl), level: 0 };
+    }
     lv = 1;
   }
   if (lv <= 1) {
-    var o = (key === "all") ? null : offeringFor(key, offerings);
-    if (o && o.imageUrl && !isBrokenUrl(o.imageUrl)) {
-      return { src: api.fullUrl(o.imageUrl), level: 1 };
-    }
+    var loc = localCover(key);
+    if (loc) return { src: loc, level: 1 };
   }
   return { src: "", level: 2 };
 }
