@@ -10,6 +10,7 @@ import { users, adminSessions } from "@/db/schema";
 import { eq, not } from "drizzle-orm";
 import { getAdminUser, requireRole } from "@/lib/auth/rbac";
 import { hashSync } from "bcryptjs";
+import { logAdminAction } from "@/lib/audit/log";
 
 export async function GET(request: NextRequest) {
   const admin = await getAdminUser(request);
@@ -75,6 +76,19 @@ export async function PATCH(request: NextRequest) {
     await db.update(users).set({ passwordHash: hashSync(password.trim(), 10) }).where(eq(users.id, id));
     // 密码变更后立即吊销该用户所有活跃会话
     await db.delete(adminSessions).where(eq(adminSessions.adminId, id));
+
+    const [target] = await db.select({ name: users.name, email: users.email }).from(users).where(eq(users.id, id));
+    const ip = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "127.0.0.1";
+    await logAdminAction({
+      adminId: owner.id,
+      adminName: owner.name,
+      adminUsername: (owner.email || "").replace(/@.*$/, ""),
+      action: "reset_password",
+      entityType: "users",
+      entityId: id,
+      summary: `管理员【${owner.name}】在电脑后台重置了账号【${target?.name || id}】(${target?.email || ""})的登录密码`,
+      ip,
+    });
   }
 
   if (status && ['active','inactive'].includes(status)) {

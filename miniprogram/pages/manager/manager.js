@@ -143,6 +143,19 @@ Page({
     loadingAuditLogs: false,
     auditLogsTotal: 0,
 
+    // ── 密码修改与重置 (change password) ──
+    showChangePwdModal: false,
+    pwdTargetId: 0,
+    pwdTargetName: "",
+    pwdTargetUsername: "",
+    pwdIsSelf: true,
+    pwdNeedOld: true,
+    oldPwdInput: "",
+    newPwdInput: "",
+    confirmPwdInput: "",
+    pwdError: "",
+    pwdSubmitting: false,
+
     // ── 代客约课 (bookForMember) ──
     showBookForMemberModal: false,
     bookForMemberSession: null,
@@ -1796,6 +1809,168 @@ Page({
         that.setData({ loadingAdmins: false });
       },
       complete: cb
+    });
+  },
+
+  // ════════════════════════════════════════════════════════════
+  // 6.7.1. 管理员密码修改与重置业务逻辑 (Change / Reset Password)
+  // ════════════════════════════════════════════════════════════
+  preventD: function() {
+    // 阻止模态框点击冒泡
+  },
+
+  tapNavBadge: function() {
+    var that = this;
+    if (!this.data.isManagerLoggedIn) return;
+    wx.showActionSheet({
+      itemList: ["🔑 修改我的登录密码", "🚪 安全退出管理工作台"],
+      itemColor: "#292D35",
+      success: function(res) {
+        if (res.tapIndex === 0) {
+          that.openChangeMyPassword();
+        } else if (res.tapIndex === 1) {
+          that.doManagerLogout();
+        }
+      }
+    });
+  },
+
+  openChangeMyPassword: function() {
+    var user = this.data.currentManagerUser || {};
+    this.setData({
+      showChangePwdModal: true,
+      pwdTargetId: user.id || 0,
+      pwdTargetName: user.name || "当前账号",
+      pwdTargetUsername: user.username || "",
+      pwdIsSelf: true,
+      pwdNeedOld: true,
+      oldPwdInput: "",
+      newPwdInput: "",
+      confirmPwdInput: "",
+      pwdError: "",
+      pwdSubmitting: false,
+    });
+  },
+
+  openChangeAdminPassword: function(e) {
+    var admin = e.currentTarget.dataset.admin;
+    if (!admin) return;
+    var current = this.data.currentManagerUser || {};
+    var isSelf = Number(admin.id) === Number(current.id);
+    var username = (admin.email || "").replace(/@.*$/, "");
+
+    this.setData({
+      showChangePwdModal: true,
+      pwdTargetId: admin.id,
+      pwdTargetName: admin.name || "管理员",
+      pwdTargetUsername: username,
+      pwdIsSelf: isSelf,
+      pwdNeedOld: isSelf, // 本人需核验旧密码，店长重置其他员工免旧密码
+      oldPwdInput: "",
+      newPwdInput: "",
+      confirmPwdInput: "",
+      pwdError: "",
+      pwdSubmitting: false,
+    });
+  },
+
+  closeChangePwdModal: function() {
+    this.setData({
+      showChangePwdModal: false,
+      oldPwdInput: "",
+      newPwdInput: "",
+      confirmPwdInput: "",
+      pwdError: "",
+      pwdSubmitting: false,
+    });
+  },
+
+  onOldPwdInput: function(e) {
+    this.setData({ oldPwdInput: e.detail.value, pwdError: "" });
+  },
+
+  onNewPwdInput: function(e) {
+    this.setData({ newPwdInput: e.detail.value, pwdError: "" });
+  },
+
+  onConfirmPwdInput: function(e) {
+    this.setData({ confirmPwdInput: e.detail.value, pwdError: "" });
+  },
+
+  submitChangePassword: function() {
+    var that = this;
+    var targetId = this.data.pwdTargetId;
+    var isSelf = this.data.pwdIsSelf;
+    var needOld = this.data.pwdNeedOld;
+    var oldPwd = (this.data.oldPwdInput || "").trim();
+    var newPwd = (this.data.newPwdInput || "").trim();
+    var confirmPwd = (this.data.confirmPwdInput || "").trim();
+
+    if (needOld && !oldPwd) {
+      this.setData({ pwdError: "请输入当前正在使用的旧密码" });
+      return;
+    }
+    if (!newPwd) {
+      this.setData({ pwdError: "请输入新密码" });
+      return;
+    }
+    if (newPwd.length < 6) {
+      this.setData({ pwdError: "新密码长度不能少于6位字符" });
+      return;
+    }
+    if (newPwd !== confirmPwd) {
+      this.setData({ pwdError: "两次输入的新密码不一致，请核对" });
+      return;
+    }
+
+    this.setData({ pwdSubmitting: true, pwdError: "" });
+    api.request({
+      url: "/api/portal/manager/actions?action=change_password",
+      method: "POST",
+      data: {
+        targetUserId: targetId,
+        oldPassword: oldPwd,
+        newPassword: newPwd,
+        confirmPassword: confirmPwd,
+      },
+      success: function(res) {
+        that.setData({ pwdSubmitting: false });
+        if (res && res.statusCode === 200 && res.data && res.data.success) {
+          that.closeChangePwdModal();
+          if (res.data.isSelf) {
+            wx.showModal({
+              title: "密码修改成功",
+              content: "登录口令已更新并写入安全留痕。为确保安全，请使用新密码重新登录。",
+              showCancel: false,
+              confirmText: "重新登录",
+              confirmColor: "#B92E32",
+              success: function() {
+                var uname = that.data.pwdTargetUsername;
+                wx.removeStorageSync("managerToken");
+                wx.removeStorageSync("managerProfile");
+                that.setData({
+                  isManagerLoggedIn: false,
+                  currentManagerUser: null,
+                  currentView: "home",
+                  managerUsername: uname,
+                  managerPassword: "",
+                  navTitle: "管家安全登录",
+                });
+              }
+            });
+          } else {
+            wx.showToast({ title: "密码重置成功", icon: "success" });
+            that.fetchAuditLogs();
+            that.fetchAdmins();
+          }
+        } else {
+          var errMsg = (res && res.data && (res.data.error || res.data.message)) || "修改密码失败，请核对信息";
+          that.setData({ pwdError: errMsg });
+        }
+      },
+      fail: function() {
+        that.setData({ pwdSubmitting: false, pwdError: "网络连接失败，请稍后重试" });
+      }
     });
   },
 

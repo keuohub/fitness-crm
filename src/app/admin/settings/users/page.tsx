@@ -44,6 +44,12 @@ export default function AdminUsersPage() {
   const [submitting, setSubmitting] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
+  // Reset password modal
+  const [pwdModalUser, setPwdModalUser] = useState<AdminUser | null>(null);
+  const [pwdModalNew, setPwdModalNew] = useState("");
+  const [pwdModalConfirm, setPwdModalConfirm] = useState("");
+  const [pwdSubmitting, setPwdSubmitting] = useState(false);
+
   const fetchUsers = () => {
     setLoading(true);
     fetch("/api/admin/users")
@@ -119,6 +125,35 @@ export default function AdminUsersPage() {
     } else {
       showToast("删除失败", "error");
     }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pwdModalUser) return;
+    if (!pwdModalNew || pwdModalNew.length < 6) {
+      showToast("新密码长度不能少于6位", "error");
+      return;
+    }
+    if (pwdModalNew !== pwdModalConfirm) {
+      showToast("两次输入的新密码不一致", "error");
+      return;
+    }
+    setPwdSubmitting(true);
+    const res = await fetch("/api/admin/users", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: pwdModalUser.id, password: pwdModalNew.trim() }),
+    });
+    if (res.ok) {
+      showToast(`已成功为【${pwdModalUser.name}】更新密码，已记录留痕寻迹`, "success");
+      setPwdModalUser(null);
+      setPwdModalNew("");
+      setPwdModalConfirm("");
+    } else {
+      const data = await res.json().catch(() => ({}));
+      showToast(data.error || "重置密码失败", "error");
+    }
+    setPwdSubmitting(false);
   };
 
   return (
@@ -223,6 +258,18 @@ export default function AdminUsersPage() {
 
                       <td className="px-5 py-3.5 text-right">
                         <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => {
+                              setPwdModalUser(u);
+                              setPwdModalNew("");
+                              setPwdModalConfirm("");
+                            }}
+                            className="px-2.5 py-1 text-xs text-[#2563EB] bg-[#E8EEFF] hover:bg-blue-100 rounded flex items-center gap-1 transition-colors"
+                            title="重置登录密码"
+                          >
+                            <KeyRound className="w-3.5 h-3.5" />
+                            重置密码
+                          </button>
                           <button
                             onClick={() => handleToggleStatus(u.id, u.status)}
                             className="px-2.5 py-1 text-xs text-[#697180] bg-white border border-[#E1E5EB] hover:bg-[#F5F7FA] rounded transition-colors"
@@ -358,6 +405,84 @@ export default function AdminUsersPage() {
                 确认删除
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Reset Password */}
+      {pwdModalUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+          <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-5 border border-[#E1E5EB]">
+            <div className="flex items-center justify-between pb-3 border-b border-[#E1E5EB]">
+              <div>
+                <h3 className="text-base font-semibold text-[#292D35] flex items-center gap-1.5">
+                  <KeyRound className="w-4 h-4 text-[#2563EB]" /> 重置登录密码
+                </h3>
+                <p className="text-xs text-[#697180] mt-0.5">
+                  正在为【{pwdModalUser.name}】({pwdModalUser.email}) 设置新密码
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPwdModalUser(null)}
+                className="text-[#697180] hover:text-[#292D35]"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleResetPassword} className="space-y-3 mt-4">
+              <div>
+                <label className="block text-xs font-medium text-[#292D35] mb-1">
+                  新密码 (至少6位)
+                </label>
+                <input
+                  type="password"
+                  value={pwdModalNew}
+                  onChange={(e) => setPwdModalNew(e.target.value)}
+                  placeholder="请输入新密码"
+                  required
+                  minLength={6}
+                  className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-[#292D35] mb-1">
+                  再次确认新密码
+                </label>
+                <input
+                  type="password"
+                  value={pwdModalConfirm}
+                  onChange={(e) => setPwdModalConfirm(e.target.value)}
+                  placeholder="请再次输入新密码"
+                  required
+                  minLength={6}
+                  className="w-full px-3 py-1.5 text-xs bg-white border border-[#E1E5EB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                />
+              </div>
+
+              <div className="p-2.5 bg-blue-50/60 border border-blue-100 rounded-lg text-[11px] text-[#2563EB] leading-relaxed">
+                密码修改后该账号所有历史会话将立即失效，下次必须使用新密码登录。本次操作将实时记入操作留痕寻迹。
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-[#E1E5EB] mt-4">
+                <button
+                  type="button"
+                  onClick={() => setPwdModalUser(null)}
+                  className="px-3 py-1.5 text-xs text-[#697180] bg-white border border-[#E1E5EB] rounded-lg"
+                >
+                  取消
+                </button>
+                <button
+                  type="submit"
+                  disabled={pwdSubmitting}
+                  className="px-4 py-1.5 text-xs font-medium text-white bg-[#2563EB] hover:bg-blue-700 rounded-lg shadow-sm disabled:opacity-50"
+                >
+                  {pwdSubmitting ? "正在更新..." : "确认更新密码"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

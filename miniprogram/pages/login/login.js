@@ -3,14 +3,22 @@ var wxbind = require("../../utils/wxbind.js");
 
 Page({
   data: {
+    loginMode: "member", // 'member' | 'manager'
     submitting: false,
+    managerSubmitting: false,
     error: "",
     inviteCode: "",
-    phoneSuffix: ""
+    phoneSuffix: "",
+    managerUsername: "",
+    managerPassword: ""
   },
 
   onLoad: function(options) {
     this.optionsFrom = (options && options.from) || "";
+    // 若带 mode=manager，直接进入管家模式
+    if (options && options.mode === "manager") {
+      this.setData({ loginMode: "manager" });
+    }
     // 若带 switch=1 或 force=1，表示用户主动要求切换账号，不自动重定向
     var isSwitching = options && (options.switch === "1" || options.force === "1");
     if (!isSwitching) {
@@ -37,14 +45,41 @@ Page({
     }
   },
 
+  switchLoginMode: function(e) {
+    var mode = e.currentTarget.dataset.mode || "member";
+    this.setData({ loginMode: mode, error: "" });
+  },
+
+  switchToManagerMode: function() {
+    this.setData({ loginMode: "manager", error: "" });
+  },
+
   onCodeInput: function(e) {
-    var val = (e.detail.value || "").trim().toUpperCase();
-    this.setData({ inviteCode: val, error: "" });
+    var raw = (e.detail.value || "").trim();
+    // 智能识别：若用户在学员输入框填入了管理员专用账号（如 laiwu_admin / front / teach）
+    if (raw.toLowerCase().indexOf("laiwu_") >= 0 || raw.toLowerCase().indexOf("admin") >= 0) {
+      this.setData({
+        loginMode: "manager",
+        managerUsername: raw.toLowerCase(),
+        inviteCode: "",
+        error: "已自动为您切换至【管家管理中枢】登录通道"
+      });
+      return;
+    }
+    this.setData({ inviteCode: raw.toUpperCase(), error: "" });
   },
 
   onPhoneSuffixInput: function(e) {
     var val = (e.detail.value || "").trim();
     this.setData({ phoneSuffix: val, error: "" });
+  },
+
+  onManagerUsernameInput: function(e) {
+    this.setData({ managerUsername: e.detail.value, error: "" });
+  },
+
+  onManagerPasswordInput: function(e) {
+    this.setData({ managerPassword: e.detail.value, error: "" });
   },
 
   handleSkipLogin: function() {
@@ -74,10 +109,6 @@ Page({
       return;
     }
 
-    // 已移除旧版本硬编码口令。
-    // 提审如需账号，请在后台新建一个「审核测试」会员，用它的真实邀请码登录，
-    // 这样审核员看到的是真实链路，而不是别人的档案。
-
     that.setData({ submitting: true, error: "" });
 
     api.request({
@@ -88,7 +119,6 @@ Page({
       success: function(res) {
         if (res.statusCode === 200 && res.data && res.data.memberId) {
           var data = res.data;
-          // 清除上一位会员的所有缓存，但保留本轮可能暂存的待约课次
           var pendingSessionId = wx.getStorageSync("pendingSessionId");
           wx.clearStorageSync();
           if (pendingSessionId) {
@@ -108,13 +138,11 @@ Page({
           if (data.isManager !== undefined) {
             wx.setStorageSync("isManager", Boolean(data.isManager));
           }
-          // 登录成功后静默绑定微信 openid（推送能力的前提，会员无感）
           try {
             wxbind.reset();
             wxbind.bind();
           } catch (e) {}
 
-          // from=booking 时跳回约课 Tab，否则默认回到首页
           if (that.optionsFrom === "booking") {
             wx.switchTab({ url: "/pages/booking/booking" });
           } else {
@@ -126,8 +154,48 @@ Page({
         }
       },
       fail: function() {
-        // 请求失败或超时：如实报错，绝不静默进演示模式
         that.setData({ submitting: false, error: "暂时连不上服务器，请稍后重试或联系小桥" });
+      }
+    });
+  },
+
+  handleManagerLogin: function() {
+    var that = this;
+    var username = (this.data.managerUsername || "").trim();
+    var password = (this.data.managerPassword || "").trim();
+
+    if (!username) {
+      this.setData({ error: "请输入管理员专属账号" });
+      return;
+    }
+    if (!password) {
+      this.setData({ error: "请输入管理员登录密码" });
+      return;
+    }
+
+    this.setData({ managerSubmitting: true, error: "" });
+
+    api.request({
+      url: "/api/portal/manager/auth",
+      method: "POST",
+      header: { "Content-Type": "application/json" },
+      data: { username: username, password: password },
+      success: function(res) {
+        that.setData({ managerSubmitting: false });
+        if (res && res.statusCode === 200 && res.data && res.data.ok) {
+          wx.setStorageSync("managerToken", res.data.token);
+          wx.setStorageSync("managerProfile", res.data.admin);
+          wx.showToast({ title: "安全验证成功", icon: "success" });
+          setTimeout(function() {
+            wx.reLaunch({ url: "/pages/manager/manager" });
+          }, 300);
+        } else {
+          var errMsg = (res && res.data && res.data.error) || "管理员账号或密码错误，请核对";
+          that.setData({ error: errMsg });
+        }
+      },
+      fail: function() {
+        that.setData({ managerSubmitting: false, error: "网络连接失败，请稍后重试" });
       }
     });
   },

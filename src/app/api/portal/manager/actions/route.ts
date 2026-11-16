@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { getPortalMemberId } from "@/lib/auth/member-session";
 import { getManagerSessionFromRequest } from "@/lib/auth/manager-session";
 import { logAdminAction } from "@/lib/audit/log";
+import { hashSync, compareSync } from "bcryptjs";
 
 export const dynamic = "force-dynamic";
 
@@ -395,8 +396,7 @@ export async function GET(request: NextRequest) {
       FROM users
       WHERE tenant_id = 1 
         AND role IN ('admin', 'owner') 
-        AND id <> 11 
-        AND LOWER(TRIM(name)) <> '小桥'
+        AND id IN (34, 35, 36)
         AND status = 'active'
       ORDER BY id ASC
     `.catch(() => []);
@@ -1290,6 +1290,99 @@ export async function POST(request: NextRequest) {
       success: true,
       booking,
       message: `已成功为【${m?.name || '学员'}】代约本节课（使用卡项：${card.card_name}）`
+    });
+  }
+
+  // 6.9. 修改/重置管理员密码（自主修改需核验旧密码 / 总店长具备管理重置特权）
+  if (action === "change_password") {
+    const currentUserId = Number(manager.managerUserId);
+    const targetUserId = body.targetUserId ? Number(body.targetUserId) : currentUserId;
+    const oldPassword = String(body.oldPassword || "").trim();
+    const newPassword = String(body.newPassword || "").trim();
+    const confirmPassword = String(body.confirmPassword || "").trim();
+
+    if (!newPassword) {
+      return bad("请输入新密码");
+    }
+    if (newPassword.length < 6) {
+      return bad("新密码长度不能少于6位字符");
+    }
+    if (confirmPassword && newPassword !== confirmPassword) {
+      return bad("两次输入的新密码不一致，请重新输入");
+    }
+
+    const isSelf = targetUserId === currentUserId;
+    const isOwner = manager.managerRole === "owner" || manager.managerUsername === "laiwu_admin";
+
+    if (!isSelf && !isOwner) {
+      return bad("仅总店长拥有重置其他管理员密码的权限", 403);
+    }
+
+    const [targetUser] = await rawSql`
+      SELECT id, name, email, password_hash, role
+      FROM users
+      WHERE id = ${targetUserId} AND tenant_id = 1
+      LIMIT 1
+    `.catch(() => []);
+
+    if (!targetUser) {
+      return bad("目标管理员账号不存在", 404);
+    }
+    if (targetUser.id === 11 || targetUser.name === "小桥") {
+      return bad("该账号无管理权限，无法修改密码", 403);
+    }
+
+    // 若修改本人密码，必须核验旧密码
+    if (isSelf) {
+      if (!oldPassword) {
+        return bad("请输入当前正在使用的旧密码以完成身份验证");
+      }
+      let oldValid = false;
+      try {
+        oldValid = compareSync(oldPassword, targetUser.password_hash || "");
+      } catch {
+        oldValid = false;
+      }
+      if (!oldValid) {
+        return bad("当前旧密码输入错误，无法完成修改");
+      }
+    }
+
+    // 生成新哈希并更新数据库
+    const newHash = hashSync(newPassword, 10);
+    await rawSql`
+      UPDATE users
+      SET password_hash = ${newHash}, updated_at = NOW()
+      WHERE id = ${targetUserId}
+    `;
+
+    // 吊销被改密账号可能存在的所有后台 session
+    await rawSql`
+      DELETE FROM admin_sessions WHERE admin_id = ${targetUserId}
+    `.catch(() => {});
+
+    const targetUsername = (targetUser.email || "").replace(/@.*$/, "");
+    const ip = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "127.0.0.1";
+
+    await logAdminAction({
+      adminId: currentUserId,
+      adminName: manager.name || "管理员",
+      adminUsername: manager.managerUsername || "admin",
+      action: isSelf ? "change_password" : "reset_password",
+      entityType: "users",
+      entityId: targetUserId,
+      summary: isSelf
+        ? `管理员【${manager.name}】(${manager.managerUsername}) 自助修改了登录密码`
+        : `总店长【${manager.name}】(${manager.managerUsername}) 重置了管理员【${targetUser.name}】(${targetUsername}) 的登录密码`,
+      ip,
+    });
+
+    return NextResponse.json({
+      success: true,
+      isSelf,
+      message: isSelf
+        ? "密码修改成功！为确保安全，请使用新密码重新登录。"
+        : `已成功将管理员【${targetUser.name}】的密码重置为新密码。`,
     });
   }
 

@@ -9,7 +9,7 @@
     </view>
     <view class="mgr-nav-title">
       <text class="mgr-nav-brand">{{navTitle}}</text>
-      <text class="mgr-nav-badge">{{isManagerLoggedIn ? (currentManagerUser.name || '管家端') : '安全专线'}}</text>
+      <text class="mgr-nav-badge" bindtap="tapNavBadge">{{isManagerLoggedIn ? (currentManagerUser.name || '管家端') : '安全专线'}} ▾</text>
     </view>
     <view class="mgr-nav-right">
       <view wx:if="{{isManagerLoggedIn && currentView !== 'home'}}" class="mgr-nav-home-pill" bindtap="goHomeView">
@@ -35,23 +35,7 @@
       <view class="mgr-login-body">
         <view class="mgr-login-security-tip">
           <text class="mgr-tip-icon">🛡</text>
-          <text class="mgr-tip-text">仅限3位专职管理人员凭账号密码登录，普通会员手机号无法免密进入。</text>
-        </view>
-
-        <!-- 快捷填入专用账号 -->
-        <view class="mgr-preset-group">
-          <text class="mgr-preset-label">快捷填入专用账号：</text>
-          <view class="mgr-preset-pills">
-            <view class="mgr-preset-pill {{managerUsername === 'laiwu_admin' ? 'is-active' : ''}}" data-user="laiwu_admin" bindtap="fillPresetAccount">
-              总店长 (admin)
-            </view>
-            <view class="mgr-preset-pill {{managerUsername === 'laiwu_front' ? 'is-active' : ''}}" data-user="laiwu_front" bindtap="fillPresetAccount">
-              前台管家 (front)
-            </view>
-            <view class="mgr-preset-pill {{managerUsername === 'laiwu_teach' ? 'is-active' : ''}}" data-user="laiwu_teach" bindtap="fillPresetAccount">
-              教务督导 (teach)
-            </view>
-          </view>
+          <text class="mgr-tip-text">仅限授权专职管理员凭专属账号密码登录，所有操作全程留痕寻迹。</text>
         </view>
 
         <!-- 输入表单 -->
@@ -60,10 +44,11 @@
           <input
             class="mgr-field-input"
             type="text"
-            placeholder="如：laiwu_admin"
+            placeholder="请输入管理员专属账号"
             placeholder-class="mgr-field-ph"
             value="{{managerUsername}}"
             bindinput="onManagerUsernameInput"
+            maxlength="50"
           />
         </view>
 
@@ -76,6 +61,7 @@
             placeholder-class="mgr-field-ph"
             value="{{managerPassword}}"
             bindinput="onManagerPasswordInput"
+            maxlength="50"
           />
         </view>
 
@@ -1475,6 +1461,16 @@
     <block wx:else>
       <view wx:if="{{loadingAdmins}}" class="mgr-inner-loading">正在核验管理员授权…</view>
       <block wx:else>
+        <!-- 当前登录管理员改密快捷条 -->
+        <view class="mgr-self-pwd-card">
+          <view class="mgr-self-pwd-left">
+            <view class="mgr-self-pwd-badge">当前已登录</view>
+            <view class="mgr-self-pwd-title">{{currentManagerUser.name}} ({{currentManagerUser.username}})</view>
+            <view class="mgr-self-pwd-sub">已通过安全鉴权 · 支持随时自助更换口令</view>
+          </view>
+          <button class="mgr-self-pwd-btn" bindtap="openChangeMyPassword">修改我的密码</button>
+        </view>
+
         <view wx:for="{{adminsList}}" wx:key="id" class="mgr-admin-card">
           <view class="mgr-admin-card-top">
             <view class="mgr-admin-name-box">
@@ -1487,13 +1483,18 @@
             <text class="mgr-admin-meta-label">专属账号：</text>
             <text class="mgr-admin-meta-val">{{item.email || ('admin_' + item.id)}}</text>
           </view>
+          <view class="mgr-admin-card-actions">
+            <button class="mgr-btn-change-pwd" data-admin="{{item}}" bindtap="openChangeAdminPassword">
+              🔑 修改/重置密码
+            </button>
+          </view>
         </view>
 
         <view class="mgr-engine-card">
           <view class="mgr-engine-title">权限安全隔离与小桥权限说明</view>
           <view class="mgr-engine-badge">安全生效中</view>
           <text class="mgr-engine-desc">
-            1. 专职管理员凭专属账号+密码登录，严禁普通学员手机号免密进入工作台。\n2. 店主小桥的管理权限已彻底撤销停用，小桥手机号无法访问后台与管理端。\n3. 每一次签到扣次、发卡、退卡、代约均实时写入数据库留痕寻迹，责任到人。
+            1. 专职管理员凭专属账号+密码登录，严禁普通学员手机号免密进入工作台。\n2. 店主小桥的管理权限已彻底撤销停用，小桥手机号无法访问后台与管理端。\n3. 每一次签到扣次、发卡、退卡、代约与密码修改均实时写入数据库留痕寻迹，责任到人。
           </text>
         </view>
       </block>
@@ -1548,6 +1549,74 @@
         </text>
       </view>
     </block>
+  </view>
+
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <!-- 通用模态弹窗：管理员密码修改 / 重置 -->
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <view wx:if="{{showChangePwdModal}}" class="mgr-pwd-mask" bindtap="closeChangePwdModal">
+    <view class="mgr-pwd-dialog" catchtap="preventD">
+      <view class="mgr-pwd-head">
+        <view class="mgr-pwd-head-info">
+          <text class="mgr-pwd-title">{{pwdIsSelf ? '修改我的登录密码' : '重置管理员密码'}}</text>
+          <text class="mgr-pwd-subtitle">正在操作账号：{{pwdTargetName}} ({{pwdTargetUsername}})</text>
+        </view>
+        <view class="mgr-pwd-close-btn" bindtap="closeChangePwdModal">✕</view>
+      </view>
+
+      <view class="mgr-pwd-body">
+        <!-- 仅修改本人密码时需要验证旧密码 -->
+        <view class="mgr-pwd-field" wx:if="{{pwdNeedOld}}">
+          <text class="mgr-pwd-field-label">当前旧密码 <text class="text-req">*</text></text>
+          <input
+            class="mgr-pwd-input"
+            password="true"
+            placeholder="请输入当前正在使用的旧密码"
+            placeholder-class="mgr-pwd-ph"
+            value="{{oldPwdInput}}"
+            bindinput="onOldPwdInput"
+          />
+        </view>
+
+        <view class="mgr-pwd-field">
+          <text class="mgr-pwd-field-label">新密码（至少6位） <text class="text-req">*</text></text>
+          <input
+            class="mgr-pwd-input"
+            password="true"
+            placeholder="请输入新密码（至少6位）"
+            placeholder-class="mgr-pwd-ph"
+            value="{{newPwdInput}}"
+            bindinput="onNewPwdInput"
+          />
+        </view>
+
+        <view class="mgr-pwd-field">
+          <text class="mgr-pwd-field-label">再次确认新密码 <text class="text-req">*</text></text>
+          <input
+            class="mgr-pwd-input"
+            password="true"
+            placeholder="请再次输入新密码"
+            placeholder-class="mgr-pwd-ph"
+            value="{{confirmPwdInput}}"
+            bindinput="onConfirmPwdInput"
+          />
+        </view>
+
+        <view wx:if="{{pwdError}}" class="mgr-pwd-err-text">
+          {{pwdError}}
+        </view>
+
+        <view class="mgr-pwd-hint-box">
+          <text class="mgr-pwd-hint-dot">🛡</text>
+          <text class="mgr-pwd-hint-text">修改后将实时写入操作留痕寻迹，旧密码立即失效。</text>
+        </view>
+      </view>
+
+      <view class="mgr-pwd-foot">
+        <button class="mgr-pwd-btn mgr-pwd-btn-cancel" bindtap="closeChangePwdModal">取消</button>
+        <button class="mgr-pwd-btn mgr-pwd-btn-submit" loading="{{pwdSubmitting}}" bindtap="submitChangePassword">确认更新密码</button>
+      </view>
+    </view>
   </view>
 
 </view>
