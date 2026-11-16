@@ -313,6 +313,62 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ rooms: roomList });
   }
 
+  // 6.5. 教练团队列表
+  if (action === "coaches") {
+    const list = await rawSql`
+      SELECT u.id, u.name, u.email, u.status, u.avatar_url,
+             COALESCE(tm.role_title, '资深塑形教练') as role_title,
+             COALESCE(tm.experience, '多年普拉提与形体训练经验') as experience,
+             COALESCE(tm.is_active, 1) as is_active
+      FROM users u
+      LEFT JOIN team_members tm ON tm.name = u.name
+      WHERE u.tenant_id = 1 AND (u.is_coach = 1 OR u.role = 'coach')
+      ORDER BY u.status ASC, u.id ASC
+    `.catch(() => []);
+    return NextResponse.json({ coaches: list });
+  }
+
+  // 6.6. 卡种规则配置库 (含关联课种与生效状态)
+  if (action === "card_types") {
+    const rows = await rawSql`
+      SELECT ct.id, ct.name, ct.category, ct.price_cents, ct.validity_days,
+             ct.total_count, ct.is_active, ct.sort_order,
+             (SELECT COUNT(*)::int FROM member_cards mc WHERE mc.card_type_id = ct.id AND mc.status = 'active') as active_count
+      FROM card_types ct
+      WHERE ct.tenant_id = 1
+      ORDER BY ct.is_active DESC, ct.sort_order ASC, ct.id ASC
+    `.catch(() => []);
+
+    const courses = await rawSql`
+      SELECT ctc.card_type_id, cc.name as category_name
+      FROM card_type_courses ctc
+      JOIN course_categories cc ON cc.id = ctc.course_category_id
+      ORDER BY ctc.course_category_id ASC
+    `.catch(() => []);
+    const map = new Map<number, string[]>();
+    for (const c of courses) {
+      const arr = map.get(c.card_type_id) || [];
+      arr.push(c.category_name);
+      map.set(c.card_type_id, arr);
+    }
+    const result = rows.map((r: any) => ({
+      ...r,
+      courseCategories: map.get(r.id) || [],
+    }));
+    return NextResponse.json({ cardTypes: result });
+  }
+
+  // 6.7. 管理员与系统权限账号列表
+  if (action === "admins") {
+    const list = await rawSql`
+      SELECT id, name, email, role, status, created_at
+      FROM users
+      WHERE tenant_id = 1 AND (role IN ('admin', 'owner') OR id IN (1, 11, 26, 27))
+      ORDER BY id ASC
+    `.catch(() => []);
+    return NextResponse.json({ admins: list });
+  }
+
   // 7. 经营数据与报表概览（在册且开通约课会员口径准确）
   if (action === "reports") {
     const [report] = await rawSql`
@@ -938,6 +994,173 @@ export async function POST(request: NextRequest) {
       success: true,
       card: newCard,
       message: `已成功为【${member.name}】开通【${ct.name}】${totalCount ? `（${totalCount}次）` : ''}`
+    });
+  }
+
+  // 10. 新增教练导师
+  if (action === "create_coach") {
+    const name = String(body.name || "").trim();
+    if (!name) return bad("教练姓名必填");
+    const roleTitle = String(body.roleTitle || "资深塑形教练").trim();
+
+    const [dup] = await rawSql`
+      SELECT id FROM users
+      WHERE tenant_id = 1 AND LOWER(TRIM(name)) = LOWER(${name}) AND is_coach = 1 AND status = 'active'
+    `;
+    if (dup) return bad(`教练「${name}」已在教练库中`, 409);
+
+    const email = `coach-${Date.now()}@laiwu.local`;
+    const [createdUser] = await rawSql`
+      INSERT INTO users (tenant_id, name, email, password_hash, role, is_coach, status, avatar_url)
+      VALUES (1, ${name}, ${email}, 'disabled', 'coach', 1, 'active', ${body.avatarUrl || '/images/team/team-2.jpg'})
+      RETURNING id, name, role, status
+    `;
+
+    await rawSql`
+      INSERT INTO team_members (tenant_id, name, role_title, avatar_url, is_active, sort_order)
+      VALUES (1, ${name}, ${roleTitle}, ${body.avatarUrl || '/images/team/team-2.jpg'}, 1, 50)
+      ON CONFLICT DO NOTHING
+    `.catch(() => {});
+
+    return NextResponse.json({
+      success: true,
+      coach: createdUser,
+      message: `已成功添加教练导师【${name}】`
+    });
+  }
+
+  // 11. 切换教练在职/启用状态
+  if (action === "toggle_coach") {
+    const id = Number(body.id || 0);
+    const status = body.status === "inactive" ? "inactive" : "active";
+    if (!id) return bad("缺少教练 id");
+
+    await rawSql`UPDATE users SET status = ${status} WHERE id = ${id} AND tenant_id = 1`;
+    const [u] = await rawSql`SELECT name FROM users WHERE id = ${id}`;
+    if (u?.name) {
+      await rawSql`UPDATE team_members SET is_active = ${status === 'active' ? 1 : 0} WHERE name = ${u.name}`.catch(() => {});
+    }
+    return NextResponse.json({ success: true, message: `已${status === 'active' ? '启用' : '停用'}该教练` });
+  }
+
+  // 12. 新建卡种规则
+  if (action === "create_card_type") {
+    const name = String(body.name || "").trim();
+    const category = String(body.category || "count").trim();
+    if (!name) return bad("卡种名称必填");
+    if (!["count", "period"].includes(category)) return bad("卡类别只能是 count 或 period");
+    const priceCents = Math.round(Number(body.price || 0) * 100);
+    const totalCount = category === "count" ? Math.max(1, Math.round(Number(body.totalCount || 10))) : null;
+    const validityDays = Math.max(1, Math.round(Number(body.validityDays || (category === 'period' ? 365 : 90))));
+
+    const [ct] = await rawSql`
+      INSERT INTO card_types (
+        tenant_id, name, category, price_cents, total_count, validity_days, is_active, sort_order, created_at
+      ) VALUES (
+        1, ${name}, ${category}, ${priceCents}, ${totalCount}, ${validityDays}, 1, 10, NOW()
+      ) RETURNING *
+    `;
+
+    const courseCategoryIds = Array.isArray(body.courseCategoryIds) ? body.courseCategoryIds : [];
+    for (const cid of courseCategoryIds) {
+      await rawSql`
+        INSERT INTO card_type_courses (card_type_id, course_category_id)
+        VALUES (${ct.id}, ${cid})
+        ON CONFLICT DO NOTHING
+      `.catch(() => {});
+    }
+    return NextResponse.json({ success: true, cardType: ct, message: `已成功创建卡种【${name}】` });
+  }
+
+  // 13. 启用/停用卡种
+  if (action === "toggle_card_type") {
+    const id = Number(body.id || 0);
+    const isActive = body.isActive ? 1 : 0;
+    if (!id) return bad("缺少 cardTypeId");
+    await rawSql`UPDATE card_types SET is_active = ${isActive} WHERE id = ${id} AND tenant_id = 1`;
+    return NextResponse.json({ success: true, message: `已${isActive ? '启用' : '停用'}卡种` });
+  }
+
+  // 14. 会员卡退卡 / 停卡办理
+  if (action === "return_card") {
+    const cardId = Number(body.cardId || 0);
+    const reason = String(body.reason || "会员申请退卡/停用").trim();
+    if (!cardId) return bad("缺少 cardId");
+
+    const [mc] = await rawSql`SELECT * FROM member_cards WHERE id = ${cardId} AND tenant_id = 1`;
+    if (!mc) return bad("会员卡不存在", 404);
+    if (mc.status !== "active") return bad("该会员卡当前不是有效状态", 409);
+
+    await rawSql`UPDATE member_cards SET status = 'refunded', updated_at = NOW() WHERE id = ${cardId}`;
+    await rawSql`
+      INSERT INTO card_transactions (
+        tenant_id, member_card_id, member_id, type, amount, balance_after, note, created_at
+      ) VALUES (
+        1, ${cardId}, ${mc.member_id}, 'refund', 0, 0, ${'管家退卡/停用: ' + reason}, NOW()
+      )
+    `.catch(() => {});
+
+    return NextResponse.json({ success: true, message: "已成功办理退卡/停用" });
+  }
+
+  // 15. 新增教室场地
+  if (action === "create_room") {
+    const name = String(body.name || "").trim();
+    const capacity = Math.max(1, Number(body.capacity || 10));
+    if (!name) return bad("教室名称必填");
+    const [room] = await rawSql`
+      INSERT INTO rooms (tenant_id, name, capacity, is_active, created_at)
+      VALUES (1, ${name}, ${capacity}, 1, NOW())
+      RETURNING *
+    `;
+    return NextResponse.json({ success: true, room, message: `已成功添加教室【${name}】` });
+  }
+
+  // 16. 管家代客约课
+  if (action === "book_for_member") {
+    const sessionId = Number(body.sessionId || 0);
+    const memberId = Number(body.memberId || 0);
+    if (!sessionId || !memberId) return bad("缺少场次或学员信息");
+
+    const [sess] = await rawSql`SELECT * FROM class_sessions WHERE id = ${sessionId} AND tenant_id = 1`;
+    if (!sess) return bad("场次不存在", 404);
+    if (sess.status === "cancelled") return bad("该课程已取消", 409);
+
+    const [existing] = await rawSql`
+      SELECT id, status FROM bookings 
+      WHERE session_id = ${sessionId} AND member_id = ${memberId} AND tenant_id = 1 AND status IN ('booked', 'attended')
+    `;
+    if (existing) return bad("该学员已在预约名单中", 409);
+
+    // 检查是否有可用有效卡
+    const [card] = await rawSql`
+      SELECT mc.id, mc.remaining_count, ct.name as card_name
+      FROM member_cards mc
+      JOIN card_types ct ON ct.id = mc.card_type_id
+      WHERE mc.member_id = ${memberId} AND mc.status = 'active'
+        AND (mc.valid_until IS NULL OR mc.valid_until::date >= ${sess.session_date}::date)
+        AND (ct.category = 'period' OR mc.remaining_count > 0)
+      LIMIT 1
+    `;
+    if (!card) return bad("该会员没有可用于预约该课程的有效卡项，请先开卡", 409);
+
+    const [booking] = await rawSql`
+      INSERT INTO bookings (tenant_id, session_id, member_id, status, booked_at, created_at, updated_at)
+      VALUES (1, ${sessionId}, ${memberId}, 'booked', NOW(), NOW(), NOW())
+      RETURNING *
+    `;
+
+    await rawSql`
+      UPDATE class_sessions
+      SET booked_count = booked_count + 1, updated_at = NOW()
+      WHERE id = ${sessionId}
+    `;
+
+    const [m] = await rawSql`SELECT name FROM members WHERE id = ${memberId}`;
+    return NextResponse.json({
+      success: true,
+      booking,
+      message: `已成功为【${m?.name || '学员'}】代约本节课（使用卡项：${card.card_name}）`
     });
   }
 

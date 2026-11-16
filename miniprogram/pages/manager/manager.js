@@ -99,11 +99,47 @@ Page({
     cardsList: [],
     loadingCards: false,
     errorCards: "",
+    cardTab: "cards", // 'cards' (持卡列表) | 'types' (卡种规则库)
+    cardTypesList: [],
+    loadingCardTypes: false,
+    showNewCardTypeForm: false,
+    newCardTypeName: "",
+    newCardTypeCategory: "count",
+    newCardTypeCount: 10,
+    newCardTypeDays: 90,
+    newCardTypePrice: "",
+    submittingCardType: false,
+    cardSearchKeyword: "",
 
     // ── 教室场地 (venue) ──
     venueRooms: [],
     loadingVenue: false,
     errorVenue: "",
+    showNewRoomForm: false,
+    newRoomName: "",
+    newRoomCapacity: 6,
+    submittingRoom: false,
+
+    // ── 教练团队 (coaches) ──
+    coachesList: [],
+    loadingCoaches: false,
+    errorCoaches: "",
+    showNewCoachForm: false,
+    newCoachName: "",
+    newCoachTitle: "资深塑形教练",
+    submittingCoach: false,
+
+    // ── 账号权限 (admins) ──
+    adminsList: [],
+    loadingAdmins: false,
+
+    // ── 代客约课 (bookForMember) ──
+    showBookForMemberModal: false,
+    bookForMemberSession: null,
+    bookForMemberKeyword: "",
+    bookForMemberCandidates: [],
+    selectedBookMember: null,
+    submittingBookForMember: false,
 
     // ── 经营报表 (reports) ──
     reportData: {},
@@ -174,6 +210,10 @@ Page({
     } else if (this.data.currentView === "memberDetail") {
       this.fetchMemberDetail(this.data.currentDetailMemberId);
       wx.stopPullDownRefresh();
+    } else if (this.data.currentView === "coaches") {
+      this.fetchCoaches(function() { wx.stopPullDownRefresh(); });
+    } else if (this.data.currentView === "admins") {
+      this.fetchAdmins(function() { wx.stopPullDownRefresh(); });
     } else if (this.data.currentView === "reports") {
       this.fetchReports(function() { wx.stopPullDownRefresh(); });
     } else {
@@ -283,9 +323,27 @@ Page({
   switchToVenue: function() {
     this.setData({
       currentView: "venue",
-      navTitle: "教室场地"
+      navTitle: "教室场地",
+      showNewRoomForm: false
     });
     this.fetchVenue();
+  },
+
+  switchToCoaches: function() {
+    this.setData({
+      currentView: "coaches",
+      navTitle: "教练团队",
+      showNewCoachForm: false
+    });
+    this.fetchCoaches();
+  },
+
+  switchToAdmins: function() {
+    this.setData({
+      currentView: "admins",
+      navTitle: "账号与权限"
+    });
+    this.fetchAdmins();
   },
 
   switchToReports: function() {
@@ -297,11 +355,11 @@ Page({
   },
 
   tapCoach: function() {
-    wx.navigateTo({ url: "/pages/notes/notes" });
+    this.switchToCoaches();
   },
 
   tapTeam: function() {
-    wx.navigateTo({ url: "/pages/brand/brand" });
+    this.switchToAdmins();
   },
 
   // ════════════════════════════════════════════════════════════
@@ -1212,6 +1270,493 @@ Page({
         wx.showToast({ title: "网络连接失败", icon: "none" });
       },
       complete: cb
+    });
+  },
+
+  onCardTabChange: function(e) {
+    var tab = e.currentTarget.dataset.tab;
+    this.setData({ cardTab: tab });
+    if (tab === "types" && this.data.cardTypesList.length === 0) {
+      this.fetchCardTypes();
+    }
+  },
+
+  fetchCardTypes: function(done) {
+    var that = this;
+    var cb = typeof done === "function" ? done : function() {};
+    this.setData({ loadingCardTypes: true });
+
+    api.request({
+      url: "/api/portal/manager/actions?action=card_types",
+      success: function(res) {
+        if (res.statusCode === 200 && res.data) {
+          that.setData({ cardTypesList: res.data.cardTypes || [], loadingCardTypes: false });
+        } else {
+          that.setData({ loadingCardTypes: false });
+        }
+      },
+      fail: function() {
+        that.setData({ loadingCardTypes: false });
+      },
+      complete: cb
+    });
+  },
+
+  openNewCardTypeForm: function() {
+    this.setData({
+      showNewCardTypeForm: true,
+      newCardTypeName: "",
+      newCardTypeCategory: "count",
+      newCardTypeCount: 10,
+      newCardTypeDays: 90,
+      newCardTypePrice: ""
+    });
+  },
+
+  closeNewCardTypeForm: function() {
+    this.setData({ showNewCardTypeForm: false });
+  },
+
+  onCardTypeCategoryChange: function(e) {
+    this.setData({ newCardTypeCategory: e.currentTarget.dataset.cat });
+  },
+
+  onNewCardTypeNameInput: function(e) {
+    this.setData({ newCardTypeName: e.detail.value });
+  },
+
+  onNewCardTypeCountInput: function(e) {
+    this.setData({ newCardTypeCount: Number(e.detail.value) || 1 });
+  },
+
+  onNewCardTypeDaysInput: function(e) {
+    this.setData({ newCardTypeDays: Number(e.detail.value) || 1 });
+  },
+
+  onNewCardTypePriceInput: function(e) {
+    this.setData({ newCardTypePrice: e.detail.value });
+  },
+
+  submitCreateCardType: function() {
+    var that = this;
+    if (!this.data.newCardTypeName.trim()) {
+      wx.showToast({ title: "请输入卡种名称", icon: "none" });
+      return;
+    }
+    this.setData({ submittingCardType: true });
+    wx.showLoading({ title: "正在创建卡种…" });
+
+    api.request({
+      url: "/api/portal/manager/actions?action=create_card_type",
+      method: "POST",
+      data: {
+        name: this.data.newCardTypeName.trim(),
+        category: this.data.newCardTypeCategory,
+        totalCount: this.data.newCardTypeCount,
+        validityDays: this.data.newCardTypeDays,
+        price: Number(this.data.newCardTypePrice) || 0
+      },
+      success: function(res) {
+        wx.hideLoading();
+        that.setData({ submittingCardType: false });
+        if (res.statusCode === 200 && res.data && res.data.success) {
+          wx.showToast({ title: "卡种创建成功", icon: "success" });
+          that.closeNewCardTypeForm();
+          that.fetchCardTypes();
+          that.loadSessionOptions();
+        } else {
+          var err = (res.data && res.data.error) || "创建失败";
+          wx.showModal({ title: "创建提示", content: err, showCancel: false });
+        }
+      },
+      fail: function() {
+        wx.hideLoading();
+        that.setData({ submittingCardType: false });
+        wx.showToast({ title: "网络连接失败", icon: "none" });
+      }
+    });
+  },
+
+  toggleCardTypeStatus: function(e) {
+    var that = this;
+    var id = e.currentTarget.dataset.id;
+    var currentActive = e.currentTarget.dataset.active;
+    var nextActive = currentActive ? 0 : 1;
+    var name = e.currentTarget.dataset.name;
+
+    wx.showModal({
+      title: "卡种状态调整",
+      content: "确认要" + (nextActive ? "重新启用" : "停用") + "卡种【" + name + "】吗？" + (nextActive ? "" : "停用后前台开卡不再展示该卡种。"),
+      confirmText: nextActive ? "启用" : "停用",
+      confirmColor: nextActive ? "#16794A" : "#B92E32",
+      success: function(m) {
+        if (!m.confirm) return;
+        wx.showLoading({ title: "正在更新…" });
+        api.request({
+          url: "/api/portal/manager/actions?action=toggle_card_type",
+          method: "POST",
+          data: { id: id, isActive: nextActive },
+          success: function(res) {
+            wx.hideLoading();
+            if (res.statusCode === 200 && res.data && res.data.success) {
+              wx.showToast({ title: res.data.message || "更新成功", icon: "success" });
+              that.fetchCardTypes();
+              that.loadSessionOptions();
+            } else {
+              wx.showToast({ title: (res.data && res.data.error) || "操作失败", icon: "none" });
+            }
+          },
+          fail: function() {
+            wx.hideLoading();
+            wx.showToast({ title: "网络连接失败", icon: "none" });
+          }
+        });
+      }
+    });
+  },
+
+  doReturnCard: function(e) {
+    var that = this;
+    var id = e.currentTarget.dataset.id;
+    var member = e.currentTarget.dataset.member;
+    var cardName = e.currentTarget.dataset.card;
+
+    wx.showModal({
+      title: "办理退卡/停卡",
+      content: "确定要为【" + member + "】办理卡项【" + cardName + "】的退卡/停用吗？\n办理后该卡将立即置为失效状态并记录退卡流水。",
+      confirmText: "确认退卡",
+      confirmColor: "#B92E32",
+      success: function(m) {
+        if (!m.confirm) return;
+        wx.showLoading({ title: "正在办理…" });
+        api.request({
+          url: "/api/portal/manager/actions?action=return_card",
+          method: "POST",
+          data: { cardId: id, reason: "管家端现场办理退卡" },
+          success: function(res) {
+            wx.hideLoading();
+            if (res.statusCode === 200 && res.data && res.data.success) {
+              wx.showToast({ title: "退卡办理成功", icon: "success" });
+              that.fetchCards();
+              that.loadDashboard();
+            } else {
+              wx.showModal({ title: "办理失败", content: (res.data && res.data.error) || "未知错误", showCancel: false });
+            }
+          },
+          fail: function() {
+            wx.hideLoading();
+            wx.showToast({ title: "网络连接失败", icon: "none" });
+          }
+        });
+      }
+    });
+  },
+
+  // ════════════════════════════════════════════════════════════
+  // 6. 教室场地逻辑 (Venue)
+  // ════════════════════════════════════════════════════════════
+  fetchVenue: function(done) {
+    var that = this;
+    var cb = typeof done === "function" ? done : function() {};
+    this.setData({ loadingVenue: true, errorVenue: "" });
+
+    api.request({
+      url: "/api/portal/manager/actions?action=venue",
+      success: function(res) {
+        if (res.statusCode === 200 && res.data) {
+          that.setData({ venueRooms: res.data.rooms || [], loadingVenue: false, errorVenue: "" });
+        } else {
+          var err = (res.data && res.data.error) || ("获取教室失败 (HTTP " + res.statusCode + ")");
+          that.setData({ loadingVenue: false, errorVenue: err });
+          wx.showToast({ title: err, icon: "none" });
+        }
+      },
+      fail: function() {
+        that.setData({ loadingVenue: false, errorVenue: "网络连接失败" });
+        wx.showToast({ title: "网络连接失败", icon: "none" });
+      },
+      complete: cb
+    });
+  },
+
+  openNewRoomForm: function() {
+    this.setData({ showNewRoomForm: true, newRoomName: "", newRoomCapacity: 6 });
+  },
+
+  closeNewRoomForm: function() {
+    this.setData({ showNewRoomForm: false });
+  },
+
+  onNewRoomNameInput: function(e) {
+    this.setData({ newRoomName: e.detail.value });
+  },
+
+  onNewRoomCapacityInput: function(e) {
+    this.setData({ newRoomCapacity: Number(e.detail.value) || 1 });
+  },
+
+  submitCreateRoom: function() {
+    var that = this;
+    if (!this.data.newRoomName.trim()) {
+      wx.showToast({ title: "请输入教室名称", icon: "none" });
+      return;
+    }
+    this.setData({ submittingRoom: true });
+    wx.showLoading({ title: "正在添加教室…" });
+
+    api.request({
+      url: "/api/portal/manager/actions?action=create_room",
+      method: "POST",
+      data: {
+        name: this.data.newRoomName.trim(),
+        capacity: this.data.newRoomCapacity
+      },
+      success: function(res) {
+        wx.hideLoading();
+        that.setData({ submittingRoom: false });
+        if (res.statusCode === 200 && res.data && res.data.success) {
+          wx.showToast({ title: "教室添加成功", icon: "success" });
+          that.closeNewRoomForm();
+          that.fetchVenue();
+          that.loadSessionOptions();
+        } else {
+          wx.showModal({ title: "添加提示", content: (res.data && res.data.error) || "添加失败", showCancel: false });
+        }
+      },
+      fail: function() {
+        wx.hideLoading();
+        that.setData({ submittingRoom: false });
+        wx.showToast({ title: "网络连接失败", icon: "none" });
+      }
+    });
+  },
+
+  // ════════════════════════════════════════════════════════════
+  // 6.5. 教练导师团队逻辑 (Coaches)
+  // ════════════════════════════════════════════════════════════
+  fetchCoaches: function(done) {
+    var that = this;
+    var cb = typeof done === "function" ? done : function() {};
+    this.setData({ loadingCoaches: true, errorCoaches: "" });
+
+    api.request({
+      url: "/api/portal/manager/actions?action=coaches",
+      success: function(res) {
+        if (res.statusCode === 200 && res.data) {
+          that.setData({ coachesList: res.data.coaches || [], loadingCoaches: false, errorCoaches: "" });
+        } else {
+          that.setData({ loadingCoaches: false, errorCoaches: "获取教练列表失败" });
+        }
+      },
+      fail: function() {
+        that.setData({ loadingCoaches: false, errorCoaches: "网络连接失败" });
+      },
+      complete: cb
+    });
+  },
+
+  openNewCoachForm: function() {
+    this.setData({ showNewCoachForm: true, newCoachName: "", newCoachTitle: "资深塑形教练" });
+  },
+
+  closeNewCoachForm: function() {
+    this.setData({ showNewCoachForm: false });
+  },
+
+  onNewCoachNameInput: function(e) {
+    this.setData({ newCoachName: e.detail.value });
+  },
+
+  onNewCoachTitleInput: function(e) {
+    this.setData({ newCoachTitle: e.detail.value });
+  },
+
+  submitCreateCoach: function() {
+    var that = this;
+    if (!this.data.newCoachName.trim()) {
+      wx.showToast({ title: "请输入教练姓名", icon: "none" });
+      return;
+    }
+    this.setData({ submittingCoach: true });
+    wx.showLoading({ title: "正在添加导师…" });
+
+    api.request({
+      url: "/api/portal/manager/actions?action=create_coach",
+      method: "POST",
+      data: {
+        name: this.data.newCoachName.trim(),
+        roleTitle: this.data.newCoachTitle.trim()
+      },
+      success: function(res) {
+        wx.hideLoading();
+        that.setData({ submittingCoach: false });
+        if (res.statusCode === 200 && res.data && res.data.success) {
+          wx.showToast({ title: "教练添加成功", icon: "success" });
+          that.closeNewCoachForm();
+          that.fetchCoaches();
+          that.loadSessionOptions();
+        } else {
+          wx.showModal({ title: "添加提示", content: (res.data && res.data.error) || "添加失败", showCancel: false });
+        }
+      },
+      fail: function() {
+        wx.hideLoading();
+        that.setData({ submittingCoach: false });
+        wx.showToast({ title: "网络连接失败", icon: "none" });
+      }
+    });
+  },
+
+  toggleCoachStatus: function(e) {
+    var that = this;
+    var id = e.currentTarget.dataset.id;
+    var currentStatus = e.currentTarget.dataset.status;
+    var nextStatus = currentStatus === "active" ? "inactive" : "active";
+    var name = e.currentTarget.dataset.name;
+
+    wx.showModal({
+      title: "教练状态管理",
+      content: "确认要" + (nextStatus === "active" ? "重新启用" : "停用") + "教练【" + name + "】吗？",
+      confirmText: nextStatus === "active" ? "启用" : "停用",
+      confirmColor: nextStatus === "active" ? "#16794A" : "#B92E32",
+      success: function(m) {
+        if (!m.confirm) return;
+        wx.showLoading({ title: "正在更新…" });
+        api.request({
+          url: "/api/portal/manager/actions?action=toggle_coach",
+          method: "POST",
+          data: { id: id, status: nextStatus },
+          success: function(res) {
+            wx.hideLoading();
+            if (res.statusCode === 200 && res.data && res.data.success) {
+              wx.showToast({ title: res.data.message || "更新成功", icon: "success" });
+              that.fetchCoaches();
+              that.loadSessionOptions();
+            } else {
+              wx.showToast({ title: (res.data && res.data.error) || "操作失败", icon: "none" });
+            }
+          },
+          fail: function() {
+            wx.hideLoading();
+            wx.showToast({ title: "网络连接失败", icon: "none" });
+          }
+        });
+      }
+    });
+  },
+
+  // ════════════════════════════════════════════════════════════
+  // 6.7. 管理员与系统权限 (Admins)
+  // ════════════════════════════════════════════════════════════
+  fetchAdmins: function(done) {
+    var that = this;
+    var cb = typeof done === "function" ? done : function() {};
+    this.setData({ loadingAdmins: true });
+
+    api.request({
+      url: "/api/portal/manager/actions?action=admins",
+      success: function(res) {
+        if (res.statusCode === 200 && res.data) {
+          that.setData({ adminsList: res.data.admins || [], loadingAdmins: false });
+        } else {
+          that.setData({ loadingAdmins: false });
+        }
+      },
+      fail: function() {
+        that.setData({ loadingAdmins: false });
+      },
+      complete: cb
+    });
+  },
+
+  // ════════════════════════════════════════════════════════════
+  // 6.8. 代客约课业务逻辑 (Book For Member)
+  // ════════════════════════════════════════════════════════════
+  openBookForMember: function(e) {
+    var session = e.currentTarget.dataset.session;
+    var list = this.data.membersList;
+    this.setData({
+      showBookForMemberModal: true,
+      bookForMemberSession: session,
+      bookForMemberKeyword: "",
+      selectedBookMember: null,
+      bookForMemberCandidates: list && list.length > 0 ? list.slice(0, 10) : []
+    });
+    if (!list || list.length === 0) {
+      this.fetchMembers();
+    }
+  },
+
+  closeBookForMember: function() {
+    this.setData({
+      showBookForMemberModal: false,
+      bookForMemberSession: null,
+      selectedBookMember: null
+    });
+  },
+
+  onBookForMemberSearch: function(e) {
+    var kw = String(e.detail.value || "").trim().toLowerCase();
+    this.setData({ bookForMemberKeyword: kw });
+    if (!kw) {
+      this.setData({ bookForMemberCandidates: this.data.membersList.slice(0, 10) });
+      return;
+    }
+    var filtered = this.data.membersList.filter(function(m) {
+      return (m.name && m.name.toLowerCase().indexOf(kw) >= 0) ||
+             (m.phone && m.phone.indexOf(kw) >= 0) ||
+             (m.code && m.code.toLowerCase().indexOf(kw) >= 0);
+    });
+    this.setData({ bookForMemberCandidates: filtered.slice(0, 15) });
+  },
+
+  selectBookMember: function(e) {
+    var m = e.currentTarget.dataset.member;
+    this.setData({ selectedBookMember: m });
+  },
+
+  submitBookForMember: function() {
+    var that = this;
+    var session = this.data.bookForMemberSession;
+    var member = this.data.selectedBookMember;
+    if (!session || !member) {
+      wx.showToast({ title: "请先选择学员", icon: "none" });
+      return;
+    }
+    this.setData({ submittingBookForMember: true });
+    wx.showLoading({ title: "正在办理代约…" });
+
+    api.request({
+      url: "/api/portal/manager/actions?action=book_for_member",
+      method: "POST",
+      data: {
+        sessionId: session.id,
+        memberId: member.id
+      },
+      success: function(res) {
+        wx.hideLoading();
+        that.setData({ submittingBookForMember: false });
+        if (res.statusCode === 200 && res.data && res.data.success) {
+          wx.showModal({
+            title: "代约成功",
+            content: res.data.message || ("已成功为【" + member.name + "】代约本课程"),
+            showCancel: false,
+            success: function() {
+              that.closeBookForMember();
+              that.fetchBookings(that.data.selectedBookingDate);
+              that.loadDashboard();
+            }
+          });
+        } else {
+          var err = (res.data && res.data.error) || "代客约课失败";
+          wx.showModal({ title: "约课提示", content: err, showCancel: false });
+        }
+      },
+      fail: function() {
+        wx.hideLoading();
+        that.setData({ submittingBookForMember: false });
+        wx.showToast({ title: "网络连接失败", icon: "none" });
+      }
     });
   },
 

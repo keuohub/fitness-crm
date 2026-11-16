@@ -138,13 +138,13 @@
           <text class="mgr-item-sub">改名与星级</text>
         </view>
 
-        <!-- 4. 私教 -->
-        <view class="mgr-grid-item" bindtap="tapCoach">
+        <!-- 4. 教练导师 -->
+        <view class="mgr-grid-item" bindtap="switchToCoaches">
           <view class="mgr-item-icon-box bg-green">
-            <text class="mgr-item-char">私</text>
+            <text class="mgr-item-char">导</text>
           </view>
-          <text class="mgr-item-title">私教跟进</text>
-          <text class="mgr-item-sub">训练与手记</text>
+          <text class="mgr-item-title">教练导师</text>
+          <text class="mgr-item-sub">名录与排课</text>
         </view>
 
         <!-- 5. 会员 -->
@@ -156,13 +156,13 @@
           <text class="mgr-item-sub">+录新会员</text>
         </view>
 
-        <!-- 6. 员工 -->
-        <view class="mgr-grid-item" bindtap="tapTeam">
+        <!-- 6. 账号权限 -->
+        <view class="mgr-grid-item" bindtap="switchToAdmins">
           <view class="mgr-item-icon-box bg-slate">
-            <text class="mgr-item-char">工</text>
+            <text class="mgr-item-char">权</text>
           </view>
-          <text class="mgr-item-title">员工导师</text>
-          <text class="mgr-item-sub">团队名录</text>
+          <text class="mgr-item-title">账号权限</text>
+          <text class="mgr-item-sub">系统管理</text>
         </view>
 
         <!-- 7. 会员卡 -->
@@ -171,7 +171,7 @@
             <text class="mgr-item-char">卡</text>
           </view>
           <text class="mgr-item-title">会员卡项</text>
-          <text class="mgr-item-sub">卡项明细</text>
+          <text class="mgr-item-sub">持卡与卡种</text>
         </view>
 
         <!-- 8. 教室 -->
@@ -217,6 +217,56 @@
         </picker>
       </view>
       <text class="mgr-sub-view-sub">点击场次查看预约学员，可随时帮学员取消退还课时</text>
+    </view>
+
+    <!-- 代客约课快速表单卡片 (Book for Member) -->
+    <view wx:if="{{showBookForMemberModal}}" class="mgr-form-card mgr-book-member-box">
+      <view class="mgr-form-card-head">
+        <text class="mgr-form-card-title">为学员代客约课</text>
+        <text class="mgr-form-close-text" bindtap="closeBookForMember">取消</text>
+      </view>
+      <view class="mgr-form-hint-bar">
+        场次：{{bookForMemberSession.course_name}} · {{bookForMemberSession.start_time}} ({{bookForMemberSession.room_name}})
+      </view>
+
+      <view class="mgr-field-group">
+        <text class="mgr-field-label">搜索学员（姓名/手机号）</text>
+        <input
+          class="mgr-field-input"
+          type="text"
+          placeholder="输入姓名或手机搜索…"
+          value="{{bookForMemberKeyword}}"
+          bindinput="onBookForMemberSearch"
+        />
+      </view>
+
+      <view class="mgr-member-picker-scroll">
+        <view
+          wx:for="{{bookForMemberCandidates}}"
+          wx:key="id"
+          class="mgr-picker-member-row {{selectedBookMember.id === item.id ? 'is-selected' : ''}}"
+          bindtap="selectBookMember"
+          data-member="{{item}}"
+        >
+          <view class="mgr-picker-left">
+            <text class="mgr-picker-member-name">{{item.name}}</text>
+            <text class="mgr-picker-member-phone">{{item.phone || '未留手机'}}</text>
+          </view>
+          <view wx:if="{{selectedBookMember.id === item.id}}" class="mgr-picker-check">✓ 已选中</view>
+        </view>
+        <view wx:if="{{bookForMemberCandidates.length === 0}}" class="mgr-picker-empty">
+          未找到匹配会员，可先前往「会员中心」录入会员
+        </view>
+      </view>
+
+      <button
+        class="mgr-primary-btn"
+        bindtap="submitBookForMember"
+        loading="{{submittingBookForMember}}"
+        disabled="{{submittingBookForMember || !selectedBookMember}}"
+      >
+        {{selectedBookMember ? '确认代【' + selectedBookMember.name + '】预约' : '请先在上方点选学员'}}
+      </button>
     </view>
 
     <!-- 7 天水平日期滑块 -->
@@ -270,7 +320,12 @@
 
         <!-- 学员列表 -->
         <view class="mgr-attendees-box">
-          <view class="mgr-attendees-header">已预约学员名单：</view>
+          <view class="mgr-attendees-header-row">
+            <text class="mgr-attendees-header">已预约学员名单：</text>
+            <view class="mgr-pill-book-mgr" catchtap="openBookForMember" data-session="{{item}}">
+              + 代客约课
+            </view>
+          </view>
           <block wx:if="{{!item.attendees || item.attendees.length === 0}}">
             <view class="mgr-attendee-none">暂无学员预约本场课程</view>
           </block>
@@ -913,39 +968,194 @@
   <view wx:elif="{{currentView === 'cards'}}" class="mgr-view-container">
     <view class="mgr-sub-header">
       <view class="mgr-sub-title-row">
-        <text class="mgr-sub-view-title">会员卡与划卡资产</text>
+        <text class="mgr-sub-view-title">会员卡与卡种管理</text>
       </view>
-      <text class="mgr-sub-view-sub">下课自动扣次结课，保障会员课时资产账目严密</text>
+      <text class="mgr-sub-view-sub">支持查看会员已持卡、退卡停卡以及卡种规则自定义</text>
     </view>
 
-    <view wx:if="{{loadingCards}}" class="mgr-inner-loading">正在同步会馆卡项明细…</view>
-    <view wx:elif="{{errorCards}}" class="mgr-error-card" bindtap="fetchCards">
-      <text class="mgr-error-card-text">{{errorCards}}（点击重试）</text>
+    <!-- 顶部卡项切换分栏 -->
+    <view class="mgr-seg-tabs">
+      <view
+        class="mgr-seg-tab {{cardTab === 'cards' ? 'is-active' : ''}}"
+        bindtap="onCardTabChange"
+        data-tab="cards"
+      >
+        会员持卡 ({{cardsList.length}})
+      </view>
+      <view
+        class="mgr-seg-tab {{cardTab === 'types' ? 'is-active' : ''}}"
+        bindtap="onCardTabChange"
+        data-tab="types"
+      >
+        卡种规则库 ({{cardTypesList.length}})
+      </view>
     </view>
-    <block wx:else>
-      <view wx:if="{{cardsList.length === 0}}" class="mgr-empty-card-sm">
-        <text class="mgr-empty-text">暂无有效会员卡记录</text>
+
+    <!-- 分支 A：会员已持卡列表 -->
+    <block wx:if="{{cardTab === 'cards'}}">
+      <view wx:if="{{loadingCards}}" class="mgr-inner-loading">正在同步会馆卡项明细…</view>
+      <view wx:elif="{{errorCards}}" class="mgr-error-card" bindtap="fetchCards">
+        <text class="mgr-error-card-text">{{errorCards}}（点击重试）</text>
       </view>
-      <view wx:for="{{cardsList}}" wx:key="id" class="mgr-card-item">
-        <view class="mgr-card-item-top">
-          <text class="mgr-card-type-name">{{item.card_name}}</text>
-          <text class="mgr-card-status-badge">{{item.status === 'active' ? '有效生效中' : item.status}}</text>
+      <block wx:else>
+        <view wx:if="{{cardsList.length === 0}}" class="mgr-empty-card-sm">
+          <text class="mgr-empty-text">暂无有效会员卡记录</text>
         </view>
-        <view class="mgr-card-member-row">
-          <text class="mgr-card-member-name">{{item.member_name}}</text>
-          <text class="mgr-card-member-phone">{{item.member_phone}}</text>
+        <view wx:for="{{cardsList}}" wx:key="id" class="mgr-card-item">
+          <view class="mgr-card-item-top">
+            <text class="mgr-card-type-name">{{item.card_name}}</text>
+            <view class="mgr-card-top-right">
+              <text class="mgr-card-status-badge">{{item.status === 'active' ? '有效生效中' : item.status}}</text>
+              <view
+                wx:if="{{item.status === 'active'}}"
+                class="mgr-pill-return"
+                catchtap="doReturnCard"
+                data-id="{{item.id}}"
+                data-member="{{item.member_name}}"
+                data-card="{{item.card_name}}"
+              >退卡/停用</view>
+            </view>
+          </view>
+          <view class="mgr-card-member-row">
+            <text class="mgr-card-member-name">{{item.member_name}}</text>
+            <text class="mgr-card-member-phone">{{item.member_phone}}</text>
+          </view>
+          <view class="mgr-card-times-row">
+            <text class="mgr-times-label">剩余课时：</text>
+            <text class="mgr-times-val">{{item.remaining_count}} / {{item.total_count}} 次</text>
+          </view>
+          <view class="mgr-card-date-row">
+            <text class="mgr-date-range">有效期：{{item.start_date || '长期'}} 至 {{item.end_date || '不限期'}}</text>
+          </view>
         </view>
-        <view class="mgr-card-times-row">
-          <text class="mgr-times-label">剩余课时：</text>
-          <text class="mgr-times-val">{{item.remaining_count}} / {{item.total_count}} 次</text>
+        <view wx:if="{{cardsList.length > 0}}" class="mgr-list-footnote">
+          <text>当前展示最近 {{cardsList.length}} 张会员卡</text>
         </view>
-        <view class="mgr-card-date-row">
-          <text class="mgr-date-range">有效期：{{item.start_date || '长期'}} 至 {{item.end_date || '不限期'}}</text>
+      </block>
+    </block>
+
+    <!-- 分支 B：卡种规则库 (增删改查) -->
+    <block wx:elif="{{cardTab === 'types'}}">
+      <!-- 快速新建卡种按钮 -->
+      <view class="mgr-add-act-bar">
+        <view class="mgr-add-act-btn" bindtap="openNewCardTypeForm">
+          <text class="mgr-add-act-icon">+</text>
+          <text>新建卡种种类</text>
         </view>
       </view>
-      <view wx:if="{{cardsList.length > 0}}" class="mgr-list-footnote">
-        <text>当前展示最近 {{cardsList.length}} 张有效会员卡</text>
+
+      <!-- 新建卡种表单卡片 -->
+      <view wx:if="{{showNewCardTypeForm}}" class="mgr-form-card">
+        <view class="mgr-form-card-head">
+          <text class="mgr-form-card-title">创建新卡种规则</text>
+          <text class="mgr-form-close-text" bindtap="closeNewCardTypeForm">取消</text>
+        </view>
+
+        <view class="mgr-field-group">
+          <text class="mgr-field-label">卡种类别</text>
+          <view class="mgr-seg-picker">
+            <view
+              class="mgr-seg-opt {{newCardTypeCategory === 'count' ? 'is-chosen' : ''}}"
+              bindtap="onCardTypeCategoryChange"
+              data-cat="count"
+            >课时次卡</view>
+            <view
+              class="mgr-seg-opt {{newCardTypeCategory === 'period' ? 'is-chosen' : ''}}"
+              bindtap="onCardTypeCategoryChange"
+              data-cat="period"
+            >尊享期限卡</view>
+          </view>
+        </view>
+
+        <view class="mgr-field-group">
+          <text class="mgr-field-label">卡种全称</text>
+          <input
+            class="mgr-field-input"
+            type="text"
+            placeholder="如：普拉提重力核心床10次卡"
+            value="{{newCardTypeName}}"
+            bindinput="onNewCardTypeNameInput"
+          />
+        </view>
+
+        <view class="mgr-field-group" wx:if="{{newCardTypeCategory === 'count'}}">
+          <text class="mgr-field-label">初始课时 (节)</text>
+          <input
+            class="mgr-field-input"
+            type="number"
+            placeholder="如：10"
+            value="{{newCardTypeCount}}"
+            bindinput="onNewCardTypeCountInput"
+          />
+        </view>
+
+        <view class="mgr-field-group">
+          <text class="mgr-field-label">有效天数 (天)</text>
+          <input
+            class="mgr-field-input"
+            type="number"
+            placeholder="如：90 或 365"
+            value="{{newCardTypeDays}}"
+            bindinput="onNewCardTypeDaysInput"
+          />
+        </view>
+
+        <view class="mgr-field-group">
+          <text class="mgr-field-label">售价参考 (元，选填)</text>
+          <input
+            class="mgr-field-input"
+            type="digit"
+            placeholder="如：1680"
+            value="{{newCardTypePrice}}"
+            bindinput="onNewCardTypePriceInput"
+          />
+        </view>
+
+        <button
+          class="mgr-primary-btn"
+          bindtap="submitCreateCardType"
+          loading="{{submittingCardType}}"
+          disabled="{{submittingCardType}}"
+        >
+          确认保存卡种规则
+        </button>
       </view>
+
+      <!-- 卡种规则列表 -->
+      <view wx:if="{{loadingCardTypes}}" class="mgr-inner-loading">正在同步卡种规则…</view>
+      <block wx:else>
+        <view wx:if="{{cardTypesList.length === 0}}" class="mgr-empty-card-sm">
+          <text class="mgr-empty-text">暂无卡种配置记录</text>
+        </view>
+        <view wx:for="{{cardTypesList}}" wx:key="id" class="mgr-card-item">
+          <view class="mgr-card-item-top">
+            <view class="mgr-type-name-box">
+              <text class="mgr-card-type-name">{{item.name}}</text>
+              <text class="mgr-type-cat-tag">{{item.category === 'count' ? '次卡' : '期限卡'}}</text>
+            </view>
+            <view
+              class="mgr-pill-toggle {{item.is_active ? 'is-active-btn' : 'is-inactive-btn'}}"
+              catchtap="toggleCardTypeStatus"
+              data-id="{{item.id}}"
+              data-active="{{item.is_active}}"
+              data-name="{{item.name}}"
+            >
+              {{item.is_active ? '使用中' : '已停用'}}
+            </view>
+          </view>
+          <view class="mgr-card-times-row">
+            <text class="mgr-times-label">额度参数：</text>
+            <text class="mgr-times-val">{{item.category === 'count' ? item.total_count + ' 节' : '不限次畅练'}} · 有效期 {{item.validity_days ? item.validity_days + ' 天' : '长期'}}</text>
+          </view>
+          <view class="mgr-card-times-row" wx:if="{{item.price_cents > 0}}">
+            <text class="mgr-times-label">指导售价：</text>
+            <text class="mgr-times-val text-gold">¥{{item.price_cents / 100}}</text>
+          </view>
+          <view class="mgr-card-date-row" wx:if="{{item.courseCategories && item.courseCategories.length > 0}}">
+            <text class="mgr-date-range">适用课种：{{item.courseCategories.join(' · ')}}</text>
+          </view>
+        </view>
+      </block>
     </block>
   </view>
 
@@ -959,6 +1169,53 @@
         <text class="mgr-sub-view-title">教室与器械设备</text>
       </view>
       <text class="mgr-sub-view-sub">系统排课自动依据教室容量防超约，保障每位会员的专属器械</text>
+    </view>
+
+    <!-- 快速新增教室按钮 -->
+    <view class="mgr-add-act-bar">
+      <view class="mgr-add-act-btn" bindtap="openNewRoomForm">
+        <text class="mgr-add-act-icon">+</text>
+        <text>新增教室场地</text>
+      </view>
+    </view>
+
+    <!-- 新增教室表单 -->
+    <view wx:if="{{showNewRoomForm}}" class="mgr-form-card">
+      <view class="mgr-form-card-head">
+        <text class="mgr-form-card-title">添加新教室场地</text>
+        <text class="mgr-form-close-text" bindtap="closeNewRoomForm">取消</text>
+      </view>
+
+      <view class="mgr-field-group">
+        <text class="mgr-field-label">教室名称</text>
+        <input
+          class="mgr-field-input"
+          type="text"
+          placeholder="如：普拉提重力床二号馆"
+          value="{{newRoomName}}"
+          bindinput="onNewRoomNameInput"
+        />
+      </view>
+
+      <view class="mgr-field-group">
+        <text class="mgr-field-label">容纳席位数 (人)</text>
+        <input
+          class="mgr-field-input"
+          type="number"
+          placeholder="如：6"
+          value="{{newRoomCapacity}}"
+          bindinput="onNewRoomCapacityInput"
+        />
+      </view>
+
+      <button
+        class="mgr-primary-btn"
+        bindtap="submitCreateRoom"
+        loading="{{submittingRoom}}"
+        disabled="{{submittingRoom}}"
+      >
+        确认添加教室场地
+      </button>
     </view>
 
     <view wx:if="{{loadingVenue}}" class="mgr-inner-loading">正在读取教室设施…</view>
@@ -976,9 +1233,140 @@
           <text class="mgr-equip-desc">{{item.equipment_desc}}</text>
         </view>
         <view class="mgr-room-rule-hint">
-          • 约课防超约：当达到 {{item.capacity}} 人时自动截约
-          <br />• 课后自动结课：自动完成消课扣次
+          <view class="mgr-room-rule-line">• 约课防超约：当达到 {{item.capacity}} 人时自动截约</view>
+          <view class="mgr-room-rule-line">• 课后自动结课：自动完成消课扣次</view>
         </view>
+      </view>
+    </block>
+  </view>
+
+
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <!-- 视图 7.5：教练导师团队全屏工作台 (currentView === 'coaches') -->
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <view wx:elif="{{currentView === 'coaches'}}" class="mgr-view-container">
+    <view class="mgr-sub-header">
+      <view class="mgr-sub-title-row">
+        <text class="mgr-sub-view-title">教练导师团队</text>
+      </view>
+      <text class="mgr-sub-view-sub">统一管理会馆教练名录，排课时可直接指定教练执教</text>
+    </view>
+
+    <!-- 新增导师按钮 -->
+    <view class="mgr-add-act-bar">
+      <view class="mgr-add-act-btn" bindtap="openNewCoachForm">
+        <text class="mgr-add-act-icon">+</text>
+        <text>新增教练导师</text>
+      </view>
+    </view>
+
+    <!-- 新增导师表单卡片 -->
+    <view wx:if="{{showNewCoachForm}}" class="mgr-form-card">
+      <view class="mgr-form-card-head">
+        <text class="mgr-form-card-title">录入新教练导师</text>
+        <text class="mgr-form-close-text" bindtap="closeNewCoachForm">取消</text>
+      </view>
+
+      <view class="mgr-field-group">
+        <text class="mgr-field-label">导师姓名</text>
+        <input
+          class="mgr-field-input"
+          type="text"
+          placeholder="如：何老师、左左…"
+          value="{{newCoachName}}"
+          bindinput="onNewCoachNameInput"
+        />
+      </view>
+
+      <view class="mgr-field-group">
+        <text class="mgr-field-label">职称 / 专长</text>
+        <input
+          class="mgr-field-input"
+          type="text"
+          placeholder="如：资深塑形教练 / 普拉提大器械导师"
+          value="{{newCoachTitle}}"
+          bindinput="onNewCoachTitleInput"
+        />
+      </view>
+
+      <button
+        class="mgr-primary-btn"
+        bindtap="submitCreateCoach"
+        loading="{{submittingCoach}}"
+        disabled="{{submittingCoach}}"
+      >
+        确认录入导师
+      </button>
+    </view>
+
+    <view wx:if="{{loadingCoaches}}" class="mgr-inner-loading">正在读取导师名录…</view>
+    <view wx:elif="{{errorCoaches}}" class="mgr-error-card" bindtap="fetchCoaches">
+      <text class="mgr-error-card-text">{{errorCoaches}}（点击重试）</text>
+    </view>
+    <block wx:else>
+      <view wx:if="{{coachesList.length === 0}}" class="mgr-empty-card-sm">
+        <text class="mgr-empty-text">暂无教练记录</text>
+      </view>
+      <view wx:for="{{coachesList}}" wx:key="id" class="mgr-coach-card">
+        <view class="mgr-coach-left">
+          <text class="mgr-coach-avatar-circle">{{item.name[0]}}</text>
+          <view class="mgr-coach-info">
+            <view class="mgr-coach-name-row">
+              <text class="mgr-coach-name-text">{{item.name}}</text>
+              <text class="mgr-coach-status-tag {{item.status === 'active' ? 'tag-active' : 'tag-inactive'}}">
+                {{item.status === 'active' ? '执教中' : '已停用'}}
+              </text>
+            </view>
+            <text class="mgr-coach-title-text">{{item.role_title}}</text>
+          </view>
+        </view>
+        <view
+          class="mgr-pill-toggle {{item.status === 'active' ? 'is-active-btn' : 'is-inactive-btn'}}"
+          catchtap="toggleCoachStatus"
+          data-id="{{item.id}}"
+          data-status="{{item.status}}"
+          data-name="{{item.name}}"
+        >
+          {{item.status === 'active' ? '停用' : '启用'}}
+        </view>
+      </view>
+    </block>
+  </view>
+
+
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <!-- 视图 7.6：管理员与系统权限全屏工作台 (currentView === 'admins') -->
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <view wx:elif="{{currentView === 'admins'}}" class="mgr-view-container">
+    <view class="mgr-sub-header">
+      <view class="mgr-sub-title-row">
+        <text class="mgr-sub-view-title">账号与系统权限</text>
+      </view>
+      <text class="mgr-sub-view-sub">门店主理人与管理员授权清单，严格守护会馆经营资产</text>
+    </view>
+
+    <view wx:if="{{loadingAdmins}}" class="mgr-inner-loading">正在核验管理员授权…</view>
+    <block wx:else>
+      <view wx:for="{{adminsList}}" wx:key="id" class="mgr-admin-card">
+        <view class="mgr-admin-card-top">
+          <view class="mgr-admin-name-box">
+            <text class="mgr-admin-name">{{item.name}}</text>
+            <text class="mgr-admin-badge">{{item.role === 'owner' ? '核心主理人' : '系统管理员'}}</text>
+          </view>
+          <text class="mgr-admin-status">权限生效中</text>
+        </view>
+        <view class="mgr-admin-meta-row">
+          <text class="mgr-admin-meta-label">账号：</text>
+          <text class="mgr-admin-meta-val">{{item.email || ('admin_' + item.id)}}</text>
+        </view>
+      </view>
+
+      <view class="mgr-engine-card">
+        <view class="mgr-engine-title">权限安全隔离机制</view>
+        <view class="mgr-engine-badge">安全生效中</view>
+        <text class="mgr-engine-desc">
+          管理端采用独立 manager_accounts 权限控制表与会话加密，与普通学员端物理隔离。普通会员即使得知管理页面路径也无法进入或调用任何后台接口。
+        </text>
       </view>
     </block>
   </view>
